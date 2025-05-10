@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ExerciseDialog } from '@/components/exercises/ExerciseDialog'; // Updated import path
+import { ExerciseDialog } from '@/components/ExerciseDialog';
 import { EditWorkoutModal } from '@/components/EditWorkoutModal';
 import { EditExerciseSetModal } from '@/components/EditExerciseSetModal';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
