@@ -9,6 +9,8 @@ export type ExerciseMetadata = {
   weight_unit?: string;
   normalized_weight?: number;
   display_unit?: string;
+  is_bodyweight?: boolean;
+  energy_cost_factor?: number;
 };
 
 type ExerciseInput = {
@@ -50,34 +52,41 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
 
       if (error) throw error;
 
-      return data.map((exercise): Exercise => ({
-        id: exercise.id,
-        name: exercise.name,
-        created_at: exercise.created_at || '',
-        user_id: exercise.created_by || '', // Map created_by to user_id
-        description: exercise.description || '',
-        primary_muscle_groups: (exercise.primary_muscle_groups || []) as MuscleGroup[],
-        secondary_muscle_groups: (exercise.secondary_muscle_groups || []) as MuscleGroup[],
-        equipment_type: (exercise.equipment_type || []) as EquipmentType[],
-        movement_pattern: (exercise.movement_pattern || 'push') as MovementPattern,
-        difficulty: (exercise.difficulty || 'beginner') as Difficulty,
-        instructions: (exercise.instructions || {}) as Record<string, any>,
-        is_compound: exercise.is_compound || false,
-        tips: exercise.tips || [],
-        variations: exercise.variations || [],
-        metadata: exercise.metadata as ExerciseMetadata || {},
-        base_exercise_id: exercise.base_exercise_id || undefined,
-        variation_type: exercise.variation_type || undefined,
-        variation_value: exercise.variation_value || undefined,
-        // Extract is_bodyweight from metadata if not directly available
-        is_bodyweight: exercise.metadata && 'is_bodyweight' in exercise.metadata 
-          ? Boolean(exercise.metadata.is_bodyweight) 
-          : false,
-        // Extract energy_cost_factor from metadata if not directly available
-        energy_cost_factor: exercise.metadata && 'energy_cost_factor' in exercise.metadata
-          ? Number(exercise.metadata.energy_cost_factor) 
-          : 1
-      }));
+      return data.map((exercise): Exercise => {
+        // Extract boolean flag safely from metadata if present
+        const isBodyweight = typeof exercise.metadata === 'object' && exercise.metadata !== null && 
+          'is_bodyweight' in exercise.metadata ? 
+          Boolean(exercise.metadata.is_bodyweight) : false;
+          
+        // Extract number value safely from metadata if present  
+        const energyCostFactor = typeof exercise.metadata === 'object' && exercise.metadata !== null && 
+          'energy_cost_factor' in exercise.metadata ? 
+          Number(exercise.metadata.energy_cost_factor) : 1;
+          
+        return {
+          id: exercise.id,
+          name: exercise.name,
+          created_at: exercise.created_at || '',
+          user_id: exercise.created_by || '', // Map created_by to user_id
+          description: exercise.description || '',
+          primary_muscle_groups: (exercise.primary_muscle_groups || []) as MuscleGroup[],
+          secondary_muscle_groups: (exercise.secondary_muscle_groups || []) as MuscleGroup[],
+          equipment_type: (exercise.equipment_type || []) as EquipmentType[],
+          movement_pattern: (exercise.movement_pattern || 'push') as MovementPattern,
+          difficulty: (exercise.difficulty || 'beginner') as Difficulty,
+          instructions: (exercise.instructions || {}) as Record<string, any>,
+          is_compound: exercise.is_compound || false,
+          tips: exercise.tips || [],
+          variations: exercise.variations || [],
+          metadata: exercise.metadata as ExerciseMetadata || {},
+          base_exercise_id: exercise.base_exercise_id || undefined,
+          variation_type: exercise.variation_type || undefined,
+          variation_value: exercise.variation_value || undefined,
+          // Use the safely extracted values
+          is_bodyweight: isBodyweight,
+          energy_cost_factor: energyCostFactor
+        };
+      });
     }
   });
 
@@ -144,7 +153,6 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
     }
   });
 
-  // New mutation for updating exercises
   const { mutate: updateExercise, isPending: isUpdating } = useMutation({
     mutationFn: async (exercise: ExerciseUpdateInput) => {
       if (!exercise.id) {
@@ -200,7 +208,6 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
     }
   });
 
-  // New mutation for deleting exercises
   const { mutate: deleteExercise, isPending: isDeleting } = useMutation({
     mutationFn: async (exerciseId: string) => {
       console.log("Deleting exercise with id:", exerciseId);
