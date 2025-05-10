@@ -1,7 +1,7 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Exercise, MuscleGroup, EquipmentType, MovementPattern, Difficulty } from '@/types/exercise';
+import { toast } from '@/hooks/use-toast';
 
 export type ExerciseMetadata = {
   default_weight?: number;
@@ -26,7 +26,12 @@ type ExerciseInput = {
   variations?: string[];
   metadata?: Record<string, any>;
   created_at?: string;
+  base_exercise_id?: string;
+  variation_type?: string;
+  variation_value?: string;
 };
+
+type ExerciseUpdateInput = Partial<Omit<ExerciseInput, 'created_at'>> & { id: string };
 
 export type ExerciseSortBy = 'name' | 'created_at' | 'difficulty';
 export type SortOrder = 'asc' | 'desc';
@@ -58,12 +63,15 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
         is_compound: exercise.is_compound || false,
         tips: exercise.tips || [],
         variations: exercise.variations || [],
-        metadata: exercise.metadata as ExerciseMetadata || {}
+        metadata: exercise.metadata as ExerciseMetadata || {},
+        base_exercise_id: exercise.base_exercise_id || undefined,
+        variation_type: exercise.variation_type || undefined,
+        variation_value: exercise.variation_value || undefined,
       }));
     }
   });
 
-  const { mutate: createExercise, isPending } = useMutation({
+  const { mutate: createExercise, isPending: isCreating } = useMutation({
     mutationFn: async (newExercise: ExerciseInput) => {
       console.log("Creating exercise with data:", newExercise);
       
@@ -87,7 +95,10 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
           variations: newExercise.variations || [],
           metadata: newExercise.metadata || {},
           created_by: newExercise.user_id || '',
-          is_custom: true
+          is_custom: true,
+          base_exercise_id: newExercise.base_exercise_id || null,
+          variation_type: newExercise.variation_type || null,
+          variation_value: newExercise.variation_value || null
         }])
         .select();
 
@@ -102,11 +113,101 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
     onSuccess: () => {
       console.log("Invalidating exercises query cache");
       queryClient.invalidateQueries({ queryKey: ['exercises'] });
+      toast({ title: "Exercise created successfully" });
     },
     onError: (error) => {
       console.error("Error in createExercise mutation:", error);
+      toast({ 
+        title: "Failed to create exercise", 
+        description: error.message,
+        variant: "destructive"
+      });
     }
   });
+
+  // New mutation for updating exercises
+  const { mutate: updateExercise, isPending: isUpdating } = useMutation({
+    mutationFn: async (exercise: ExerciseUpdateInput) => {
+      if (!exercise.id) {
+        throw new Error("Exercise ID is required for updating");
+      }
+      
+      console.log("Updating exercise with data:", exercise);
+      
+      // Destructure id from exercise and keep the rest as updateData
+      const { id, ...updateData } = exercise;
+      
+      const { data, error } = await supabase
+        .from('exercises')
+        .update(updateData)
+        .eq('id', id)
+        .select();
+
+      if (error) {
+        console.error("Error updating exercise:", error);
+        throw error;
+      }
+      
+      console.log("Exercise updated successfully:", data);
+      return data[0];
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['exercises'] });
+      toast({ title: "Exercise updated successfully" });
+    },
+    onError: (error) => {
+      console.error("Error in updateExercise mutation:", error);
+      toast({ 
+        title: "Failed to update exercise", 
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  // New mutation for deleting exercises
+  const { mutate: deleteExercise, isPending: isDeleting } = useMutation({
+    mutationFn: async (exerciseId: string) => {
+      console.log("Deleting exercise with id:", exerciseId);
+      
+      const { error } = await supabase
+        .from('exercises')
+        .delete()
+        .eq('id', exerciseId);
+
+      if (error) {
+        console.error("Error deleting exercise:", error);
+        throw error;
+      }
+      
+      console.log("Exercise deleted successfully");
+      return exerciseId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['exercises'] });
+      toast({ title: "Exercise deleted successfully" });
+    },
+    onError: (error) => {
+      console.error("Error in deleteExercise mutation:", error);
+      toast({ 
+        title: "Failed to delete exercise", 
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Return only base exercises (those without a base_exercise_id)
+  const getBaseExercises = () => {
+    if (!exercises) return [];
+    return exercises.filter(exercise => !exercise.base_exercise_id);
+  };
+
+  // Return variations for a specific base exercise
+  const getVariationsForExercise = (baseId: string) => {
+    if (!exercises) return [];
+    return exercises.filter(exercise => exercise.base_exercise_id === baseId);
+  };
 
   // Sort exercises
   const getSortedExercises = (
@@ -142,10 +243,17 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
   return {
     exercises: exercises || [],
     getSortedExercises,
+    getBaseExercises,
+    getVariationsForExercise,
     isLoading,
     error,
     createExercise,
-    isPending,
+    updateExercise,
+    deleteExercise,
+    isPending: isCreating,
+    isCreating,
+    isUpdating,
+    isDeleting,
     isError
   };
 };
