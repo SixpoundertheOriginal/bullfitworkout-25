@@ -7,7 +7,8 @@ export function useExerciseSuggestions(trainingType: string = "") {
   const { exercises = [] } = useExercises();
 
   const suggestedExercises = useMemo(() => {
-    if (!exercises || !Array.isArray(exercises) || !exercises?.length) return [];
+    // Ensure exercises is an array
+    if (!exercises || !Array.isArray(exercises) || !exercises.length) return [];
 
     // Filter exercises based on training type
     let filtered = [...(exercises || [])].filter(Boolean); // Ensure no undefined/null values
@@ -45,5 +46,5 @@ export function useExerciseSuggestions(trainingType: string = "") {
     return filtered.slice(0, 10);
   }, [exercises, trainingType]);
 
-  return { suggestedExercises };
+  return { suggestedExercises: suggestedExercises || [] };
 }

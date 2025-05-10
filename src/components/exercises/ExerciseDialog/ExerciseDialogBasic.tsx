@@ -28,7 +28,8 @@ export const ExerciseDialogBasic = React.memo(function ExerciseDialogBasic({
     value: group
   }));
 
-  const isPrimaryMuscleGroupsError = !exercise.primary_muscle_groups || exercise.primary_muscle_groups.length === 0;
+  const isPrimaryMuscleGroupsError = !exercise.primary_muscle_groups || 
+    (Array.isArray(exercise.primary_muscle_groups) && exercise.primary_muscle_groups.length === 0);
 
   return (
     <>
@@ -52,7 +53,7 @@ export const ExerciseDialogBasic = React.memo(function ExerciseDialogBasic({
         </Label>
         <MultiSelect
           options={muscleGroupOptions}
-          selected={exercise.primary_muscle_groups || []}
+          selected={Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : []}
           onChange={onChangePrimaryMuscleGroups || (() => {})}
           placeholder="Select primary muscles worked"
           className={`${isPrimaryMuscleGroupsError ? 'border-red-500' : ''}`}

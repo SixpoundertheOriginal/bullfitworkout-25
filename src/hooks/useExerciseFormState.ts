@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { MovementPattern, Difficulty, MuscleGroup } from '@/types/exercise';
 
@@ -92,9 +91,15 @@ export const useExerciseFormState = (
           form: initialExercise.instructions?.form ?? '',
         },
         // Ensure these properties exist as arrays even if not in initialExercise
-        primary_muscle_groups: initialExercise.primary_muscle_groups || [],
-        secondary_muscle_groups: initialExercise.secondary_muscle_groups || [],
-        equipment_type: initialExercise.equipment_type || [],
+        primary_muscle_groups: Array.isArray(initialExercise.primary_muscle_groups) 
+          ? initialExercise.primary_muscle_groups 
+          : [],
+        secondary_muscle_groups: Array.isArray(initialExercise.secondary_muscle_groups) 
+          ? initialExercise.secondary_muscle_groups 
+          : [],
+        equipment_type: Array.isArray(initialExercise.equipment_type) 
+          ? initialExercise.equipment_type 
+          : [],
         metadata: initialExercise.metadata || {},
         // Include variation fields
         base_exercise_id: initialExercise.base_exercise_id,
@@ -150,31 +155,31 @@ export const useExerciseFormState = (
   }, []);
 
   const setTips = useCallback((tips: string[]) => {
-    setExercise(ex => ({ ...ex, tips: tips || [] }));
+    setExercise(ex => ({ ...ex, tips: Array.isArray(tips) ? tips : [] }));
   }, []);
 
   const addTip = useCallback((tip: string) => {
     if (tip.trim()) {
-      setExercise(ex => ({ ...ex, tips: [...(ex.tips || []), tip.trim()] }));
+      setExercise(ex => ({ ...ex, tips: [...(Array.isArray(ex.tips) ? ex.tips : []), tip.trim()] }));
     }
   }, []);
 
   const removeTip = useCallback((index: number) => {
     setExercise(ex => ({ 
       ...ex, 
-      tips: (ex.tips || []).filter((_, i) => i !== index) 
+      tips: Array.isArray(ex.tips) ? ex.tips.filter((_, i) => i !== index) : [] 
     }));
   }, []);
 
   const setVariations = useCallback((variations: string[]) => {
-    setExercise(ex => ({ ...ex, variations: variations || [] }));
+    setExercise(ex => ({ ...ex, variations: Array.isArray(variations) ? variations : [] }));
   }, []);
 
   const addVariation = useCallback((variation: string) => {
     if (variation.trim()) {
       setExercise(ex => ({ 
         ...ex, 
-        variations: [...(ex.variations || []), variation.trim()] 
+        variations: [...(Array.isArray(ex.variations) ? ex.variations : []), variation.trim()] 
       }));
     }
   }, []);
@@ -182,7 +187,7 @@ export const useExerciseFormState = (
   const removeVariation = useCallback((index: number) => {
     setExercise(ex => ({ 
       ...ex, 
-      variations: (ex.variations || []).filter((_, i) => i !== index) 
+      variations: Array.isArray(ex.variations) ? ex.variations.filter((_, i) => i !== index) : [] 
     }));
   }, []);
 
@@ -196,15 +201,15 @@ export const useExerciseFormState = (
 
   // Make sure muscle group handlers properly handle undefined values
   const setPrimaryMuscleGroups = useCallback((groups: string[]) => {
-    setExercise(ex => ({ ...ex, primary_muscle_groups: groups || [] }));
+    setExercise(ex => ({ ...ex, primary_muscle_groups: Array.isArray(groups) ? groups : [] }));
   }, []);
 
   const setSecondaryMuscleGroups = useCallback((groups: string[]) => {
-    setExercise(ex => ({ ...ex, secondary_muscle_groups: groups || [] }));
+    setExercise(ex => ({ ...ex, secondary_muscle_groups: Array.isArray(groups) ? groups : [] }));
   }, []);
 
   const setEquipmentType = useCallback((types: string[]) => {
-    setExercise(ex => ({ ...ex, equipment_type: types || [] }));
+    setExercise(ex => ({ ...ex, equipment_type: Array.isArray(types) ? types : [] }));
   }, []);
 
   const reset = useCallback(() => {

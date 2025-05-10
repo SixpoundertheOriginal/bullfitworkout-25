@@ -36,6 +36,7 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
 
   // Extract recently used exercises from workout history
   const recentExercises = React.useMemo(() => {
+    // Ensure workouts and allExercises are arrays
     if (!Array.isArray(workouts) || !workouts?.length || !Array.isArray(allExercises) || !allExercises?.length) return [];
     
     const exerciseMap = new Map<string, Exercise>();
@@ -45,7 +46,7 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
       if (!workout) return;
       const exerciseNames = new Set<string>();
       
-      if (Array.isArray(workout?.exerciseSets)) {
+      if (workout?.exerciseSets && Array.isArray(workout.exerciseSets)) {
         workout.exerciseSets.forEach(set => {
           if (set?.exercise_name) {
             exerciseNames.add(set.exercise_name);
@@ -66,6 +67,7 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
 
   // Filter exercises based on search query
   const filteredSuggested = React.useMemo(() => {
+    // Ensure suggestedExercises is an array
     if (!Array.isArray(suggestedExercises)) return [];
     
     return searchQuery
@@ -78,6 +80,7 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
   }, [suggestedExercises, searchQuery]);
 
   const filteredRecent = React.useMemo(() => {
+    // Ensure recentExercises is an array
     if (!Array.isArray(recentExercises)) return [];
     
     return searchQuery
@@ -106,7 +109,8 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
   const renderExerciseCard = (exercise: Exercise) => {
     if (!exercise || !Array.isArray(exercise.primary_muscle_groups)) return null;
     
-    const muscleGroups = (exercise.primary_muscle_groups || []).slice(0, 2).join(', ');
+    const muscleGroups = (Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : [])
+      .slice(0, 2).join(', ');
     
     return (
       <div key={exercise.id} className="flex items-center justify-between p-3 mb-2 bg-gray-800/50 rounded-lg border border-gray-700/50">
