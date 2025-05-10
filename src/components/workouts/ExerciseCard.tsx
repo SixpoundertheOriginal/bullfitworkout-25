@@ -5,15 +5,17 @@ import { CommonExerciseCard } from '../exercises/CommonExerciseCard';
 
 interface ExerciseCardProps {
   exercise: Exercise;
+  onAdd?: (exercise: Exercise) => void;
 }
 
-export const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise }) => {
-  // This component is typically used in the workout context, so we default to 'workout-add'
+export const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onAdd }) => {
   return (
     <CommonExerciseCard
       exercise={exercise}
       variant="workout-add"
-      onAdd={() => {/* Handler will be provided via props in parent components */}}
+      onAdd={onAdd ? () => onAdd(exercise) : undefined}
     />
   );
 };
+
+export default ExerciseCard;

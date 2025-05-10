@@ -13,7 +13,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onAdd }) =
     <CommonExerciseCard
       exercise={exercise}
       variant="workout-add"
-      onAdd={onAdd}
+      onAdd={onAdd ? () => onAdd(exercise) : undefined}
     />
   );
 };

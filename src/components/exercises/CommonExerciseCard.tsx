@@ -3,18 +3,20 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Edit, Trash2, Plus, Check } from 'lucide-react';
+import { Edit, Trash2, Plus, Check, Copy, Info } from 'lucide-react';
 import { Exercise } from '@/types/exercise';
 import { Badge } from '@/components/ui/badge';
 
 interface CommonExerciseCardProps {
   exercise: Exercise;
-  variant: 'list' | 'selector' | 'workout-add';
+  variant: 'list' | 'selector' | 'workout-add' | 'library-manage';
   className?: string;
   onSelect?: () => void;
   onAdd?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onViewDetails?: () => void;
+  onDuplicate?: () => void;
   isSelected?: boolean;
   isVariation?: boolean;
   rightContent?: React.ReactNode;
@@ -29,6 +31,8 @@ export const CommonExerciseCard: React.FC<CommonExerciseCardProps> = ({
   onAdd,
   onEdit,
   onDelete,
+  onViewDetails,
+  onDuplicate,
   isSelected = false,
   isVariation = false,
   rightContent,
@@ -108,6 +112,31 @@ export const CommonExerciseCard: React.FC<CommonExerciseCardProps> = ({
               <div className="h-8 w-8 rounded-full bg-purple-500/20 flex items-center justify-center">
                 <Check size={16} className="text-purple-400" />
               </div>
+            )}
+            
+            {variant === 'library-manage' && (
+              <>
+                {onViewDetails && (
+                  <Button 
+                    size="icon"
+                    variant="ghost" 
+                    className="h-8 w-8 text-purple-500 hover:text-purple-400 hover:bg-purple-900/20"
+                    onClick={(e) => { e.stopPropagation(); onViewDetails(); }}
+                  >
+                    <Info size={16} />
+                  </Button>
+                )}
+                {onDuplicate && (
+                  <Button 
+                    size="icon"
+                    variant="ghost" 
+                    className="h-8 w-8 text-cyan-500 hover:text-cyan-400 hover:bg-cyan-900/20"
+                    onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
+                  >
+                    <Copy size={16} />
+                  </Button>
+                )}
+              </>
             )}
             
             {onEdit && (
