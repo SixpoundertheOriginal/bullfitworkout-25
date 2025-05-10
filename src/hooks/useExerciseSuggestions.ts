@@ -4,34 +4,34 @@ import { Exercise } from "@/types/exercise";
 import { useExercises } from "./useExercises";
 
 export function useExerciseSuggestions(trainingType: string = "") {
-  const { exercises } = useExercises();
+  const { exercises = [] } = useExercises();
 
   const suggestedExercises = useMemo(() => {
-    if (!exercises?.length) return [];
+    if (!exercises || !Array.isArray(exercises) || !exercises?.length) return [];
 
     // Filter exercises based on training type
-    let filtered = [...exercises];
+    let filtered = [...exercises].filter(Boolean); // Ensure no undefined/null values
     
-    if (trainingType.toLowerCase() === "strength") {
+    if (trainingType?.toLowerCase() === "strength") {
       filtered = filtered.filter(e => 
         e.is_compound || 
-        e.equipment_type.some(t => ["barbell", "dumbbell", "machine"].includes(t)) ||
-        e.primary_muscle_groups.some(m => ["chest", "back", "shoulders", "legs", "arms"].includes(m))
+        (e.equipment_type && Array.isArray(e.equipment_type) && e.equipment_type.some(t => ["barbell", "dumbbell", "machine"].includes(t))) ||
+        (e.primary_muscle_groups && Array.isArray(e.primary_muscle_groups) && e.primary_muscle_groups.some(m => ["chest", "back", "shoulders", "legs", "arms"].includes(m)))
       );
-    } else if (trainingType.toLowerCase() === "cardio") {
+    } else if (trainingType?.toLowerCase() === "cardio") {
       filtered = filtered.filter(e => 
-        e.equipment_type.some(t => ["bodyweight", "cardio machine"].includes(t)) ||
-        e.primary_muscle_groups.some(m => ["heart", "lungs", "full body"].includes(m))
+        (e.equipment_type && Array.isArray(e.equipment_type) && e.equipment_type.some(t => ["bodyweight", "cardio machine"].includes(t))) ||
+        (e.primary_muscle_groups && Array.isArray(e.primary_muscle_groups) && e.primary_muscle_groups.some(m => ["heart", "lungs", "full body"].includes(m)))
       );
-    } else if (trainingType.toLowerCase() === "yoga") {
+    } else if (trainingType?.toLowerCase() === "yoga") {
       filtered = filtered.filter(e => 
-        e.equipment_type.includes("bodyweight") ||
-        e.primary_muscle_groups.some(m => ["core", "flexibility", "balance"].includes(m))
+        (e.equipment_type && Array.isArray(e.equipment_type) && e.equipment_type.includes("bodyweight")) ||
+        (e.primary_muscle_groups && Array.isArray(e.primary_muscle_groups) && e.primary_muscle_groups.some(m => ["core", "flexibility", "balance"].includes(m)))
       );
-    } else if (trainingType.toLowerCase() === "calisthenics") {
+    } else if (trainingType?.toLowerCase() === "calisthenics") {
       filtered = filtered.filter(e => 
-        e.equipment_type.includes("bodyweight") ||
-        e.primary_muscle_groups.some(m => ["core", "chest", "back", "arms"].includes(m))
+        (e.equipment_type && Array.isArray(e.equipment_type) && e.equipment_type.includes("bodyweight")) ||
+        (e.primary_muscle_groups && Array.isArray(e.primary_muscle_groups) && e.primary_muscle_groups.some(m => ["core", "chest", "back", "arms"].includes(m)))
       );
     }
 

@@ -36,7 +36,7 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
 
   // Extract recently used exercises from workout history
   const recentExercises = React.useMemo(() => {
-    if (!workouts?.length || !allExercises?.length) return [];
+    if (!Array.isArray(workouts) || !workouts?.length || !Array.isArray(allExercises) || !allExercises?.length) return [];
     
     const exerciseMap = new Map<string, Exercise>();
     
@@ -44,16 +44,16 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
     workouts.slice(0, 8).forEach(workout => {
       const exerciseNames = new Set<string>();
       
-      if (workout.exerciseSets) {
+      if (Array.isArray(workout?.exerciseSets)) {
         workout.exerciseSets.forEach(set => {
-          if (set.exercise_name) {
+          if (set?.exercise_name) {
             exerciseNames.add(set.exercise_name);
           }
         });
       }
       
       exerciseNames.forEach(name => {
-        const exercise = allExercises.find(e => e.name === name);
+        const exercise = allExercises.find(e => e?.name === name);
         if (exercise && !exerciseMap.has(exercise.id)) {
           exerciseMap.set(exercise.id, exercise);
         }
@@ -89,7 +89,7 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
   }, [recentExercises, searchQuery]);
 
   const handleAddExercise = (exercise: Exercise | string) => {
-    const exerciseName = typeof exercise === 'string' ? exercise : exercise.name;
+    const exerciseName = typeof exercise === 'string' ? exercise : (exercise?.name || "Unknown exercise");
     onSelectExercise(exercise);
     
     // Close the sheet immediately after selecting an exercise
@@ -103,7 +103,7 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
   };
 
   const renderExerciseCard = (exercise: Exercise) => {
-    if (!exercise || !exercise.primary_muscle_groups || !Array.isArray(exercise.primary_muscle_groups)) return null;
+    if (!exercise || !Array.isArray(exercise.primary_muscle_groups)) return null;
     
     const muscleGroups = exercise.primary_muscle_groups.slice(0, 2).join(', ');
     
@@ -181,7 +181,7 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
               
               <TabsContent value="suggested" className="mt-0 flex-1 overflow-auto">
                 <div className="overflow-y-auto max-h-[calc(80vh-170px)]">
-                  {filteredSuggested && filteredSuggested.length > 0 ? (
+                  {Array.isArray(filteredSuggested) && filteredSuggested.length > 0 ? (
                     filteredSuggested.map(exercise => exercise ? renderExerciseCard(exercise) : null)
                   ) : (
                     <div className="text-center py-6 text-gray-400">
@@ -193,7 +193,7 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
               
               <TabsContent value="recent" className="mt-0 flex-1 overflow-auto">
                 <div className="overflow-y-auto max-h-[calc(80vh-170px)]">
-                  {filteredRecent && filteredRecent.length > 0 ? (
+                  {Array.isArray(filteredRecent) && filteredRecent.length > 0 ? (
                     filteredRecent.map(exercise => exercise ? renderExerciseCard(exercise) : null)
                   ) : (
                     <div className="text-center py-6 text-gray-400">

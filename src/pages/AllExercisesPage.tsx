@@ -43,6 +43,7 @@ interface AllExercisesPageProps {
 }
 
 export default function AllExercisesPage({ onSelectExercise, standalone = true, onBack }: AllExercisesPageProps) {
+  // Ensure exercises is always an array, even if it's undefined
   const { exercises = [], isLoading, isError, createExercise, isPending } = useExercises();
   const { workouts = [] } = useWorkoutHistory();
   const { toast } = useToast();
@@ -68,11 +69,12 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
 
   // For add/edit
   const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
-  const [exerciseToEdit, setExerciseToEdit] = useState<any | null>(null);
+  const [exerciseToEdit, setExerciseToEdit] = useState<Exercise | null>(null);
 
   // Extract recently used exercises from workout history
   const recentExercises = React.useMemo(() => {
     if (!workouts?.length) return [];
+    if (!Array.isArray(exercises)) return [];
     
     const exerciseMap = new Map<string, Exercise>();
     
@@ -80,14 +82,16 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
     workouts.slice(0, 8).forEach(workout => {
       const exerciseNames = new Set<string>();
       
-      workout.exerciseSets?.forEach(set => {
-        if (set.exercise_name) {
-          exerciseNames.add(set.exercise_name);
-        }
-      });
+      if (workout.exerciseSets && Array.isArray(workout.exerciseSets)) {
+        workout.exerciseSets.forEach(set => {
+          if (set && set.exercise_name) {
+            exerciseNames.add(set.exercise_name);
+          }
+        });
+      }
       
       exerciseNames.forEach(name => {
-        const exercise = exercises.find(e => e.name === name);
+        const exercise = exercises.find(e => e && e.name === name);
         if (exercise && !exerciseMap.has(exercise.id)) {
           exerciseMap.set(exercise.id, exercise);
         }
@@ -99,22 +103,27 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
 
   // Filter exercises based on search query and filters
   const filterExercises = (exercisesList: Exercise[] = []) => {
-    if (!exercisesList) return [];
+    if (!exercisesList || !Array.isArray(exercisesList)) return [];
     
     return exercisesList.filter(exercise => {
+      if (!exercise) return false;
+      
       // Search filter
       const matchesSearch = searchQuery === "" || 
-        exercise.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        exercise.description?.toLowerCase().includes(searchQuery.toLowerCase());
+        (exercise.name && exercise.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (exercise.description && exercise.description.toLowerCase().includes(searchQuery.toLowerCase()));
 
       // Muscle group filter
       const matchesMuscleGroup = selectedMuscleGroup === "all" || 
-        (exercise.primary_muscle_groups && exercise.primary_muscle_groups.includes(selectedMuscleGroup as MuscleGroup)) ||
-        (exercise.secondary_muscle_groups && exercise.secondary_muscle_groups.includes(selectedMuscleGroup as MuscleGroup));
+        (exercise.primary_muscle_groups && Array.isArray(exercise.primary_muscle_groups) && 
+          exercise.primary_muscle_groups.includes(selectedMuscleGroup as MuscleGroup)) ||
+        (exercise.secondary_muscle_groups && Array.isArray(exercise.secondary_muscle_groups) && 
+          exercise.secondary_muscle_groups.includes(selectedMuscleGroup as MuscleGroup));
 
       // Equipment filter
       const matchesEquipment = selectedEquipment === "all" || 
-        (exercise.equipment_type && exercise.equipment_type.includes(selectedEquipment as EquipmentType));
+        (exercise.equipment_type && Array.isArray(exercise.equipment_type) && 
+          exercise.equipment_type.includes(selectedEquipment as EquipmentType));
 
       // Difficulty filter
       const matchesDifficulty = selectedDifficulty === "all" || 
@@ -131,11 +140,11 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
 
   // Filter exercises and get only base exercises (those without base_exercise_id)
   const filteredBaseExercises = filterExercises(Array.isArray(exercises) ? 
-    exercises.filter(ex => !ex.base_exercise_id) : []);
+    exercises.filter(ex => ex && !ex.base_exercise_id) : []);
 
   // Define these variables to fix the missing references
   const suggestedExercises = filterExercises(Array.isArray(exercises) ? 
-    exercises.filter(ex => !ex.base_exercise_id).slice(0, 20) : []); // Limit suggested to top 20 for better performance
+    exercises.filter(ex => ex && !ex.base_exercise_id).slice(0, 20) : []); // Limit suggested to top 20 for better performance
   const filteredRecent = filterExercises(recentExercises || []);
   const filteredAll = filteredBaseExercises;  // Use the filtered base exercises for "all" exercises
 
@@ -243,9 +252,9 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
             ...exercise,
             user_id: "",
             // Ensure these are properly cast to the expected types
-            primary_muscle_groups: exercise.primary_muscle_groups as MuscleGroup[],
-            secondary_muscle_groups: exercise.secondary_muscle_groups as MuscleGroup[],
-            equipment_type: exercise.equipment_type as EquipmentType[]
+            primary_muscle_groups: (exercise.primary_muscle_groups || []) as MuscleGroup[],
+            secondary_muscle_groups: (exercise.secondary_muscle_groups || []) as MuscleGroup[],
+            equipment_type: (exercise.equipment_type || []) as EquipmentType[]
           },
           {
             onSuccess: () => resolve(),
@@ -281,7 +290,7 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
 
   // Render exercise list using ExerciseVariationGroup
   const renderExerciseList = (exercisesList: Exercise[], showPagination = false) => {
-    if (!exercisesList || exercisesList.length === 0) {
+    if (!exercisesList || !Array.isArray(exercisesList) || exercisesList.length === 0) {
       return (
         <div className="text-center py-6 text-gray-400">
           No exercises found
@@ -384,7 +393,7 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
           open={showDialog}
           onOpenChange={setShowDialog}
           onSubmit={handleDialogSubmit}
-          initialExercise={exerciseToEdit!}
+          initialExercise={exerciseToEdit}
           loading={isPending}
           mode={dialogMode}
         />
@@ -551,7 +560,7 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
                     <SelectContent className="bg-gray-900 border-gray-700">
                       <SelectGroup>
                         <SelectItem value="all">All Difficulties</SelectItem>
-                        {DIFFICULTY_LEVELS.map((difficulty) => (
+                        {Array.isArray(DIFFICULTY_LEVELS) && DIFFICULTY_LEVELS.map((difficulty) => (
                           <SelectItem key={difficulty} value={difficulty}>{difficulty}</SelectItem>
                         ))}
                       </SelectGroup>
@@ -571,7 +580,7 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
                     <SelectContent className="bg-gray-900 border-gray-700">
                       <SelectGroup>
                         <SelectItem value="all">All Patterns</SelectItem>
-                        {MOVEMENT_PATTERNS.map((pattern) => (
+                        {Array.isArray(MOVEMENT_PATTERNS) && MOVEMENT_PATTERNS.map((pattern) => (
                           <SelectItem key={pattern} value={pattern}>{pattern}</SelectItem>
                         ))}
                       </SelectGroup>

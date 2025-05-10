@@ -111,7 +111,10 @@ CommandSeparator.displayName = CommandPrimitive.Separator.displayName
 
 const CommandItem = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Item>
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Item> & {
+    'data-disabled'?: boolean;
+    'data-selected'?: boolean | string;
+  }
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.Item
     ref={ref}

@@ -29,15 +29,15 @@ export function MinimalisticExerciseSelect({
   className
 }: MinimalisticExerciseSelectProps) {
   // Take the first 3 recent exercises (ensure exercises array exists)
-  const safeRecentExercises = Array.isArray(recentExercises) ? recentExercises : [];
+  const safeRecentExercises = Array.isArray(recentExercises) ? recentExercises.filter(Boolean) : [];
   const recentFirst = safeRecentExercises.slice(0, 3);
   
   // Limit recommended exercises to first 4 if we have them (ensure array exists)
-  const safeSuggestedExercises = Array.isArray(suggestedExercises) ? suggestedExercises : [];
+  const safeSuggestedExercises = Array.isArray(suggestedExercises) ? suggestedExercises.filter(Boolean) : [];
   const recommendedExercises = safeSuggestedExercises.slice(0, 4);
   
   // For other exercises, ensure no duplicates with recommended or recent
-  const safeOtherExercises = Array.isArray(otherExercises) ? otherExercises : [];
+  const safeOtherExercises = Array.isArray(otherExercises) ? otherExercises.filter(Boolean) : [];
   const filteredOther = safeOtherExercises
     .filter(e => e && 
       !recommendedExercises.some(r => r?.id === e?.id) && 
@@ -131,7 +131,7 @@ function ExerciseItem({
   isRecommended,
   matchData
 }: ExerciseItemProps) {
-  if (!exercise || !exercise.primary_muscle_groups || !Array.isArray(exercise.primary_muscle_groups)) return null;
+  if (!exercise || !Array.isArray(exercise.primary_muscle_groups)) return null;
   
   // Determine main muscle group for badge
   const primaryMuscle = exercise.primary_muscle_groups?.[0] || "general";
