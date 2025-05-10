@@ -15,17 +15,23 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MovementPattern, Difficulty } from "@/constants/exerciseMetadata";
+import { MovementPattern, Difficulty, Exercise } from "@/types/exercise";
 import { useExerciseFormState, ExerciseFormState } from "@/hooks/useExerciseFormState";
 import { ExerciseDialogBasic } from "@/components/exercises/ExerciseDialog/ExerciseDialogBasic";
 import { ExerciseDialogAdvanced } from "@/components/exercises/ExerciseDialog/ExerciseDialogAdvanced";
 import { ExerciseDialogMetrics } from "@/components/exercises/ExerciseDialog/ExerciseDialogMetrics";
 import { ExerciseDialogInstructions } from "@/components/exercises/ExerciseDialog/ExerciseDialogInstructions";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ExerciseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode: "add" | "edit";
+  baseExercise?: Exercise; // New prop for variation parent
   onSubmit: (exercise: {
     name: string;
     description: string;
@@ -40,6 +46,10 @@ interface ExerciseDialogProps {
     estimated_load_percent?: number;
     variant_category?: string;
     energy_cost_factor: number;
+    // Variation fields
+    base_exercise_id?: string;
+    variation_type?: string;
+    variation_value?: string;
     // The missing properties needed by AllExercisesPage
     primary_muscle_groups: any[];
     secondary_muscle_groups: any[];
@@ -50,10 +60,22 @@ interface ExerciseDialogProps {
   loading?: boolean;
 }
 
+const VARIATION_TYPES = [
+  "grip", 
+  "angle", 
+  "stance", 
+  "equipment", 
+  "tempo", 
+  "range", 
+  "resistance",
+  "unilateral"
+];
+
 export function ExerciseDialog({
   open,
   onOpenChange,
   mode = "add",
+  baseExercise,
   onSubmit,
   initialExercise,
   loading = false,
@@ -66,6 +88,19 @@ export function ExerciseDialog({
   
   // Use our custom hook for form state management
   const [exercise, handlers] = useExerciseFormState(initialExercise, open);
+
+  // Handle variation specific fields
+  const handleVariationTypeChange = (value: string) => {
+    if (handlers.setVariationType) {
+      handlers.setVariationType(value);
+    }
+  };
+
+  const handleVariationValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (handlers.setVariationValue) {
+      handlers.setVariationValue(e.target.value);
+    }
+  };
 
   // Type-safe tab change handler
   const handleTabChange = useCallback((value: string) => {
@@ -82,17 +117,76 @@ export function ExerciseDialog({
     }
     
     setFormError("");
-    onSubmit(exercise);
-  }, [exercise, onSubmit]);
+    
+    // Include variation fields in submission if there's a base exercise
+    const submissionData = {
+      ...exercise,
+      base_exercise_id: baseExercise?.id || exercise.base_exercise_id,
+    };
+    
+    onSubmit(submissionData);
+  }, [exercise, onSubmit, baseExercise]);
+
+  // Set base exercise ID when baseExercise prop changes
+  React.useEffect(() => {
+    if (baseExercise?.id && handlers.setBaseExerciseId) {
+      handlers.setBaseExerciseId(baseExercise.id);
+    }
+  }, [baseExercise, handlers]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-xl">
-            {mode === "add" ? "Add Exercise" : "Edit Exercise"}
+            {baseExercise ? 
+              `Add Variation for ${baseExercise.name}` : 
+              mode === "add" ? "Add Exercise" : "Edit Exercise"}
           </DialogTitle>
         </DialogHeader>
+
+        {/* Show variation info when creating a variation */}
+        {baseExercise && (
+          <Alert className="bg-purple-900/20 border-purple-800 mb-4">
+            <AlertCircle className="h-4 w-4 text-purple-300" />
+            <AlertDescription className="text-sm text-purple-100">
+              You're creating a variation of <span className="font-semibold">{baseExercise.name}</span>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Variation fields */}
+        {baseExercise && (
+          <div className="grid grid-cols-1 gap-4 mb-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="variation-type">Variation Type</Label>
+              <Select 
+                value={exercise.variation_type || ''} 
+                onValueChange={handleVariationTypeChange}
+              >
+                <SelectTrigger id="variation-type">
+                  <SelectValue placeholder="Select variation type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {VARIATION_TYPES.map(type => (
+                    <SelectItem key={type} value={type}>
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="variation-value">Variation Value</Label>
+              <Input
+                id="variation-value"
+                value={exercise.variation_value || ''}
+                onChange={handleVariationValueChange}
+                placeholder="e.g. Wide, 30°, Sumo, etc."
+              />
+            </div>
+          </div>
+        )}
 
         <Tabs
           value={activeTab}
@@ -149,7 +243,7 @@ export function ExerciseDialog({
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={loading}>
-            {loading ? "Saving..." : mode === "add" ? "Add Exercise" : "Update Exercise"}
+            {loading ? "Saving..." : baseExercise ? "Add Variation" : mode === "add" ? "Add Exercise" : "Update Exercise"}
           </Button>
         </DialogFooter>
       </DialogContent>

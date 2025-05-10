@@ -20,6 +20,10 @@ export interface ExerciseFormState {
   secondary_muscle_groups: any[];
   equipment_type: any[];
   metadata: Record<string, any>;
+  // Add variation fields
+  base_exercise_id?: string;
+  variation_type?: string;
+  variation_value?: string;
 }
 
 export interface ExerciseFormHandlers {
@@ -38,6 +42,10 @@ export interface ExerciseFormHandlers {
   removeVariation: (index: number) => void;
   setIsBodyweight: (isBodyweight: boolean) => void;
   setEstimatedLoadPercent: (percent: number) => void;
+  // Add variation handlers
+  setBaseExerciseId?: (id: string) => void;
+  setVariationType?: (type: string) => void;
+  setVariationValue?: (value: string) => void;
   reset: () => void;
 }
 
@@ -62,7 +70,11 @@ export const useExerciseFormState = (
     primary_muscle_groups: [],
     secondary_muscle_groups: [],
     equipment_type: [],
-    metadata: {}
+    metadata: {},
+    // Default values for variation fields
+    base_exercise_id: undefined,
+    variation_type: undefined,
+    variation_value: undefined
   });
 
   // Reset or seed form when initialExercise changes or dialog opens/closes
@@ -79,7 +91,11 @@ export const useExerciseFormState = (
         primary_muscle_groups: initialExercise.primary_muscle_groups || [],
         secondary_muscle_groups: initialExercise.secondary_muscle_groups || [],
         equipment_type: initialExercise.equipment_type || [],
-        metadata: initialExercise.metadata || {}
+        metadata: initialExercise.metadata || {},
+        // Include variation fields
+        base_exercise_id: initialExercise.base_exercise_id,
+        variation_type: initialExercise.variation_type,
+        variation_value: initialExercise.variation_value
       });
     } else {
       reset();
@@ -192,8 +208,25 @@ export const useExerciseFormState = (
       primary_muscle_groups: [],
       secondary_muscle_groups: [],
       equipment_type: [],
-      metadata: {}
+      metadata: {},
+      // Reset variation fields
+      base_exercise_id: undefined,
+      variation_type: undefined,
+      variation_value: undefined
     });
+  }, []);
+
+  // Add variation field handlers
+  const setBaseExerciseId = useCallback((id: string) => {
+    setExercise(ex => ({ ...ex, base_exercise_id: id }));
+  }, []);
+
+  const setVariationType = useCallback((type: string) => {
+    setExercise(ex => ({ ...ex, variation_type: type }));
+  }, []);
+
+  const setVariationValue = useCallback((value: string) => {
+    setExercise(ex => ({ ...ex, variation_value: value }));
   }, []);
 
   const handlers: ExerciseFormHandlers = {
@@ -212,6 +245,10 @@ export const useExerciseFormState = (
     removeVariation,
     setIsBodyweight,
     setEstimatedLoadPercent,
+    // Add variation handlers
+    setBaseExerciseId,
+    setVariationType,
+    setVariationValue,
     reset
   };
 
