@@ -127,6 +127,11 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
   // Filter exercises and get only base exercises (those without base_exercise_id)
   const filteredBaseExercises = filterExercises(exercises).filter(ex => !ex.base_exercise_id);
 
+  // Define these variables to fix the missing references
+  const suggestedExercises = filterExercises(exercises.filter(ex => !ex.base_exercise_id).slice(0, 20)); // Limit suggested to top 20 for better performance
+  const filteredRecent = filterExercises(recentExercises);
+  const filteredAll = filteredBaseExercises;  // Use the filtered base exercises for "all" exercises
+
   // Pagination logic specifically for base exercises
   const indexOfLastExercise = currentPage * exercisesPerPage;
   const indexOfFirstExercise = indexOfLastExercise - exercisesPerPage;
