@@ -69,10 +69,14 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
         base_exercise_id: exercise.base_exercise_id || undefined,
         variation_type: exercise.variation_type || undefined,
         variation_value: exercise.variation_value || undefined,
-        // Handle is_bodyweight from metadata if not directly available
-        is_bodyweight: exercise.is_bodyweight !== undefined ? Boolean(exercise.is_bodyweight) : false,
-        // Handle energy_cost_factor from metadata if not directly available
-        energy_cost_factor: exercise.energy_cost_factor !== undefined ? exercise.energy_cost_factor : 1
+        // Extract is_bodyweight from metadata if not directly available
+        is_bodyweight: exercise.metadata && 'is_bodyweight' in exercise.metadata 
+          ? Boolean(exercise.metadata.is_bodyweight) 
+          : false,
+        // Extract energy_cost_factor from metadata if not directly available
+        energy_cost_factor: exercise.metadata && 'energy_cost_factor' in exercise.metadata
+          ? Number(exercise.metadata.energy_cost_factor) 
+          : 1
       }));
     }
   });
