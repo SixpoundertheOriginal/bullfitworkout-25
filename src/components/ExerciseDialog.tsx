@@ -1,4 +1,4 @@
-// src/components/exercises/ExerciseDialog.tsx
+
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -54,6 +54,11 @@ interface ExerciseDialogProps {
     estimated_load_percent?: number;
     variant_category?: string;
     energy_cost_factor: number;
+    // Add the missing properties needed by AllExercisesPage
+    primary_muscle_groups: any[];
+    secondary_muscle_groups: any[];
+    equipment_type: any[];
+    metadata?: Record<string, any>;
   }) => void;
   initialExercise?: any;
   loading?: boolean;
@@ -67,6 +72,7 @@ export function ExerciseDialog({
   initialExercise,
   loading = false,
 }: ExerciseDialogProps) {
+  // Define a properly typed tab state to match what the Tabs component expects
   const [activeTab, setActiveTab] = useState<"basic" | "advanced" | "metrics" | "instructions">("basic");
   const [exercise, setExercise] = useState({
     name: "",
@@ -82,6 +88,11 @@ export function ExerciseDialog({
     variant_category: undefined as string | undefined,
     is_bodyweight: false,
     energy_cost_factor: 1,
+    // Initialize the missing properties
+    primary_muscle_groups: [] as any[],
+    secondary_muscle_groups: [] as any[],
+    equipment_type: [] as any[],
+    metadata: {} as Record<string, any>
   });
   const [newTip, setNewTip] = useState("");
   const [newVariation, setNewVariation] = useState("");
@@ -97,6 +108,11 @@ export function ExerciseDialog({
           steps: initialExercise.instructions?.steps ?? "",
           form: initialExercise.instructions?.form ?? "",
         },
+        // Ensure these properties exist even if not in initialExercise
+        primary_muscle_groups: initialExercise.primary_muscle_groups || [],
+        secondary_muscle_groups: initialExercise.secondary_muscle_groups || [],
+        equipment_type: initialExercise.equipment_type || [],
+        metadata: initialExercise.metadata || {}
       });
     } else {
       setExercise((ex) => ({
@@ -114,6 +130,11 @@ export function ExerciseDialog({
         variant_category: undefined,
         is_bodyweight: false,
         energy_cost_factor: 1,
+        // Reset the missing properties too
+        primary_muscle_groups: [],
+        secondary_muscle_groups: [],
+        equipment_type: [],
+        metadata: {}
       }));
     }
     setFormError("");
@@ -161,6 +182,14 @@ export function ExerciseDialog({
     onSubmit(exercise);
   };
 
+  // Create a type-safe handler for the Tabs component
+  const handleTabChange = (value: string) => {
+    // This ensures the value is one of our valid tab values
+    if (value === "basic" || value === "advanced" || value === "metrics" || value === "instructions") {
+      setActiveTab(value);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
@@ -172,7 +201,7 @@ export function ExerciseDialog({
 
         <Tabs
           value={activeTab}
-          onValueChange={setActiveTab}
+          onValueChange={handleTabChange}
           className="flex-1 flex flex-col overflow-hidden"
         >
           <TabsList className="grid grid-cols-4">

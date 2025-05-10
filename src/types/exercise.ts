@@ -23,7 +23,7 @@ export type EquipmentType =
   | 'resistance band' | 'smith machine' | 'box' | 'bench' | 'other';
 
 export type MovementPattern = 
-  | 'push' | 'pull' | 'squat' | 'hinge' | 'lunge' | 'rotation' | 'carry' | 'isometric';
+  | 'push' | 'pull' | 'squat' | 'hinge' | 'lunge' | 'rotation' | 'carry' | 'isometric' | 'locomotion';
 
 export type Difficulty = 'beginner' | 'intermediate' | 'advanced' | 'expert';
 
@@ -76,7 +76,7 @@ export const COMMON_EQUIPMENT: EquipmentType[] = [
 ];
 
 export const MOVEMENT_PATTERNS: MovementPattern[] = [
-  'push', 'pull', 'squat', 'hinge', 'lunge', 'rotation', 'carry', 'isometric'
+  'push', 'pull', 'squat', 'hinge', 'lunge', 'rotation', 'carry', 'isometric', 'locomotion'
 ];
 
 export const DIFFICULTY_LEVELS: Difficulty[] = [
