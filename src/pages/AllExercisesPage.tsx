@@ -366,36 +366,6 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
     );
   };
 
-  const handleAdd = () => {
-    setExerciseToEdit(null);
-    setDialogMode("add");
-    setShowDialog(true);
-  };
-
-  const handleEdit = (exercise: Exercise) => {
-    setExerciseToEdit(exercise);
-    setDialogMode("edit");
-    setShowDialog(true);
-  };
-  
-  const handleDelete = (exercise: Exercise) => {
-    setExerciseToDelete(exercise);
-    setDeleteConfirmOpen(true);
-  };
-  
-  const confirmDelete = async () => {
-    if (!exerciseToDelete) return;
-    
-    // Here we would actually delete the exercise
-    toast({
-      title: "Exercise deleted",
-      description: `${exerciseToDelete.name} has been removed from your library`,
-    });
-    
-    setDeleteConfirmOpen(false);
-    setExerciseToDelete(null);
-  };
-
   return (
     <div className={`${standalone ? 'pt-16 pb-24' : ''} h-full overflow-hidden flex flex-col`}>
       {standalone && <PageHeader title="Exercise Library" />}
@@ -696,3 +666,4 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
     </div>
   );
 }
+
