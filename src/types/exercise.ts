@@ -1,3 +1,4 @@
+
 export interface ExerciseSet {
   id: string;
   weight: number;
@@ -62,6 +63,24 @@ export interface Exercise {
   is_isometric?: boolean; // Flag to identify isometric exercises
   is_bodyweight?: boolean; // Flag for bodyweight exercises
   energy_cost_factor?: number; // Relative energy expenditure factor
+
+  /**
+   * Reference to the base exercise ID if this exercise is a variation
+   * For example, "Incline Bench Press" would reference "Bench Press" as its base
+   */
+  base_exercise_id?: string;
+
+  /**
+   * Categorizes the type of variation (e.g., 'grip', 'angle', 'stance', 'equipment')
+   * Helps group similar variation types together for filtering and analysis
+   */
+  variation_type?: string;
+
+  /**
+   * Specific value for the variation type (e.g., 'wide', '30-degree', 'sumo', 'kettlebell')
+   * Provides detailed information about how this exercise varies from its base exercise
+   */
+  variation_value?: string;
 }
 
 export const COMMON_MUSCLE_GROUPS: MuscleGroup[] = [
