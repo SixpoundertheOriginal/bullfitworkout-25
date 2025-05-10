@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Exercise, MuscleGroup, EquipmentType, MovementPattern, Difficulty } from '@/types/exercise';
@@ -15,7 +16,7 @@ type ExerciseInput = {
   name: string;
   description: string;
   user_id: string;
-  primary_muscle_groups: MuscleGroup[];
+  primary_muscle_groups: string[];
   secondary_muscle_groups: MuscleGroup[];
   equipment_type: EquipmentType[];
   movement_pattern: MovementPattern;

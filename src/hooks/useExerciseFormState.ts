@@ -16,9 +16,9 @@ export interface ExerciseFormState {
   variant_category: string | undefined;
   is_bodyweight: boolean;
   energy_cost_factor: number;
-  primary_muscle_groups: any[];
-  secondary_muscle_groups: any[];
-  equipment_type: any[];
+  primary_muscle_groups: string[];
+  secondary_muscle_groups: string[];
+  equipment_type: string[];
   metadata: Record<string, any>;
   // Add variation fields
   base_exercise_id?: string;
@@ -42,6 +42,9 @@ export interface ExerciseFormHandlers {
   removeVariation: (index: number) => void;
   setIsBodyweight: (isBodyweight: boolean) => void;
   setEstimatedLoadPercent: (percent: number) => void;
+  setPrimaryMuscleGroups: (groups: string[]) => void;
+  setSecondaryMuscleGroups: (groups: string[]) => void;
+  setEquipmentType: (types: string[]) => void;
   // Add variation handlers
   setBaseExerciseId?: (id: string) => void;
   setVariationType?: (type: string) => void;
@@ -190,6 +193,18 @@ export const useExerciseFormState = (
     setExercise(ex => ({ ...ex, estimated_load_percent: percent }));
   }, []);
 
+  const setPrimaryMuscleGroups = useCallback((groups: string[]) => {
+    setExercise(ex => ({ ...ex, primary_muscle_groups: groups }));
+  }, []);
+
+  const setSecondaryMuscleGroups = useCallback((groups: string[]) => {
+    setExercise(ex => ({ ...ex, secondary_muscle_groups: groups }));
+  }, []);
+
+  const setEquipmentType = useCallback((types: string[]) => {
+    setExercise(ex => ({ ...ex, equipment_type: types }));
+  }, []);
+
   const reset = useCallback(() => {
     setExercise({
       name: '',
@@ -245,6 +260,9 @@ export const useExerciseFormState = (
     removeVariation,
     setIsBodyweight,
     setEstimatedLoadPercent,
+    setPrimaryMuscleGroups,
+    setSecondaryMuscleGroups,
+    setEquipmentType,
     // Add variation handlers
     setBaseExerciseId,
     setVariationType,

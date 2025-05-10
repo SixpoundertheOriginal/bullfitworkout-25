@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from "react";
 import {
   Dialog,
@@ -50,9 +51,9 @@ interface ExerciseDialogProps {
     variation_type?: string;
     variation_value?: string;
     // The missing properties needed by AllExercisesPage
-    primary_muscle_groups: any[];
-    secondary_muscle_groups: any[];
-    equipment_type: any[];
+    primary_muscle_groups: string[];
+    secondary_muscle_groups: string[];
+    equipment_type: string[];
     metadata?: Record<string, any>;
   }) => void;
   initialExercise?: any;
@@ -112,6 +113,11 @@ export function ExerciseDialog({
   const handleSubmit = useCallback(() => {
     if (!exercise.name.trim()) {
       setFormError("Exercise name is required");
+      return;
+    }
+    
+    if (!exercise.primary_muscle_groups || exercise.primary_muscle_groups.length === 0) {
+      setFormError("At least one primary muscle group is required");
       return;
     }
     
@@ -205,6 +211,8 @@ export function ExerciseDialog({
                 exercise={exercise}
                 onChangeName={handlers.setName}
                 onChangeDescription={handlers.setDescription}
+                onChangePrimaryMuscleGroups={handlers.setPrimaryMuscleGroups}
+                formError={formError}
               />
             </TabsContent>
 
