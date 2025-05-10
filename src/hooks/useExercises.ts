@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Exercise, MuscleGroup, EquipmentType, MovementPattern, Difficulty } from '@/types/exercise';
@@ -16,9 +15,9 @@ type ExerciseInput = {
   name: string;
   description: string;
   user_id: string;
-  primary_muscle_groups: string[];
-  secondary_muscle_groups: MuscleGroup[];
-  equipment_type: EquipmentType[];
+  primary_muscle_groups: MuscleGroup[] | string[];
+  secondary_muscle_groups: MuscleGroup[] | string[];
+  equipment_type: EquipmentType[] | string[];
   movement_pattern: MovementPattern;
   difficulty: Difficulty;
   instructions?: Record<string, any>;
@@ -30,6 +29,8 @@ type ExerciseInput = {
   base_exercise_id?: string;
   variation_type?: string;
   variation_value?: string;
+  is_bodyweight?: boolean;
+  energy_cost_factor?: number;
 };
 
 type ExerciseUpdateInput = Partial<Omit<ExerciseInput, 'created_at'>> & { id: string };
@@ -68,6 +69,8 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
         base_exercise_id: exercise.base_exercise_id || undefined,
         variation_type: exercise.variation_type || undefined,
         variation_value: exercise.variation_value || undefined,
+        is_bodyweight: exercise.is_bodyweight || false,
+        energy_cost_factor: exercise.energy_cost_factor || 1
       }));
     }
   });
@@ -99,7 +102,9 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
           is_custom: true,
           base_exercise_id: newExercise.base_exercise_id || null,
           variation_type: newExercise.variation_type || null,
-          variation_value: newExercise.variation_value || null
+          variation_value: newExercise.variation_value || null,
+          is_bodyweight: Boolean(newExercise.is_bodyweight),
+          energy_cost_factor: newExercise.energy_cost_factor || 1
         }])
         .select();
 

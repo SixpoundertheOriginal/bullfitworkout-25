@@ -47,11 +47,10 @@ export const ExerciseDialogBasic = React.memo(function ExerciseDialogBasic({
       
       <div className="mt-4">
         <Label htmlFor="primary-muscle-groups" className="flex">
-          Primary Muscle Groups* 
+          Primary Muscle Groups
           <span className="text-red-500 ml-1">*</span>
         </Label>
         <MultiSelect
-          id="primary-muscle-groups"
           options={muscleGroupOptions}
           selected={exercise.primary_muscle_groups}
           onChange={onChangePrimaryMuscleGroups || (() => {})}

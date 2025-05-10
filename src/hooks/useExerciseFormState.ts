@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { MovementPattern, Difficulty } from '@/types/exercise';
+import { MovementPattern, Difficulty, MuscleGroup } from '@/types/exercise';
 
 // Define the exercise state type
 export interface ExerciseFormState {

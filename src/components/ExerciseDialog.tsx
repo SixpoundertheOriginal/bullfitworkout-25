@@ -15,7 +15,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MovementPattern, Difficulty, Exercise } from "@/types/exercise";
+import { MovementPattern, Difficulty, Exercise, MuscleGroup } from "@/types/exercise";
 import { useExerciseFormState, ExerciseFormState } from "@/hooks/useExerciseFormState";
 import { ExerciseDialogBasic } from "@/components/exercises/ExerciseDialog/ExerciseDialogBasic";
 import { ExerciseDialogAdvanced } from "@/components/exercises/ExerciseDialog/ExerciseDialogAdvanced";
@@ -31,7 +31,7 @@ interface ExerciseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode: "add" | "edit";
-  baseExercise?: Exercise; // New prop for variation parent
+  baseExercise?: Exercise; // Prop for variation parent
   onSubmit: (exercise: {
     name: string;
     description: string;
@@ -50,9 +50,9 @@ interface ExerciseDialogProps {
     base_exercise_id?: string;
     variation_type?: string;
     variation_value?: string;
-    // The missing properties needed by AllExercisesPage
-    primary_muscle_groups: string[];
-    secondary_muscle_groups: string[];
+    // The required properties needed by AllExercisesPage
+    primary_muscle_groups: MuscleGroup[];
+    secondary_muscle_groups: MuscleGroup[];
     equipment_type: string[];
     metadata?: Record<string, any>;
   }) => void;
@@ -127,6 +127,9 @@ export function ExerciseDialog({
     const submissionData = {
       ...exercise,
       base_exercise_id: baseExercise?.id || exercise.base_exercise_id,
+      // Ensure the primary_muscle_groups are cast to MuscleGroup[] for the onSubmit
+      primary_muscle_groups: exercise.primary_muscle_groups as MuscleGroup[],
+      secondary_muscle_groups: (exercise.secondary_muscle_groups || []) as MuscleGroup[]
     };
     
     onSubmit(submissionData);
