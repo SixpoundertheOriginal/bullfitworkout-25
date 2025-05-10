@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,9 +8,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import {
   Tabs,
   TabsContent,
@@ -18,23 +15,12 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Slider } from "@/components/ui/slider";
-import {
-  MovementPattern,
-  Difficulty,
-  MOVEMENT_PATTERNS,
-  DIFFICULTY_LEVELS,
-} from "@/constants/exerciseMetadata";
+import { MovementPattern, Difficulty } from "@/constants/exerciseMetadata";
+import { useExerciseFormState, ExerciseFormState } from "@/hooks/useExerciseFormState";
+import { ExerciseDialogBasic } from "@/components/exercises/ExerciseDialog/ExerciseDialogBasic";
+import { ExerciseDialogAdvanced } from "@/components/exercises/ExerciseDialog/ExerciseDialogAdvanced";
+import { ExerciseDialogMetrics } from "@/components/exercises/ExerciseDialog/ExerciseDialogMetrics";
+import { ExerciseDialogInstructions } from "@/components/exercises/ExerciseDialog/ExerciseDialogInstructions";
 
 interface ExerciseDialogProps {
   open: boolean;
@@ -54,7 +40,7 @@ interface ExerciseDialogProps {
     estimated_load_percent?: number;
     variant_category?: string;
     energy_cost_factor: number;
-    // Add the missing properties needed by AllExercisesPage
+    // The missing properties needed by AllExercisesPage
     primary_muscle_groups: any[];
     secondary_muscle_groups: any[];
     equipment_type: any[];
@@ -72,123 +58,32 @@ export function ExerciseDialog({
   initialExercise,
   loading = false,
 }: ExerciseDialogProps) {
-  // Define a properly typed tab state to match what the Tabs component expects
+  // State for the active tab
   const [activeTab, setActiveTab] = useState<"basic" | "advanced" | "metrics" | "instructions">("basic");
-  const [exercise, setExercise] = useState({
-    name: "",
-    description: "",
-    movement_pattern: "push" as MovementPattern,
-    difficulty: "beginner" as Difficulty,
-    instructions: { steps: "", form: "" },
-    is_compound: false,
-    tips: [] as string[],
-    variations: [] as string[],
-    loading_type: undefined as string | undefined,
-    estimated_load_percent: undefined as number | undefined,
-    variant_category: undefined as string | undefined,
-    is_bodyweight: false,
-    energy_cost_factor: 1,
-    // Initialize the missing properties
-    primary_muscle_groups: [] as any[],
-    secondary_muscle_groups: [] as any[],
-    equipment_type: [] as any[],
-    metadata: {} as Record<string, any>
-  });
-  const [newTip, setNewTip] = useState("");
-  const [newVariation, setNewVariation] = useState("");
+  
+  // State for form errors
   const [formError, setFormError] = useState("");
+  
+  // Use our custom hook for form state management
+  const [exercise, handlers] = useExerciseFormState(initialExercise, open);
 
-  // reset or seed form
-  useEffect(() => {
-    if (initialExercise) {
-      setExercise({
-        ...exercise,
-        ...initialExercise,
-        instructions: {
-          steps: initialExercise.instructions?.steps ?? "",
-          form: initialExercise.instructions?.form ?? "",
-        },
-        // Ensure these properties exist even if not in initialExercise
-        primary_muscle_groups: initialExercise.primary_muscle_groups || [],
-        secondary_muscle_groups: initialExercise.secondary_muscle_groups || [],
-        equipment_type: initialExercise.equipment_type || [],
-        metadata: initialExercise.metadata || {}
-      });
-    } else {
-      setExercise((ex) => ({
-        ...ex,
-        name: "",
-        description: "",
-        movement_pattern: "push",
-        difficulty: "beginner",
-        instructions: { steps: "", form: "" },
-        is_compound: false,
-        tips: [],
-        variations: [],
-        loading_type: undefined,
-        estimated_load_percent: undefined,
-        variant_category: undefined,
-        is_bodyweight: false,
-        energy_cost_factor: 1,
-        // Reset the missing properties too
-        primary_muscle_groups: [],
-        secondary_muscle_groups: [],
-        equipment_type: [],
-        metadata: {}
-      }));
+  // Type-safe tab change handler
+  const handleTabChange = useCallback((value: string) => {
+    if (value === "basic" || value === "advanced" || value === "metrics" || value === "instructions") {
+      setActiveTab(value);
     }
-    setFormError("");
-    setActiveTab("basic");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialExercise, open]);
+  }, []);
 
-  // keep bodyweight flag in sync
-  useEffect(() => {
-    if (exercise.is_bodyweight) {
-      setExercise((ex) => ({ ...ex, is_bodyweight: true }));
-    }
-  }, [exercise.is_bodyweight]);
-
-  const addTip = () => {
-    if (newTip.trim()) {
-      setExercise((ex) => ({ ...ex, tips: [...ex.tips, newTip.trim()] }));
-      setNewTip("");
-    }
-  };
-  const removeTip = (i: number) =>
-    setExercise((ex) => ({ ...ex, tips: ex.tips.filter((_, idx) => idx !== i) }));
-
-  const addVariation = () => {
-    if (newVariation.trim()) {
-      setExercise((ex) => ({
-        ...ex,
-        variations: [...ex.variations, newVariation.trim()],
-      }));
-      setNewVariation("");
-    }
-  };
-  const removeVariation = (i: number) =>
-    setExercise((ex) => ({
-      ...ex,
-      variations: ex.variations.filter((_, idx) => idx !== i),
-    }));
-
-  const handleSubmit = () => {
+  // Form submission handler
+  const handleSubmit = useCallback(() => {
     if (!exercise.name.trim()) {
       setFormError("Exercise name is required");
       return;
     }
-    // no other validations since we removed muscle/equipment
+    
+    setFormError("");
     onSubmit(exercise);
-  };
-
-  // Create a type-safe handler for the Tabs component
-  const handleTabChange = (value: string) => {
-    // This ensures the value is one of our valid tab values
-    if (value === "basic" || value === "advanced" || value === "metrics" || value === "instructions") {
-      setActiveTab(value);
-    }
-  };
+  }, [exercise, onSubmit]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -212,151 +107,37 @@ export function ExerciseDialog({
           </TabsList>
 
           <ScrollArea className="flex-1 overflow-auto mt-2 p-2 space-y-4">
-            {/* BASIC */}
             <TabsContent value="basic">
-              <div>
-                <Label htmlFor="name">Exercise Name*</Label>
-                <Input
-                  id="name"
-                  placeholder="e.g. Bench Press"
-                  value={exercise.name}
-                  onChange={(e) => setExercise({ ...exercise, name: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Brief description…"
-                  value={exercise.description}
-                  onChange={(e) =>
-                    setExercise({ ...exercise, description: e.target.value })
-                  }
-                  className="min-h-[100px]"
-                />
-              </div>
+              <ExerciseDialogBasic 
+                exercise={exercise}
+                onChangeName={handlers.setName}
+                onChangeDescription={handlers.setDescription}
+              />
             </TabsContent>
 
-            {/* ADVANCED */}
             <TabsContent value="advanced">
-              <div>
-                <Label htmlFor="difficulty">Difficulty</Label>
-                <Select
-                  value={exercise.difficulty}
-                  onValueChange={(v) =>
-                    setExercise({ ...exercise, difficulty: v as Difficulty })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select difficulty" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DIFFICULTY_LEVELS.map((lvl) => (
-                      <SelectItem key={lvl} value={lvl}>
-                        {lvl}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="movement">Movement Pattern</Label>
-                <Select
-                  value={exercise.movement_pattern}
-                  onValueChange={(v) =>
-                    setExercise({ ...exercise, movement_pattern: v as MovementPattern })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select movement" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MOVEMENT_PATTERNS.map((m) => (
-                      <SelectItem key={m} value={m}>
-                        {m}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="is_compound"
-                  checked={exercise.is_compound}
-                  onCheckedChange={(c) =>
-                    setExercise({ ...exercise, is_compound: c as boolean })
-                  }
-                />
-                <Label htmlFor="is_compound">Compound exercise</Label>
-              </div>
+              <ExerciseDialogAdvanced 
+                exercise={exercise}
+                onChangeDifficulty={handlers.setDifficulty}
+                onChangeMovement={handlers.setMovementPattern}
+                onToggleCompound={handlers.setIsCompound}
+              />
             </TabsContent>
 
-            {/* METRICS */}
             <TabsContent value="metrics">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="is_bodyweight"
-                  checked={exercise.is_bodyweight}
-                  onCheckedChange={(c) =>
-                    setExercise({ ...exercise, is_bodyweight: c as boolean })
-                  }
-                />
-                <Label htmlFor="is_bodyweight">Bodyweight exercise</Label>
-              </div>
-              {exercise.is_bodyweight && (
-                <div>
-                  <Label htmlFor="estimated_load_percent">
-                    Estimated Body Load (%)
-                  </Label>
-                  <div className="flex items-center space-x-4">
-                    <Slider
-                      defaultValue={[exercise.estimated_load_percent ?? 65]}
-                      min={10}
-                      max={100}
-                      step={5}
-                      onValueChange={(v) =>
-                        setExercise({ ...exercise, estimated_load_percent: v[0] })
-                      }
-                      className="flex-1"
-                    />
-                    <span className="w-16 text-center">
-                      {exercise.estimated_load_percent ?? 65}%
-                    </span>
-                  </div>
-                </div>
-              )}
+              <ExerciseDialogMetrics 
+                exercise={exercise}
+                onToggleBodyweight={handlers.setIsBodyweight}
+                onChangeLoadPercent={handlers.setEstimatedLoadPercent}
+              />
             </TabsContent>
 
-            {/* INSTRUCTIONS */}
             <TabsContent value="instructions">
-              <div>
-                <Label>Exercise Instructions</Label>
-                <Textarea
-                  placeholder="Step-by-step instructions…"
-                  value={exercise.instructions.steps}
-                  onChange={(e) =>
-                    setExercise({
-                      ...exercise,
-                      instructions: { ...exercise.instructions, steps: e.target.value },
-                    })
-                  }
-                  className="min-h-[200px]"
-                />
-              </div>
-              <div>
-                <Label>Form Cues</Label>
-                <Textarea
-                  placeholder="Form cues…"
-                  value={exercise.instructions.form}
-                  onChange={(e) =>
-                    setExercise({
-                      ...exercise,
-                      instructions: { ...exercise.instructions, form: e.target.value },
-                    })
-                  }
-                  className="min-h-[100px]"
-                />
-              </div>
+              <ExerciseDialogInstructions 
+                exercise={exercise}
+                onChangeSteps={handlers.setInstructionsSteps}
+                onChangeForm={handlers.setInstructionsForm}
+              />
             </TabsContent>
           </ScrollArea>
         </Tabs>

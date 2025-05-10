@@ -1,0 +1,219 @@
+import { useState, useEffect, useCallback } from 'react';
+import { MovementPattern, Difficulty } from '@/types/exercise';
+
+// Define the exercise state type
+export interface ExerciseFormState {
+  name: string;
+  description: string;
+  movement_pattern: MovementPattern;
+  difficulty: Difficulty;
+  instructions: { steps: string; form: string };
+  is_compound: boolean;
+  tips: string[];
+  variations: string[];
+  loading_type: string | undefined;
+  estimated_load_percent: number | undefined;
+  variant_category: string | undefined;
+  is_bodyweight: boolean;
+  energy_cost_factor: number;
+  primary_muscle_groups: any[];
+  secondary_muscle_groups: any[];
+  equipment_type: any[];
+  metadata: Record<string, any>;
+}
+
+export interface ExerciseFormHandlers {
+  setName: (name: string) => void;
+  setDescription: (description: string) => void;
+  setMovementPattern: (pattern: MovementPattern) => void;
+  setDifficulty: (difficulty: Difficulty) => void;
+  setInstructionsSteps: (steps: string) => void;
+  setInstructionsForm: (form: string) => void;
+  setIsCompound: (isCompound: boolean) => void;
+  setTips: (tips: string[]) => void;
+  addTip: (tip: string) => void;
+  removeTip: (index: number) => void;
+  setVariations: (variations: string[]) => void;
+  addVariation: (variation: string) => void;
+  removeVariation: (index: number) => void;
+  setIsBodyweight: (isBodyweight: boolean) => void;
+  setEstimatedLoadPercent: (percent: number) => void;
+  reset: () => void;
+}
+
+export const useExerciseFormState = (
+  initialExercise?: Partial<ExerciseFormState>,
+  open = false
+): [ExerciseFormState, ExerciseFormHandlers] => {
+  const [exercise, setExercise] = useState<ExerciseFormState>({
+    name: '',
+    description: '',
+    movement_pattern: 'push',
+    difficulty: 'beginner',
+    instructions: { steps: '', form: '' },
+    is_compound: false,
+    tips: [],
+    variations: [],
+    loading_type: undefined,
+    estimated_load_percent: undefined,
+    variant_category: undefined,
+    is_bodyweight: false,
+    energy_cost_factor: 1,
+    primary_muscle_groups: [],
+    secondary_muscle_groups: [],
+    equipment_type: [],
+    metadata: {}
+  });
+
+  // Reset or seed form when initialExercise changes or dialog opens/closes
+  useEffect(() => {
+    if (initialExercise) {
+      setExercise({
+        ...exercise,
+        ...initialExercise,
+        instructions: {
+          steps: initialExercise.instructions?.steps ?? '',
+          form: initialExercise.instructions?.form ?? '',
+        },
+        // Ensure these properties exist even if not in initialExercise
+        primary_muscle_groups: initialExercise.primary_muscle_groups || [],
+        secondary_muscle_groups: initialExercise.secondary_muscle_groups || [],
+        equipment_type: initialExercise.equipment_type || [],
+        metadata: initialExercise.metadata || {}
+      });
+    } else {
+      reset();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialExercise, open]);
+
+  // keep bodyweight flag in sync
+  useEffect(() => {
+    if (exercise.is_bodyweight) {
+      setExercise((ex) => ({ ...ex, is_bodyweight: true }));
+    }
+  }, [exercise.is_bodyweight]);
+
+  // Define handlers with useCallback to avoid recreating them on each render
+  const setName = useCallback((name: string) => {
+    setExercise(ex => ({ ...ex, name }));
+  }, []);
+
+  const setDescription = useCallback((description: string) => {
+    setExercise(ex => ({ ...ex, description }));
+  }, []);
+
+  const setMovementPattern = useCallback((movement_pattern: MovementPattern) => {
+    setExercise(ex => ({ ...ex, movement_pattern }));
+  }, []);
+
+  const setDifficulty = useCallback((difficulty: Difficulty) => {
+    setExercise(ex => ({ ...ex, difficulty }));
+  }, []);
+
+  const setInstructionsSteps = useCallback((steps: string) => {
+    setExercise(ex => ({ 
+      ...ex, 
+      instructions: { ...ex.instructions, steps } 
+    }));
+  }, []);
+
+  const setInstructionsForm = useCallback((form: string) => {
+    setExercise(ex => ({ 
+      ...ex, 
+      instructions: { ...ex.instructions, form } 
+    }));
+  }, []);
+
+  const setIsCompound = useCallback((is_compound: boolean) => {
+    setExercise(ex => ({ ...ex, is_compound }));
+  }, []);
+
+  const setTips = useCallback((tips: string[]) => {
+    setExercise(ex => ({ ...ex, tips }));
+  }, []);
+
+  const addTip = useCallback((tip: string) => {
+    if (tip.trim()) {
+      setExercise(ex => ({ ...ex, tips: [...ex.tips, tip.trim()] }));
+    }
+  }, []);
+
+  const removeTip = useCallback((index: number) => {
+    setExercise(ex => ({ 
+      ...ex, 
+      tips: ex.tips.filter((_, i) => i !== index) 
+    }));
+  }, []);
+
+  const setVariations = useCallback((variations: string[]) => {
+    setExercise(ex => ({ ...ex, variations }));
+  }, []);
+
+  const addVariation = useCallback((variation: string) => {
+    if (variation.trim()) {
+      setExercise(ex => ({ 
+        ...ex, 
+        variations: [...ex.variations, variation.trim()] 
+      }));
+    }
+  }, []);
+
+  const removeVariation = useCallback((index: number) => {
+    setExercise(ex => ({ 
+      ...ex, 
+      variations: ex.variations.filter((_, i) => i !== index) 
+    }));
+  }, []);
+
+  const setIsBodyweight = useCallback((is_bodyweight: boolean) => {
+    setExercise(ex => ({ ...ex, is_bodyweight }));
+  }, []);
+
+  const setEstimatedLoadPercent = useCallback((percent: number) => {
+    setExercise(ex => ({ ...ex, estimated_load_percent: percent }));
+  }, []);
+
+  const reset = useCallback(() => {
+    setExercise({
+      name: '',
+      description: '',
+      movement_pattern: 'push',
+      difficulty: 'beginner',
+      instructions: { steps: '', form: '' },
+      is_compound: false,
+      tips: [],
+      variations: [],
+      loading_type: undefined,
+      estimated_load_percent: undefined,
+      variant_category: undefined,
+      is_bodyweight: false,
+      energy_cost_factor: 1,
+      primary_muscle_groups: [],
+      secondary_muscle_groups: [],
+      equipment_type: [],
+      metadata: {}
+    });
+  }, []);
+
+  const handlers: ExerciseFormHandlers = {
+    setName,
+    setDescription,
+    setMovementPattern,
+    setDifficulty,
+    setInstructionsSteps,
+    setInstructionsForm,
+    setIsCompound,
+    setTips,
+    addTip,
+    removeTip,
+    setVariations,
+    addVariation,
+    removeVariation,
+    setIsBodyweight,
+    setEstimatedLoadPercent,
+    reset
+  };
+
+  return [exercise, handlers];
+};
