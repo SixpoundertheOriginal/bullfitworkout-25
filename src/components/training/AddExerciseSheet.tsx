@@ -42,6 +42,7 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
     
     // Get unique exercise names from recent workouts
     workouts.slice(0, 8).forEach(workout => {
+      if (!workout) return;
       const exerciseNames = new Set<string>();
       
       if (Array.isArray(workout?.exerciseSets)) {
@@ -105,7 +106,7 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
   const renderExerciseCard = (exercise: Exercise) => {
     if (!exercise || !Array.isArray(exercise.primary_muscle_groups)) return null;
     
-    const muscleGroups = exercise.primary_muscle_groups.slice(0, 2).join(', ');
+    const muscleGroups = (exercise.primary_muscle_groups || []).slice(0, 2).join(', ');
     
     return (
       <div key={exercise.id} className="flex items-center justify-between p-3 mb-2 bg-gray-800/50 rounded-lg border border-gray-700/50">

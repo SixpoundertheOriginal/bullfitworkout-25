@@ -10,7 +10,7 @@ export function useExerciseSuggestions(trainingType: string = "") {
     if (!exercises || !Array.isArray(exercises) || !exercises?.length) return [];
 
     // Filter exercises based on training type
-    let filtered = [...exercises].filter(Boolean); // Ensure no undefined/null values
+    let filtered = [...(exercises || [])].filter(Boolean); // Ensure no undefined/null values
     
     if (trainingType?.toLowerCase() === "strength") {
       filtered = filtered.filter(e => 

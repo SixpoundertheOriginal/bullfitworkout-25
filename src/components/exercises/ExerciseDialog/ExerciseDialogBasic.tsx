@@ -23,7 +23,7 @@ export const ExerciseDialogBasic = React.memo(function ExerciseDialogBasic({
   formError
 }: ExerciseDialogBasicProps) {
   // Convert muscle groups to options format required by MultiSelect
-  const muscleGroupOptions = COMMON_MUSCLE_GROUPS.map(group => ({
+  const muscleGroupOptions = (COMMON_MUSCLE_GROUPS || []).map(group => ({
     label: group.charAt(0).toUpperCase() + group.slice(1), // Capitalize first letter
     value: group
   }));
@@ -52,7 +52,7 @@ export const ExerciseDialogBasic = React.memo(function ExerciseDialogBasic({
         </Label>
         <MultiSelect
           options={muscleGroupOptions}
-          selected={exercise.primary_muscle_groups}
+          selected={exercise.primary_muscle_groups || []}
           onChange={onChangePrimaryMuscleGroups || (() => {})}
           placeholder="Select primary muscles worked"
           className={`${isPrimaryMuscleGroupsError ? 'border-red-500' : ''}`}
