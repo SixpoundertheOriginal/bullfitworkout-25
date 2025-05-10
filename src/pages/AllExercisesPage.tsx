@@ -214,14 +214,19 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
     description: string;
     primary_muscle_groups: MuscleGroup[];
     secondary_muscle_groups: MuscleGroup[];
-    equipment_type: EquipmentType[];
+    equipment_type: string[];
     movement_pattern: MovementPattern;
     difficulty: Difficulty;
-    instructions?: Record<string, any>;
+    instructions?: { steps: string; form: string };
     is_compound?: boolean;
     tips?: string[];
     variations?: string[];
     metadata?: Record<string, any>;
+    is_bodyweight?: boolean;
+    energy_cost_factor?: number;
+    base_exercise_id?: string;
+    variation_type?: string;
+    variation_value?: string;
   }) => {
     if (dialogMode === "add") {
       await new Promise(resolve => setTimeout(resolve, 350));
@@ -230,6 +235,10 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
           {
             ...exercise,
             user_id: "",
+            // Ensure these are properly cast to the expected types
+            primary_muscle_groups: exercise.primary_muscle_groups as MuscleGroup[],
+            secondary_muscle_groups: exercise.secondary_muscle_groups as MuscleGroup[],
+            equipment_type: exercise.equipment_type as EquipmentType[]
           },
           {
             onSuccess: () => resolve(),

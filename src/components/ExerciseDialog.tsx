@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from "react";
 import {
   Dialog,
@@ -39,13 +38,13 @@ interface ExerciseDialogProps {
     difficulty: Difficulty;
     instructions: { steps: string; form: string };
     is_compound: boolean;
-    is_bodyweight: boolean;
     tips: string[];
     variations: string[];
     loading_type?: string;
     estimated_load_percent?: number;
     variant_category?: string;
     energy_cost_factor: number;
+    is_bodyweight: boolean;
     // Variation fields
     base_exercise_id?: string;
     variation_type?: string;

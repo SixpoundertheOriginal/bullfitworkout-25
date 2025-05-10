@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ExerciseFormState } from '@/hooks/useExerciseFormState';
 import { MultiSelect } from '@/components/MultiSelect';
-import { COMMON_MUSCLE_GROUPS } from '@/types/exercise';
+import { COMMON_MUSCLE_GROUPS, MuscleGroup } from '@/types/exercise';
 
 interface ExerciseDialogBasicProps {
   exercise: ExerciseFormState;
