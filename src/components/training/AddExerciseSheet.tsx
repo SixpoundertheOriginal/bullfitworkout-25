@@ -65,21 +65,25 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
 
   // Filter exercises based on search query
   const filteredSuggested = React.useMemo(() => {
-    if (!suggestedExercises?.length) return [];
+    if (!Array.isArray(suggestedExercises)) return [];
+    
     return searchQuery
       ? suggestedExercises.filter(e => 
-          e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (e.primary_muscle_groups && e.primary_muscle_groups.some(m => m.toLowerCase().includes(searchQuery.toLowerCase())))
+          e && e.name && e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (e && e.primary_muscle_groups && Array.isArray(e.primary_muscle_groups) && 
+           e.primary_muscle_groups.some(m => m && m.toLowerCase().includes(searchQuery.toLowerCase())))
         )
       : suggestedExercises;
   }, [suggestedExercises, searchQuery]);
 
   const filteredRecent = React.useMemo(() => {
-    if (!recentExercises?.length) return [];
+    if (!Array.isArray(recentExercises)) return [];
+    
     return searchQuery
       ? recentExercises.filter(e => 
-          e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (e.primary_muscle_groups && e.primary_muscle_groups.some(m => m.toLowerCase().includes(searchQuery.toLowerCase())))
+          e && e.name && e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (e && e.primary_muscle_groups && Array.isArray(e.primary_muscle_groups) && 
+           e.primary_muscle_groups.some(m => m && m.toLowerCase().includes(searchQuery.toLowerCase())))
         )
       : recentExercises;
   }, [recentExercises, searchQuery]);
@@ -99,7 +103,7 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
   };
 
   const renderExerciseCard = (exercise: Exercise) => {
-    if (!exercise || !exercise.primary_muscle_groups) return null;
+    if (!exercise || !exercise.primary_muscle_groups || !Array.isArray(exercise.primary_muscle_groups)) return null;
     
     const muscleGroups = exercise.primary_muscle_groups.slice(0, 2).join(', ');
     
@@ -177,8 +181,8 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
               
               <TabsContent value="suggested" className="mt-0 flex-1 overflow-auto">
                 <div className="overflow-y-auto max-h-[calc(80vh-170px)]">
-                  {filteredSuggested.length > 0 ? (
-                    filteredSuggested.map(renderExerciseCard)
+                  {filteredSuggested && filteredSuggested.length > 0 ? (
+                    filteredSuggested.map(exercise => exercise ? renderExerciseCard(exercise) : null)
                   ) : (
                     <div className="text-center py-6 text-gray-400">
                       No suggested exercises found
@@ -189,8 +193,8 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
               
               <TabsContent value="recent" className="mt-0 flex-1 overflow-auto">
                 <div className="overflow-y-auto max-h-[calc(80vh-170px)]">
-                  {filteredRecent.length > 0 ? (
-                    filteredRecent.map(renderExerciseCard)
+                  {filteredRecent && filteredRecent.length > 0 ? (
+                    filteredRecent.map(exercise => exercise ? renderExerciseCard(exercise) : null)
                   ) : (
                     <div className="text-center py-6 text-gray-400">
                       No recent exercises found

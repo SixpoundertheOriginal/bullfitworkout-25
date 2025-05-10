@@ -28,17 +28,22 @@ export function MinimalisticExerciseSelect({
   trainingType = "",
   className
 }: MinimalisticExerciseSelectProps) {
-  // Take the first 3 recent exercises
-  const recentFirst = recentExercises?.slice(0, 3) || [];
+  // Take the first 3 recent exercises (ensure exercises array exists)
+  const safeRecentExercises = Array.isArray(recentExercises) ? recentExercises : [];
+  const recentFirst = safeRecentExercises.slice(0, 3);
   
-  // Limit recommended exercises to first 4 if we have them
-  const recommendedExercises = suggestedExercises?.slice(0, 4) || [];
+  // Limit recommended exercises to first 4 if we have them (ensure array exists)
+  const safeSuggestedExercises = Array.isArray(suggestedExercises) ? suggestedExercises : [];
+  const recommendedExercises = safeSuggestedExercises.slice(0, 4);
   
   // For other exercises, ensure no duplicates with recommended or recent
-  const filteredOther = otherExercises?.filter(
-    e => e && !recommendedExercises.some(r => r?.id === e?.id) && 
-         !recentFirst.some(r => r?.id === e?.id)
-  ).slice(0, 4) || []; // Show up to 4 other exercises
+  const safeOtherExercises = Array.isArray(otherExercises) ? otherExercises : [];
+  const filteredOther = safeOtherExercises
+    .filter(e => e && 
+      !recommendedExercises.some(r => r?.id === e?.id) && 
+      !recentFirst.some(r => r?.id === e?.id)
+    )
+    .slice(0, 4); // Show up to 4 other exercises
 
   return (
     <div className={cn("space-y-5", className)}>
@@ -126,7 +131,7 @@ function ExerciseItem({
   isRecommended,
   matchData
 }: ExerciseItemProps) {
-  if (!exercise || !exercise.primary_muscle_groups) return null;
+  if (!exercise || !exercise.primary_muscle_groups || !Array.isArray(exercise.primary_muscle_groups)) return null;
   
   // Determine main muscle group for badge
   const primaryMuscle = exercise.primary_muscle_groups?.[0] || "general";
@@ -189,14 +194,14 @@ function ExerciseItem({
                 >
                   {primaryMuscle}
                 </Badge>
-                {exercise.equipment_type && exercise.equipment_type[0] && (
+                {exercise.equipment_type && Array.isArray(exercise.equipment_type) && exercise.equipment_type[0] && (
                   <span className="text-xs text-gray-500 capitalize">
                     {exercise.equipment_type[0]}
                   </span>
                 )}
 
                 {/* Match reasons tooltip */}
-                {hasScore && matchData?.reasons && matchData.reasons.length > 0 && (
+                {hasScore && matchData?.reasons && Array.isArray(matchData.reasons) && matchData.reasons.length > 0 && (
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
