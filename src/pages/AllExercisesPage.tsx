@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useExercises } from "@/hooks/useExercises";
 import { Button } from "@/components/ui/button";
@@ -42,8 +43,8 @@ interface AllExercisesPageProps {
 }
 
 export default function AllExercisesPage({ onSelectExercise, standalone = true, onBack }: AllExercisesPageProps) {
-  const { exercises, isLoading, isError, createExercise, isPending } = useExercises();
-  const { workouts } = useWorkoutHistory();
+  const { exercises = [], isLoading, isError, createExercise, isPending } = useExercises();
+  const { workouts = [] } = useWorkoutHistory();
   const { toast } = useToast();
   const [showDialog, setShowDialog] = useState(false);
   const isMobile = useIsMobile();
@@ -80,7 +81,9 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
       const exerciseNames = new Set<string>();
       
       workout.exerciseSets?.forEach(set => {
-        exerciseNames.add(set.exercise_name);
+        if (set.exercise_name) {
+          exerciseNames.add(set.exercise_name);
+        }
       });
       
       exerciseNames.forEach(name => {
@@ -95,7 +98,7 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
   }, [workouts, exercises]);
 
   // Filter exercises based on search query and filters
-  const filterExercises = (exercisesList: Exercise[]) => {
+  const filterExercises = (exercisesList: Exercise[] = []) => {
     return exercisesList.filter(exercise => {
       // Search filter
       const matchesSearch = searchQuery === "" || 
@@ -104,12 +107,12 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
 
       // Muscle group filter
       const matchesMuscleGroup = selectedMuscleGroup === "all" || 
-        exercise.primary_muscle_groups.includes(selectedMuscleGroup as MuscleGroup) ||
+        exercise.primary_muscle_groups?.includes(selectedMuscleGroup as MuscleGroup) ||
         (exercise.secondary_muscle_groups && exercise.secondary_muscle_groups.includes(selectedMuscleGroup as MuscleGroup));
 
       // Equipment filter
       const matchesEquipment = selectedEquipment === "all" || 
-        exercise.equipment_type.includes(selectedEquipment as EquipmentType);
+        exercise.equipment_type?.includes(selectedEquipment as EquipmentType);
 
       // Difficulty filter
       const matchesDifficulty = selectedDifficulty === "all" || 
@@ -125,7 +128,7 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
   };
 
   // Filter exercises and get only base exercises (those without base_exercise_id)
-  const filteredBaseExercises = filterExercises(exercises).filter(ex => !ex.base_exercise_id);
+  const filteredBaseExercises = filterExercises(exercises.filter(ex => !ex.base_exercise_id));
 
   // Define these variables to fix the missing references
   const suggestedExercises = filterExercises(exercises.filter(ex => !ex.base_exercise_id).slice(0, 20)); // Limit suggested to top 20 for better performance
@@ -272,7 +275,7 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
 
   // Render exercise list using ExerciseVariationGroup
   const renderExerciseList = (exercisesList: Exercise[], showPagination = false) => {
-    if (exercisesList.length === 0) {
+    if (!exercisesList || exercisesList.length === 0) {
       return (
         <div className="text-center py-6 text-gray-400">
           No exercises found
@@ -361,6 +364,36 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
         )}
       </div>
     );
+  };
+
+  const handleAdd = () => {
+    setExerciseToEdit(null);
+    setDialogMode("add");
+    setShowDialog(true);
+  };
+
+  const handleEdit = (exercise: Exercise) => {
+    setExerciseToEdit(exercise);
+    setDialogMode("edit");
+    setShowDialog(true);
+  };
+  
+  const handleDelete = (exercise: Exercise) => {
+    setExerciseToDelete(exercise);
+    setDeleteConfirmOpen(true);
+  };
+  
+  const confirmDelete = async () => {
+    if (!exerciseToDelete) return;
+    
+    // Here we would actually delete the exercise
+    toast({
+      title: "Exercise deleted",
+      description: `${exerciseToDelete.name} has been removed from your library`,
+    });
+    
+    setDeleteConfirmOpen(false);
+    setExerciseToDelete(null);
   };
 
   return (

@@ -29,14 +29,14 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<string>("suggested");
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const { suggestedExercises } = useExerciseSuggestions(trainingType);
-  const { workouts } = useWorkoutHistory();
-  const { exercises: allExercises } = useExercises();
+  const { suggestedExercises = [] } = useExerciseSuggestions(trainingType);
+  const { workouts = [] } = useWorkoutHistory();
+  const { exercises: allExercises = [] } = useExercises();
   const [showAllExercises, setShowAllExercises] = useState(false);
 
   // Extract recently used exercises from workout history
   const recentExercises = React.useMemo(() => {
-    if (!workouts?.length) return [];
+    if (!workouts?.length || !allExercises?.length) return [];
     
     const exerciseMap = new Map<string, Exercise>();
     
@@ -44,9 +44,13 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
     workouts.slice(0, 8).forEach(workout => {
       const exerciseNames = new Set<string>();
       
-      workout.exerciseSets?.forEach(set => {
-        exerciseNames.add(set.exercise_name);
-      });
+      if (workout.exerciseSets) {
+        workout.exerciseSets.forEach(set => {
+          if (set.exercise_name) {
+            exerciseNames.add(set.exercise_name);
+          }
+        });
+      }
       
       exerciseNames.forEach(name => {
         const exercise = allExercises.find(e => e.name === name);
@@ -61,19 +65,21 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
 
   // Filter exercises based on search query
   const filteredSuggested = React.useMemo(() => {
+    if (!suggestedExercises?.length) return [];
     return searchQuery
       ? suggestedExercises.filter(e => 
           e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          e.primary_muscle_groups.some(m => m.toLowerCase().includes(searchQuery.toLowerCase()))
+          (e.primary_muscle_groups && e.primary_muscle_groups.some(m => m.toLowerCase().includes(searchQuery.toLowerCase())))
         )
       : suggestedExercises;
   }, [suggestedExercises, searchQuery]);
 
   const filteredRecent = React.useMemo(() => {
+    if (!recentExercises?.length) return [];
     return searchQuery
       ? recentExercises.filter(e => 
           e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          e.primary_muscle_groups.some(m => m.toLowerCase().includes(searchQuery.toLowerCase()))
+          (e.primary_muscle_groups && e.primary_muscle_groups.some(m => m.toLowerCase().includes(searchQuery.toLowerCase())))
         )
       : recentExercises;
   }, [recentExercises, searchQuery]);
@@ -93,6 +99,8 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
   };
 
   const renderExerciseCard = (exercise: Exercise) => {
+    if (!exercise || !exercise.primary_muscle_groups) return null;
+    
     const muscleGroups = exercise.primary_muscle_groups.slice(0, 2).join(', ');
     
     return (

@@ -29,16 +29,16 @@ export function MinimalisticExerciseSelect({
   className
 }: MinimalisticExerciseSelectProps) {
   // Take the first 3 recent exercises
-  const recentFirst = [...recentExercises.slice(0, 3)];
+  const recentFirst = recentExercises?.slice(0, 3) || [];
   
   // Limit recommended exercises to first 4 if we have them
-  const recommendedExercises = suggestedExercises.slice(0, 4);
+  const recommendedExercises = suggestedExercises?.slice(0, 4) || [];
   
   // For other exercises, ensure no duplicates with recommended or recent
-  const filteredOther = otherExercises.filter(
-    e => !recommendedExercises.some(r => r.id === e.id) && 
-         !recentFirst.some(r => r.id === e.id)
-  ).slice(0, 4); // Show up to 4 other exercises
+  const filteredOther = otherExercises?.filter(
+    e => e && !recommendedExercises.some(r => r?.id === e?.id) && 
+         !recentFirst.some(r => r?.id === e?.id)
+  ).slice(0, 4) || []; // Show up to 4 other exercises
 
   return (
     <div className={cn("space-y-5", className)}>
@@ -49,7 +49,7 @@ export function MinimalisticExerciseSelect({
           </h3>
           <div className="space-y-2">
             {recentFirst.map((exercise) => (
-              <ExerciseItem 
+              exercise && <ExerciseItem 
                 key={exercise.id}
                 exercise={exercise}
                 onSelectExercise={onSelectExercise}
@@ -68,7 +68,7 @@ export function MinimalisticExerciseSelect({
           </h3>
           <div className="space-y-2">
             {recommendedExercises.map((exercise) => (
-              <ExerciseItem 
+              exercise && <ExerciseItem 
                 key={exercise.id}
                 exercise={exercise}
                 onSelectExercise={onSelectExercise}
@@ -87,7 +87,7 @@ export function MinimalisticExerciseSelect({
           </h3>
           <div className="space-y-2">
             {filteredOther.map((exercise) => (
-              <ExerciseItem 
+              exercise && <ExerciseItem 
                 key={exercise.id}
                 exercise={exercise}
                 onSelectExercise={onSelectExercise}
@@ -126,6 +126,8 @@ function ExerciseItem({
   isRecommended,
   matchData
 }: ExerciseItemProps) {
+  if (!exercise || !exercise.primary_muscle_groups) return null;
+  
   // Determine main muscle group for badge
   const primaryMuscle = exercise.primary_muscle_groups?.[0] || "general";
   
@@ -194,7 +196,7 @@ function ExerciseItem({
                 )}
 
                 {/* Match reasons tooltip */}
-                {hasScore && matchData.reasons.length > 0 && (
+                {hasScore && matchData?.reasons && matchData.reasons.length > 0 && (
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
