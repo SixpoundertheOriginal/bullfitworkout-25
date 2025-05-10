@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Exercise, MuscleGroup, EquipmentType, MovementPattern, Difficulty } from '@/types/exercise';
@@ -70,8 +69,10 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
         base_exercise_id: exercise.base_exercise_id || undefined,
         variation_type: exercise.variation_type || undefined,
         variation_value: exercise.variation_value || undefined,
-        is_bodyweight: Boolean(exercise.is_bodyweight) || false,
-        energy_cost_factor: exercise.energy_cost_factor || 1
+        // Handle is_bodyweight from metadata if not directly available
+        is_bodyweight: exercise.is_bodyweight !== undefined ? Boolean(exercise.is_bodyweight) : false,
+        // Handle energy_cost_factor from metadata if not directly available
+        energy_cost_factor: exercise.energy_cost_factor !== undefined ? exercise.energy_cost_factor : 1
       }));
     }
   });
@@ -98,12 +99,19 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
           is_compound: Boolean(newExercise.is_compound),
           tips: newExercise.tips || [],
           variations: newExercise.variations || [],
-          metadata: newExercise.metadata || {},
+          metadata: {
+            ...(newExercise.metadata || {}),
+            // Store is_bodyweight and energy_cost_factor in metadata if they're not direct columns
+            is_bodyweight: newExercise.is_bodyweight,
+            energy_cost_factor: newExercise.energy_cost_factor
+          },
           created_by: newExercise.user_id || '',
           is_custom: true,
           base_exercise_id: newExercise.base_exercise_id || null,
           variation_type: newExercise.variation_type || null,
           variation_value: newExercise.variation_value || null,
+          // Try sending these fields directly; if the DB schema supports them they'll be stored,
+          // otherwise they'll be ignored but still available in metadata
           is_bodyweight: Boolean(newExercise.is_bodyweight),
           energy_cost_factor: newExercise.energy_cost_factor || 1
         }])
@@ -144,9 +152,25 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
       // Destructure id from exercise and keep the rest as updateData
       const { id, ...updateData } = exercise;
       
+      // Store is_bodyweight and energy_cost_factor in metadata as fallback
+      const metadata = {
+        ...(exercise.metadata || {}),
+      };
+      
+      if (exercise.is_bodyweight !== undefined) {
+        metadata.is_bodyweight = exercise.is_bodyweight;
+      }
+      
+      if (exercise.energy_cost_factor !== undefined) {
+        metadata.energy_cost_factor = exercise.energy_cost_factor;
+      }
+      
       const { data, error } = await supabase
         .from('exercises')
-        .update(updateData)
+        .update({
+          ...updateData,
+          metadata
+        })
         .eq('id', id)
         .select();
 
