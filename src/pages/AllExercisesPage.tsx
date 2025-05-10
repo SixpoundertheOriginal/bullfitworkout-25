@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useExercises } from "@/hooks/useExercises";
 import { Button } from "@/components/ui/button";
@@ -33,6 +32,7 @@ import {
   PaginationPrevious 
 } from "@/components/ui/pagination";
 import { CommonExerciseCard } from "@/components/exercises/CommonExerciseCard";
+import { ExerciseVariationGroup } from "@/components/exercises/ExerciseVariationGroup";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface AllExercisesPageProps {
@@ -124,16 +124,16 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
     });
   };
 
-  const suggestedExercises = filterExercises(exercises.slice(0, 20)); // Limit suggested to top 20 for better performance
-  const filteredRecent = filterExercises(recentExercises);
-  const filteredAll = filterExercises(exercises);
+  // Filter exercises and get only base exercises (those without base_exercise_id)
+  const filteredBaseExercises = filterExercises(exercises).filter(ex => !ex.base_exercise_id);
 
-  // Pagination logic
+  // Pagination logic specifically for base exercises
   const indexOfLastExercise = currentPage * exercisesPerPage;
   const indexOfFirstExercise = indexOfLastExercise - exercisesPerPage;
-  const currentExercises = filteredAll.slice(indexOfFirstExercise, indexOfLastExercise);
-  const totalPages = Math.ceil(filteredAll.length / exercisesPerPage);
+  const currentBaseExercises = filteredBaseExercises.slice(indexOfFirstExercise, indexOfLastExercise);
+  const totalPages = Math.ceil(filteredBaseExercises.length / exercisesPerPage);
 
+  // Pagination logic
   const paginate = (pageNumber: number) => {
     if (pageNumber > 0 && pageNumber <= totalPages) {
       setCurrentPage(pageNumber);
@@ -242,32 +242,21 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
     }
   };
 
-  const renderExerciseCard = (exercise: Exercise) => {
-    const variant = standalone ? 'library-manage' : 'workout-add';
-    
+  // Render ExerciseVariationGroup component
+  const renderExerciseVariationGroup = (exercise: Exercise) => {
     return (
       <div key={exercise.id} className="mb-4">
-        {standalone ? (
-          <CommonExerciseCard
-            exercise={exercise}
-            variant={variant}
-            onAdd={() => handleSelectExercise(exercise)}
-            onEdit={() => handleEdit(exercise)}
-            onDelete={() => handleDelete(exercise)}
-            onViewDetails={() => handleViewDetails(exercise)}
-            onDuplicate={() => handleDuplicate(exercise)}
-          />
-        ) : (
-          <CommonExerciseCard
-            exercise={exercise}
-            variant={variant}
-            onAdd={() => handleSelectExercise(exercise)}
-          />
-        )}
+        <ExerciseVariationGroup
+          baseExercise={exercise}
+          onSelect={standalone ? undefined : handleSelectExercise}
+          onEdit={standalone ? handleEdit : undefined}
+          onDelete={standalone ? handleDelete : undefined}
+        />
       </div>
     );
   };
 
+  // Render exercise list using ExerciseVariationGroup
   const renderExerciseList = (exercisesList: Exercise[], showPagination = false) => {
     if (exercisesList.length === 0) {
       return (
@@ -277,11 +266,12 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
       );
     }
 
-    const listToRender = showPagination ? currentExercises : exercisesList;
+    // For base exercises, use ExerciseVariationGroup
+    const listToRender = showPagination ? currentBaseExercises : exercisesList;
 
     return (
-      <div className="space-y-2">
-        {listToRender.map(renderExerciseCard)}
+      <div className="space-y-4">
+        {listToRender.map(renderExerciseVariationGroup)}
         
         {showPagination && totalPages > 1 && (
           <Pagination className="mt-4">
