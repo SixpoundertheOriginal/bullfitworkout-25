@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { MovementPattern, Difficulty, MuscleGroup } from '@/types/exercise';
+import { Variation } from '@/types/exerciseVariation';
 
 // Define the exercise state type
 export interface ExerciseFormState {
@@ -24,6 +25,8 @@ export interface ExerciseFormState {
   base_exercise_id?: string;
   variation_type?: string;
   variation_value?: string;
+  // New field for array-based variations
+  variationList: Variation[];
 }
 
 export interface ExerciseFormHandlers {
@@ -49,6 +52,9 @@ export interface ExerciseFormHandlers {
   setBaseExerciseId?: (id: string) => void;
   setVariationType?: (type: string) => void;
   setVariationValue?: (value: string) => void;
+  // New handlers for variation list
+  addVariationToList: (variation: Variation) => void;
+  removeVariationFromList: (index: number) => void;
   reset: () => void;
 }
 
@@ -77,12 +83,25 @@ export const useExerciseFormState = (
     // Default values for variation fields
     base_exercise_id: undefined,
     variation_type: undefined,
-    variation_value: undefined
+    variation_value: undefined,
+    // New field for variation list
+    variationList: []
   });
 
   // Reset or seed form when initialExercise changes or dialog opens/closes
   useEffect(() => {
     if (initialExercise) {
+      // Convert single variation_type/value to variationList if needed
+      let variationList: Variation[] = initialExercise.variationList || [];
+      
+      // If we have legacy variation fields but no list, create a variation item
+      if (initialExercise.variation_type && initialExercise.variation_value && !initialExercise.variationList) {
+        variationList = [{
+          type: initialExercise.variation_type as any,
+          value: initialExercise.variation_value
+        }];
+      }
+      
       setExercise({
         ...exercise,
         ...initialExercise,
@@ -104,7 +123,9 @@ export const useExerciseFormState = (
         // Include variation fields
         base_exercise_id: initialExercise.base_exercise_id,
         variation_type: initialExercise.variation_type,
-        variation_value: initialExercise.variation_value
+        variation_value: initialExercise.variation_value,
+        // Set variation list
+        variationList: variationList
       });
     } else {
       reset();
@@ -212,6 +233,43 @@ export const useExerciseFormState = (
     setExercise(ex => ({ ...ex, equipment_type: Array.isArray(types) ? types : [] }));
   }, []);
 
+  // Add new handlers for managing variation list
+  const addVariationToList = useCallback((variation: Variation) => {
+    setExercise(ex => {
+      // Ensure we have a valid list
+      const currentList = Array.isArray(ex.variationList) ? ex.variationList : [];
+      
+      // Add the new variation
+      return { 
+        ...ex, 
+        variationList: [...currentList, variation],
+        // Also update legacy fields to the last added variation for backward compatibility
+        variation_type: variation.type,
+        variation_value: variation.value
+      };
+    });
+  }, []);
+
+  const removeVariationFromList = useCallback((index: number) => {
+    setExercise(ex => {
+      // Filter out the variation at the given index
+      const updatedList = Array.isArray(ex.variationList) 
+        ? ex.variationList.filter((_, i) => i !== index) 
+        : [];
+      
+      // Update the legacy fields based on the most recent variation
+      const lastVariation = updatedList.length > 0 ? updatedList[updatedList.length - 1] : null;
+      
+      return { 
+        ...ex, 
+        variationList: updatedList,
+        // Update legacy fields if there are still variations, otherwise clear them
+        variation_type: lastVariation ? lastVariation.type : undefined,
+        variation_value: lastVariation ? lastVariation.value : undefined
+      };
+    });
+  }, []);
+
   const reset = useCallback(() => {
     setExercise({
       name: '',
@@ -234,7 +292,9 @@ export const useExerciseFormState = (
       // Reset variation fields
       base_exercise_id: undefined,
       variation_type: undefined,
-      variation_value: undefined
+      variation_value: undefined,
+      // Reset variation list
+      variationList: []
     });
   }, []);
 
@@ -274,6 +334,9 @@ export const useExerciseFormState = (
     setBaseExerciseId,
     setVariationType,
     setVariationValue,
+    // New variation list handlers
+    addVariationToList,
+    removeVariationFromList,
     reset
   };
 

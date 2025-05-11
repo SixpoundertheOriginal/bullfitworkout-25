@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from "react";
 import {
   Dialog,
@@ -15,11 +16,13 @@ import {
 } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MovementPattern, Difficulty, Exercise, MuscleGroup } from "@/types/exercise";
+import { Variation } from "@/types/exerciseVariation";
 import { useExerciseFormState, ExerciseFormState } from "@/hooks/useExerciseFormState";
 import { ExerciseDialogBasic } from "@/components/exercises/ExerciseDialog/ExerciseDialogBasic";
 import { ExerciseDialogAdvanced } from "@/components/exercises/ExerciseDialog/ExerciseDialogAdvanced";
 import { ExerciseDialogMetrics } from "@/components/exercises/ExerciseDialog/ExerciseDialogMetrics";
 import { ExerciseDialogInstructions } from "@/components/exercises/ExerciseDialog/ExerciseDialogInstructions";
+import { ExerciseDialogVariations } from "@/components/exercises/ExerciseDialog/ExerciseDialogVariations";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -54,6 +57,8 @@ interface ExerciseDialogProps {
     secondary_muscle_groups: MuscleGroup[];
     equipment_type: string[];
     metadata?: Record<string, any>;
+    // New field for variations
+    variationList?: Variation[];
   }) => void;
   initialExercise?: any;
   loading?: boolean;
@@ -80,7 +85,7 @@ export function ExerciseDialog({
   loading = false,
 }: ExerciseDialogProps) {
   // State for the active tab
-  const [activeTab, setActiveTab] = useState<"basic" | "advanced" | "metrics" | "instructions">("basic");
+  const [activeTab, setActiveTab] = useState<"basic" | "advanced" | "metrics" | "instructions" | "variations">("basic");
   
   // State for form errors
   const [formError, setFormError] = useState("");
@@ -103,7 +108,8 @@ export function ExerciseDialog({
 
   // Type-safe tab change handler
   const handleTabChange = useCallback((value: string) => {
-    if (value === "basic" || value === "advanced" || value === "metrics" || value === "instructions") {
+    if (value === "basic" || value === "advanced" || value === "metrics" || 
+        value === "instructions" || value === "variations") {
       setActiveTab(value);
     }
   }, []);
@@ -125,6 +131,8 @@ export function ExerciseDialog({
       // Cast to appropriate types for API submission with empty arrays as default
       primary_muscle_groups: [] as MuscleGroup[],
       secondary_muscle_groups: [] as MuscleGroup[],
+      // Include the variation list in the submission
+      variationList: exercise.variationList || []
     };
     
     onSubmit(submissionData);
@@ -158,8 +166,8 @@ export function ExerciseDialog({
           </Alert>
         )}
 
-        {/* Variation fields */}
-        {baseExercise && (
+        {/* Legacy Variation fields - shown when editing a basic variation */}
+        {baseExercise && exercise.variationList.length === 0 && (
           <div className="grid grid-cols-1 gap-4 mb-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="variation-type">Variation Type</Label>
@@ -196,10 +204,11 @@ export function ExerciseDialog({
           onValueChange={handleTabChange}
           className="flex-1 flex flex-col overflow-hidden"
         >
-          <TabsList className="grid grid-cols-4">
+          <TabsList className="grid grid-cols-5">
             <TabsTrigger value="basic">Basic</TabsTrigger>
             <TabsTrigger value="advanced">Advanced</TabsTrigger>
             <TabsTrigger value="metrics">Metrics</TabsTrigger>
+            <TabsTrigger value="variations">Variations</TabsTrigger>
             <TabsTrigger value="instructions">Instructions</TabsTrigger>
           </TabsList>
 
@@ -227,6 +236,14 @@ export function ExerciseDialog({
                 exercise={exercise}
                 onToggleBodyweight={handlers.setIsBodyweight}
                 onChangeLoadPercent={handlers.setEstimatedLoadPercent}
+              />
+            </TabsContent>
+
+            <TabsContent value="variations">
+              <ExerciseDialogVariations 
+                exercise={exercise}
+                onAddVariation={handlers.addVariationToList}
+                onRemoveVariation={handlers.removeVariationFromList}
               />
             </TabsContent>
 

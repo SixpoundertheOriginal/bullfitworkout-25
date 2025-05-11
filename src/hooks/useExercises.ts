@@ -11,6 +11,7 @@ export type ExerciseMetadata = {
   display_unit?: string;
   is_bodyweight?: boolean;
   energy_cost_factor?: number;
+  variations?: any[]; // To store additional variations beyond the 1:1 field
 };
 
 type ExerciseInput = {
@@ -33,6 +34,8 @@ type ExerciseInput = {
   variation_value?: string;
   is_bodyweight?: boolean;
   energy_cost_factor?: number;
+  // New field for variation list
+  variationList?: any[];
 };
 
 type ExerciseUpdateInput = Partial<Omit<ExerciseInput, 'created_at'>> & { id: string };
@@ -99,6 +102,29 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
         throw new Error("Exercise name is required");
       }
       
+      // Process variations list into legacy fields if needed
+      let variation_type = newExercise.variation_type;
+      let variation_value = newExercise.variation_value;
+      
+      // Store variation list in metadata if present
+      const metadata = {
+        ...(newExercise.metadata || {}),
+        // Store is_bodyweight and energy_cost_factor in metadata if they're not direct columns
+        is_bodyweight: newExercise.is_bodyweight,
+        energy_cost_factor: newExercise.energy_cost_factor
+      };
+      
+      // Add variationList to metadata if present
+      if (newExercise.variationList && newExercise.variationList.length > 0) {
+        metadata.variations = newExercise.variationList;
+        
+        // Use first variation for the legacy fields if not already set
+        if (!variation_type && !variation_value) {
+          variation_type = newExercise.variationList[0].type;
+          variation_value = newExercise.variationList[0].value;
+        }
+      }
+      
       const { data, error } = await supabase
         .from('exercises')
         .insert([{
@@ -114,17 +140,12 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
           is_compound: Boolean(newExercise.is_compound),
           tips: newExercise.tips || [],
           variations: newExercise.variations || [],
-          metadata: {
-            ...(newExercise.metadata || {}),
-            // Store is_bodyweight and energy_cost_factor in metadata if they're not direct columns
-            is_bodyweight: newExercise.is_bodyweight,
-            energy_cost_factor: newExercise.energy_cost_factor
-          },
+          metadata: metadata,
           created_by: newExercise.user_id || '',
           is_custom: true,
           base_exercise_id: newExercise.base_exercise_id || null,
-          variation_type: newExercise.variation_type || null,
-          variation_value: newExercise.variation_value || null,
+          variation_type: variation_type || null,
+          variation_value: variation_value || null,
           // Try sending these fields directly; if the DB schema supports them they'll be stored,
           // otherwise they'll be ignored but still available in metadata
           is_bodyweight: Boolean(newExercise.is_bodyweight),
@@ -166,23 +187,43 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
       // Destructure id from exercise and keep the rest as updateData
       const { id, ...updateData } = exercise;
       
-      // Store is_bodyweight and energy_cost_factor in metadata as fallback
+      // Process variations list into legacy fields if needed
+      let variation_type = updateData.variation_type;
+      let variation_value = updateData.variation_value;
+      
+      // Store variation list in metadata if present
       const metadata = {
-        ...(exercise.metadata || {}),
+        ...(updateData.metadata || {}),
       };
       
-      if (exercise.is_bodyweight !== undefined) {
-        metadata.is_bodyweight = exercise.is_bodyweight;
+      if (updateData.is_bodyweight !== undefined) {
+        metadata.is_bodyweight = updateData.is_bodyweight;
       }
       
-      if (exercise.energy_cost_factor !== undefined) {
-        metadata.energy_cost_factor = exercise.energy_cost_factor;
+      if (updateData.energy_cost_factor !== undefined) {
+        metadata.energy_cost_factor = updateData.energy_cost_factor;
+      }
+      
+      // Add variationList to metadata if present
+      if (updateData.variationList && updateData.variationList.length > 0) {
+        metadata.variations = updateData.variationList;
+        
+        // Use first variation for the legacy fields if not already set
+        if (!variation_type && !variation_value) {
+          variation_type = updateData.variationList[0].type;
+          variation_value = updateData.variationList[0].value;
+        }
+        
+        // Remove variationList from updateData since it's not a DB column
+        delete updateData.variationList;
       }
       
       const { data, error } = await supabase
         .from('exercises')
         .update({
           ...updateData,
+          variation_type,
+          variation_value,
           metadata
         })
         .eq('id', id)
