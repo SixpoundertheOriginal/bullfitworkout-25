@@ -16,7 +16,7 @@ export interface ExerciseFormState {
   variant_category: string | undefined;
   is_bodyweight: boolean;
   energy_cost_factor: number;
-  primary_muscle_groups: string[];  // Ensure this is always initialized as an array
+  primary_muscle_groups: string[];  // Keep for backward compatibility
   secondary_muscle_groups: string[];
   equipment_type: string[];
   metadata: Record<string, any>;
@@ -42,7 +42,7 @@ export interface ExerciseFormHandlers {
   removeVariation: (index: number) => void;
   setIsBodyweight: (isBodyweight: boolean) => void;
   setEstimatedLoadPercent: (percent: number) => void;
-  setPrimaryMuscleGroups: (groups: string[]) => void;  // Always ensure this accepts an array
+  setPrimaryMuscleGroups: (groups: string[]) => void;  // Keep for backward compatibility
   setSecondaryMuscleGroups: (groups: string[]) => void;
   setEquipmentType: (types: string[]) => void;
   // Add variation handlers
@@ -70,7 +70,7 @@ export const useExerciseFormState = (
     variant_category: undefined,
     is_bodyweight: false,
     energy_cost_factor: 1,
-    primary_muscle_groups: [],  // Initialize as empty array
+    primary_muscle_groups: [],  // Default as empty array
     secondary_muscle_groups: [],
     equipment_type: [],
     metadata: {},
@@ -199,7 +199,7 @@ export const useExerciseFormState = (
     setExercise(ex => ({ ...ex, estimated_load_percent: percent }));
   }, []);
 
-  // Make sure muscle group handlers properly handle undefined values
+  // Keep muscle group handlers for backward compatibility
   const setPrimaryMuscleGroups = useCallback((groups: string[]) => {
     setExercise(ex => ({ ...ex, primary_muscle_groups: Array.isArray(groups) ? groups : [] }));
   }, []);
@@ -227,7 +227,7 @@ export const useExerciseFormState = (
       variant_category: undefined,
       is_bodyweight: false,
       energy_cost_factor: 1,
-      primary_muscle_groups: [],  // Ensure this is always an empty array
+      primary_muscle_groups: [],  // Initialize as empty array
       secondary_muscle_groups: [],
       equipment_type: [],
       metadata: {},

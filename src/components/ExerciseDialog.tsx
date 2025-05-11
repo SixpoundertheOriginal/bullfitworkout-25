@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from "react";
 import {
   Dialog,
@@ -115,20 +116,16 @@ export function ExerciseDialog({
       return;
     }
     
-    if (!exercise.primary_muscle_groups || exercise.primary_muscle_groups.length === 0) {
-      setFormError("At least one primary muscle group is required");
-      return;
-    }
-    
+    // Remove validation for primary muscle groups
     setFormError("");
     
     // Include variation fields in submission if there's a base exercise
     const submissionData = {
       ...exercise,
       base_exercise_id: baseExercise?.id || exercise.base_exercise_id,
-      // Ensure the primary_muscle_groups are cast to MuscleGroup[] for the onSubmit
-      primary_muscle_groups: exercise.primary_muscle_groups as MuscleGroup[],
-      secondary_muscle_groups: (exercise.secondary_muscle_groups || []) as MuscleGroup[]
+      // Ensure the primary_muscle_groups are initialized as empty arrays if not provided
+      primary_muscle_groups: Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : [],
+      secondary_muscle_groups: Array.isArray(exercise.secondary_muscle_groups) ? exercise.secondary_muscle_groups : []
     };
     
     onSubmit(submissionData);
@@ -213,7 +210,6 @@ export function ExerciseDialog({
                 exercise={exercise}
                 onChangeName={handlers.setName}
                 onChangeDescription={handlers.setDescription}
-                onChangePrimaryMuscleGroups={handlers.setPrimaryMuscleGroups}
                 formError={formError}
               />
             </TabsContent>
