@@ -107,7 +107,7 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
       let variation_value = newExercise.variation_value;
       
       // Initialize metadata object with all needed fields
-      const metadata = {
+      const metadata: ExerciseMetadata = {
         ...(newExercise.metadata || {}),
         // Store is_bodyweight and energy_cost_factor in metadata if they're not direct columns
         is_bodyweight: newExercise.is_bodyweight,
@@ -194,16 +194,18 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
       let variation_value = updateData.variation_value;
       
       // Initialize metadata object with all needed fields
-      const metadata = {
+      const metadata: ExerciseMetadata = {
         ...(updateData.metadata || {}),
         // Initialize variations array if not present
         variations: []
       };
       
+      // Preserve the is_bodyweight setting if provided
       if (updateData.is_bodyweight !== undefined) {
         metadata.is_bodyweight = updateData.is_bodyweight;
       }
       
+      // Preserve the energy_cost_factor if provided
       if (updateData.energy_cost_factor !== undefined) {
         metadata.energy_cost_factor = updateData.energy_cost_factor;
       }
