@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Exercise, MuscleGroup, EquipmentType, MovementPattern, Difficulty } from '@/types/exercise';
@@ -147,11 +148,10 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
           is_custom: true,
           base_exercise_id: newExercise.base_exercise_id || null,
           variation_type: variation_type || null,
-          variation_value: variation_value || null,
-          // Try sending these fields directly; if the DB schema supports them they'll be stored,
-          // otherwise they'll be ignored but still available in metadata
-          is_bodyweight: Boolean(newExercise.is_bodyweight),
-          energy_cost_factor: newExercise.energy_cost_factor || 1
+          variation_value: variation_value || null
+          // REMOVED: Don't try to insert these as direct columns
+          // is_bodyweight: Boolean(newExercise.is_bodyweight),
+          // energy_cost_factor: newExercise.energy_cost_factor || 1
         }])
         .select();
 
@@ -231,6 +231,9 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
           variation_type,
           variation_value,
           metadata
+          // REMOVED: Don't try to update these as direct columns
+          // is_bodyweight: updateData.is_bodyweight,
+          // energy_cost_factor: updateData.energy_cost_factor
         })
         .eq('id', id)
         .select();
