@@ -9,7 +9,6 @@ interface ExerciseDialogBasicProps {
   exercise: ExerciseFormState;
   onChangeName: (name: string) => void;
   onChangeDescription: (description: string) => void;
-  onChangePrimaryMuscleGroups?: (groups: string[]) => void;
   formError?: string;
 }
 

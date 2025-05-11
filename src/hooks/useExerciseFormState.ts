@@ -16,8 +16,8 @@ export interface ExerciseFormState {
   variant_category: string | undefined;
   is_bodyweight: boolean;
   energy_cost_factor: number;
-  primary_muscle_groups: string[];  // Keep for backward compatibility
-  secondary_muscle_groups: string[];
+  primary_muscle_groups: MuscleGroup[];  // Keep MuscleGroup type
+  secondary_muscle_groups: MuscleGroup[];
   equipment_type: string[];
   metadata: Record<string, any>;
   // Add variation fields
@@ -42,8 +42,8 @@ export interface ExerciseFormHandlers {
   removeVariation: (index: number) => void;
   setIsBodyweight: (isBodyweight: boolean) => void;
   setEstimatedLoadPercent: (percent: number) => void;
-  setPrimaryMuscleGroups: (groups: string[]) => void;  // Keep for backward compatibility
-  setSecondaryMuscleGroups: (groups: string[]) => void;
+  setPrimaryMuscleGroups: (groups: MuscleGroup[]) => void;  // Keep MuscleGroup type
+  setSecondaryMuscleGroups: (groups: MuscleGroup[]) => void;
   setEquipmentType: (types: string[]) => void;
   // Add variation handlers
   setBaseExerciseId?: (id: string) => void;
@@ -70,7 +70,7 @@ export const useExerciseFormState = (
     variant_category: undefined,
     is_bodyweight: false,
     energy_cost_factor: 1,
-    primary_muscle_groups: [],  // Default as empty array
+    primary_muscle_groups: [],  // Initialize as empty array
     secondary_muscle_groups: [],
     equipment_type: [],
     metadata: {},
@@ -199,12 +199,12 @@ export const useExerciseFormState = (
     setExercise(ex => ({ ...ex, estimated_load_percent: percent }));
   }, []);
 
-  // Keep muscle group handlers for backward compatibility
-  const setPrimaryMuscleGroups = useCallback((groups: string[]) => {
+  // Keep muscle group handlers with correct types
+  const setPrimaryMuscleGroups = useCallback((groups: MuscleGroup[]) => {
     setExercise(ex => ({ ...ex, primary_muscle_groups: Array.isArray(groups) ? groups : [] }));
   }, []);
 
-  const setSecondaryMuscleGroups = useCallback((groups: string[]) => {
+  const setSecondaryMuscleGroups = useCallback((groups: MuscleGroup[]) => {
     setExercise(ex => ({ ...ex, secondary_muscle_groups: Array.isArray(groups) ? groups : [] }));
   }, []);
 

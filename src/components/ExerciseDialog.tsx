@@ -116,16 +116,16 @@ export function ExerciseDialog({
       return;
     }
     
-    // Remove validation for primary muscle groups
     setFormError("");
     
     // Include variation fields in submission if there's a base exercise
+    // Cast primary_muscle_groups and secondary_muscle_groups to MuscleGroup[] to satisfy TypeScript
     const submissionData = {
       ...exercise,
       base_exercise_id: baseExercise?.id || exercise.base_exercise_id,
-      // Ensure the primary_muscle_groups are initialized as empty arrays if not provided
-      primary_muscle_groups: Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : [],
-      secondary_muscle_groups: Array.isArray(exercise.secondary_muscle_groups) ? exercise.secondary_muscle_groups : []
+      // Cast to appropriate types for API submission
+      primary_muscle_groups: (Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : []) as MuscleGroup[],
+      secondary_muscle_groups: (Array.isArray(exercise.secondary_muscle_groups) ? exercise.secondary_muscle_groups : []) as MuscleGroup[],
     };
     
     onSubmit(submissionData);
