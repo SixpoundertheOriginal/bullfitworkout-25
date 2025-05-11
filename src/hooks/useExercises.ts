@@ -94,8 +94,9 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
     mutationFn: async (newExercise: ExerciseInput) => {
       console.log("Creating exercise with data:", newExercise);
       
-      if (!newExercise.name || !newExercise.primary_muscle_groups || newExercise.primary_muscle_groups.length === 0) {
-        throw new Error("Exercise name and at least one primary muscle group are required");
+      // Updated validation: only name is required, primary_muscle_groups is optional
+      if (!newExercise.name) {
+        throw new Error("Exercise name is required");
       }
       
       const { data, error } = await supabase
@@ -103,9 +104,10 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
         .insert([{
           name: newExercise.name,
           description: newExercise.description || '',
-          primary_muscle_groups: newExercise.primary_muscle_groups,
-          secondary_muscle_groups: newExercise.secondary_muscle_groups || [],
-          equipment_type: newExercise.equipment_type || [],
+          // Ensure we always pass an array for muscle groups, even if empty
+          primary_muscle_groups: Array.isArray(newExercise.primary_muscle_groups) ? newExercise.primary_muscle_groups : [],
+          secondary_muscle_groups: Array.isArray(newExercise.secondary_muscle_groups) ? newExercise.secondary_muscle_groups : [],
+          equipment_type: Array.isArray(newExercise.equipment_type) ? newExercise.equipment_type : [],
           movement_pattern: newExercise.movement_pattern,
           difficulty: newExercise.difficulty,
           instructions: newExercise.instructions || {}, // Default empty object if not provided
