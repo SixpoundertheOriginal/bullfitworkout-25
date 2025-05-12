@@ -6,20 +6,22 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { useExercises } from '@/hooks/useExercises';
 import { Badge } from '@/components/ui/badge';
 import { Variation } from '@/types/exerciseVariation';
-import { ChevronDown } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 
 interface ExerciseVariationGroupProps {
   baseExercise: Exercise;
   onSelect?: (exercise: Exercise) => void;
   onEdit?: (exercise: Exercise) => void;
   onDelete?: (exercise: Exercise) => void;
+  onAddVariation?: (exercise: Exercise) => void;
 }
 
 export const ExerciseVariationGroup: React.FC<ExerciseVariationGroupProps> = React.memo(({
   baseExercise,
   onSelect,
   onEdit,
-  onDelete
+  onDelete,
+  onAddVariation
 }) => {
   const { getVariationsForExercise } = useExercises();
   
@@ -49,7 +51,7 @@ export const ExerciseVariationGroup: React.FC<ExerciseVariationGroupProps> = Rea
   const hasVariations = variations.length > 0;
   
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 transition-all">
       {/* Base Exercise Card */}
       <CommonExerciseCard 
         exercise={baseExercise}
@@ -58,71 +60,105 @@ export const ExerciseVariationGroup: React.FC<ExerciseVariationGroupProps> = Rea
         onEdit={onEdit ? () => onEdit(baseExercise) : undefined}
         onDelete={onDelete ? () => onDelete(baseExercise) : undefined}
         rightContent={
-          hasVariations ? (
-            <Badge 
-              variant="outline" 
-              className="bg-gray-800 hover:bg-gray-700 text-gray-300"
-            >
-              {variations.length} variation{variations.length !== 1 ? 's' : ''}
-            </Badge>
-          ) : null
+          <div className="flex items-center gap-2">
+            {hasVariations ? (
+              <Badge 
+                variant="outline" 
+                className="bg-gray-800/70 hover:bg-gray-700 text-gray-300 flex items-center gap-1"
+              >
+                {variations.length} variation{variations.length !== 1 ? 's' : ''}
+                <ChevronRight className="h-3 w-3" />
+              </Badge>
+            ) : (
+              onAddVariation && (
+                <Badge 
+                  variant="outline" 
+                  className="bg-purple-900/30 hover:bg-purple-800/50 border-purple-700/30 text-purple-300 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddVariation(baseExercise);
+                  }}
+                >
+                  Add variation
+                </Badge>
+              )
+            )}
+          </div>
         }
       />
       
       {/* Variations Accordion */}
       {hasVariations && (
-        <div className="ml-8 mt-1">
+        <div className="ml-8 mt-1 transition-all">
           <Accordion type="single" collapsible className="border-l-2 border-gray-800 pl-4">
             <AccordionItem value="variations" className="border-none">
-              <AccordionTrigger className="py-2 hover:no-underline">
-                <span className="text-sm font-medium text-gray-400">Variations</span>
+              <AccordionTrigger className="py-2 hover:no-underline group">
+                <span className="text-sm font-medium text-gray-400 group-hover:text-gray-300 flex items-center">
+                  Variations 
+                  <span className="ml-2 bg-gray-800/50 text-xs px-2 py-0.5 rounded-full">
+                    {variations.length}
+                  </span>
+                </span>
               </AccordionTrigger>
-              <AccordionContent className="animate-fade-in">
-                <div className="space-y-2 pt-2">
-                  {variations.map((variation) => {
-                    // Get variation list for this exercise
-                    const variationList = getVariationList(variation);
-                    
-                    return (
-                      <div key={variation.id} className="relative pl-4">
-                        {/* Connecting line */}
-                        <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-800"></div>
-                        
-                        <CommonExerciseCard
-                          exercise={variation}
-                          variant="list"
-                          isVariation={true}
-                          onSelect={onSelect ? () => onSelect(variation) : undefined}
-                          onEdit={onEdit ? () => onEdit(variation) : undefined}
-                          onDelete={onDelete ? () => onDelete(variation) : undefined}
-                          className="border-gray-800 hover:border-purple-600/30"
-                          variationBadge={
-                            variationList.length > 0 ? (
-                              <div className="flex flex-wrap gap-1">
-                                {variationList.map((v, i) => (
-                                  <Badge 
-                                    key={i}
-                                    variant="outline" 
-                                    className="bg-purple-900/20 text-xs border-purple-700/30 text-purple-300"
-                                  >
-                                    {v.type}: {v.value}
-                                  </Badge>
-                                ))}
-                              </div>
-                            ) : (
-                              <Badge 
-                                variant="outline" 
-                                className="bg-purple-900/20 text-xs border-purple-700/30 text-purple-300"
-                              >
-                                {variation.variation_type}: {variation.variation_value}
-                              </Badge>
-                            )
-                          }
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
+              <AccordionContent className="animate-accordion-down space-y-2 pt-1">
+                {variations.map((variation) => {
+                  // Get variation list for this exercise
+                  const variationList = getVariationList(variation);
+                  
+                  return (
+                    <div key={variation.id} className="relative pl-4">
+                      {/* Connecting line */}
+                      <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-800"></div>
+                      
+                      <CommonExerciseCard
+                        exercise={variation}
+                        variant="list"
+                        isVariation={true}
+                        onSelect={onSelect ? () => onSelect(variation) : undefined}
+                        onEdit={onEdit ? () => onEdit(variation) : undefined}
+                        onDelete={onDelete ? () => onDelete(variation) : undefined}
+                        className="border-gray-800 hover:border-purple-600/50 transition-colors"
+                        variationBadge={
+                          variationList.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {variationList.map((v, i) => (
+                                <Badge 
+                                  key={i}
+                                  variant="outline" 
+                                  className="bg-purple-900/20 text-xs border-purple-700/30 text-purple-300"
+                                >
+                                  {v.type}: {v.value}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : (
+                            <Badge 
+                              variant="outline" 
+                              className="bg-purple-900/20 text-xs border-purple-700/30 text-purple-300"
+                            >
+                              {variation.variation_type}: {variation.variation_value}
+                            </Badge>
+                          )
+                        }
+                      />
+                    </div>
+                  );
+                })}
+                
+                {/* Add variation button */}
+                {onAddVariation && (
+                  <div className="pl-4 relative">
+                    <div className="absolute left-0 top-0 bottom-1/2 w-0.5 bg-gray-800"></div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-1 bg-gray-800/30 border-gray-700/50 hover:bg-purple-900/30 hover:border-purple-700/50 text-gray-300 hover:text-purple-100"
+                      onClick={() => onAddVariation(baseExercise)}
+                    >
+                      Add variation
+                    </Button>
+                  </div>
+                )}
               </AccordionContent>
             </AccordionItem>
           </Accordion>

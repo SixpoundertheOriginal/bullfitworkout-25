@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useExercises } from "@/hooks/useExercises";
 import { Button } from "@/components/ui/button";
@@ -35,6 +34,7 @@ import {
 import { CommonExerciseCard } from "@/components/exercises/CommonExerciseCard";
 import { ExerciseVariationGroup } from "@/components/exercises/ExerciseVariationGroup";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface AllExercisesPageProps {
   onSelectExercise?: (exercise: string | Exercise) => void;
@@ -44,7 +44,7 @@ interface AllExercisesPageProps {
 
 export default function AllExercisesPage({ onSelectExercise, standalone = true, onBack }: AllExercisesPageProps) {
   // Ensure exercises is always an array, even if it's undefined
-  const { exercises = [], isLoading, isError, createExercise, isPending } = useExercises();
+  const { exercises = [], isLoading, isError, createExercise, updateExercise, deleteExercise, isPending } = useExercises();
   const { workouts = [] } = useWorkoutHistory();
   const { toast } = useToast();
   const [showDialog, setShowDialog] = useState(false);
@@ -70,6 +70,7 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
   // For add/edit
   const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
   const [exerciseToEdit, setExerciseToEdit] = useState<Exercise | null>(null);
+  const [baseExerciseForVariation, setBaseExerciseForVariation] = useState<Exercise | null>(null);
 
   // Extract recently used exercises from workout history
   const recentExercises = React.useMemo(() => {
@@ -108,10 +109,17 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
     return exercisesList.filter(exercise => {
       if (!exercise) return false;
       
-      // Search filter
-      const matchesSearch = searchQuery === "" || 
-        (exercise.name && exercise.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (exercise.description && exercise.description.toLowerCase().includes(searchQuery.toLowerCase()));
+      // Search filter - include both name and variation info in search
+      const searchableText = [
+        exercise.name,
+        exercise.description,
+        exercise.variation_type,
+        exercise.variation_value,
+        ...exercise.primary_muscle_groups || [],
+        ...exercise.secondary_muscle_groups || []
+      ].filter(Boolean).join(' ').toLowerCase();
+      
+      const matchesSearch = searchQuery === "" || searchableText.includes(searchQuery.toLowerCase());
 
       // Muscle group filter
       const matchesMuscleGroup = selectedMuscleGroup === "all" || 
@@ -168,13 +176,22 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
 
   const handleAdd = () => {
     setExerciseToEdit(null);
+    setBaseExerciseForVariation(null);
     setDialogMode("add");
     setShowDialog(true);
   };
 
   const handleEdit = (exercise: Exercise) => {
     setExerciseToEdit(exercise);
+    setBaseExerciseForVariation(null);
     setDialogMode("edit");
+    setShowDialog(true);
+  };
+  
+  const handleAddVariation = (baseExercise: Exercise) => {
+    setExerciseToEdit(null);
+    setBaseExerciseForVariation(baseExercise);
+    setDialogMode("add");
     setShowDialog(true);
   };
   
@@ -186,30 +203,25 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
   const confirmDelete = async () => {
     if (!exerciseToDelete) return;
     
-    // Here we would actually delete the exercise
-    toast({
-      title: "Exercise deleted",
-      description: `${exerciseToDelete.name} has been removed from your library`,
-    });
+    try {
+      await deleteExercise(exerciseToDelete.id);
+      toast({
+        title: "Exercise deleted",
+        description: `${exerciseToDelete.name} has been removed from your library`,
+      });
+    } catch (err) {
+      console.error("Error deleting exercise:", err);
+      toast({
+        title: "Failed to delete exercise",
+        description: "An error occurred while deleting the exercise",
+        variant: "destructive"
+      });
+    }
     
     setDeleteConfirmOpen(false);
     setExerciseToDelete(null);
   };
   
-  const handleViewDetails = (exercise: Exercise) => {
-    toast({
-      title: "View Details",
-      description: `This feature will be implemented soon!`,
-    });
-  };
-  
-  const handleDuplicate = (exercise: Exercise) => {
-    toast({
-      title: "Duplicate Exercise",
-      description: `This feature will be implemented soon!`,
-    });
-  };
-
   const handleSelectExercise = (exercise: Exercise) => {
     if (onSelectExercise) {
       onSelectExercise(exercise);
@@ -243,32 +255,60 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
     base_exercise_id?: string;
     variation_type?: string;
     variation_value?: string;
+    variationList?: any[];
   }) => {
-    if (dialogMode === "add") {
-      await new Promise(resolve => setTimeout(resolve, 350));
-      await new Promise<void>((resolve, reject) => {
-        createExercise(
-          {
-            ...exercise,
-            user_id: "",
-            // Ensure these are properly cast to the expected types
-            primary_muscle_groups: (exercise.primary_muscle_groups || []) as MuscleGroup[],
-            secondary_muscle_groups: (exercise.secondary_muscle_groups || []) as MuscleGroup[],
-            equipment_type: (exercise.equipment_type || []) as EquipmentType[]
-          },
-          {
-            onSuccess: () => resolve(),
-            onError: err => reject(err),
-          }
-        );
-      });
+    try {
+      if (dialogMode === "add") {
+        await new Promise(resolve => setTimeout(resolve, 350));
+        await new Promise<void>((resolve, reject) => {
+          createExercise(
+            {
+              ...exercise,
+              user_id: "",
+              // Ensure these are properly cast to the expected types
+              primary_muscle_groups: (Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : []) as MuscleGroup[],
+              secondary_muscle_groups: (Array.isArray(exercise.secondary_muscle_groups) ? exercise.secondary_muscle_groups : []) as MuscleGroup[],
+              equipment_type: (Array.isArray(exercise.equipment_type) ? exercise.equipment_type : []) as EquipmentType[]
+            },
+            {
+              onSuccess: () => resolve(),
+              onError: err => reject(err),
+            }
+          );
+        });
+        
+        toast({
+          title: baseExerciseForVariation ? "Variation added" : "Exercise added",
+          description: baseExerciseForVariation 
+            ? `Added variation to ${baseExerciseForVariation.name}`
+            : `Added ${exercise.name} to your library`
+        });
+        
+        setShowDialog(false);
+      } else if (dialogMode === "edit" && exerciseToEdit) {
+        await updateExercise({
+          id: exerciseToEdit.id,
+          ...exercise,
+          // Ensure these are properly cast to the expected types
+          primary_muscle_groups: (Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : []) as MuscleGroup[],
+          secondary_muscle_groups: (Array.isArray(exercise.secondary_muscle_groups) ? exercise.secondary_muscle_groups : []) as MuscleGroup[],
+          equipment_type: (Array.isArray(exercise.equipment_type) ? exercise.equipment_type : []) as EquipmentType[]
+        });
+        
+        toast({
+          title: "Exercise updated",
+          description: `Updated ${exercise.name} in your library`
+        });
+        
+        setShowDialog(false);
+      }
+    } catch (error) {
+      console.error("Error handling exercise submission:", error);
       toast({
-        title: "Exercise added",
-        description: `Added ${exercise.name} to your library`
+        title: "Error",
+        description: "Failed to save exercise. Please try again.",
+        variant: "destructive"
       });
-      setShowDialog(false);
-    } else {
-      toast({ title: "Edit not implemented", description: "Update exercise functionality will be implemented soon!" });
     }
   };
 
@@ -283,6 +323,7 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
           onSelect={standalone ? undefined : handleSelectExercise}
           onEdit={standalone ? handleEdit : undefined}
           onDelete={standalone ? handleDelete : undefined}
+          onAddVariation={standalone ? handleAddVariation : undefined}
         />
       </div>
     );
@@ -383,6 +424,25 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
     );
   };
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className={`${standalone ? 'pt-16 pb-24' : ''} h-full overflow-hidden flex flex-col`}>
+        {standalone && <PageHeader title="Exercise Library" />}
+        <div className={`flex-1 overflow-auto mx-auto w-full max-w-4xl px-4 ${standalone ? 'py-4' : 'pt-0'}`}>
+          <div className="space-y-4 pt-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Card key={i} className="p-3">
+                <Skeleton className="h-6 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`${standalone ? 'pt-16 pb-24' : ''} h-full overflow-hidden flex flex-col`}>
       {standalone && <PageHeader title="Exercise Library" />}
@@ -394,6 +454,7 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
           onOpenChange={setShowDialog}
           onSubmit={handleDialogSubmit}
           initialExercise={exerciseToEdit}
+          baseExercise={baseExerciseForVariation}
           loading={isPending}
           mode={dialogMode}
         />
@@ -547,7 +608,9 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
                     </SelectContent>
                   </Select>
                 </div>
-                
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="text-sm text-gray-300 mb-1 block">Difficulty</label>
                   <Select 
@@ -560,8 +623,8 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
                     <SelectContent className="bg-gray-900 border-gray-700">
                       <SelectGroup>
                         <SelectItem value="all">All Difficulties</SelectItem>
-                        {Array.isArray(DIFFICULTY_LEVELS) && DIFFICULTY_LEVELS.map((difficulty) => (
-                          <SelectItem key={difficulty} value={difficulty}>{difficulty}</SelectItem>
+                        {DIFFICULTY_LEVELS.map((level) => (
+                          <SelectItem key={level} value={level}>{level}</SelectItem>
                         ))}
                       </SelectGroup>
                     </SelectContent>
@@ -575,12 +638,12 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
                     onValueChange={(value) => setSelectedMovement(value as any)}
                   >
                     <SelectTrigger className="bg-gray-900 border-gray-700">
-                      <SelectValue placeholder="Select pattern" />
+                      <SelectValue placeholder="Select movement" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-900 border-gray-700">
                       <SelectGroup>
-                        <SelectItem value="all">All Patterns</SelectItem>
-                        {Array.isArray(MOVEMENT_PATTERNS) && MOVEMENT_PATTERNS.map((pattern) => (
+                        <SelectItem value="all">All Movements</SelectItem>
+                        {MOVEMENT_PATTERNS.map((pattern) => (
                           <SelectItem key={pattern} value={pattern}>{pattern}</SelectItem>
                         ))}
                       </SelectGroup>
@@ -589,94 +652,35 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
                 </div>
               </div>
               
-              <div className="flex justify-between">
-                <div className="text-sm text-gray-400">
-                  {filteredAll.length} exercise{filteredAll.length !== 1 ? 's' : ''} found
-                </div>
-                
-                <Button
-                  variant="link"
-                  size="sm"
-                  onClick={clearFilters}
-                  className="text-purple-400 hover:text-purple-300"
-                >
-                  Clear all filters
-                </Button>
-              </div>
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={clearFilters}
+                className="w-full"
+              >
+                Clear Filters
+              </Button>
             </Card>
           )}
           
-          {/* Tab content */}
-          <div className="flex-1 overflow-y-auto">
-            {/* Loading state */}
-            {isLoading && (
-              <div className="space-y-4">
-                {Array.from({ length: 4 }).map((_, index) => (
-                  <Card key={index} className="bg-gray-900 border-gray-700 p-4">
-                    <div className="flex flex-col gap-2">
-                      <Skeleton className="h-6 w-3/4 bg-gray-800" />
-                      <Skeleton className="h-4 w-5/6 bg-gray-800" />
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-            
-            {/* Error state */}
-            {isError && (
-              <div className="text-red-500 text-center py-8">
-                Error loading exercises. Please try again later.
-              </div>
-            )}
-            
-            {/* Empty state */}
-            {!isLoading && !isError && filteredAll.length === 0 && activeTab === 'browse' && (
-              <div className="text-center py-12">
-                <div className="bg-gray-800/50 rounded-lg py-10 px-6 max-w-md mx-auto">
-                  {searchQuery || selectedMuscleGroup !== "all" || selectedEquipment !== "all" || 
-                  selectedDifficulty !== "all" || selectedMovement !== "all" ? (
-                    <>
-                      <h3 className="text-xl font-medium mb-2">No matching exercises</h3>
-                      <p className="text-gray-400 mb-6">Try adjusting your filters or search query</p>
-                      <Button variant="outline" onClick={clearFilters}>Clear filters</Button>
-                    </>
-                  ) : (
-                    <>
-                      <h3 className="text-xl font-medium mb-2">No exercises found</h3>
-                      <p className="text-gray-400 mb-6">Create your first exercise to get started</p>
-                      <Button variant="gradient" onClick={handleAdd}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Your First Exercise
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-            
-            {/* Tab content */}
-            <TabsContent value="suggested" className="mt-0 h-full">
-              <div className="overflow-y-auto">
-                {renderExerciseList(suggestedExercises)}
-              </div>
+          {/* Tab contents */}
+          <ScrollArea className="flex-1 overflow-auto">
+            <TabsContent value="suggested" className="mt-0">
+              {renderExerciseList(suggestedExercises)}
             </TabsContent>
             
-            <TabsContent value="recent" className="mt-0 h-full">
-              <div className="overflow-y-auto">
-                {renderExerciseList(filteredRecent)}
-              </div>
+            <TabsContent value="recent" className="mt-0">
+              {renderExerciseList(filteredRecent)}
             </TabsContent>
             
-            <TabsContent value="browse" className="mt-0 h-full">
-              <div className="overflow-y-auto">
-                {renderExerciseList(filteredAll, true)}
-              </div>
+            <TabsContent value="browse" className="mt-0">
+              {renderExerciseList(filteredAll, true)}
             </TabsContent>
-          </div>
+          </ScrollArea>
         </Tabs>
       </div>
       
-      {/* Mobile Add Button */}
+      {/* Add Exercise FAB - for mobile */}
       {standalone && isMobile && (
         <ExerciseFAB onClick={handleAdd} />
       )}

@@ -23,6 +23,7 @@ import { ExerciseDialogAdvanced } from "@/components/exercises/ExerciseDialog/Ex
 import { ExerciseDialogMetrics } from "@/components/exercises/ExerciseDialog/ExerciseDialogMetrics";
 import { ExerciseDialogInstructions } from "@/components/exercises/ExerciseDialog/ExerciseDialogInstructions";
 import { ExerciseDialogVariations } from "@/components/exercises/ExerciseDialog/ExerciseDialogVariations";
+import { ExerciseDialogMuscleGroups } from "@/components/exercises/ExerciseDialog/ExerciseDialogMuscleGroups";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -85,7 +86,7 @@ export function ExerciseDialog({
   loading = false,
 }: ExerciseDialogProps) {
   // State for the active tab
-  const [activeTab, setActiveTab] = useState<"basic" | "advanced" | "metrics" | "instructions" | "variations">("basic");
+  const [activeTab, setActiveTab] = useState<"basic" | "advanced" | "metrics" | "instructions" | "variations" | "muscles">("basic");
   
   // State for form errors
   const [formError, setFormError] = useState("");
@@ -109,7 +110,7 @@ export function ExerciseDialog({
   // Type-safe tab change handler
   const handleTabChange = useCallback((value: string) => {
     if (value === "basic" || value === "advanced" || value === "metrics" || 
-        value === "instructions" || value === "variations") {
+        value === "instructions" || value === "variations" || value === "muscles") {
       setActiveTab(value);
     }
   }, []);
@@ -124,13 +125,14 @@ export function ExerciseDialog({
     setFormError("");
     
     // Include variation fields in submission if there's a base exercise
-    // Make sure to always include empty arrays for muscle groups to satisfy TypeScript
+    // Make sure to always include arrays for muscle groups and equipment to satisfy TypeScript
     const submissionData = {
       ...exercise,
       base_exercise_id: baseExercise?.id || exercise.base_exercise_id,
-      // Cast to appropriate types for API submission with empty arrays as default
-      primary_muscle_groups: [] as MuscleGroup[],
-      secondary_muscle_groups: [] as MuscleGroup[],
+      // Ensure we have arrays, even if empty
+      primary_muscle_groups: Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : [],
+      secondary_muscle_groups: Array.isArray(exercise.secondary_muscle_groups) ? exercise.secondary_muscle_groups : [],
+      equipment_type: Array.isArray(exercise.equipment_type) ? exercise.equipment_type : [],
       // Include the variation list in the submission
       variationList: exercise.variationList || []
     };
@@ -204,9 +206,10 @@ export function ExerciseDialog({
           onValueChange={handleTabChange}
           className="flex-1 flex flex-col overflow-hidden"
         >
-          <TabsList className="grid grid-cols-5">
+          <TabsList className="grid grid-cols-6">
             <TabsTrigger value="basic">Basic</TabsTrigger>
             <TabsTrigger value="advanced">Advanced</TabsTrigger>
+            <TabsTrigger value="muscles">Muscles</TabsTrigger>
             <TabsTrigger value="metrics">Metrics</TabsTrigger>
             <TabsTrigger value="variations">Variations</TabsTrigger>
             <TabsTrigger value="instructions">Instructions</TabsTrigger>
@@ -228,6 +231,14 @@ export function ExerciseDialog({
                 onChangeDifficulty={handlers.setDifficulty}
                 onChangeMovement={handlers.setMovementPattern}
                 onToggleCompound={handlers.setIsCompound}
+              />
+            </TabsContent>
+            
+            <TabsContent value="muscles">
+              <ExerciseDialogMuscleGroups 
+                exercise={exercise}
+                onChangePrimaryMuscles={handlers.setPrimaryMuscleGroups}
+                onChangeSecondaryMuscles={handlers.setSecondaryMuscleGroups}
               />
             </TabsContent>
 

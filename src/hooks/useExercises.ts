@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Exercise, MuscleGroup, EquipmentType, MovementPattern, Difficulty } from '@/types/exercise';
@@ -110,9 +109,9 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
       // Initialize metadata object with all needed fields
       const metadata: ExerciseMetadata = {
         ...(newExercise.metadata || {}),
-        // Store is_bodyweight and energy_cost_factor in metadata if they're not direct columns
+        // Store is_bodyweight and energy_cost_factor in metadata
         is_bodyweight: newExercise.is_bodyweight,
-        energy_cost_factor: newExercise.energy_cost_factor,
+        energy_cost_factor: newExercise.energy_cost_factor || 1,
         // Initialize variations array if not present
         variations: []
       };
@@ -149,9 +148,6 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
           base_exercise_id: newExercise.base_exercise_id || null,
           variation_type: variation_type || null,
           variation_value: variation_value || null
-          // REMOVED: Don't try to insert these as direct columns
-          // is_bodyweight: Boolean(newExercise.is_bodyweight),
-          // energy_cost_factor: newExercise.energy_cost_factor || 1
         }])
         .select();
 
@@ -231,9 +227,6 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
           variation_type,
           variation_value,
           metadata
-          // REMOVED: Don't try to update these as direct columns
-          // is_bodyweight: updateData.is_bodyweight,
-          // energy_cost_factor: updateData.energy_cost_factor
         })
         .eq('id', id)
         .select();
