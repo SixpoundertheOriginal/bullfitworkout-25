@@ -48,7 +48,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
     <CommonExerciseCard
       exercise={exercise}
       variant={onAdd ? "workout-add" : "workout"}
-      onAdd={onAdd}
+      onAdd={onAdd ? () => onAdd(exercise) : undefined}
       sets={sets}
       isActive={isActive}
       onAddSet={onAddSet}

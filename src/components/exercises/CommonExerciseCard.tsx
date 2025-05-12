@@ -8,8 +8,8 @@ import { Exercise } from '@/types/exercise';
 import { Badge } from '@/components/ui/badge';
 
 interface CommonExerciseCardProps {
-  exercise: Exercise;
-  variant: 'list' | 'selector' | 'workout-add' | 'library-manage';
+  exercise: Exercise | string;
+  variant: 'list' | 'selector' | 'workout-add' | 'library-manage' | 'workout';
   className?: string;
   onSelect?: () => void;
   onAdd?: () => void;
@@ -21,6 +21,22 @@ interface CommonExerciseCardProps {
   isVariation?: boolean;
   rightContent?: React.ReactNode;
   variationBadge?: React.ReactNode;
+  sets?: any[];
+  isActive?: boolean;
+  onAddSet?: () => void;
+  onCompleteSet?: (setIndex: number) => void;
+  onDeleteExercise?: () => void;
+  onRemoveSet?: (setIndex: number) => void;
+  onEditSet?: (setIndex: number) => void;
+  onSaveSet?: (setIndex: number) => void;
+  onWeightChange?: (setIndex: number, value: string) => void;
+  onRepsChange?: (setIndex: number, value: string) => void;
+  onRestTimeChange?: (setIndex: number, value: string) => void;
+  onWeightIncrement?: (setIndex: number, increment: number) => void;
+  onRepsIncrement?: (setIndex: number, increment: number) => void;
+  onRestTimeIncrement?: (setIndex: number, increment: number) => void;
+  onShowRestTimer?: () => void;
+  onResetRestTimer?: () => void;
 }
 
 export const CommonExerciseCard: React.FC<CommonExerciseCardProps> = ({
@@ -36,32 +52,56 @@ export const CommonExerciseCard: React.FC<CommonExerciseCardProps> = ({
   isSelected = false,
   isVariation = false,
   rightContent,
-  variationBadge
+  variationBadge,
+  // Workout-specific props
+  sets,
+  isActive,
+  onAddSet,
+  onCompleteSet,
+  onDeleteExercise,
+  onRemoveSet,
+  onEditSet,
+  onSaveSet,
+  onWeightChange,
+  onRepsChange,
+  onRestTimeChange,
+  onWeightIncrement,
+  onRepsIncrement,
+  onRestTimeIncrement,
+  onShowRestTimer,
+  onResetRestTimer
 }) => {
   // Determine appropriate handlers based on variant
   const handleClick = () => {
     if (variant === 'selector' && onSelect) {
       onSelect();
-    } else if (variant === 'workout-add' && onAdd) {
+    } else if ((variant === 'workout-add' || variant === 'workout') && onAdd) {
       onAdd();
     }
   };
+
+  // Get the exercise name, handling both string and Exercise object
+  const exerciseName = typeof exercise === 'string' ? exercise : exercise.name;
+  
+  // Get other exercise properties only if it's an Exercise object
+  const primaryMuscleGroups = typeof exercise !== 'string' ? exercise.primary_muscle_groups : [];
+  const equipmentType = typeof exercise !== 'string' ? exercise.equipment_type : [];
 
   return (
     <Card 
       className={cn(
         "relative overflow-hidden transition-all duration-200",
-        variant === 'selector' ? "cursor-pointer" : "",
+        (variant === 'selector' || variant === 'workout-add') ? "cursor-pointer" : "",
         isSelected ? "border-purple-500 ring-1 ring-purple-500/30" : "border-gray-800",
         isVariation ? "bg-gray-900/60" : "bg-gray-900",
         className
       )}
-      onClick={variant === 'selector' ? handleClick : undefined}
+      onClick={(variant === 'selector' || variant === 'workout-add') ? handleClick : undefined}
     >
       <CardContent className="p-3 flex items-center justify-between">
         <div className="flex flex-col flex-grow mr-2">
           <div className="flex items-center space-x-2">
-            <h3 className="font-medium text-gray-100">{exercise.name}</h3>
+            <h3 className="font-medium text-gray-100">{exerciseName}</h3>
             
             {/* Display variation badge if provided */}
             {variationBadge && (
@@ -69,27 +109,29 @@ export const CommonExerciseCard: React.FC<CommonExerciseCardProps> = ({
             )}
           </div>
           
-          <div className="flex flex-wrap gap-1 mt-1">
-            {exercise.primary_muscle_groups.slice(0, 3).map((muscle, idx) => (
-              <Badge 
-                key={idx} 
-                variant="outline" 
-                className="text-xs bg-gray-800/60 border-gray-700/50 text-gray-300"
-              >
-                {muscle}
-              </Badge>
-            ))}
-            
-            {exercise.equipment_type.slice(0, 1).map((equipment, idx) => (
-              <Badge 
-                key={idx} 
-                variant="outline" 
-                className="text-xs bg-gray-800/80 border-gray-700/50 text-gray-400"
-              >
-                {equipment}
-              </Badge>
-            ))}
-          </div>
+          {typeof exercise !== 'string' && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {primaryMuscleGroups.slice(0, 3).map((muscle, idx) => (
+                <Badge 
+                  key={idx} 
+                  variant="outline" 
+                  className="text-xs bg-gray-800/60 border-gray-700/50 text-gray-300"
+                >
+                  {muscle}
+                </Badge>
+              ))}
+              
+              {equipmentType.slice(0, 1).map((equipment, idx) => (
+                <Badge 
+                  key={idx} 
+                  variant="outline" 
+                  className="text-xs bg-gray-800/80 border-gray-700/50 text-gray-400"
+                >
+                  {equipment}
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
         
         {/* Right side content - either custom content or action buttons */}
