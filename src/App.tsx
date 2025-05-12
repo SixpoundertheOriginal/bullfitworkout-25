@@ -1,20 +1,8 @@
 
 import React from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { BrowserRouter } from 'react-router-dom'
 import './App.css'
 
-import Index from './pages/Index'
-import Auth from './pages/Auth'
-import NotFound from './pages/NotFound'
-import Overview from './pages/Overview'
-import TrainingSession from './pages/TrainingSession'
-import WorkoutComplete from './pages/WorkoutComplete'
-import WorkoutDetailsPage from './pages/workout/WorkoutDetailsPage'
-import WorkoutCompletePage from './pages/WorkoutCompletePage'
-import WorkoutManagementPage from './pages/WorkoutManagementPage'
-import AllExercisesPage from './pages/AllExercisesPage'
-import ProfilePage from './pages/ProfilePage'
-import ExerciseEditorPage from './pages/ExerciseEditorPage'
 import { AuthProvider } from './context/AuthContext'
 import { WorkoutNavigationContextProvider } from './context/WorkoutNavigationContext'
 import { DateRangeProvider } from './context/DateRangeContext'
@@ -33,18 +21,20 @@ const queryClient = new QueryClient()
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <WeightUnitContextProvider>
-          <DateRangeProvider>
-            <WorkoutNavigationContextProvider>
-              <LayoutProvider>
-                <RouterProvider />
-                <Toaster />
-              </LayoutProvider>
-            </WorkoutNavigationContextProvider>
-          </DateRangeProvider>
-        </WeightUnitContextProvider>
-      </AuthProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <WeightUnitContextProvider>
+            <DateRangeProvider>
+              <WorkoutNavigationContextProvider>
+                <LayoutProvider>
+                  <RouterProvider />
+                  <Toaster />
+                </LayoutProvider>
+              </WorkoutNavigationContextProvider>
+            </DateRangeProvider>
+          </WeightUnitContextProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   )
 }
