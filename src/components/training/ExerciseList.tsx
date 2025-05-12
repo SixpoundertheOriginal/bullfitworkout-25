@@ -2,7 +2,7 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { ExerciseSet } from "@/types/exercise";
-import ExerciseCard from '@/components/exercises/ExerciseCard';
+import ExerciseCard from './ExerciseCard';
 
 interface ExerciseListProps {
   exercises: Record<string, ExerciseSet[]>;
