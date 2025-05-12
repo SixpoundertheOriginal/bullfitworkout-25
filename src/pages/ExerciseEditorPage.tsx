@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useExercises } from '@/hooks/useExercises';
 import { ExerciseDialogV2 } from '@/components/ExerciseDialogV2';
@@ -9,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Dumbbell, Filter, Search, Plus, BookOpen } from 'lucide-react';
+import { Dumbbell, Filter, Search, Plus, BookOpen, Edit } from 'lucide-react';
 import { MuscleGroup, MovementPattern } from '@/types/exercise';
 import { MUSCLE_GROUP_CATEGORIES } from '@/constants/exerciseMetadata';
 import { useAuth } from '@/hooks/useAuth';

@@ -16,12 +16,12 @@ import AllExercisesPage from './pages/AllExercisesPage'
 import ProfilePage from './pages/ProfilePage'
 import ExerciseEditorPage from './pages/ExerciseEditorPage'
 import { AuthProvider } from './context/AuthContext'
-import { WorkoutNavigationProvider } from './context/WorkoutNavigationContext'
+import { WorkoutNavigationContextProvider } from './context/WorkoutNavigationContext'
 import { DateRangeProvider } from './context/DateRangeContext'
 import { WeightUnitProvider } from './context/WeightUnitContext'
 import { Toaster } from './components/ui/toaster'
 import { LayoutProvider } from './context/LayoutContext'
-import RouterProvider from './context/RouterProvider'
+import { RouterProvider } from './context/RouterProvider'
 
 import {
   QueryClient,
@@ -34,9 +34,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <WeightUnitProvider>
+        <WeightUnitProvider defaultUnit="kg">
           <DateRangeProvider>
-            <WorkoutNavigationProvider>
+            <WorkoutNavigationContextProvider>
               <LayoutProvider>
                 <RouterProvider>
                   <Routes>
@@ -56,7 +56,7 @@ function App() {
                   <Toaster />
                 </RouterProvider>
               </LayoutProvider>
-            </WorkoutNavigationProvider>
+            </WorkoutNavigationContextProvider>
           </DateRangeProvider>
         </WeightUnitProvider>
       </AuthProvider>
