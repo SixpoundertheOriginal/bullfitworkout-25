@@ -10,6 +10,7 @@ import { WeightUnitContextProvider } from './context/WeightUnitContext'
 import { Toaster } from './components/ui/toaster'
 import { LayoutProvider } from './context/LayoutContext'
 import { RouterProvider } from './context/RouterProvider'
+import { TooltipProvider } from './components/ui/tooltip'
 
 import {
   QueryClient,
@@ -22,18 +23,20 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AuthProvider>
-          <WeightUnitContextProvider>
-            <DateRangeProvider>
-              <WorkoutNavigationContextProvider>
-                <LayoutProvider>
-                  <RouterProvider />
-                  <Toaster />
-                </LayoutProvider>
-              </WorkoutNavigationContextProvider>
-            </DateRangeProvider>
-          </WeightUnitContextProvider>
-        </AuthProvider>
+        <TooltipProvider>
+          <AuthProvider>
+            <WeightUnitContextProvider>
+              <DateRangeProvider>
+                <WorkoutNavigationContextProvider>
+                  <LayoutProvider>
+                    <RouterProvider />
+                    <Toaster />
+                  </LayoutProvider>
+                </WorkoutNavigationContextProvider>
+              </DateRangeProvider>
+            </WeightUnitContextProvider>
+          </AuthProvider>
+        </TooltipProvider>
       </BrowserRouter>
     </QueryClientProvider>
   )
