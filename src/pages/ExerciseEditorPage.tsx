@@ -290,7 +290,7 @@ export default function ExerciseEditorPage() {
         </TabsContent>
       </Tabs>
       
-      {/* Exercise Dialog */}
+      {/* Use the new ExerciseDialogV2 component instead of ExerciseDialog */}
       <ExerciseDialogV2
         open={dialogOpen}
         onOpenChange={setDialogOpen}

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Search, Plus } from "lucide-react";
@@ -12,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AllExercisesPage from "@/pages/AllExercisesPage";
+import { ExerciseDialogV2 } from '@/components/ExerciseDialogV2'; // Update import
 
 interface AddExerciseSheetProps {
   open: boolean;
@@ -33,6 +33,7 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
   const { workouts = [] } = useWorkoutHistory();
   const { exercises: allExercises = [] } = useExercises();
   const [showAllExercises, setShowAllExercises] = useState(false);
+  const [exerciseDialogV2Open, setExerciseDialogV2Open] = useState(false);
 
   // Extract recently used exercises from workout history
   const recentExercises = React.useMemo(() => {
@@ -211,6 +212,15 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
           </div>
         </div>
       </SheetContent>
+      <ExerciseDialogV2
+        open={exerciseDialogV2Open}
+        onOpenChange={setExerciseDialogV2Open}
+        mode="add"
+        onSubmit={(exercise) => {
+          handleAddExercise(exercise);
+          setExerciseDialogV2Open(false);
+        }}
+      />
     </Sheet>
   );
 };
