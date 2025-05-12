@@ -10,7 +10,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ExerciseFormState } from '@/hooks/useExerciseFormState';
-import { MovementPattern, Difficulty, MOVEMENT_PATTERNS, DIFFICULTY_LEVELS } from '@/constants/exerciseMetadata';
+import { 
+  MovementPattern, 
+  Difficulty,
+  MOVEMENT_PATTERNS, 
+  DIFFICULTY_LEVELS 
+} from '@/types/exercise';
 
 interface ExerciseDialogAdvancedProps {
   exercise: ExerciseFormState;

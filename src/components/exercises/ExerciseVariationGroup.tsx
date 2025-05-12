@@ -5,6 +5,7 @@ import { CommonExerciseCard } from './CommonExerciseCard';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useExercises } from '@/hooks/useExercises';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Variation } from '@/types/exerciseVariation';
 import { ChevronRight } from 'lucide-react';
 
