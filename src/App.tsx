@@ -18,7 +18,7 @@ import ExerciseEditorPage from './pages/ExerciseEditorPage'
 import { AuthProvider } from './context/AuthContext'
 import { WorkoutNavigationContextProvider } from './context/WorkoutNavigationContext'
 import { DateRangeProvider } from './context/DateRangeContext'
-import { WeightUnitProvider } from './context/WeightUnitContext'
+import { WeightUnitContextProvider } from './context/WeightUnitContext'
 import { Toaster } from './components/ui/toaster'
 import { LayoutProvider } from './context/LayoutContext'
 import { RouterProvider } from './context/RouterProvider'
@@ -34,7 +34,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <WeightUnitProvider defaultUnit="kg">
+        <WeightUnitContextProvider>
           <DateRangeProvider>
             <WorkoutNavigationContextProvider>
               <LayoutProvider>
@@ -58,7 +58,7 @@ function App() {
               </LayoutProvider>
             </WorkoutNavigationContextProvider>
           </DateRangeProvider>
-        </WeightUnitProvider>
+        </WeightUnitContextProvider>
       </AuthProvider>
     </QueryClientProvider>
   )
