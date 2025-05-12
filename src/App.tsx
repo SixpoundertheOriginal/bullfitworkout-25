@@ -38,23 +38,8 @@ function App() {
           <DateRangeProvider>
             <WorkoutNavigationContextProvider>
               <LayoutProvider>
-                <RouterProvider>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/overview" element={<Overview />} />
-                    <Route path="/training-session" element={<TrainingSession />} />
-                    <Route path="/workout-complete" element={<WorkoutComplete />} />
-                    <Route path="/workout/:workoutId" element={<WorkoutDetailsPage />} />
-                    <Route path="/workout-complete/:workoutId" element={<WorkoutCompletePage />} />
-                    <Route path="/workouts" element={<WorkoutManagementPage />} />
-                    <Route path="/all-exercises" element={<AllExercisesPage />} />
-                    <Route path="/exercises" element={<ExerciseEditorPage />} />
-                    <Route path="/profile" element={<ProfilePage />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                  <Toaster />
-                </RouterProvider>
+                <RouterProvider />
+                <Toaster />
               </LayoutProvider>
             </WorkoutNavigationContextProvider>
           </DateRangeProvider>
