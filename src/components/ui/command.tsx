@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import { type DialogProps } from "@radix-ui/react-dialog"
 import { Command as CommandPrimitive } from "cmdk"
@@ -60,15 +59,25 @@ CommandInput.displayName = CommandPrimitive.Input.displayName
 const CommandList = React.forwardRef<
  React.ElementRef<typeof CommandPrimitive.List>,
  React.ComponentPropsWithoutRef<typeof CommandPrimitive.List>
->(({ className, children, ...props }, ref) => (
- <CommandPrimitive.List
-   ref={ref}
-   className={cn("max-h-[300px] overflow-y-auto overflow-x-hidden", className)}
-   {...props}
- >
-   {children || null}
- </CommandPrimitive.List>
-))
+>(({ className, children, ...props }, ref) => {
+ // Ensure children is something that can be iterated over
+ const safeChildren = React.useMemo(() => {
+   // If children is null/undefined, return null
+   if (children == null) return null;
+   // Otherwise return the children
+   return children;
+ }, [children]);
+ 
+ return (
+   <CommandPrimitive.List
+     ref={ref}
+     className={cn("max-h-[300px] overflow-y-auto overflow-x-hidden", className)}
+     {...props}
+   >
+     {safeChildren}
+   </CommandPrimitive.List>
+ );
+})
 
 CommandList.displayName = CommandPrimitive.List.displayName
 
