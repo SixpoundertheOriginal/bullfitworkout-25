@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useExercises } from '@/hooks/useExercises';
 import { useAuth } from '@/hooks/useAuth';
-import { Exercise, MuscleGroup, EquipmentType } from '@/types/exercise';
+import { Exercise, MuscleGroup, EquipmentType, MovementPattern, Difficulty } from '@/types/exercise';
 import { MUSCLE_GROUP_CATEGORIES } from '@/constants/exerciseMetadata';
 import { Dumbbell, ChevronLeft, ChevronRight, Check, Plus, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -28,7 +27,7 @@ interface ExerciseInput {
   primary_muscle_groups: MuscleGroup[];
   secondary_muscle_groups: MuscleGroup[];
   equipment_type: EquipmentType[];
-  movement_pattern: string;
+  movement_pattern: MovementPattern;
   difficulty: string;
   instructions?: Record<string, any>;
   is_compound?: boolean;
