@@ -2,20 +2,18 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useWorkoutDetails } from '@/hooks/useWorkoutDetails';
-import { WorkoutCompletion } from '@/components/training/WorkoutCompletion';
-import WorkoutSummaryCard from '@/components/workouts/WorkoutSummaryCard';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { WorkoutSummary } from '@/components/workouts/WorkoutSummary';
 import { toast } from '@/hooks/use-toast';
 import { Home, Dumbbell, BarChart, ArrowLeft } from 'lucide-react';
 import { ExerciseSet } from '@/types/exercise';
+import WorkoutSummaryCard from '@/components/workouts/WorkoutSummaryCard';
 
 export function WorkoutCompletePage() {
   const { workoutId } = useParams<{ workoutId: string }>();
   const navigate = useNavigate();
-  const { workoutDetails: workout, loading, error } = useWorkoutDetails(workoutId);
+  const { workoutDetails: workout, loading, error, exerciseSets } = useWorkoutDetails(workoutId);
   
   if (loading) {
     return (
@@ -67,8 +65,7 @@ export function WorkoutCompletePage() {
   }
 
   // Prepare the props for WorkoutSummaryCard
-  const exerciseSets = workout.exercises || {}; 
-  const sets = Object.values(exerciseSets).flat();
+  const sets = Object.values(exerciseSets || {}).flat();
   
   const completedSets = sets
     .filter((set: ExerciseSet) => set.completed)

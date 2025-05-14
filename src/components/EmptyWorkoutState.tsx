@@ -5,15 +5,17 @@ import { cn } from "@/lib/utils";
 import { ExerciseSelector } from "@/components/exercises/ExerciseSelector";
 import { Exercise } from "@/types/exercise";
 import { useLocation } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { typography } from "@/lib/typography";
 
 interface EmptyWorkoutStateProps {
+  onAddExercise?: (exercise: string | Exercise) => void;
   onTemplateSelect: (exercise: string | Exercise) => void;
   className?: string;
 }
 
 export const EmptyWorkoutState: React.FC<EmptyWorkoutStateProps> = ({ 
+  onAddExercise,
   onTemplateSelect,
   className 
 }) => {
@@ -35,6 +37,14 @@ export const EmptyWorkoutState: React.FC<EmptyWorkoutStateProps> = ({
   // Get difficulty from user profile or default to intermediate
   const difficulty = 'intermediate'; // This would come from user profile in a real app
 
+  const handleSelectExercise = (exercise: string | Exercise) => {
+    if (onAddExercise) {
+      onAddExercise(exercise);
+    } else {
+      onTemplateSelect(exercise);
+    }
+  };
+
   return (
     <div className={cn("flex flex-col items-center py-6", className)}>
       <Card className="w-full mb-4 bg-card/50 border-gray-800">
@@ -47,7 +57,7 @@ export const EmptyWorkoutState: React.FC<EmptyWorkoutStateProps> = ({
           </p>
           
           <ExerciseSelector
-            onSelectExercise={onTemplateSelect}
+            onSelectExercise={handleSelectExercise}
             trainingType={trainingType}
             bodyFocus={bodyFocus}
             movementPattern={movementPattern}

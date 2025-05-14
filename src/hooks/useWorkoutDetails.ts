@@ -4,8 +4,26 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { ExerciseSet } from "@/types/exercise";
 
+// Define a WorkoutSession interface to match the database structure
+interface WorkoutSession {
+  id: string;
+  user_id: string;
+  name: string;
+  training_type: string;
+  start_time: string;
+  end_time: string | null;
+  duration: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  is_historical: boolean;
+  logged_at: string;
+  metadata: any;
+  exercises?: Record<string, ExerciseSet[]>; // This will be populated from exercise_sets
+}
+
 export function useWorkoutDetails(workoutId: string | undefined) {
-  const [workoutDetails, setWorkoutDetails] = useState<any>(null);
+  const [workoutDetails, setWorkoutDetails] = useState<WorkoutSession | null>(null);
   const [exerciseSets, setExerciseSets] = useState<Record<string, ExerciseSet[]>>({});
   const [loading, setLoading] = useState(workoutId ? true : false);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +52,8 @@ export function useWorkoutDetails(workoutId: string | undefined) {
         return;
       }
       
-      setWorkoutDetails(workout);
+      const workoutSessionData: WorkoutSession = workout;
+      setWorkoutDetails(workoutSessionData);
       
       const { data: sets, error: setsError } = await supabase
         .from('exercise_sets')
@@ -65,8 +84,9 @@ export function useWorkoutDetails(workoutId: string | undefined) {
       setExerciseSets(groupedSets);
       
       // Process sets for the workout.exercises property
-      if (workout) {
-        workout.exercises = groupedSets;
+      if (workoutSessionData) {
+        workoutSessionData.exercises = groupedSets;
+        setWorkoutDetails({...workoutSessionData});
       }
       
     } catch (err: any) {
@@ -93,9 +113,20 @@ export function useWorkoutDetails(workoutId: string | undefined) {
     if (!workoutId || !workoutDetails) return;
     
     try {
+      // Make sure required properties are defined
+      const validSet = {
+        workout_id: workoutId,
+        exercise_name: newSet.exercise_name || '',
+        weight: newSet.weight || 0,
+        reps: newSet.reps || 0, 
+        set_number: newSet.set_number || 1,
+        completed: newSet.completed || false,
+        rest_time: newSet.restTime || 60
+      };
+
       const { data, error: insertError } = await supabase
         .from('exercise_sets')
-        .insert([{ ...newSet, workout_id: workoutId }])
+        .insert([validSet])
         .select()
         .single();
         
@@ -114,8 +145,9 @@ export function useWorkoutDetails(workoutId: string | undefined) {
         
         // Also update workoutDetails.exercises
         if (workoutDetails) {
-          workoutDetails.exercises = updatedSets;
-          setWorkoutDetails({...workoutDetails});
+          const updatedWorkout = {...workoutDetails};
+          updatedWorkout.exercises = updatedSets;
+          setWorkoutDetails(updatedWorkout);
         }
         
         return updatedSets;
@@ -164,8 +196,9 @@ export function useWorkoutDetails(workoutId: string | undefined) {
         
         // Also update workoutDetails.exercises
         if (workoutDetails) {
-          workoutDetails.exercises = updatedSets;
-          setWorkoutDetails({...workoutDetails});
+          const updatedWorkout = {...workoutDetails};
+          updatedWorkout.exercises = updatedSets;
+          setWorkoutDetails(updatedWorkout);
         }
         
         return updatedSets;
@@ -209,8 +242,9 @@ export function useWorkoutDetails(workoutId: string | undefined) {
         
         // Also update workoutDetails.exercises
         if (workoutDetails) {
-          workoutDetails.exercises = updatedSets;
-          setWorkoutDetails({...workoutDetails});
+          const updatedWorkout = {...workoutDetails};
+          updatedWorkout.exercises = updatedSets;
+          setWorkoutDetails(updatedWorkout);
         }
         
         return updatedSets;

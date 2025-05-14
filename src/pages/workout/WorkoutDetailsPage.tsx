@@ -13,7 +13,6 @@ import { Card } from '@/components/ui/card';
 import { WorkoutDetailsHeader } from '@/components/workouts/WorkoutDetailsHeader';
 import { WorkoutSessionFooter } from '@/components/training/WorkoutSessionFooter';
 import { TopRestTimer } from '@/components/TopRestTimer';
-import { WorkoutExercisesSection } from '@/components/workouts/WorkoutExercisesSection';
 import { WorkoutStatsOverview } from '@/components/metrics/WorkoutStatsOverview';
 import { EmptyWorkoutState } from '@/components/EmptyWorkoutState';
 import { toast } from '@/hooks/use-toast';
@@ -28,7 +27,16 @@ export default function WorkoutDetailsPage() {
   const [restTimerActive, setRestTimerActive] = useState(false);
   const [resetTimerSignal, setResetTimerSignal] = useState(0);
   
-  const { workoutDetails, loading: workoutLoading, error, exerciseSets, addExerciseSet, updateExerciseSet, deleteExerciseSet } = useWorkoutDetails(workoutId);
+  const { 
+    workoutDetails, 
+    loading: workoutLoading, 
+    error, 
+    exerciseSets, 
+    addExerciseSet, 
+    updateExerciseSet, 
+    deleteExerciseSet 
+  } = useWorkoutDetails(workoutId);
+  
   const { isLoading: isHistoryLoading } = useWorkoutHistory();
   
   const isLoading = workoutLoading || isHistoryLoading;
@@ -74,7 +82,8 @@ export default function WorkoutDetailsPage() {
     if (!workoutDetails || !exerciseSets || Object.keys(exerciseSets).length === 0) {
       return (
         <EmptyWorkoutState 
-          onAddExercise={() => setAddExerciseSheetOpen(true)} 
+          onTemplateSelect={handleAddExercise}
+          onAddExercise={() => setAddExerciseSheetOpen(true)}
         />
       );
     }
@@ -165,10 +174,15 @@ export default function WorkoutDetailsPage() {
   return (
     <div className="min-h-screen pb-20">
       {/* Top Rest Timer */}
-      <TopRestTimer isActive={restTimerActive} resetSignal={resetTimerSignal} />
+      <TopRestTimer 
+        isActive={restTimerActive} 
+        resetSignal={resetTimerSignal} 
+      />
       
       {/* Workout Details Header */}
-      <WorkoutDetailsHeader workoutData={workoutDetails} />
+      <WorkoutDetailsHeader 
+        workoutData={workoutDetails} 
+      />
       
       {/* Main Content Tabs */}
       <div className="container max-w-screen-md mx-auto px-4 pt-4">
@@ -190,7 +204,9 @@ export default function WorkoutDetailsPage() {
           </TabsContent>
           
           <TabsContent value="stats">
-            <WorkoutStatsOverview workoutData={workoutDetails} />
+            <WorkoutStatsOverview 
+              workoutData={workoutDetails} 
+            />
           </TabsContent>
           
           <TabsContent value="timer">
@@ -219,7 +235,9 @@ export default function WorkoutDetailsPage() {
       />
       
       {/* Footer */}
-      <WorkoutSessionFooter workoutData={workoutDetails} />
+      <WorkoutSessionFooter 
+        workoutData={workoutDetails} 
+      />
     </div>
   );
 }
