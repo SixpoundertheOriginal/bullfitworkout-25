@@ -123,7 +123,7 @@ export default function WorkoutDetailsPage() {
               {sets.map((set) => (
                 <SetRow
                   key={set.id}
-                  set={set}
+                  exerciseSet={set}
                   onUpdate={updateExerciseSet}
                   onDelete={deleteExerciseSet}
                   onTimerStart={() => {
@@ -233,7 +233,7 @@ export default function WorkoutDetailsPage() {
         open={addExerciseSheetOpen}
         onOpenChange={setAddExerciseSheetOpen}
         onSelectExercise={handleAddExercise}
-        trainingType={workoutDetails.training_type}
+        trainingType={workoutDetails?.training_type}
       />
       
       {/* Footer */}
@@ -241,7 +241,7 @@ export default function WorkoutDetailsPage() {
         hasExercises={Object.keys(exerciseSets).length > 0}
         isSaving={false}
         onAddExercise={() => setAddExerciseSheetOpen(true)}
-        onFinishWorkout={() => navigate(`/workout-complete/${workoutDetails.id}`)} 
+        onFinishWorkout={() => navigate(`/workout-complete/${workoutDetails?.id}`)} 
       />
     </div>
   );

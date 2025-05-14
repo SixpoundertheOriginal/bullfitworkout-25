@@ -168,15 +168,18 @@ export function ExerciseWizard({ onComplete, onCancel, className }: ExerciseWiza
       ? `${selectedVariation} ${exerciseName}`
       : exerciseName;
 
+    // Ensure that movement_pattern is cast to the proper type
+    const movementPatternValue = (selectedExercise?.movement_pattern || 'push') as MovementPattern;
+
     // Prepare the exercise data that conforms to the ExerciseInput interface
     const exerciseData: ExerciseInput = {
       name: fullExerciseName,
       user_id: user.id,
-      description: exerciseDescription || fullExerciseName, // Ensure description always has a value
+      description: exerciseDescription || fullExerciseName,
       primary_muscle_groups: selectedExercise?.primary_muscle_groups || [selectedMuscleGroup as MuscleGroup],
       secondary_muscle_groups: selectedExercise?.secondary_muscle_groups || [],
       equipment_type: selectedEquipment ? [selectedEquipment] : ['bodyweight'],
-      movement_pattern: selectedExercise?.movement_pattern || 'push',
+      movement_pattern: movementPatternValue,
       difficulty: selectedExercise?.difficulty || 'intermediate',
       is_compound: selectedExercise?.is_compound || false,
       instructions: selectedExercise?.instructions || {},
