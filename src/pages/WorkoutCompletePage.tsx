@@ -1,142 +1,125 @@
 
-import React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from 'react-router-dom';
 import { useWorkoutDetails } from '@/hooks/useWorkoutDetails';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from '@/hooks/use-toast';
-import { Home, Dumbbell, BarChart, ArrowLeft } from 'lucide-react';
-import { ExerciseSet } from '@/types/exercise';
-import WorkoutSummaryCard from '@/components/workouts/WorkoutSummaryCard';
+import { CheckCircle2, Clock, Dumbbell, BarChart } from 'lucide-react';
 
 export function WorkoutCompletePage() {
   const { workoutId } = useParams<{ workoutId: string }>();
   const navigate = useNavigate();
-  const { workoutDetails: workout, loading, error, exerciseSets } = useWorkoutDetails(workoutId);
+  const [totalSets, setTotalSets] = useState(0);
+  const [totalVolume, setTotalVolume] = useState(0);
+  
+  const {
+    workoutDetails,
+    exerciseSets,
+    loading,
+    error
+  } = useWorkoutDetails(workoutId);
+  
+  useEffect(() => {
+    if (error) {
+      navigate('/');
+    }
+  }, [error, navigate]);
+  
+  useEffect(() => {
+    if (exerciseSets) {
+      // Calculate total sets and volume
+      let sets = 0;
+      let volume = 0;
+      
+      Object.values(exerciseSets).forEach(exerciseSets => {
+        exerciseSets.forEach(set => {
+          sets++;
+          if (set.completed) {
+            volume += set.weight * set.reps;
+          }
+        });
+      });
+      
+      setTotalSets(sets);
+      setTotalVolume(volume);
+    }
+  }, [exerciseSets]);
   
   if (loading) {
-    return (
-      <div className="container max-w-screen-md mx-auto py-6 px-4">
-        <Skeleton className="h-12 w-3/4 mb-6" />
-        <div className="space-y-6">
-          <Skeleton className="h-40 w-full" />
-          <Skeleton className="h-60 w-full" />
-        </div>
-      </div>
-    );
+    return <div className="p-8 text-center">Loading workout details...</div>;
   }
   
-  if (error || !workout) {
-    // Show error toast and navigate to home
-    toast({
-      title: "Error loading workout",
-      description: error || "Workout not found",
-      variant: "destructive"
-    });
-    
-    return (
-      <div className="container max-w-screen-md mx-auto py-16 px-4 text-center">
-        <h2 className="text-2xl font-bold mb-2">Workout not found</h2>
-        <p className="text-gray-500 mb-6">The requested workout could not be found.</p>
-        <Button onClick={() => navigate('/')}>Return to Home</Button>
-      </div>
-    );
+  if (!workoutDetails) {
+    return <div className="p-8 text-center">Workout not found</div>;
   }
-  
-  // Check if the workout has actually been completed
-  const isWorkoutCompleted = workout.end_time !== null;
-  
-  if (!isWorkoutCompleted) {
-    return (
-      <div className="container max-w-screen-md mx-auto py-16 px-4 text-center">
-        <h2 className="text-2xl font-bold mb-2">Workout Not Completed</h2>
-        <p className="text-gray-500 mb-6">This workout has not been marked as complete yet.</p>
-        <div className="space-y-4">
-          <Button onClick={() => navigate(`/workout/${workoutId}`)} className="w-full">
-            <ArrowLeft className="h-4 w-4 mr-2" /> Return to Workout
-          </Button>
-          <Button onClick={() => navigate('/')} variant="outline" className="w-full">
-            <Home className="h-4 w-4 mr-2" /> Return to Home
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // Prepare the props for WorkoutSummaryCard
-  const sets = Object.values(exerciseSets || {}).flat();
-  
-  const completedSets = sets
-    .filter((set: ExerciseSet) => set.completed)
-    .length;
-  
-  const totalSets = sets.length;
-  
-  // Calculate total volume (weight * reps across all sets)
-  const totalVolume = sets
-    .reduce((acc: number, set: ExerciseSet) => {
-      return acc + (set.completed ? (set.weight * set.reps) : 0);
-    }, 0);
-  
-  const weightUnit = 'kg'; // Default weight unit, could be dynamic based on user preferences
   
   return (
-    <div className="container max-w-screen-md mx-auto py-6 px-4 pb-20">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-4">Workout Completed!</h1>
+    <div className="container max-w-md mx-auto py-8 px-4">
+      <div className="text-center mb-8">
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-800/30 border-2 border-green-500 mb-4">
+          <CheckCircle2 className="h-10 w-10 text-green-500" />
+        </div>
+        <h1 className="text-2xl font-bold mb-2">Workout Complete!</h1>
         <p className="text-gray-400">
-          Great job on completing your workout. Here's a summary of your session.
+          Great job completing your {workoutDetails.training_type} workout
         </p>
       </div>
       
-      <div className="mt-8 space-y-6">
-        <h2 className="text-2xl font-bold">Workout Summary</h2>
-        
-        <WorkoutSummaryCard 
-          workoutData={workout}
-          completedSets={completedSets}
-          totalSets={totalSets}
-          totalVolume={totalVolume}
-          weightUnit={weightUnit}
-        />
-        
-        <Card className="border-gray-800 bg-gray-900/50">
-          <div className="p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <BarChart className="h-5 w-5 text-purple-500" /> Performance Stats
-            </h3>
+      <Card className="bg-gray-900 border-gray-800 mb-6">
+        <div className="p-6">
+          <h2 className="text-xl font-bold mb-4">{workoutDetails.name}</h2>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-purple-500" />
+              <div>
+                <div className="text-sm text-gray-400">Duration</div>
+                <div className="font-semibold">{workoutDetails.duration} min</div>
+              </div>
+            </div>
             
-            <div className="space-y-4">
-              <p className="text-gray-300">
-                This workout focused on {workout.training_type || "general fitness"} training.
-              </p>
-              
-              {workout.notes && (
-                <div className="bg-gray-800 p-3 rounded">
-                  <p className="text-sm text-gray-300">{workout.notes}</p>
-                </div>
-              )}
+            <div className="flex items-center gap-2">
+              <Dumbbell className="h-5 w-5 text-purple-500" />
+              <div>
+                <div className="text-sm text-gray-400">Exercises</div>
+                <div className="font-semibold">{Object.keys(exerciseSets).length}</div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <BarChart className="h-5 w-5 text-purple-500" />
+              <div>
+                <div className="text-sm text-gray-400">Sets</div>
+                <div className="font-semibold">{totalSets}</div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <BarChart className="h-5 w-5 text-purple-500" />
+              <div>
+                <div className="text-sm text-gray-400">Volume</div>
+                <div className="font-semibold">{totalVolume} kg</div>
+              </div>
             </div>
           </div>
-        </Card>
-        
-        <div className="flex flex-col gap-4 pt-6">
-          <Button 
-            onClick={() => navigate('/')}
-            className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600"
-          >
-            <Home className="h-4 w-4 mr-2" /> Back to Home
-          </Button>
-          
-          <Button 
-            onClick={() => navigate('/workout/new')}
-            variant="outline" 
-            className="border-gray-700"
-          >
-            <Dumbbell className="h-4 w-4 mr-2" /> Start New Workout
-          </Button>
         </div>
+      </Card>
+      
+      <div className="flex gap-4">
+        <Button 
+          variant="outline" 
+          className="flex-1 border-gray-700" 
+          onClick={() => navigate(`/workout/${workoutId}`)}
+        >
+          View Details
+        </Button>
+        
+        <Button 
+          className="flex-1 bg-purple-700 hover:bg-purple-600"
+          onClick={() => navigate('/')}
+        >
+          Done
+        </Button>
       </div>
     </div>
   );

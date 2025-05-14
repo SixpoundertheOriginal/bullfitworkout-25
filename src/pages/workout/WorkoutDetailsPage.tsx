@@ -83,7 +83,7 @@ export default function WorkoutDetailsPage() {
       return (
         <EmptyWorkoutState 
           onTemplateSelect={handleAddExercise}
-          onAddExercise={() => setAddExerciseSheetOpen(true)}
+          onAddExerciseClick={() => setAddExerciseSheetOpen(true)}
         />
       );
     }
@@ -123,7 +123,7 @@ export default function WorkoutDetailsPage() {
               {sets.map((set) => (
                 <SetRow
                   key={set.id}
-                  exerciseSet={set}
+                  set={set}
                   onUpdate={updateExerciseSet}
                   onDelete={deleteExerciseSet}
                   onTimerStart={() => {
@@ -181,7 +181,9 @@ export default function WorkoutDetailsPage() {
       
       {/* Workout Details Header */}
       <WorkoutDetailsHeader 
-        workoutData={workoutDetails} 
+        workoutDetails={workoutDetails}
+        onEditClick={() => {}}
+        onDeleteClick={() => {}} 
       />
       
       {/* Main Content Tabs */}
@@ -205,7 +207,7 @@ export default function WorkoutDetailsPage() {
           
           <TabsContent value="stats">
             <WorkoutStatsOverview 
-              workoutData={workoutDetails} 
+              workoutDetails={workoutDetails}
             />
           </TabsContent>
           
@@ -236,7 +238,10 @@ export default function WorkoutDetailsPage() {
       
       {/* Footer */}
       <WorkoutSessionFooter 
-        workoutData={workoutDetails} 
+        hasExercises={Object.keys(exerciseSets).length > 0}
+        isSaving={false}
+        onAddExercise={() => setAddExerciseSheetOpen(true)}
+        onFinishWorkout={() => navigate(`/workout-complete/${workoutDetails.id}`)} 
       />
     </div>
   );

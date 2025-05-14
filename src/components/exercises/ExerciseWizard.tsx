@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useExercises } from '@/hooks/useExercises';
 import { useAuth } from '@/hooks/useAuth';
@@ -23,12 +24,12 @@ type WizardStep =
 interface ExerciseInput {
   name: string;
   user_id: string;
+  description: string; // Making this required to match the expected type
   primary_muscle_groups: MuscleGroup[];
   secondary_muscle_groups: MuscleGroup[];
   equipment_type: EquipmentType[];
   movement_pattern: string;
   difficulty: string;
-  description?: string;
   instructions?: Record<string, any>;
   is_compound?: boolean;
   tips?: string[];
@@ -171,7 +172,7 @@ export function ExerciseWizard({ onComplete, onCancel, className }: ExerciseWiza
     const exerciseData: ExerciseInput = {
       name: fullExerciseName,
       user_id: user.id,
-      description: exerciseDescription,
+      description: exerciseDescription || fullExerciseName, // Ensure description always has a value
       primary_muscle_groups: selectedExercise?.primary_muscle_groups || [selectedMuscleGroup as MuscleGroup],
       secondary_muscle_groups: selectedExercise?.secondary_muscle_groups || [],
       equipment_type: selectedEquipment ? [selectedEquipment] : ['bodyweight'],
