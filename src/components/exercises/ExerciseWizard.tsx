@@ -28,7 +28,7 @@ interface ExerciseInput {
   secondary_muscle_groups: MuscleGroup[];
   equipment_type: EquipmentType[];
   movement_pattern: MovementPattern;
-  difficulty: string;
+  difficulty: Difficulty;
   instructions?: Record<string, any>;
   is_compound?: boolean;
   tips?: string[];
@@ -169,6 +169,9 @@ export function ExerciseWizard({ onComplete, onCancel, className }: ExerciseWiza
 
     // Ensure that movement_pattern is cast to the proper type
     const movementPatternValue = (selectedExercise?.movement_pattern || 'push') as MovementPattern;
+    
+    // Ensure that difficulty is cast to the proper type
+    const difficultyValue = (selectedExercise?.difficulty || 'intermediate') as Difficulty;
 
     // Prepare the exercise data that conforms to the ExerciseInput interface
     const exerciseData: ExerciseInput = {
@@ -179,7 +182,7 @@ export function ExerciseWizard({ onComplete, onCancel, className }: ExerciseWiza
       secondary_muscle_groups: selectedExercise?.secondary_muscle_groups || [],
       equipment_type: selectedEquipment ? [selectedEquipment] : ['bodyweight'],
       movement_pattern: movementPatternValue,
-      difficulty: selectedExercise?.difficulty || 'intermediate',
+      difficulty: difficultyValue,
       is_compound: selectedExercise?.is_compound || false,
       instructions: selectedExercise?.instructions || {},
       tips: selectedExercise?.tips || [],
