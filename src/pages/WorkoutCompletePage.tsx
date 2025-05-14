@@ -1,352 +1,106 @@
 
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { TrainingConfig } from "@/hooks/useTrainingSetupPersistence";
-import { Loader2, ArrowLeft } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-import { useAuth } from "@/context/AuthContext";
-import { useWorkoutStore } from '@/store/workoutStore';
-import { WorkoutCompletion } from "@/components/training/WorkoutCompletion";
-import NotesSection from "@/components/workouts/NotesSection";
-import { useWorkoutSave } from "@/hooks/useWorkoutSave";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import SaveTemplateSection from "@/components/workouts/SaveTemplateSection";
-import { useEffect as useEffectState } from 'react';
+import React from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useWorkoutDetails } from '@/hooks/useWorkoutDetails';
+import { WorkoutCompletion } from '@/components/training/WorkoutCompletion';
+import { WorkoutSummaryCard } from '@/components/workouts/WorkoutSummaryCard';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { WorkoutSummary } from '@/components/workouts/WorkoutSummary';
+import { toast } from '@/hooks/use-toast';
+import { Home, Dumbbell, BarChart, ArrowLeft } from 'lucide-react';
 
-export interface WorkoutPageState {
-  workoutData?: {
-    exercises: Record<string, any[]>;
-    duration: number;
-    startTime: Date;
-    endTime: Date;
-    trainingType: string;
-    name: string;
-    trainingConfig: TrainingConfig | null;
-    notes: string;
-    metadata: any;
-  };
-}
-
-export const WorkoutCompletePage = () => {
-  const location = useLocation();
+export function WorkoutCompletePage() {
+  const { workoutId } = useParams<{ workoutId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { workout, loading, error } = useWorkoutDetails(workoutId);
   
-  // Access the workout store
-  const { 
-    resetSession, 
-    exercises, 
-    elapsedTime,
-    isActive,
-    setWorkoutStatus
-  } = useWorkoutStore();
+  if (loading) {
+    return (
+      <div className="container max-w-screen-md mx-auto py-6 px-4">
+        <Skeleton className="h-12 w-3/4 mb-6" />
+        <div className="space-y-6">
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-60 w-full" />
+        </div>
+      </div>
+    );
+  }
   
-  // Local state for this page
-  const [notes, setNotes] = useState("");
-  const [saveAsTemplate, setSaveAsTemplate] = useState(false);
-  const [templateName, setTemplateName] = useState("");
-  const [templateDescription, setTemplateDescription] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
-  
-  // State from the route transition
-  const state = location.state as WorkoutPageState;
-  const workoutData = state?.workoutData;
-  
-  // Initialize the workout save hook with the proper data
-  const {
-    saveStatus,
-    savingErrors,
-    workoutId,
-    handleCompleteWorkout,
-  } = useWorkoutSave(
-    workoutData?.exercises || exercises,
-    workoutData?.duration || elapsedTime,
-    resetSession
-  );
-  
-  // When page loads, validate if we have workout data
-  useEffectState(() => {
-    console.log("Workout Complete Page - Initial State:", { 
-      hasWorkoutData: !!workoutData,
-      exercises: Object.keys(workoutData?.exercises || {}).length,
-      isActive,
-      saveStatus
-    });
-    
-    if (!workoutData && Object.keys(exercises).length === 0) {
-      toast({
-        title: "No workout data found",
-        description: "Please complete a workout session first",
-        variant: "destructive"
-      });
-      
-      // Navigate back to workout page
-      navigate('/training-session');
-    }
-  }, []);
-
-  // Initialize template name from workout data
-  useEffect(() => {
-    if (workoutData) {
-      setTemplateName(workoutData.name || "My Workout");
-    }
-  }, [workoutData]);
-
-  // Back button handler
-  const handleBack = () => {
-    setShowDiscardDialog(true);
-  };
-
-  // Save workout handler
-  const handleSave = async () => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "You need to be logged in to save your workout",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    try {
-      setIsLoading(true);
-      
-      // Prepare the workout data with user notes
-      const finalWorkoutData = {
-        ...workoutData,
-        notes
-      };
-      
-      console.log("Saving workout with data:", finalWorkoutData);
-      
-      // Save workout and get the ID
-      const savedWorkoutId = await handleCompleteWorkout({
-        ...finalWorkoutData?.trainingConfig,
-        notes
-      });
-      
-      // Handle template creation if requested
-      if (savedWorkoutId && saveAsTemplate) {
-        try {
-          // Logic for saving template would go here
-          console.log("Saving template:", {
-            name: templateName,
-            description: templateDescription,
-            exercises: finalWorkoutData.exercises
-          });
-          
-          toast({
-            title: "Template saved!",
-            description: "Your workout template has been created"
-          });
-        } catch (templateError) {
-          console.error("Error saving template:", templateError);
-          toast({
-            title: "Workout saved, but template could not be created",
-            description: "There was a problem saving your workout template",
-            variant: "destructive"
-          });
-        }
-      }
-
-      // Success - show toast and delay navigation to allow it to be seen
-      console.log("Workout saved with ID:", savedWorkoutId);
-      toast({
-        title: "Workout saved!",
-        description: "Your workout has been successfully recorded"
-      });
-      
-      // Navigate after short delay to show the success message
-      setTimeout(() => {
-        navigate('/overview');
-      }, 1500);
-      
-    } catch (error) {
-      console.error("Error saving workout:", error);
-      toast({
-        title: "Error saving workout",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
-        variant: "destructive"
-      });
-      setIsLoading(false);
-    }
-  };
-
-  // Discard workout handler
-  const handleDiscard = () => {
-    console.log("Discarding workout");
-    // Reset state related to the workout
-    resetSession();
-    
-    // Close the dialog
-    setShowDiscardDialog(false);
-    
-    // Show confirmation
+  if (error || !workout) {
+    // Show error toast and navigate to home
     toast({
-      title: "Workout discarded",
-      description: "Your workout session has been discarded"
+      title: "Error loading workout",
+      description: error || "Workout not found",
+      variant: "destructive"
     });
     
-    // Navigate to home screen
-    navigate('/overview');
-  };
+    return (
+      <div className="container max-w-screen-md mx-auto py-16 px-4 text-center">
+        <h2 className="text-2xl font-bold mb-2">Workout not found</h2>
+        <p className="text-gray-500 mb-6">The requested workout could not be found.</p>
+        <Button onClick={() => navigate('/')}>Return to Home</Button>
+      </div>
+    );
+  }
   
-  // Cancel discard and return to training session
-  const handleContinueWorkout = () => {
-    console.log("Continuing workout");
-    // Ensure workout status is set back to active when returning
-    setWorkoutStatus('active');
-    setShowDiscardDialog(false);
-    
-    // Navigate back to training session with a flag to indicate we're returning from discard
-    navigate('/training-session', { 
-      state: { fromDiscard: true }
-    });
-  };
-
-  // Render error state
-  if (savingErrors.length > 0) {
+  // Check if the workout has actually been completed
+  const isWorkoutCompleted = workout.end_time !== null;
+  
+  if (!isWorkoutCompleted) {
     return (
-      <div className="min-h-screen bg-black text-white p-6">
-        <h1 className="text-2xl font-bold mb-4">Error Saving Workout</h1>
-        <div className="bg-red-900/30 border border-red-800 p-4 rounded-lg mb-6">
-          <p className="text-red-200 mb-2">There was an error saving your workout:</p>
-          <p className="font-mono text-sm bg-black/50 p-2 rounded whitespace-pre-wrap">
-            {savingErrors.map((err, i) => (
-              <div key={i} className="mb-2">
-                <strong>{err.type}:</strong> {err.message}
-              </div>
-            ))}
-          </p>
-        </div>
-        <div className="flex gap-4 justify-end">
-          <Button variant="outline" onClick={() => navigate('/training-session')}>
-            Back to Workout
+      <div className="container max-w-screen-md mx-auto py-16 px-4 text-center">
+        <h2 className="text-2xl font-bold mb-2">Workout Not Completed</h2>
+        <p className="text-gray-500 mb-6">This workout has not been marked as complete yet.</p>
+        <div className="space-y-4">
+          <Button onClick={() => navigate(`/workout/${workoutId}`)} className="w-full">
+            <ArrowLeft className="h-4 w-4 mr-2" /> Return to Workout
           </Button>
-          <Button onClick={() => window.location.reload()}>
-            Try Again
+          <Button onClick={() => navigate('/')} variant="outline" className="w-full">
+            <Home className="h-4 w-4 mr-2" /> Return to Home
           </Button>
         </div>
       </div>
     );
   }
-
-  // Show loading state
-  if (isLoading || !workoutData) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white">
-        <Loader2 className="h-8 w-8 animate-spin mb-4" />
-        <p>Processing your workout...</p>
-      </div>
-    );
-  }
-
+  
   return (
-    <div className="min-h-screen bg-black text-white pb-20">
-      <header className="sticky top-0 z-10 bg-black p-4 border-b border-gray-800 flex items-center">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={handleBack}
-          className="mr-2"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-xl font-semibold flex-1">Complete Workout</h1>
-      </header>
+    <div className="container max-w-screen-md mx-auto py-6 px-4 pb-20">
+      <WorkoutCompletion workout={workout} />
       
-      <main className="container max-w-3xl mx-auto px-4 py-6">
-        <WorkoutCompletion
-          exercises={workoutData.exercises}
-          duration={workoutData.duration}
-          intensity={75} // Default values for required props
-          efficiency={80} // Default values for required props
-          onComplete={handleSave}
-        />
+      <div className="mt-8 space-y-6">
+        <h2 className="text-2xl font-bold">Workout Summary</h2>
         
-        <NotesSection 
-          notes={notes}
-          setNotes={setNotes}
-          className="mb-6"
-        />
+        <WorkoutSummaryCard workout={workout} />
         
-        <SaveTemplateSection
-          saveAsTemplate={saveAsTemplate}
-          setSaveAsTemplate={setSaveAsTemplate}
-          templateName={templateName}
-          setTemplateName={setTemplateName}
-          workoutData={workoutData}
-        />
+        <Card className="border-gray-800 bg-gray-900/50">
+          <div className="p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <BarChart className="h-5 w-5 text-purple-500" /> Performance Stats
+            </h3>
+            
+            <WorkoutSummary workout={workout} />
+          </div>
+        </Card>
         
-        <div className="flex justify-end gap-4 mt-8">
+        <div className="flex flex-col gap-4 pt-6">
           <Button 
-            variant="outline" 
-            onClick={handleBack}
-          >
-            Back
-          </Button>
-          <Button 
-            onClick={handleSave}
-            disabled={isLoading}
+            onClick={() => navigate('/')}
             className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600"
           >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              "Save Workout"
-            )}
+            <Home className="h-4 w-4 mr-2" /> Back to Home
+          </Button>
+          
+          <Button 
+            onClick={() => navigate('/workout/new')}
+            variant="outline" 
+            className="border-gray-700"
+          >
+            <Dumbbell className="h-4 w-4 mr-2" /> Start New Workout
           </Button>
         </div>
-      </main>
-      
-      {/* Discard confirmation dialog */}
-      <Dialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
-        <DialogContent className="bg-gray-900 text-white">
-          <DialogHeader>
-            <DialogTitle>Discard Workout?</DialogTitle>
-            <DialogDescription>
-              Do you want to discard this workout or continue editing it?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => setShowDiscardDialog(false)}
-              className="w-full sm:w-auto"
-            >
-              Cancel
-            </Button>
-            <Button 
-              variant="secondary"
-              onClick={handleContinueWorkout}
-              className="w-full sm:w-auto"
-            >
-              Continue Workout
-            </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleDiscard}
-              className="w-full sm:w-auto"
-            >
-              Discard Workout
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      </div>
     </div>
   );
-};
-
-export default WorkoutCompletePage;
+}
