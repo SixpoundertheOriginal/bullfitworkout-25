@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useWorkoutDetails } from '@/hooks/useWorkoutDetails';
 import { WorkoutCompletion } from '@/components/training/WorkoutCompletion';
-import { WorkoutSummaryCard } from '@/components/workouts/WorkoutSummaryCard';
+import WorkoutSummaryCard from '@/components/workouts/WorkoutSummaryCard';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,7 +14,7 @@ import { Home, Dumbbell, BarChart, ArrowLeft } from 'lucide-react';
 export function WorkoutCompletePage() {
   const { workoutId } = useParams<{ workoutId: string }>();
   const navigate = useNavigate();
-  const { workout, loading, error } = useWorkoutDetails(workoutId);
+  const { workoutDetails: workout, loading, error } = useWorkoutDetails(workoutId);
   
   if (loading) {
     return (
@@ -64,15 +64,43 @@ export function WorkoutCompletePage() {
       </div>
     );
   }
+
+  // Prepare the props for WorkoutSummaryCard
+  const completedSets = Object.values(workout.exercises || {})
+    .flat()
+    .filter(set => set.completed)
+    .length;
+  
+  const totalSets = Object.values(workout.exercises || {}).flat().length;
+  
+  // Calculate total volume (weight * reps across all sets)
+  const totalVolume = Object.values(workout.exercises || {})
+    .flat()
+    .reduce((acc, set) => {
+      return acc + (set.completed ? (set.weight * set.reps) : 0);
+    }, 0);
+  
+  const weightUnit = 'kg'; // Default weight unit, could be dynamic based on user preferences
   
   return (
     <div className="container max-w-screen-md mx-auto py-6 px-4 pb-20">
-      <WorkoutCompletion workout={workout} />
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold mb-4">Workout Completed!</h1>
+        <p className="text-gray-400">
+          Great job on completing your workout. Here's a summary of your session.
+        </p>
+      </div>
       
       <div className="mt-8 space-y-6">
         <h2 className="text-2xl font-bold">Workout Summary</h2>
         
-        <WorkoutSummaryCard workout={workout} />
+        <WorkoutSummaryCard 
+          workoutData={workout}
+          completedSets={completedSets}
+          totalSets={totalSets}
+          totalVolume={totalVolume}
+          weightUnit={weightUnit}
+        />
         
         <Card className="border-gray-800 bg-gray-900/50">
           <div className="p-6">
@@ -80,7 +108,17 @@ export function WorkoutCompletePage() {
               <BarChart className="h-5 w-5 text-purple-500" /> Performance Stats
             </h3>
             
-            <WorkoutSummary workout={workout} />
+            <div className="space-y-4">
+              <p className="text-gray-300">
+                This workout focused on {workout.training_type || "general fitness"} training.
+              </p>
+              
+              {workout.notes && (
+                <div className="bg-gray-800 p-3 rounded">
+                  <p className="text-sm text-gray-300">{workout.notes}</p>
+                </div>
+              )}
+            </div>
           </div>
         </Card>
         
