@@ -25,11 +25,13 @@ export default function WorkoutDetailsPage() {
   
   const [addExerciseSheetOpen, setAddExerciseSheetOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('exercises');
+  const [restTimerActive, setRestTimerActive] = useState(false);
+  const [resetTimerSignal, setResetTimerSignal] = useState(0);
   
-  const { workout, loading, error, addExerciseSet, updateExerciseSet, deleteExerciseSet } = useWorkoutDetails(workoutId);
+  const { workoutDetails, loading: workoutLoading, error, exerciseSets, addExerciseSet, updateExerciseSet, deleteExerciseSet } = useWorkoutDetails(workoutId);
   const { isLoading: isHistoryLoading } = useWorkoutHistory();
   
-  const isLoading = loading || isHistoryLoading;
+  const isLoading = workoutLoading || isHistoryLoading;
   
   useEffect(() => {
     if (error) {
@@ -43,14 +45,12 @@ export default function WorkoutDetailsPage() {
   }, [error, navigate]);
   
   const handleAddExercise = (exercise: any) => {
-    if (!workout) return;
+    if (!workoutDetails) return;
     
     const exerciseName = typeof exercise === 'string' ? exercise : exercise.name;
     
     // Get the highest set number for this exercise
-    const existingSets = workout.exerciseSets?.filter(
-      set => set.exercise_name === exerciseName
-    ) || [];
+    const existingSets = exerciseSets[exerciseName] || [];
     
     const nextSetNumber = existingSets.length > 0 
       ? Math.max(...existingSets.map(set => set.set_number)) + 1 
@@ -58,7 +58,7 @@ export default function WorkoutDetailsPage() {
     
     // Create new exercise set with default values
     const newSet: Partial<ExerciseSet> = {
-      workout_id: workout.id,
+      workout_id: workoutDetails.id,
       exercise_name: exerciseName,
       weight: 0,
       reps: 8,
@@ -71,7 +71,7 @@ export default function WorkoutDetailsPage() {
   };
   
   const renderExerciseSets = () => {
-    if (!workout || !workout.exerciseSets || workout.exerciseSets.length === 0) {
+    if (!workoutDetails || !exerciseSets || Object.keys(exerciseSets).length === 0) {
       return (
         <EmptyWorkoutState 
           onAddExercise={() => setAddExerciseSheetOpen(true)} 
@@ -79,24 +79,9 @@ export default function WorkoutDetailsPage() {
       );
     }
     
-    // Group exercise sets by exercise name
-    const exerciseGroups: { [key: string]: ExerciseSet[] } = {};
-    
-    workout.exerciseSets.forEach(set => {
-      if (!exerciseGroups[set.exercise_name]) {
-        exerciseGroups[set.exercise_name] = [];
-      }
-      exerciseGroups[set.exercise_name].push(set);
-    });
-    
-    // Sort sets within each group by set number
-    Object.keys(exerciseGroups).forEach(exercise => {
-      exerciseGroups[exercise].sort((a, b) => a.set_number - b.set_number);
-    });
-    
     return (
       <div className="space-y-8 pb-24">
-        {Object.entries(exerciseGroups).map(([exerciseName, sets]) => (
+        {Object.entries(exerciseSets).map(([exerciseName, sets]) => (
           <Card key={exerciseName} className="overflow-hidden border-gray-800 bg-gray-900/50">
             <div className="p-4 bg-gray-800/50 border-b border-gray-700/50 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -107,17 +92,19 @@ export default function WorkoutDetailsPage() {
                 size="sm" 
                 variant="ghost" 
                 onClick={() => {
-                  const lastSet = sets[sets.length - 1];
-                  const newSet = {
-                    workout_id: workout.id,
-                    exercise_name: exerciseName,
-                    weight: lastSet.weight,
-                    reps: lastSet.reps,
-                    set_number: lastSet.set_number + 1,
-                    completed: false,
-                    restTime: lastSet.restTime || 60,
-                  };
-                  addExerciseSet(newSet);
+                  if (sets.length > 0) {
+                    const lastSet = sets[sets.length - 1];
+                    const newSet = {
+                      workout_id: workoutDetails.id,
+                      exercise_name: exerciseName,
+                      weight: lastSet.weight,
+                      reps: lastSet.reps,
+                      set_number: lastSet.set_number + 1,
+                      completed: false,
+                      restTime: lastSet.restTime || 60,
+                    };
+                    addExerciseSet(newSet);
+                  }
                 }}
               >
                 <Plus size={18} />
@@ -127,9 +114,13 @@ export default function WorkoutDetailsPage() {
               {sets.map((set) => (
                 <SetRow
                   key={set.id}
-                  set={set}
+                  exerciseSet={set}
                   onUpdate={updateExerciseSet}
                   onDelete={deleteExerciseSet}
+                  onTimerStart={() => {
+                    setRestTimerActive(true);
+                    setResetTimerSignal(prev => prev + 1);
+                  }}
                 />
               ))}
             </div>
@@ -159,7 +150,7 @@ export default function WorkoutDetailsPage() {
     );
   }
   
-  if (!workout) {
+  if (!workoutDetails) {
     return (
       <div className="container max-w-screen-md mx-auto py-6 px-4 text-center">
         <div className="py-16">
@@ -174,10 +165,10 @@ export default function WorkoutDetailsPage() {
   return (
     <div className="min-h-screen pb-20">
       {/* Top Rest Timer */}
-      <TopRestTimer />
+      <TopRestTimer isActive={restTimerActive} resetSignal={resetTimerSignal} />
       
       {/* Workout Details Header */}
-      <WorkoutDetailsHeader workout={workout} />
+      <WorkoutDetailsHeader workoutData={workoutDetails} />
       
       {/* Main Content Tabs */}
       <div className="container max-w-screen-md mx-auto px-4 pt-4">
@@ -199,7 +190,7 @@ export default function WorkoutDetailsPage() {
           </TabsContent>
           
           <TabsContent value="stats">
-            <WorkoutStatsOverview workoutData={workout} />
+            <WorkoutStatsOverview workoutData={workoutDetails} />
           </TabsContent>
           
           <TabsContent value="timer">
@@ -224,11 +215,11 @@ export default function WorkoutDetailsPage() {
         open={addExerciseSheetOpen}
         onOpenChange={setAddExerciseSheetOpen}
         onSelectExercise={handleAddExercise}
-        trainingType={workout.training_type}
+        trainingType={workoutDetails.training_type}
       />
       
       {/* Footer */}
-      <WorkoutSessionFooter workout={workout} />
+      <WorkoutSessionFooter workoutData={workoutDetails} />
     </div>
   );
 }

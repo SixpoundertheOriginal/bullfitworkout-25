@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { WorkoutSummary } from '@/components/workouts/WorkoutSummary';
 import { toast } from '@/hooks/use-toast';
 import { Home, Dumbbell, BarChart, ArrowLeft } from 'lucide-react';
+import { ExerciseSet } from '@/types/exercise';
 
 export function WorkoutCompletePage() {
   const { workoutId } = useParams<{ workoutId: string }>();
@@ -66,17 +67,18 @@ export function WorkoutCompletePage() {
   }
 
   // Prepare the props for WorkoutSummaryCard
-  const completedSets = Object.values(workout.exercises || {})
-    .flat()
-    .filter(set => set.completed)
+  const exerciseSets = workout.exercises || {}; 
+  const sets = Object.values(exerciseSets).flat();
+  
+  const completedSets = sets
+    .filter((set: ExerciseSet) => set.completed)
     .length;
   
-  const totalSets = Object.values(workout.exercises || {}).flat().length;
+  const totalSets = sets.length;
   
   // Calculate total volume (weight * reps across all sets)
-  const totalVolume = Object.values(workout.exercises || {})
-    .flat()
-    .reduce((acc, set) => {
+  const totalVolume = sets
+    .reduce((acc: number, set: ExerciseSet) => {
       return acc + (set.completed ? (set.weight * set.reps) : 0);
     }, 0);
   
