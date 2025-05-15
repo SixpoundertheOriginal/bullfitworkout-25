@@ -1,0 +1,43 @@
+
+import { Exercise, MuscleGroup, EquipmentType, MovementPattern, Difficulty } from '@/types/exercise';
+
+export type ExerciseMetadata = {
+  default_weight?: number;
+  default_reps?: number;
+  weight_unit?: string;
+  normalized_weight?: number;
+  display_unit?: string;
+  is_bodyweight?: boolean;
+  energy_cost_factor?: number;
+  variations?: any[]; // To store additional variations beyond the 1:1 field
+  media_urls?: string[]; // To store multiple media URLs
+};
+
+export type ExerciseInput = {
+  name: string;
+  description: string;
+  user_id: string;
+  primary_muscle_groups: MuscleGroup[] | string[];
+  secondary_muscle_groups: MuscleGroup[] | string[];
+  equipment_type: EquipmentType[] | string[];
+  movement_pattern: MovementPattern;
+  difficulty: Difficulty;
+  instructions?: Record<string, any>;
+  is_compound?: boolean;
+  tips?: string[];
+  variations?: string[];
+  metadata?: Record<string, any>;
+  base_exercise_id?: string;
+  variation_type?: string;
+  variation_value?: string;
+  is_bodyweight?: boolean;
+  energy_cost_factor?: number;
+  // New fields for media
+  media_url?: string;
+  variationList?: any[];
+};
+
+export type ExerciseUpdateInput = Partial<Omit<ExerciseInput, 'created_at'>> & { id: string };
+
+export type ExerciseSortBy = 'name' | 'created_at' | 'difficulty';
+export type SortOrder = 'asc' | 'desc';
