@@ -12,6 +12,7 @@ export type ExerciseMetadata = {
   is_bodyweight?: boolean;
   energy_cost_factor?: number;
   variations?: any[]; // To store additional variations beyond the 1:1 field
+  media_urls?: string[]; // To store multiple media URLs
 };
 
 type ExerciseInput = {
@@ -34,7 +35,8 @@ type ExerciseInput = {
   variation_value?: string;
   is_bodyweight?: boolean;
   energy_cost_factor?: number;
-  // New field for variation list
+  // New fields for media
+  media_url?: string;
   variationList?: any[];
 };
 
@@ -66,6 +68,12 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
           'energy_cost_factor' in exercise.metadata ? 
           Number(exercise.metadata.energy_cost_factor) : 1;
           
+        // Extract media URL if present  
+        const mediaUrl = exercise.media_url || 
+          (typeof exercise.metadata === 'object' && exercise.metadata !== null && 
+           Array.isArray(exercise.metadata.media_urls) && exercise.metadata.media_urls.length > 0 ? 
+           exercise.metadata.media_urls[0] : undefined);
+          
         return {
           id: exercise.id,
           name: exercise.name,
@@ -87,7 +95,9 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
           variation_value: exercise.variation_value || undefined,
           // Use the safely extracted values
           is_bodyweight: isBodyweight,
-          energy_cost_factor: energyCostFactor
+          energy_cost_factor: energyCostFactor,
+          // Add media URL
+          media_url: mediaUrl
         };
       });
     }
@@ -124,6 +134,17 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
         if (!variation_type && !variation_value) {
           variation_type = newExercise.variationList[0].type;
           variation_value = newExercise.variationList[0].value;
+        }
+      }
+      
+      // Add media_url to media_urls array in metadata if present
+      if (newExercise.media_url) {
+        if (!metadata.media_urls) {
+          metadata.media_urls = [];
+        }
+        // Only add if it's not already in the array
+        if (!metadata.media_urls.includes(newExercise.media_url)) {
+          metadata.media_urls = [newExercise.media_url, ...metadata.media_urls].slice(0, 5); // Keep max 5 images
         }
       }
       
@@ -218,6 +239,17 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
         
         // Remove variationList from updateData since it's not a DB column
         delete updateData.variationList;
+      }
+      
+      // Add media_url to media_urls array in metadata if present
+      if (updateData.media_url) {
+        if (!metadata.media_urls) {
+          metadata.media_urls = [];
+        }
+        // Only add if it's not already in the array
+        if (!metadata.media_urls.includes(updateData.media_url)) {
+          metadata.media_urls = [updateData.media_url, ...metadata.media_urls].slice(0, 5); // Keep max 5 images
+        }
       }
       
       const { data, error } = await supabase

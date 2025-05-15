@@ -21,6 +21,7 @@ interface CommonExerciseCardProps {
   isVariation?: boolean;
   rightContent?: React.ReactNode;
   variationBadge?: React.ReactNode;
+  thumbnail?: React.ReactNode;
   sets?: any[];
   isActive?: boolean;
   onAddSet?: () => void;
@@ -53,6 +54,7 @@ export const CommonExerciseCard: React.FC<CommonExerciseCardProps> = ({
   isVariation = false,
   rightContent,
   variationBadge,
+  thumbnail,
   // Workout-specific props
   sets,
   isActive,
@@ -77,6 +79,8 @@ export const CommonExerciseCard: React.FC<CommonExerciseCardProps> = ({
       onSelect();
     } else if ((variant === 'workout-add' || variant === 'workout') && onAdd) {
       onAdd();
+    } else if (onSelect) {
+      onSelect();
     }
   };
 
@@ -91,47 +95,54 @@ export const CommonExerciseCard: React.FC<CommonExerciseCardProps> = ({
     <Card 
       className={cn(
         "relative overflow-hidden transition-all duration-200",
-        (variant === 'selector' || variant === 'workout-add') ? "cursor-pointer" : "",
+        (variant === 'selector' || variant === 'workout-add' || onSelect) ? "cursor-pointer" : "",
         isSelected ? "border-purple-500 ring-1 ring-purple-500/30" : "border-gray-800",
         isVariation ? "bg-gray-900/60" : "bg-gray-900",
         className
       )}
-      onClick={(variant === 'selector' || variant === 'workout-add') ? handleClick : undefined}
+      onClick={handleClick}
     >
       <CardContent className="p-3 flex items-center justify-between">
-        <div className="flex flex-col flex-grow mr-2">
-          <div className="flex items-center space-x-2">
-            <h3 className="font-medium text-gray-100">{exerciseName}</h3>
-            
-            {/* Display variation badge if provided */}
-            {variationBadge && (
-              <div className="ml-2">{variationBadge}</div>
-            )}
-          </div>
-          
-          {typeof exercise !== 'string' && (
-            <div className="flex flex-wrap gap-1 mt-1">
-              {primaryMuscleGroups.slice(0, 3).map((muscle, idx) => (
-                <Badge 
-                  key={idx} 
-                  variant="outline" 
-                  className="text-xs bg-gray-800/60 border-gray-700/50 text-gray-300"
-                >
-                  {muscle}
-                </Badge>
-              ))}
-              
-              {equipmentType.slice(0, 1).map((equipment, idx) => (
-                <Badge 
-                  key={idx} 
-                  variant="outline" 
-                  className="text-xs bg-gray-800/80 border-gray-700/50 text-gray-400"
-                >
-                  {equipment}
-                </Badge>
-              ))}
+        <div className="flex flex-grow mr-2">
+          {thumbnail && (
+            <div className="mr-3 flex-shrink-0">
+              {thumbnail}
             </div>
           )}
+          <div className="flex flex-col flex-grow">
+            <div className="flex items-center space-x-2">
+              <h3 className="font-medium text-gray-100">{exerciseName}</h3>
+              
+              {/* Display variation badge if provided */}
+              {variationBadge && (
+                <div className="ml-2">{variationBadge}</div>
+              )}
+            </div>
+            
+            {typeof exercise !== 'string' && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {primaryMuscleGroups.slice(0, 3).map((muscle, idx) => (
+                  <Badge 
+                    key={idx} 
+                    variant="outline" 
+                    className="text-xs bg-gray-800/60 border-gray-700/50 text-gray-300"
+                  >
+                    {muscle}
+                  </Badge>
+                ))}
+                
+                {equipmentType.slice(0, 1).map((equipment, idx) => (
+                  <Badge 
+                    key={idx} 
+                    variant="outline" 
+                    className="text-xs bg-gray-800/80 border-gray-700/50 text-gray-400"
+                  >
+                    {equipment}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         
         {/* Right side content - either custom content or action buttons */}

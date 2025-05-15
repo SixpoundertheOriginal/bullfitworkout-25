@@ -7,7 +7,7 @@ import { useExercises } from '@/hooks/useExercises';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Variation } from '@/types/exerciseVariation';
-import { ChevronRight, Edit, Trash } from 'lucide-react';
+import { ChevronRight, Edit, Trash, Image as ImageIcon } from 'lucide-react';
 
 interface ExerciseVariationGroupProps {
   baseExercise: Exercise;
@@ -51,6 +51,21 @@ export const ExerciseVariationGroup: React.FC<ExerciseVariationGroupProps> = Rea
   // Only show accordion if there are variations
   const hasVariations = variations.length > 0;
   
+  // Render thumbnail if exercise has media_url
+  const renderThumbnail = (exercise: Exercise) => {
+    if (!exercise.media_url) return null;
+    
+    return (
+      <div className="w-10 h-10 rounded overflow-hidden mr-2 bg-gray-800 flex-shrink-0">
+        <img 
+          src={exercise.media_url} 
+          alt={exercise.name} 
+          className="w-full h-full object-cover"
+        />
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-2 transition-all">
       {/* Base Exercise Card */}
@@ -60,6 +75,7 @@ export const ExerciseVariationGroup: React.FC<ExerciseVariationGroupProps> = Rea
         onSelect={onSelect ? () => onSelect(baseExercise) : undefined}
         onEdit={onEdit ? () => onEdit(baseExercise) : undefined}
         onDelete={onDelete ? () => onDelete(baseExercise) : undefined}
+        thumbnail={renderThumbnail(baseExercise)}
         rightContent={
           <div className="flex items-center gap-2">
             {hasVariations ? (
@@ -144,6 +160,7 @@ export const ExerciseVariationGroup: React.FC<ExerciseVariationGroupProps> = Rea
                         onSelect={onSelect ? () => onSelect(variation) : undefined}
                         onEdit={onEdit ? () => onEdit(variation) : undefined}
                         onDelete={onDelete ? () => onDelete(variation) : undefined}
+                        thumbnail={renderThumbnail(variation)}
                         className="border-gray-800 hover:border-purple-600/50 transition-colors"
                         variationBadge={
                           variationList.length > 0 ? (

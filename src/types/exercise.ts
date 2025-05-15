@@ -1,4 +1,3 @@
-
 export interface ExerciseSet {
   id: string;
   weight: number;
@@ -41,19 +40,17 @@ export type VariantCategory =
 export interface Exercise {
   id: string;
   name: string;
-  user_id: string;
-  created_at: string;
   description: string;
   primary_muscle_groups: MuscleGroup[];
   secondary_muscle_groups: MuscleGroup[];
   equipment_type: EquipmentType[];
   movement_pattern: MovementPattern;
   difficulty: Difficulty;
-  instructions: Record<string, any>;
-  is_compound: boolean;
-  tips: string[];
-  variations: string[];
-  metadata: Record<string, any>;
+  instructions?: Record<string, any>;
+  is_compound?: boolean;
+  tips?: string[];
+  variations?: string[];
+  metadata?: Record<string, any>;
   
   // Enhanced exercise schema properties for better metrics calculation
   loading_type?: LoadingType; 
@@ -63,6 +60,7 @@ export interface Exercise {
   is_isometric?: boolean; // Flag to identify isometric exercises
   is_bodyweight?: boolean; // Flag for bodyweight exercises
   energy_cost_factor?: number; // Relative energy expenditure factor
+  media_url?: string;  // New field for exercise image URL
 
   /**
    * Reference to the base exercise ID if this exercise is a variation

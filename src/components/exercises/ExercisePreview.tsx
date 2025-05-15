@@ -8,7 +8,8 @@ import {
   LayoutGrid, 
   ChevronRight, 
   Zap,
-  MoveDiagonal
+  MoveDiagonal,
+  Image as ImageIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +37,16 @@ export function ExercisePreview({ exercise, className }: ExercisePreviewProps) {
 
   return (
     <Card className={cn("overflow-hidden backdrop-blur-sm border-gray-800", className)}>
+      {exercise.media_url && (
+        <div className="w-full h-40 overflow-hidden">
+          <img 
+            src={exercise.media_url} 
+            alt={exercise.name}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+      
       <CardHeader className="space-y-1 pb-3">
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-2">
