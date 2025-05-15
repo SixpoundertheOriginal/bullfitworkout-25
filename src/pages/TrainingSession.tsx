@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
@@ -14,6 +15,7 @@ import { useSound } from "@/hooks/useSound";
 import { RestTimer } from "@/components/RestTimer";
 import { WorkoutSessionFooter } from "@/components/training/WorkoutSessionFooter";
 import { adaptExerciseSets, adaptToStoreFormat } from "@/utils/exerciseAdapter";
+import { useWorkoutSave } from "@/hooks/useWorkoutSave";
 
 const TrainingSessionPage = () => {
   const navigate = useNavigate();
@@ -45,6 +47,14 @@ const TrainingSessionPage = () => {
     setTrainingConfig,
     setWorkoutStatus
   } = useWorkoutStore();
+  
+  // Initialize the useWorkoutSave hook
+  const { 
+    handleCompleteWorkout,
+    saveStatus,
+    savingErrors,
+    workoutId: savedWorkoutId 
+  } = useWorkoutSave(storeExercises, elapsedTime, resetSession);
   
   // Convert store exercises to the format expected by components
   const exercises = adaptExerciseSets(storeExercises);
@@ -82,7 +92,6 @@ const TrainingSessionPage = () => {
     if (location.pathname === '/training-session') {
       updateLastActiveRoute('/training-session');
     }
-    console.log('TrainingSession page state:', { isActive, exerciseCount, elapsedTime, workoutStatus, isSaving });
   }, []);
 
   useEffect(() => {
@@ -109,11 +118,22 @@ const TrainingSessionPage = () => {
     }
   }, [location.search, resetSession, navigate]);
 
+  // Track saved workout ID and navigate when save is successful
   useEffect(() => {
-    if (workoutStatus === 'saved') {
-      console.log('Workout saved successfully');
+    if (saveStatus === 'saved' && savedWorkoutId) {
+      console.log('Workout saved successfully, navigating to complete page with ID:', savedWorkoutId);
+      navigate(`/workout-complete/${savedWorkoutId}`);
     }
-  }, [workoutStatus]);
+  }, [saveStatus, savedWorkoutId, navigate]);
+
+  // Handle save errors
+  useEffect(() => {
+    if (saveStatus === 'failed' && savingErrors.length > 0) {
+      setIsSaving(false);
+      const errorMessage = savingErrors[0]?.message || 'Failed to save workout';
+      toast.error("Save Error", { description: errorMessage });
+    }
+  }, [saveStatus, savingErrors]);
 
   const triggerRestTimerReset = () => setRestTimerResetSignal(x => x + 1);
 
@@ -145,42 +165,45 @@ const TrainingSessionPage = () => {
       toast.error("Add at least one exercise before finishing your workout");
       return;
     }
+    
     try {
       setIsSaving(true);
       markAsSaving();
-      const now = new Date();
-      const startTime = new Date(now.getTime() - elapsedTime * 1000);
+      
+      // Prepare workout data
       const workoutData = {
-        exercises: Object.fromEntries(
-          Object.entries(storeExercises).map(([name, sets]) => [
-            name,
-            sets.map(s => ({ ...s, isEditing: s.isEditing || false }))
-          ])
-        ),
-        duration: elapsedTime,
-        startTime,
-        endTime: now,
-        trainingType: trainingConfig?.trainingType || "Strength",
-        name: trainingConfig?.trainingType || "Workout",
-        trainingConfig: trainingConfig || null,
-        notes: "",
-        metrics: {
-          trainingConfig: trainingConfig || null,
-          performance: { completedSets, totalSets, restTimers: { defaultTime: currentRestTime, wasUsed: restTimerActive } },
-          progression: {
-            timeOfDay: startTime.getHours() < 12 ? 'morning' :
-                       startTime.getHours() < 17 ? 'afternoon' : 'evening',
-            totalVolume: Object.values(storeExercises).flat().reduce((acc, s) => acc + (s.completed ? s.weight * s.reps : 0), 0)
-          },
-          sessionDetails: { exerciseCount, averageRestTime: currentRestTime, workoutDensity: completedSets / (elapsedTime / 60) }
-        }
+        name: trainingConfig?.trainingType ? `${trainingConfig.trainingType} Workout` : "Workout",
+        training_type: trainingConfig?.trainingType || 'Strength',
+        start_time: new Date(new Date().getTime() - elapsedTime * 1000).toISOString(),
+        end_time: new Date().toISOString(),
+        duration: elapsedTime || 0,
+        notes: null,
+        metadata: trainingConfig ? JSON.stringify({ trainingConfig }) : null
       };
-      navigate("/workout-complete", { state: { workoutData } });
+      
+      // Save the workout using the useWorkoutSave hook
+      const savedId = await handleCompleteWorkout(trainingConfig);
+      
+      // If save failed or returned null, handle the error
+      if (!savedId) {
+        setIsSaving(false);
+        toast.error("Failed to save workout");
+        return;
+      }
+      
+      // Success will be handled by the useEffect that watches saveStatus
+      console.log("Workout saved with ID:", savedId);
+      
     } catch (err) {
-      console.error("Error preparing workout data:", err);
-      markAsFailed({ type: 'unknown', message: err instanceof Error ? err.message : 'Save failed', timestamp: new Date().toISOString(), recoverable: true });
-      toast.error("Failed to complete workout");
+      console.error("Error saving workout data:", err);
       setIsSaving(false);
+      markAsFailed({ 
+        type: 'unknown', 
+        message: err instanceof Error ? err.message : 'Save failed', 
+        timestamp: new Date().toISOString(), 
+        recoverable: true 
+      });
+      toast.error("Failed to complete workout");
     }
   };
 
@@ -295,7 +318,7 @@ const TrainingSessionPage = () => {
         onAddExercise={() => setIsAddExerciseSheetOpen(true)}
         onFinishWorkout={handleFinishWorkout}
         hasExercises={hasExercises}
-        isSaving={isSaving}
+        isSaving={isSaving || saveStatus === 'saving'}
       />
 
       <AddExerciseSheet

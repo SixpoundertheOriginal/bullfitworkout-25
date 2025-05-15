@@ -78,6 +78,13 @@ export const RouterProvider = () => {
           </MainLayout>
         </ProtectedRoute>
       } />
+      <Route path="/workout-complete/:workoutId" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <WorkoutComplete />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
       <Route path="/workout-details" element={
         <ProtectedRoute>
           <MainLayout>

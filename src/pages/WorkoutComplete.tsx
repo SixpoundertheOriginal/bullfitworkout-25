@@ -1,4 +1,9 @@
 
 import React from "react";
 import { WorkoutCompletePage } from "./WorkoutCompletePage";
-export default WorkoutCompletePage;
+
+const WorkoutComplete = () => {
+  return <WorkoutCompletePage />;
+};
+
+export default WorkoutComplete;

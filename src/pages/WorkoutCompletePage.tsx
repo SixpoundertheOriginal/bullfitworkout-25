@@ -1,57 +1,111 @@
 
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useWorkoutDetails } from '@/hooks/useWorkoutDetails';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { CheckCircle2, Clock, Dumbbell, BarChart } from 'lucide-react';
+import { CheckCircle2, Clock, Dumbbell, BarChart, Loader2 } from 'lucide-react';
+import { useWeightUnit } from '@/context/WeightUnitContext';
+import { toast } from '@/hooks/use-toast';
 
 export function WorkoutCompletePage() {
   const { workoutId } = useParams<{ workoutId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { weightUnit } = useWeightUnit();
+  
   const [totalSets, setTotalSets] = useState(0);
   const [totalVolume, setTotalVolume] = useState(0);
+  
+  // Get workout data either from URL param or state
+  const stateWorkoutData = location.state?.workoutData;
+  
+  // Prefer workoutId from URL, but fallback to the one in state if available
+  const effectiveWorkoutId = workoutId || stateWorkoutData?.id;
   
   const {
     workoutDetails,
     exerciseSets,
     loading,
     error
-  } = useWorkoutDetails(workoutId);
+  } = useWorkoutDetails(effectiveWorkoutId);
+  
+  // Use state data if available and no workout details from the hook
+  const effectiveWorkoutDetails = workoutDetails || stateWorkoutData;
+  
+  // Use either the exercise sets from the hook or from state
+  const effectiveExerciseSets = exerciseSets || 
+    (stateWorkoutData ? Object.fromEntries(
+      Object.entries(stateWorkoutData.exercises || {}).map(([name, sets]) => [
+        name, 
+        Array.isArray(sets) ? sets : []
+      ])
+    ) : {});
   
   useEffect(() => {
     if (error) {
-      navigate('/');
+      toast({
+        title: "Error loading workout details",
+        description: "Please try again or check your connection",
+        variant: "destructive"
+      });
+      
+      // Only navigate away if we don't have state data to fall back on
+      if (!stateWorkoutData) {
+        navigate('/');
+      }
     }
-  }, [error, navigate]);
+  }, [error, navigate, stateWorkoutData]);
   
   useEffect(() => {
-    if (exerciseSets) {
+    if (exerciseSets || stateWorkoutData?.exercises) {
       // Calculate total sets and volume
       let sets = 0;
       let volume = 0;
       
-      Object.values(exerciseSets).forEach(exerciseSets => {
-        exerciseSets.forEach(set => {
-          sets++;
-          if (set.completed) {
-            volume += set.weight * set.reps;
-          }
-        });
+      const setsToProcess = exerciseSets || stateWorkoutData?.exercises || {};
+      
+      Object.values(setsToProcess).forEach(exerciseSets => {
+        if (Array.isArray(exerciseSets)) {
+          exerciseSets.forEach(set => {
+            sets++;
+            if (set.completed) {
+              volume += set.weight * set.reps;
+            }
+          });
+        }
       });
       
       setTotalSets(sets);
       setTotalVolume(volume);
     }
-  }, [exerciseSets]);
+  }, [exerciseSets, stateWorkoutData]);
   
-  if (loading) {
-    return <div className="p-8 text-center">Loading workout details...</div>;
+  if (loading && !stateWorkoutData) {
+    return (
+      <div className="p-8 text-center flex flex-col items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin mb-4 text-purple-500" />
+        <p>Loading workout details...</p>
+      </div>
+    );
   }
   
-  if (!workoutDetails) {
-    return <div className="p-8 text-center">Workout not found</div>;
+  if (!effectiveWorkoutDetails) {
+    return (
+      <div className="p-8 text-center">
+        <h1 className="text-xl font-bold mb-4">Workout Not Found</h1>
+        <p className="mb-4">The workout you're looking for couldn't be found.</p>
+        <Button onClick={() => navigate('/')}>Return to Dashboard</Button>
+      </div>
+    );
   }
+  
+  const duration = effectiveWorkoutDetails.duration || 0;
+  const trainingType = effectiveWorkoutDetails.training_type || 
+                       effectiveWorkoutDetails.trainingType || 
+                       'Workout';
+  
+  const exerciseCount = Object.keys(effectiveExerciseSets).length;
   
   return (
     <div className="container max-w-md mx-auto py-8 px-4">
@@ -61,20 +115,20 @@ export function WorkoutCompletePage() {
         </div>
         <h1 className="text-2xl font-bold mb-2">Workout Complete!</h1>
         <p className="text-gray-400">
-          Great job completing your {workoutDetails.training_type} workout
+          Great job completing your {trainingType} workout
         </p>
       </div>
       
       <Card className="bg-gray-900 border-gray-800 mb-6">
         <div className="p-6">
-          <h2 className="text-xl font-bold mb-4">{workoutDetails.name}</h2>
+          <h2 className="text-xl font-bold mb-4">{effectiveWorkoutDetails.name}</h2>
           
           <div className="grid grid-cols-2 gap-4">
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-purple-500" />
               <div>
                 <div className="text-sm text-gray-400">Duration</div>
-                <div className="font-semibold">{workoutDetails.duration} min</div>
+                <div className="font-semibold">{Math.round(duration / 60)} min</div>
               </div>
             </div>
             
@@ -82,7 +136,7 @@ export function WorkoutCompletePage() {
               <Dumbbell className="h-5 w-5 text-purple-500" />
               <div>
                 <div className="text-sm text-gray-400">Exercises</div>
-                <div className="font-semibold">{Object.keys(exerciseSets).length}</div>
+                <div className="font-semibold">{exerciseCount}</div>
               </div>
             </div>
             
@@ -98,7 +152,7 @@ export function WorkoutCompletePage() {
               <BarChart className="h-5 w-5 text-purple-500" />
               <div>
                 <div className="text-sm text-gray-400">Volume</div>
-                <div className="font-semibold">{totalVolume} kg</div>
+                <div className="font-semibold">{totalVolume} {weightUnit}</div>
               </div>
             </div>
           </div>
@@ -109,7 +163,8 @@ export function WorkoutCompletePage() {
         <Button 
           variant="outline" 
           className="flex-1 border-gray-700" 
-          onClick={() => navigate(`/workout/${workoutId}`)}
+          onClick={() => navigate(`/workout-details/${effectiveWorkoutId || ''}`)}
+          disabled={!effectiveWorkoutId}
         >
           View Details
         </Button>
@@ -124,3 +179,5 @@ export function WorkoutCompletePage() {
     </div>
   );
 }
+
+export default WorkoutCompletePage;
