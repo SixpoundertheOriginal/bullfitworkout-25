@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useExercises } from "@/hooks/useExercises";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ import { CommonExerciseCard } from "@/components/exercises/CommonExerciseCard";
 import { ExerciseVariationGroup } from "@/components/exercises/ExerciseVariationGroup";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AllExercisesPageProps {
   onSelectExercise?: (exercise: string | Exercise) => void;
@@ -43,6 +45,9 @@ interface AllExercisesPageProps {
 }
 
 export default function AllExercisesPage({ onSelectExercise, standalone = true, onBack }: AllExercisesPageProps) {
+  // Add authentication
+  const { user } = useAuth();
+  
   // Ensure exercises is always an array, even if it's undefined
   const { exercises = [], isLoading, isError, createExercise, updateExercise, deleteExercise, isPending } = useExercises();
   const { workouts = [] } = useWorkoutHistory();
@@ -115,8 +120,8 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
         exercise.description,
         exercise.variation_type,
         exercise.variation_value,
-        ...exercise.primary_muscle_groups || [],
-        ...exercise.secondary_muscle_groups || []
+        ...(exercise.primary_muscle_groups || []),
+        ...(exercise.secondary_muscle_groups || [])
       ].filter(Boolean).join(' ').toLowerCase();
       
       const matchesSearch = searchQuery === "" || searchableText.includes(searchQuery.toLowerCase());
@@ -175,6 +180,16 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
   }, [searchQuery, selectedMuscleGroup, selectedEquipment, selectedDifficulty, selectedMovement]);
 
   const handleAdd = () => {
+    // Check if user is authenticated
+    if (!user || !user.id) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to create exercises",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setExerciseToEdit(null);
     setBaseExerciseForVariation(null);
     setDialogMode("add");
@@ -182,6 +197,16 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
   };
 
   const handleEdit = (exercise: Exercise) => {
+    // Check if user is authenticated
+    if (!user || !user.id) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to edit exercises",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setExerciseToEdit(exercise);
     setBaseExerciseForVariation(null);
     setDialogMode("edit");
@@ -189,6 +214,16 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
   };
   
   const handleAddVariation = (baseExercise: Exercise) => {
+    // Check if user is authenticated
+    if (!user || !user.id) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to create exercise variations",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setExerciseToEdit(null);
     setBaseExerciseForVariation(baseExercise);
     setDialogMode("add");
@@ -196,6 +231,16 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
   };
   
   const handleDelete = (exercise: Exercise) => {
+    // Check if user is authenticated
+    if (!user || !user.id) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to delete exercises",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setExerciseToDelete(exercise);
     setDeleteConfirmOpen(true);
   };
@@ -257,6 +302,16 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
     variation_value?: string;
     variationList?: any[];
   }) => {
+    // Check if user is authenticated
+    if (!user || !user.id) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to save exercises",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     try {
       if (dialogMode === "add") {
         await new Promise(resolve => setTimeout(resolve, 350));
@@ -264,7 +319,7 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
           createExercise(
             {
               ...exercise,
-              user_id: "",
+              user_id: user.id, // Use the authenticated user ID
               // Ensure these are properly cast to the expected types
               primary_muscle_groups: (Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : []) as MuscleGroup[],
               secondary_muscle_groups: (Array.isArray(exercise.secondary_muscle_groups) ? exercise.secondary_muscle_groups : []) as MuscleGroup[],
@@ -289,6 +344,7 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
         await updateExercise({
           id: exerciseToEdit.id,
           ...exercise,
+          user_id: user.id, // Ensure user ID is included
           // Ensure these are properly cast to the expected types
           primary_muscle_groups: (Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : []) as MuscleGroup[],
           secondary_muscle_groups: (Array.isArray(exercise.secondary_muscle_groups) ? exercise.secondary_muscle_groups : []) as MuscleGroup[],
