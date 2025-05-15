@@ -61,7 +61,6 @@ export function ExerciseAutocomplete({ onSelectExercise, className }: ExerciseAu
   
   const [newExercise, setNewExercise] = useState<Omit<Exercise, 'id'>>({
     name: "",
-    created_at: new Date().toISOString(),
     user_id: user?.id || "",
     description: "",
     primary_muscle_groups: [],
@@ -125,7 +124,6 @@ export function ExerciseAutocomplete({ onSelectExercise, className }: ExerciseAu
         setDialogOpen(false);
         setNewExercise({
           name: "",
-          created_at: new Date().toISOString(),
           user_id: user?.id || "",
           description: "",
           primary_muscle_groups: [],

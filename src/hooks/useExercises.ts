@@ -29,7 +29,6 @@ type ExerciseInput = {
   tips?: string[];
   variations?: string[];
   metadata?: Record<string, any>;
-  created_at?: string;
   base_exercise_id?: string;
   variation_type?: string;
   variation_value?: string;
@@ -68,17 +67,21 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
           'energy_cost_factor' in exercise.metadata ? 
           Number(exercise.metadata.energy_cost_factor) : 1;
           
-        // Extract media URL if present  
-        const mediaUrl = exercise.media_url || 
-          (typeof exercise.metadata === 'object' && exercise.metadata !== null && 
-           Array.isArray(exercise.metadata.media_urls) && exercise.metadata.media_urls.length > 0 ? 
-           exercise.metadata.media_urls[0] : undefined);
+        // Extract media URL if present
+        let mediaUrl;
+        if (exercise.media_url) {
+          mediaUrl = exercise.media_url;
+        } else if (typeof exercise.metadata === 'object' && exercise.metadata !== null) {
+          // Check if media_urls exists in metadata and has items
+          const mediaUrls = exercise.metadata.media_urls;
+          if (Array.isArray(mediaUrls) && mediaUrls.length > 0) {
+            mediaUrl = mediaUrls[0];
+          }
+        }
           
         return {
           id: exercise.id,
           name: exercise.name,
-          created_at: exercise.created_at || '',
-          user_id: exercise.created_by || '', // Map created_by to user_id
           description: exercise.description || '',
           primary_muscle_groups: (exercise.primary_muscle_groups || []) as MuscleGroup[],
           secondary_muscle_groups: (exercise.secondary_muscle_groups || []) as MuscleGroup[],
@@ -93,6 +96,7 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
           base_exercise_id: exercise.base_exercise_id || undefined,
           variation_type: exercise.variation_type || undefined,
           variation_value: exercise.variation_value || undefined,
+          user_id: exercise.created_by || '',
           // Use the safely extracted values
           is_bodyweight: isBodyweight,
           energy_cost_factor: energyCostFactor,
@@ -343,7 +347,10 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
           comparison = a.name.localeCompare(b.name);
           break;
         case 'created_at':
-          comparison = (new Date(a.created_at)).getTime() - (new Date(b.created_at)).getTime();
+          // Handle the case where created_at might be undefined
+          const aDate = a.created_at ? new Date(a.created_at) : new Date(0);
+          const bDate = b.created_at ? new Date(b.created_at) : new Date(0);
+          comparison = aDate.getTime() - bDate.getTime();
           break;
         case 'difficulty': {
           const difficultyOrder = { beginner: 1, intermediate: 2, advanced: 3, expert: 4 };

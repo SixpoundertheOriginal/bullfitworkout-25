@@ -51,6 +51,8 @@ export interface Exercise {
   tips?: string[];
   variations?: string[];
   metadata?: Record<string, any>;
+  user_id?: string;  // Added for compatibility
+  created_at?: string; // Added for compatibility
   
   // Enhanced exercise schema properties for better metrics calculation
   loading_type?: LoadingType; 
@@ -79,6 +81,11 @@ export interface Exercise {
    * Provides detailed information about how this exercise varies from its base exercise
    */
   variation_value?: string;
+  
+  /**
+   * For working with variations in UI
+   */
+  variationList?: any[];
 }
 
 export const COMMON_MUSCLE_GROUPS: MuscleGroup[] = [
