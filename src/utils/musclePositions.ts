@@ -5,6 +5,7 @@ export interface MusclePosition {
   width: string;
   height: string;
   right?: string;
+  display?: string;  // Add this optional property
 }
 
 export function getMusclePosition(muscle: string): MusclePosition {

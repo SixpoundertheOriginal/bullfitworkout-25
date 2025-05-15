@@ -66,6 +66,7 @@ export function MuscleSelector({
         const isSecondary = safeSecondary.includes(muscle);
         const position = getMusclePosition(muscle);
         
+        // Check if position has display property with 'none' value
         if (position.display === 'none') return null;
         
         return (
