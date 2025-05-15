@@ -98,16 +98,19 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         </div>
       )}
       
-      <style jsx>{`
-        .content-container {
-          min-height: calc(100vh - 128px); /* Account for header and footer */
-        }
-        
-        .force-no-transition * {
-          transition: none !important;
-          animation: none !important;
-        }
-      `}</style>
+      {/* Adding the CSS as a style tag without the jsx attribute */}
+      <style>
+        {`
+          .content-container {
+            min-height: calc(100vh - 128px); /* Account for header and footer */
+          }
+          
+          .force-no-transition * {
+            transition: none !important;
+            animation: none !important;
+          }
+        `}
+      </style>
     </div>
   );
 };
