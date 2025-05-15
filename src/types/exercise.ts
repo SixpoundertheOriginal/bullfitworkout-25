@@ -52,7 +52,7 @@ export interface Exercise {
   variations?: string[];
   metadata?: Record<string, any>;
   user_id?: string;  // Added for compatibility
-  created_at?: string; // Added for compatibility
+  created_at?: string; // Ensuring this is properly defined
   
   // Enhanced exercise schema properties for better metrics calculation
   loading_type?: LoadingType; 
@@ -62,7 +62,7 @@ export interface Exercise {
   is_isometric?: boolean; // Flag to identify isometric exercises
   is_bodyweight?: boolean; // Flag for bodyweight exercises
   energy_cost_factor?: number; // Relative energy expenditure factor
-  media_url?: string;  // New field for exercise image URL
+  media_url?: string;  // Field for exercise image URL
 
   /**
    * Reference to the base exercise ID if this exercise is a variation
