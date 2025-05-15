@@ -8,31 +8,44 @@ import { MuscleHotspot } from './MuscleHotspot';
 import { getMusclePosition } from '@/utils/musclePositions';
 
 interface MuscleSelectorProps {
-  selectedPrimary: string[];
-  selectedSecondary: string[];
-  onPrimarySelect: (muscles: string[]) => void;
-  onSecondarySelect: (muscles: string[]) => void;
+  selectedMuscles?: string[];
+  selectedPrimary?: string[];
+  selectedSecondary?: string[];
+  onSelectMuscle?: (muscle: string) => void;
+  onPrimarySelect?: (muscles: string[]) => void;
+  onSecondarySelect?: (muscles: string[]) => void;
 }
 
 export function MuscleSelector({ 
+  selectedMuscles = [],
   selectedPrimary = [], 
   selectedSecondary = [], 
+  onSelectMuscle,
   onPrimarySelect, 
   onSecondarySelect 
 }: MuscleSelectorProps) {
-  // Ensure arrays with defensive checks
+  // Support both new and old API
   const safePrimary = Array.isArray(selectedPrimary) ? selectedPrimary : [];
   const safeSecondary = Array.isArray(selectedSecondary) ? selectedSecondary : [];
+  const safeMuscles = Array.isArray(selectedMuscles) ? selectedMuscles : [];
   
   // Handle primary muscle selection
   const handlePrimarySelect = (muscle: string) => {
+    if (onSelectMuscle) {
+      // If using simplified API
+      onSelectMuscle(muscle);
+      return;
+    }
+    
+    if (!onPrimarySelect) return;
+    
     if (safePrimary.includes(muscle)) {
       // Remove from primary
       onPrimarySelect(safePrimary.filter(m => m !== muscle));
     } else {
       // Add to primary, remove from secondary if present
       onPrimarySelect([...safePrimary, muscle]);
-      if (safeSecondary.includes(muscle)) {
+      if (safeSecondary.includes(muscle) && onSecondarySelect) {
         onSecondarySelect(safeSecondary.filter(m => m !== muscle));
       }
     }
@@ -40,13 +53,15 @@ export function MuscleSelector({
 
   // Handle secondary muscle selection
   const handleSecondarySelect = (muscle: string) => {
+    if (!onSecondarySelect) return;
+    
     if (safeSecondary.includes(muscle)) {
       // Remove from secondary
       onSecondarySelect(safeSecondary.filter(m => m !== muscle));
     } else {
       // Add to secondary, remove from primary if present
       onSecondarySelect([...safeSecondary, muscle]);
-      if (safePrimary.includes(muscle)) {
+      if (safePrimary.includes(muscle) && onPrimarySelect) {
         onPrimarySelect(safePrimary.filter(m => m !== muscle));
       }
     }
@@ -58,11 +73,20 @@ export function MuscleSelector({
     handleSecondarySelect(muscle);
   };
 
+  // Determine if a muscle is selected based on either API
+  const isMuscleSelected = (muscle: string) => {
+    return safeMuscles.includes(muscle) || safePrimary.includes(muscle);
+  };
+
+  const isSecondaryMuscle = (muscle: string) => {
+    return safeSecondary.includes(muscle);
+  };
+
   // Memoize muscle hotspots to prevent unnecessary re-renders
   const muscleHotspots = useMemo(() => {
     return MUSCLE_GROUP_CATEGORIES.flatMap(category => 
       category.muscles.map(muscle => {
-        const isPrimary = safePrimary.includes(muscle);
+        const isPrimary = safePrimary.includes(muscle) || safeMuscles.includes(muscle);
         const isSecondary = safeSecondary.includes(muscle);
         const position = getMusclePosition(muscle);
         
@@ -82,7 +106,7 @@ export function MuscleSelector({
         );
       })
     ).filter(Boolean); // Filter out null values
-  }, [safePrimary, safeSecondary]);
+  }, [safePrimary, safeSecondary, safeMuscles]);
 
   return (
     <Card className="border-gray-800 bg-gray-900/60 overflow-hidden">

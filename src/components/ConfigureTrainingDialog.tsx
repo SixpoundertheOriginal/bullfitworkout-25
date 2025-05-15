@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -12,6 +11,11 @@ import { useWorkoutStats } from '@/hooks/useWorkoutStats';
 import { processExerciseRanking } from '@/utils/processExerciseRanking';
 import { MuscleSelector } from '@/components/exercises/MuscleSelector';
 import { MUSCLE_GROUP_CATEGORIES } from '@/constants/exerciseMetadata';
+
+// Function to render the Yoga icon since it's not available in lucide-react
+const Yoga = () => (
+  <span className="text-lg">🧘</span>
+);
 
 interface ConfigureTrainingDialogProps {
   open: boolean;
@@ -373,6 +377,7 @@ interface TrainingTypeButtonProps {
   recommended?: boolean;
 }
 
+// Updated the TrainingTypeButton component to accept a custom icon component
 function TrainingTypeButton({
   icon: Icon,
   label,

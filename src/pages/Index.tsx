@@ -8,7 +8,7 @@ import { useWorkoutStats } from "@/hooks/useWorkoutStats";
 import { FeaturesSection } from "@/components/features/FeaturesSection";
 import { WorkoutLogSection } from "@/components/workouts/WorkoutLogSection";
 import { toast } from "@/hooks/use-toast";
-import { StartTrainingButton } from "@/components/training/TrainingStartButton";
+import { TrainingStartButton } from "@/components/training/StartTrainingButton";
 import { motion } from "framer-motion";
 import { typography } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";

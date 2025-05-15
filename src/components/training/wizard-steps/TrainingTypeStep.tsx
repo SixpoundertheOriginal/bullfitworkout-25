@@ -1,8 +1,14 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Dumbbell, Activity, Compass, Sun } from 'lucide-react';
 import { WorkoutStats } from '@/types/workoutStats';
+
+// Function to render the Yoga icon since it's not available in lucide-react
+const Yoga = () => (
+  <span className="text-lg">🧘</span>
+);
 
 interface TrainingTypeStepProps {
   selectedType: string;
@@ -46,7 +52,7 @@ export function TrainingTypeStep({ selectedType, onSelectType, stats }: Training
       id: 'mobility',
       name: 'Yoga & Mobility',
       description: 'Improve flexibility and mindfulness',
-      icon: () => <span className="text-lg">🧘</span>,
+      icon: Yoga,
       color: 'from-green-600 to-green-400',
     },
     {
