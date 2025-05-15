@@ -67,12 +67,13 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
           'energy_cost_factor' in exercise.metadata ? 
           Number(exercise.metadata.energy_cost_factor) : 1;
           
-        // Extract media URL if present - fixed to avoid TypeScript errors
+        // Extract media URL if present - improved safety checks
         let mediaUrl: string | undefined = undefined;
         
         // Safely check if metadata exists and contains media_urls array
         if (typeof exercise.metadata === 'object' && exercise.metadata !== null) {
           const metadata = exercise.metadata as Record<string, any>;
+          // Check if media_urls exists and is an array with at least one item
           if (metadata.media_urls && Array.isArray(metadata.media_urls) && metadata.media_urls.length > 0) {
             mediaUrl = metadata.media_urls[0] as string;
           }
@@ -245,7 +246,7 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
         delete updateData.variationList;
       }
       
-      // Add media_url to media_urls array in metadata if present
+      // Handle media_url specially - add to media_urls array in metadata
       if (updateData.media_url) {
         if (!metadata.media_urls) {
           metadata.media_urls = [];
