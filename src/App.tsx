@@ -1,44 +1,58 @@
-
 import React from 'react'
-import { BrowserRouter } from 'react-router-dom'
-import './App.css'
-
-import { AuthProvider } from './context/AuthContext'
-import { WorkoutNavigationContextProvider } from './context/WorkoutNavigationContext'
-import { DateRangeProvider } from './context/DateRangeContext'
-import { WeightUnitContextProvider } from './context/WeightUnitContext'
-import { Toaster } from './components/ui/toaster'
-import { LayoutProvider } from './context/LayoutContext'
-import { RouterProvider } from './context/RouterProvider'
-import { TooltipProvider } from './components/ui/tooltip'
-
 import {
-  QueryClient,
-  QueryClientProvider,
-} from '@tanstack/react-query'
+  createBrowserRouter,
+  RouterProvider,
+} from "react-router-dom";
+import Index from "@/pages/Index";
+import TrainingSession from "@/pages/TrainingSession";
+import AllExercises from "@/pages/AllExercises";
+import Workouts from "@/pages/Workouts";
+import WorkoutDetails from "@/pages/WorkoutDetails";
+import Profile from "@/pages/Profile";
+import Overview from "@/pages/Overview";
+import ExerciseSetup from "@/pages/ExerciseSetup";
 
-const queryClient = new QueryClient()
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Index />,
+  },
+  {
+    path: "/training-session",
+    element: <TrainingSession />
+  },
+  {
+    path: "/all-exercises",
+    element: <AllExercises />
+  },
+  {
+    path: "/workouts",
+    element: <Workouts />
+  },
+  {
+    path: "/workout-details/:id",
+    element: <WorkoutDetails />
+  },
+  {
+    path: "/profile",
+    element: <Profile />
+  },
+  {
+    path: "/overview",
+    element: <Overview />
+  },
+  // Add new route for the ExerciseSetup page
+  {
+    path: "/setup-workout",
+    element: <ExerciseSetup />
+  }
+]);
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <TooltipProvider>
-          <AuthProvider>
-            <WeightUnitContextProvider>
-              <DateRangeProvider>
-                <WorkoutNavigationContextProvider>
-                  <LayoutProvider>
-                    <RouterProvider />
-                    <Toaster />
-                  </LayoutProvider>
-                </WorkoutNavigationContextProvider>
-              </DateRangeProvider>
-            </WeightUnitContextProvider>
-          </AuthProvider>
-        </TooltipProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <React.StrictMode>
+      <RouterProvider router={router} />
+    </React.StrictMode>
   )
 }
 
