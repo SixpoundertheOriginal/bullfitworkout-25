@@ -54,8 +54,9 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
       exercise={exercise} 
       className={cn(
         "transition-all duration-300",
-        isActive ? "ring-2 ring-purple-500/40" : ""
+        isActive ? "ring-2 ring-purple-500/40 shadow-lg shadow-purple-500/20" : ""
       )}
+      size="lg"
     /> : 
     undefined;
 
@@ -82,8 +83,11 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
       onResetRestTimer={onResetRestTimer}
       thumbnail={thumbnail}
       className={cn(
-        "transition-all duration-200",
-        isActive ? "border-purple-500/50 shadow-md shadow-purple-500/10" : "",
+        "transition-all duration-300",
+        "shadow-md hover:shadow-lg",
+        "bg-gradient-to-br from-gray-900/90 to-gray-800/70",
+        "border border-white/5",
+        isActive ? "border-purple-500/40 shadow-lg shadow-purple-500/10" : "",
         "active:scale-[0.99]",
         "tap-highlight-transparent",
         className

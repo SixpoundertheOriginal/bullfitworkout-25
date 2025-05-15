@@ -24,7 +24,9 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onAdd, cla
         /> : undefined}
       className={cn(
         "hover:scale-[1.02] active:scale-[0.98] transition-all duration-200",
-        "tap-highlight-transparent",
+        "tap-highlight-transparent shadow-md hover:shadow-lg",
+        "bg-gradient-to-br from-gray-900/80 to-gray-800/60",
+        "border border-white/5",
         className
       )}
     />

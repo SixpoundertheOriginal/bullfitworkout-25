@@ -79,3 +79,51 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
+
+/* Touch interaction enhancements */
+.tap-highlight-transparent {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-feedback {
+  touch-action: manipulation;
+}
+
+/* Prevent text selection during taps */
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Improve card interactions */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:active {
+  transform: scale(0.98);
+}
+
+/* Custom scrollbar for a more polished look */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Prevent pull-to-refresh on mobile */
+html, body {
+  overscroll-behavior-y: contain;
+}
