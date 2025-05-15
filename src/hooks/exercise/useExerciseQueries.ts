@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Exercise, MuscleGroup, EquipmentType, MovementPattern, Difficulty } from '@/types/exercise';
-import { ExerciseSortBy, SortOrder } from './types';
+import { ExerciseSortBy, SortOrder, ExerciseMetadata } from './types';
 
 /**
  * Hook for fetching and querying exercises
@@ -123,3 +123,4 @@ export const useExerciseQueries = (initialSortBy: ExerciseSortBy = 'name', initi
     isError: !!error
   };
 };
+
