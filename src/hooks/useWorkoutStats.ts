@@ -18,9 +18,15 @@ export function useWorkoutStats(
   const { weightUnit } = useWeightUnit();
   const { user } = useAuth();
   
-  // Get date range context safely with a default empty object if not available
-  const dateRangeContext = useDateRange();
-  const dateRange = dateRangeContext?.dateRange;
+  // Safely access date range context
+  let dateRange;
+  try {
+    const dateRangeContext = useDateRange();
+    dateRange = dateRangeContext?.dateRange;
+  } catch (error) {
+    console.warn("DateRange context not available, defaulting to null", error);
+    dateRange = null;
+  }
 
   const [loading, setLoading] = useState(true);
   const [workouts, setWorkouts] = useState<any[]>([]);

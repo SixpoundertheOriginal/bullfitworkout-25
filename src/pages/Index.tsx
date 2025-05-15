@@ -14,8 +14,8 @@ import { cn } from "@/lib/utils";
 import { useWorkoutState } from "@/hooks/useWorkoutState";
 import { DateRangeProvider } from "@/context/DateRangeContext";
 
+// Export the main component which is wrapped with providers
 const Index = () => {
-  // Wrap the entire component in DateRangeProvider
   return (
     <DateRangeProvider>
       <IndexContent />
