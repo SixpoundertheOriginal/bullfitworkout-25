@@ -1,18 +1,13 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { MusclePosition } from '@/utils/musclePositions';
 
 interface MuscleHotspotProps {
   muscle: string;
   isPrimary: boolean;
   isSecondary: boolean;
-  position: {
-    top: string;
-    left: string;
-    width: string;
-    height: string;
-    right?: string;
-  };
+  position: MusclePosition;
   onPrimarySelect: (muscle: string) => void;
   onContextMenu: (e: React.MouseEvent, muscle: string) => void;
 }
@@ -25,6 +20,11 @@ export function MuscleHotspot({
   onPrimarySelect, 
   onContextMenu 
 }: MuscleHotspotProps) {
+  // Early return if position should not be displayed
+  if (position.display === 'none') {
+    return null;
+  }
+  
   return (
     <div 
       onClick={() => onPrimarySelect(muscle)}

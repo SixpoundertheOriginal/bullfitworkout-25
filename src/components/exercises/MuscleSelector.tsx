@@ -81,7 +81,7 @@ export function MuscleSelector({
           />
         );
       })
-    );
+    ).filter(Boolean); // Filter out null values
   }, [safePrimary, safeSecondary]);
 
   return (

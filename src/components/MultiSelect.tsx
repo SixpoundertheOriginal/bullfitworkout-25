@@ -1,110 +1,168 @@
 
-import * as React from "react";
-import { X, Check } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Badge } from '@/components/ui/badge';
 
-interface Option {
+export type Option = {
   label: string;
   value: string;
-}
+};
 
 interface MultiSelectProps {
   options: Option[];
   selected: string[];
   onChange: (values: string[]) => void;
-  placeholder?: string;
   className?: string;
+  placeholder?: string;
+  badgeClassName?: string;
+  disabled?: boolean;
 }
 
 export function MultiSelect({
-  options = [],
+  options,
   selected = [],
   onChange,
-  placeholder = "Select options",
   className,
+  placeholder = "Select options",
+  badgeClassName,
+  disabled = false,
 }: MultiSelectProps) {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
+  const [inputValue, setInputValue] = useState("");
   
-  // Ensure options is always an array
-  const safeOptions = Array.isArray(options) ? options : [];
-  // Ensure selected is always an array
+  // Ensure selected is always an array to prevent "undefined is not iterable" error
   const safeSelected = Array.isArray(selected) ? selected : [];
   
-  const handleSelect = (currentValue: string) => {
-    const isSelected = safeSelected.includes(currentValue);
-    
-    if (isSelected) {
-      onChange(safeSelected.filter((value) => value !== currentValue));
-    } else {
-      onChange([...safeSelected, currentValue]);
-    }
-  };
+  const handleUnselect = useCallback((value: string) => {
+    onChange(safeSelected.filter((v) => v !== value));
+  }, [safeSelected, onChange]);
 
-  const handleRemove = (currentValue: string) => {
-    onChange(safeSelected.filter((value) => value !== currentValue));
-  };
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    const input = e.target as HTMLInputElement;
+    if (input.value === "" && e.key === "Backspace") {
+      onChange(safeSelected.slice(0, -1));
+    }
+  }, [safeSelected, onChange]);
+
+  // This ref helps track clicks on badges for determining focus
+  const commandRef = useRef<HTMLDivElement>(null);
+  
+  // Calculate the display labels based on selected values
+  const selectedLabels = safeSelected.map((value) => {
+    const option = options.find((opt) => opt.value === value);
+    return option ? option.label : value;
+  });
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <div
+        <Button
+          variant="outline"
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "flex min-h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+            "min-h-[40px] h-auto flex-wrap justify-between",
+            disabled && "opacity-50 cursor-not-allowed",
             className
           )}
+          onClick={() => !disabled && setOpen(!open)}
+          disabled={disabled}
         >
-          <div className="flex gap-1 flex-wrap">
-            {safeSelected.length === 0 && <span className="text-muted-foreground">{placeholder}</span>}
-            {safeSelected.map((value) => {
-              const option = safeOptions.find((opt) => opt.value === value);
-              return (
-                <Badge
-                  key={value}
-                  variant="secondary"
-                  className="mr-1 mb-1 flex items-center gap-1"
-                >
-                  {option?.label || value}
-                  <button
-                    className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
+          <div className="flex flex-wrap gap-1 items-center">
+            {safeSelected.length === 0 && (
+              <span className="text-muted-foreground">{placeholder}</span>
+            )}
+            {safeSelected.length > 0 && 
+              safeSelected.map((value) => {
+                const label = selectedLabels[safeSelected.indexOf(value)];
+                return (
+                  <Badge
+                    key={value}
+                    className={cn(
+                      "px-1 py-0 mr-1 mb-1",
+                      badgeClassName
+                    )}
+                    onClick={(e) => {
                       e.stopPropagation();
+                      if (!disabled) handleUnselect(value);
                     }}
-                    onClick={() => handleRemove(value)}
                   >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              );
-            })}
+                    {label}
+                    {!disabled && (
+                      <X
+                        className="ml-1 h-3 w-3 cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!disabled) handleUnselect(value);
+                        }}
+                      />
+                    )}
+                  </Badge>
+                );
+              })
+            }
           </div>
-          <div className="shrink-0 opacity-50">{safeSelected.length > 0 && `${safeSelected.length} selected`}</div>
-        </div>
+          <div>
+            {!disabled && (
+              <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+            )}
+          </div>
+        </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
-        <Command>
-          <CommandInput placeholder={`Search ${placeholder.toLowerCase()}...`} />
-          <CommandEmpty>No options found.</CommandEmpty>
-          <CommandGroup className="max-h-64 overflow-auto">
-            {safeOptions.map((option) => {
-              const isSelected = safeSelected.includes(option.value);
-              return (
-                <CommandItem
-                  key={option.value}
-                  onSelect={() => handleSelect(option.value)}
-                  className="flex items-center justify-between cursor-pointer"
-                >
-                  <span>{option.label}</span>
-                  {isSelected && <Check className="h-4 w-4" />}
-                </CommandItem>
-              );
-            })}
-          </CommandGroup>
+        <Command ref={commandRef}>
+          <CommandInput 
+            placeholder="Search..." 
+            value={inputValue}
+            onValueChange={setInputValue}
+            onKeyDown={handleKeyDown}
+            disabled={disabled}
+          />
+          <CommandList>
+            <CommandEmpty>No options found.</CommandEmpty>
+            <CommandGroup>
+              {options.map((option) => {
+                const isSelected = safeSelected.indexOf(option.value) !== -1;
+                return (
+                  <CommandItem
+                    key={option.value}
+                    value={option.value}
+                    onSelect={() => {
+                      if (disabled) return;
+                      
+                      const newSelected = isSelected
+                        ? safeSelected.filter((v) => v !== option.value)
+                        : [...safeSelected, option.value];
+                      
+                      onChange(newSelected);
+                      setInputValue("");
+                    }}
+                    className={cn(
+                      "flex items-center gap-2", 
+                      disabled && "opacity-50 cursor-not-allowed"
+                    )}
+                    disabled={disabled}
+                  >
+                    <div
+                      className={cn(
+                        "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                        isSelected
+                          ? "bg-primary text-primary-foreground"
+                          : "opacity-50"
+                      )}
+                    >
+                      {isSelected && <Check className="h-3 w-3" />}
+                    </div>
+                    {option.label}
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>
