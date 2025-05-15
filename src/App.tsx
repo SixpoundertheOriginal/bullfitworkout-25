@@ -8,6 +8,7 @@ import Index from "@/pages/Index";
 import TrainingSession from "@/pages/TrainingSession";
 import Overview from "@/pages/Overview";
 import ExerciseSetup from "@/pages/ExerciseSetup";
+import { DateRangeProvider } from '@/context/DateRangeContext';
 
 // Create router with pages that actually exist
 const router = createBrowserRouter([
@@ -32,7 +33,9 @@ const router = createBrowserRouter([
 function App() {
   return (
     <React.StrictMode>
-      <RouterProvider router={router} />
+      <DateRangeProvider>
+        <RouterProvider router={router} />
+      </DateRangeProvider>
     </React.StrictMode>
   )
 }

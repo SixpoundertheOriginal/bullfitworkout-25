@@ -14,21 +14,17 @@ import { cn } from "@/lib/utils";
 import { useWorkoutState } from "@/hooks/useWorkoutState";
 import { DateRangeProvider } from "@/context/DateRangeContext";
 
-// Export the main component which is wrapped with providers
+// The main component doesn't need DateRangeProvider anymore as it's provided in App.tsx
 const Index = () => {
-  return (
-    <DateRangeProvider>
-      <IndexContent />
-    </DateRangeProvider>
-  );
+  return <IndexContent />;
 };
 
-// Extract the content to a separate component that uses the context
+// IndexContent component uses context from parent providers
 const IndexContent = () => {
   const navigate = useNavigate();
   const [showWorkouts, setShowWorkouts] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { stats } = useWorkoutStats(); // This needs the DateRangeProvider
+  const { stats } = useWorkoutStats(); // Now this will have access to DateRangeContext from App.tsx
   const { isActive, lastActiveRoute } = useWorkoutState();
   
   // Replace useElementVisibility with native IntersectionObserver

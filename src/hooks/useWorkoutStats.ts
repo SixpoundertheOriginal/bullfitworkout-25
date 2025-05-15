@@ -18,14 +18,21 @@ export function useWorkoutStats(
   const { weightUnit } = useWeightUnit();
   const { user } = useAuth();
   
-  // Safely access date range context
+  // Safely access date range context with default values
   let dateRange;
   try {
     const dateRangeContext = useDateRange();
     dateRange = dateRangeContext?.dateRange;
   } catch (error) {
-    console.warn("DateRange context not available, defaulting to null", error);
-    dateRange = null;
+    console.warn("DateRange context not available, using default date range", error);
+    // Set reasonable defaults if context is not available
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    dateRange = {
+      from: thirtyDaysAgo,
+      to: now
+    };
   }
 
   const [loading, setLoading] = useState(true);
@@ -68,6 +75,7 @@ export function useWorkoutStats(
 
     try {
       const now = new Date();
+      // If no dateRange is available, use last 30 days as default
       const defaultFrom = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
       const from = dateRange?.from || defaultFrom;
       const to   = dateRange?.to   || now;
