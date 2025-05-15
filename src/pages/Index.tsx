@@ -194,7 +194,7 @@ const Index = () => {
               {isActive ? (
                 <div className="flex flex-col items-center space-y-4">
                   <TrainingStartButton
-                    onClick={handleContinueWorkout}
+                    onStartClick={handleContinueWorkout}
                     trainingType="Continue"
                     label="Resume"
                   />
@@ -207,7 +207,7 @@ const Index = () => {
                 </div>
               ) : (
                 <TrainingStartButton
-                  onClick={() => setDialogOpen(true)}
+                  onStartClick={() => setDialogOpen(true)}
                   trainingType={recommendedWorkoutType}
                   label="Start"
                 />
