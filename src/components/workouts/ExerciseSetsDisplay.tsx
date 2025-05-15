@@ -3,9 +3,10 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ClipboardEdit, Trash2, Clock, ArrowRight } from "lucide-react";
+import { ClipboardEdit, Trash2, Clock, ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
 import { ExerciseSet } from "@/types/exercise";
 import { cn } from "@/lib/utils";
+import { motion } from 'framer-motion';
 
 interface ExerciseSetsDisplayProps {
   exerciseName: string;
@@ -24,6 +25,9 @@ export const ExerciseSetsDisplay: React.FC<ExerciseSetsDisplayProps> = ({
   onSelect,
   isSelected = false,
 }) => {
+  // State for collapsing sets display
+  const [collapsed, setCollapsed] = React.useState(false);
+
   // Calculate average rest time
   const completedSets = sets.filter(set => set.completed);
   const restTimes = sets.map(set => set.restTime || 60);
@@ -44,19 +48,35 @@ export const ExerciseSetsDisplay: React.FC<ExerciseSetsDisplayProps> = ({
   };
 
   return (
-    <div 
+    <motion.div 
+      initial={{ opacity: 0, y: 5 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
       className={cn(
         "bg-gray-800/50 rounded-lg p-3 transition-all duration-300",
         isSelected ? "ring-2 ring-purple-500/50" : "hover:bg-gray-800/70 cursor-pointer"
       )}
       onClick={onSelect}
     >
-      <div className="flex justify-between items-center mb-2">
+      <div className="flex justify-between items-center">
         <div className="flex items-center">
           <h4 className="font-medium text-sm">{exerciseName}</h4>
           {isSelected && <ArrowRight size={14} className="ml-2 text-purple-400" />}
         </div>
+        
         <div className="flex gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => { 
+              e.stopPropagation();
+              setCollapsed(!collapsed);
+            }}
+            className="h-7 w-7 text-gray-400 hover:text-white hover:bg-gray-700"
+          >
+            {collapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+          </Button>
+          
           <Button
             variant="ghost"
             size="icon"
@@ -68,6 +88,7 @@ export const ExerciseSetsDisplay: React.FC<ExerciseSetsDisplayProps> = ({
           >
             <ClipboardEdit size={14} />
           </Button>
+          
           <Button
             variant="ghost"
             size="icon"
@@ -87,30 +108,42 @@ export const ExerciseSetsDisplay: React.FC<ExerciseSetsDisplayProps> = ({
         <span>Avg Rest: <span className={getRestTimeClass(avgRestTime)}>{Math.round(avgRestTime)}s</span></span>
       </div>
       
-      <div className="grid grid-cols-5 gap-1 text-xs text-gray-400">
-        <div>Set</div>
-        <div className="text-right">Weight</div>
-        <div className="text-right">Reps</div>
-        <div className="text-right">Rest</div>
-        <div className="text-right">Volume</div>
-      </div>
-      
-      <Separator className="my-1 bg-gray-700" />
-      
-      {sets.map((set, index) => (
-        <div 
-          key={index} 
-          className={`grid grid-cols-5 gap-1 text-sm py-1 ${!set.completed ? "text-gray-500" : ""}`}
-        >
-          <div>{set.set_number}</div>
-          <div className="text-right font-mono">{set.weight}</div>
-          <div className="text-right font-mono">{set.reps}</div>
-          <div className={`text-right font-mono ${getRestTimeClass(set.restTime)}`}>
-            {formatRestTime(set.restTime)}
-          </div>
-          <div className="text-right font-mono">{set.weight * set.reps}</div>
-        </div>
-      ))}
-    </div>
+      {!collapsed && (
+        <>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-auto"
+          >
+            <div className="grid grid-cols-5 gap-1 text-xs text-gray-400">
+              <div>Set</div>
+              <div className="text-right">Weight</div>
+              <div className="text-right">Reps</div>
+              <div className="text-right">Rest</div>
+              <div className="text-right">Volume</div>
+            </div>
+            
+            <Separator className="my-1 bg-gray-700" />
+            
+            {sets.map((set, index) => (
+              <div 
+                key={index} 
+                className={`grid grid-cols-5 gap-1 text-sm py-1 ${!set.completed ? "text-gray-500" : ""}`}
+              >
+                <div>{set.set_number}</div>
+                <div className="text-right font-mono">{set.weight}</div>
+                <div className="text-right font-mono">{set.reps}</div>
+                <div className={`text-right font-mono ${getRestTimeClass(set.restTime)}`}>
+                  {formatRestTime(set.restTime)}
+                </div>
+                <div className="text-right font-mono">{set.weight * set.reps}</div>
+              </div>
+            ))}
+          </motion.div>
+        </>
+      )}
+    </motion.div>
   );
 };

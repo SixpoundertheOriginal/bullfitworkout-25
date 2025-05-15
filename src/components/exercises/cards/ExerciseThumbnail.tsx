@@ -33,6 +33,7 @@ export const ExerciseThumbnail: React.FC<ExerciseThumbnailProps> = ({
         sizeClasses[size],
         'rounded-lg overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center',
         'border border-white/5',
+        'shadow-inner',
         className
       )}>
         <Image size={size === 'sm' ? 14 : size === 'md' ? 16 : 20} className="text-gray-500" />
