@@ -16,6 +16,15 @@ export const ExerciseDialogMuscleGroups = React.memo(function ExerciseDialogMusc
   onChangePrimaryMuscles,
   onChangeSecondaryMuscles
 }: ExerciseDialogMuscleGroupsProps) {
+  // Ensure the muscle groups are arrays
+  const primaryMuscles = Array.isArray(exercise.primary_muscle_groups) 
+    ? exercise.primary_muscle_groups 
+    : [];
+    
+  const secondaryMuscles = Array.isArray(exercise.secondary_muscle_groups) 
+    ? exercise.secondary_muscle_groups 
+    : [];
+  
   // Create options array for the MultiSelect component
   const muscleOptions = COMMON_MUSCLE_GROUPS.map(muscle => ({
     label: muscle.charAt(0).toUpperCase() + muscle.slice(1),
@@ -28,7 +37,7 @@ export const ExerciseDialogMuscleGroups = React.memo(function ExerciseDialogMusc
         <Label htmlFor="primary-muscles" className="mb-2 block">Primary Muscle Groups</Label>
         <MultiSelect
           options={muscleOptions}
-          selected={exercise.primary_muscle_groups}
+          selected={primaryMuscles}
           onChange={(values) => onChangePrimaryMuscles(values as MuscleGroup[])}
           placeholder="Select primary muscles"
         />
@@ -41,7 +50,7 @@ export const ExerciseDialogMuscleGroups = React.memo(function ExerciseDialogMusc
         <Label htmlFor="secondary-muscles" className="mb-2 block">Secondary Muscle Groups</Label>
         <MultiSelect
           options={muscleOptions}
-          selected={exercise.secondary_muscle_groups}
+          selected={secondaryMuscles}
           onChange={(values) => onChangeSecondaryMuscles(values as MuscleGroup[])}
           placeholder="Select secondary muscles"
         />

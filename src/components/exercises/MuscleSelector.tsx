@@ -12,35 +12,39 @@ interface MuscleSelectorProps {
 }
 
 export function MuscleSelector({ 
-  selectedPrimary, 
-  selectedSecondary, 
+  selectedPrimary = [], 
+  selectedSecondary = [], 
   onPrimarySelect, 
   onSecondarySelect 
 }: MuscleSelectorProps) {
+  // Ensure arrays
+  const safePrimary = Array.isArray(selectedPrimary) ? selectedPrimary : [];
+  const safeSecondary = Array.isArray(selectedSecondary) ? selectedSecondary : [];
+  
   // Handle primary muscle selection
   const handlePrimarySelect = (muscle: string) => {
-    if (selectedPrimary.includes(muscle)) {
+    if (safePrimary.includes(muscle)) {
       // Remove from primary
-      onPrimarySelect(selectedPrimary.filter(m => m !== muscle));
+      onPrimarySelect(safePrimary.filter(m => m !== muscle));
     } else {
       // Add to primary, remove from secondary if present
-      onPrimarySelect([...selectedPrimary, muscle]);
-      if (selectedSecondary.includes(muscle)) {
-        onSecondarySelect(selectedSecondary.filter(m => m !== muscle));
+      onPrimarySelect([...safePrimary, muscle]);
+      if (safeSecondary.includes(muscle)) {
+        onSecondarySelect(safeSecondary.filter(m => m !== muscle));
       }
     }
   };
 
   // Handle secondary muscle selection
   const handleSecondarySelect = (muscle: string) => {
-    if (selectedSecondary.includes(muscle)) {
+    if (safeSecondary.includes(muscle)) {
       // Remove from secondary
-      onSecondarySelect(selectedSecondary.filter(m => m !== muscle));
+      onSecondarySelect(safeSecondary.filter(m => m !== muscle));
     } else {
       // Add to secondary, remove from primary if present
-      onSecondarySelect([...selectedSecondary, muscle]);
-      if (selectedPrimary.includes(muscle)) {
-        onPrimarySelect(selectedPrimary.filter(m => m !== muscle));
+      onSecondarySelect([...safeSecondary, muscle]);
+      if (safePrimary.includes(muscle)) {
+        onPrimarySelect(safePrimary.filter(m => m !== muscle));
       }
     }
   };

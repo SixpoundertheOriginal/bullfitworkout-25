@@ -28,10 +28,12 @@ export function MultiSelect({
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false);
   
+  // Ensure options is always an array
+  const safeOptions = Array.isArray(options) ? options : [];
+  // Ensure selected is always an array
+  const safeSelected = Array.isArray(selected) ? selected : [];
+  
   const handleSelect = (currentValue: string) => {
-    // Ensure selected is always an array
-    const safeSelected = Array.isArray(selected) ? selected : [];
-    
     const isSelected = safeSelected.includes(currentValue);
     
     if (isSelected) {
@@ -42,15 +44,8 @@ export function MultiSelect({
   };
 
   const handleRemove = (currentValue: string) => {
-    // Ensure selected is always an array
-    const safeSelected = Array.isArray(selected) ? selected : [];
     onChange(safeSelected.filter((value) => value !== currentValue));
   };
-
-  // Ensure options is an array
-  const safeOptions = Array.isArray(options) ? options : [];
-  // Ensure selected is an array
-  const safeSelected = Array.isArray(selected) ? selected : [];
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -92,7 +87,7 @@ export function MultiSelect({
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
-        <Command className="w-full">
+        <Command>
           <CommandInput placeholder={`Search ${placeholder.toLowerCase()}...`} />
           <CommandEmpty>No options found.</CommandEmpty>
           <CommandGroup className="max-h-64 overflow-auto">
