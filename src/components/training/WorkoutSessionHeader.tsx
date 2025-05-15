@@ -63,7 +63,16 @@ export const WorkoutSessionHeader: React.FC<WorkoutSessionHeaderProps> = ({
 
   return (
     <>
-      <div className="sticky top-16 z-10 bg-gray-900/80 backdrop-blur-lg shadow-sm">
+      <div className={cn(
+        // Base positioning
+        "sticky top-16 z-10",
+        // Visual styling with glass effect
+        "bg-gray-900/90 backdrop-blur-lg",
+        // Shadow for depth
+        "shadow-sm",
+        // Transitions
+        "transition-all duration-300"
+      )}>
         <WorkoutMetrics
           time={elapsedTime}
           exerciseCount={exerciseCount}
@@ -90,7 +99,12 @@ export const WorkoutSessionHeader: React.FC<WorkoutSessionHeaderProps> = ({
       
       {isRecoveryMode && (
         <div className="px-4 mt-2 animate-fade-in">
-          <div className="bg-gray-800 border border-gray-700 rounded-lg p-3">
+          <div className={cn(
+            // Visual styling
+            "bg-gray-800 border border-gray-700 rounded-lg p-3",
+            // Shadow for depth
+            "shadow-md"
+          )}>
             <h3 className="text-sm font-medium mb-1">Workout recovery available</h3>
             <p className="text-gray-400 text-xs mb-2">
               We found an unsaved workout. Continue your session or reset to start fresh.

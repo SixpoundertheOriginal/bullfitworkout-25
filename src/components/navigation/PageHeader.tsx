@@ -1,7 +1,10 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { theme } from "@/lib/theme";
 
 interface PageHeaderProps {
   title: string;
@@ -17,6 +20,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   children
 }) => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   const handleBack = () => {
     if (onBack) {
@@ -26,18 +30,56 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
     }
   };
 
+  // Add haptic feedback for iOS devices when back button is pressed
+  const handleBackWithFeedback = () => {
+    if ('vibrate' in navigator) {
+      // Light haptic feedback
+      navigator.vibrate(5);
+    }
+    handleBack();
+  };
+
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 flex items-center px-4 bg-gray-900/95 backdrop-blur-sm z-10 border-b border-gray-800/50">
-      <div className="flex-1 flex items-center min-w-0">
+    <header 
+      className={cn(
+        // Base styles
+        "fixed top-0 left-0 right-0 z-10",
+        // Height and alignment
+        "h-16 md:h-[60px] flex items-center",
+        // Padding with safe area support
+        "px-4 md:px-6",
+        // Visual styling with glass effect
+        "bg-gray-900/95 backdrop-blur-md",
+        // Border styling
+        "border-b border-gray-800/50",
+        // Shadow for depth
+        "shadow-sm shadow-black/20"
+      )}
+    >
+      <div className="flex-1 flex items-center min-w-0 gap-3">
         {showBackButton && (
-          <button onClick={handleBack} className="mr-2 p-2 -ml-2">
-            <ArrowLeft size={20} />
+          <button 
+            onClick={handleBackWithFeedback}
+            aria-label="Go back"
+            className={cn(
+              // Size for better touch targets
+              "w-10 h-10 flex items-center justify-center rounded-full",
+              // Visual feedback on touch
+              "-ml-2 active:bg-gray-800/50",
+              // Transition for smooth interaction
+              "transition-colors duration-200"
+            )}
+          >
+            <ArrowLeft size={22} />
           </button>
         )}
-        <h1 className="text-xl font-bold truncate">{title}</h1>
+        <h1 className={cn(
+          "text-xl font-bold truncate",
+          theme.textStyles.headings.primary
+        )}>{title}</h1>
       </div>
       {children && (
-        <div className="flex items-center ml-2">
+        <div className="flex items-center space-x-2">
           {children}
         </div>
       )}

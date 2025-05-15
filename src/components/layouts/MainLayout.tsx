@@ -7,6 +7,7 @@ import { useLocation } from "react-router-dom";
 import { useLayout } from "@/context/LayoutContext";
 import { DateRangeFilter } from "@/components/date-filters/DateRangeFilter";
 import { MainMenu } from "@/components/navigation/MainMenu";
+import { cn } from "@/lib/utils";
 
 // Function to get page title based on the current route
 const getPageTitle = (pathname: string): string => {
@@ -82,7 +83,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         </div>
       )}
       
-      <main className="flex-grow overflow-y-auto pt-16 pb-16 will-change-transform">
+      <main className={cn(
+        "flex-grow overflow-y-auto will-change-transform",
+        "pt-16 pb-16", // Standard padding for header and footer
+        "w-full"
+      )}>
         <div className="content-container w-full">
           {children}
         </div>
@@ -101,7 +106,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           animation: none !important;
         }
         .content-container {
-          min-height: calc(100vh - 48px);
+          min-height: calc(100vh - 64px);
         }
         `}
       </style>
