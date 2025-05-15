@@ -67,15 +67,14 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
           'energy_cost_factor' in exercise.metadata ? 
           Number(exercise.metadata.energy_cost_factor) : 1;
           
-        // Extract media URL if present
-        let mediaUrl;
-        if (exercise.media_url) {
-          mediaUrl = exercise.media_url;
-        } else if (typeof exercise.metadata === 'object' && exercise.metadata !== null) {
-          // Check if media_urls exists in metadata and has items
-          const mediaUrls = exercise.metadata.media_urls;
-          if (Array.isArray(mediaUrls) && mediaUrls.length > 0) {
-            mediaUrl = mediaUrls[0];
+        // Extract media URL if present - fixed to avoid TypeScript errors
+        let mediaUrl: string | undefined = undefined;
+        
+        // Safely check if metadata exists and contains media_urls array
+        if (typeof exercise.metadata === 'object' && exercise.metadata !== null) {
+          const metadata = exercise.metadata as Record<string, any>;
+          if (metadata.media_urls && Array.isArray(metadata.media_urls) && metadata.media_urls.length > 0) {
+            mediaUrl = metadata.media_urls[0] as string;
           }
         }
           
@@ -97,6 +96,7 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
           variation_type: exercise.variation_type || undefined,
           variation_value: exercise.variation_value || undefined,
           user_id: exercise.created_by || '',
+          created_at: exercise.created_at,
           // Use the safely extracted values
           is_bodyweight: isBodyweight,
           energy_cost_factor: energyCostFactor,
