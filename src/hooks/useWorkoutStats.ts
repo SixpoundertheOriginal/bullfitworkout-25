@@ -163,7 +163,7 @@ export function useWorkoutStats(
           setCount += w.exercises.length;
 
           unique.forEach(name => {
-            const muscle = getExerciseMainMuscleGroup(name);
+            const muscle = getExerciseMainMuscleGroup(name as string);
             muscleCounts[muscle] = (muscleCounts[muscle] || 0) + 1;
           });
 

@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { QuickStatsSection } from "@/components/metrics/QuickStatsSection";
@@ -13,20 +14,15 @@ import { typography } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { useWorkoutState } from "@/hooks/useWorkoutState";
 
-// The main component doesn't need DateRangeProvider anymore as it's provided in App.tsx
+// The main Index component
 const Index = () => {
-  return <IndexContent />;
-};
-
-// IndexContent component uses context from parent providers
-const IndexContent = () => {
   const navigate = useNavigate();
   const [showWorkouts, setShowWorkouts] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { stats } = useWorkoutStats(); // Now this will have access to DateRangeContext from App.tsx
+  const { stats, loading } = useWorkoutStats(); // Now using context from App.tsx
   const { isActive, lastActiveRoute } = useWorkoutState();
   
-  // Replace useElementVisibility with native IntersectionObserver
+  // Use IntersectionObserver for section visibility
   const sectionRef = useRef<HTMLElement | null>(null);
   const [isSectionVisible, setIsSectionVisible] = useState(false);
   
