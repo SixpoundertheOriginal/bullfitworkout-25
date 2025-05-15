@@ -8,18 +8,23 @@ import { cn } from '@/lib/utils';
 
 interface CommonExerciseCardProps {
   exercise: Exercise | string;
-  variant?: 'default' | 'workout' | 'workout-add' | 'selection' | 'compact';
+  variant?: 'default' | 'workout' | 'workout-add' | 'selection' | 'compact' | 'list';
   className?: string;
   onAdd?: () => void;
   onSelect?: () => void;
   onDeleteExercise?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
   sets?: any[];
   isActive?: boolean;
   isSelected?: boolean;
+  isVariation?: boolean;
   onAddSet?: () => void;
   onCompleteSet?: (setIndex: number) => void;
   thumbnail?: React.ReactNode;
   customContent?: React.ReactNode;
+  rightContent?: React.ReactNode;
+  variationBadge?: React.ReactNode;
 }
 
 export const CommonExerciseCard: React.FC<CommonExerciseCardProps> = ({
@@ -28,17 +33,46 @@ export const CommonExerciseCard: React.FC<CommonExerciseCardProps> = ({
   className,
   onAdd,
   onSelect,
+  onEdit,
+  onDelete,
   onDeleteExercise,
   sets,
   isActive,
   isSelected,
+  isVariation,
   onAddSet,
   onCompleteSet,
   thumbnail,
-  customContent
+  customContent,
+  rightContent,
+  variationBadge
 }) => {
   // Handle both string and Exercise object for the name
   const exerciseName = typeof exercise === 'string' ? exercise : exercise.name;
+  
+  // For list variant (used in ExerciseVariationGroup)
+  if (variant === 'list') {
+    return (
+      <BaseExerciseCard
+        exercise={exercise}
+        onClick={onSelect}
+        className={className}
+      >
+        <div className="flex justify-between items-start">
+          <div className="flex items-center space-x-3">
+            {thumbnail && <div>{thumbnail}</div>}
+            <div className="flex flex-col">
+              <h3 className="font-medium text-gray-100">{exerciseName}</h3>
+              {isVariation && variationBadge && (
+                <div className="mt-1">{variationBadge}</div>
+              )}
+            </div>
+          </div>
+          {rightContent}
+        </div>
+      </BaseExerciseCard>
+    );
+  }
   
   // For selection variant
   if (variant === 'selection') {
@@ -190,3 +224,4 @@ export const CommonExerciseCard: React.FC<CommonExerciseCardProps> = ({
     </BaseExerciseCard>
   );
 };
+
