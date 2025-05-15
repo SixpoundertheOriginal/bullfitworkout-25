@@ -2,6 +2,7 @@
 import React from 'react';
 import { Exercise } from '@/types/exercise';
 import { CommonExerciseCard } from '../exercises/CommonExerciseCard';
+import { ExerciseThumbnail } from '../exercises/cards/ExerciseThumbnail';
 
 interface ExerciseCardProps {
   exercise: Exercise;
@@ -14,6 +15,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onAdd }) =
       exercise={exercise}
       variant="workout-add"
       onAdd={onAdd ? () => onAdd(exercise) : undefined}
+      thumbnail={typeof exercise !== 'string' ? <ExerciseThumbnail exercise={exercise} /> : undefined}
     />
   );
 };

@@ -2,6 +2,7 @@
 import React from 'react';
 import { Exercise } from '@/types/exercise';
 import { CommonExerciseCard } from '../exercises/CommonExerciseCard';
+import { ExerciseThumbnail } from '../exercises/cards/ExerciseThumbnail';
 
 interface ExerciseCardProps {
   exercise: Exercise | string;
@@ -44,6 +45,11 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
   onShowRestTimer,
   onResetRestTimer
 }) => {
+  // Create thumbnail if exercise is an object with a media_url
+  const thumbnail = typeof exercise !== 'string' ? 
+    <ExerciseThumbnail exercise={exercise} /> : 
+    undefined;
+
   return (
     <CommonExerciseCard
       exercise={exercise}
@@ -65,6 +71,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
       onRestTimeIncrement={onRestTimeIncrement}
       onShowRestTimer={onShowRestTimer}
       onResetRestTimer={onResetRestTimer}
+      thumbnail={thumbnail}
     />
   );
 };

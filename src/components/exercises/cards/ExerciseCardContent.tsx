@@ -1,0 +1,71 @@
+
+import React from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Exercise } from '@/types/exercise';
+
+interface ExerciseCardContentProps {
+  exercise: Exercise | string;
+  variationBadge?: React.ReactNode;
+  thumbnail?: React.ReactNode;
+  rightContent?: React.ReactNode;
+}
+
+export const ExerciseCardContent: React.FC<ExerciseCardContentProps> = ({
+  exercise,
+  variationBadge,
+  thumbnail,
+  rightContent
+}) => {
+  // Get the exercise properties only if it's an Exercise object
+  const primaryMuscleGroups = typeof exercise !== 'string' ? exercise.primary_muscle_groups : [];
+  const equipmentType = typeof exercise !== 'string' ? exercise.equipment_type : [];
+  const exerciseName = typeof exercise === 'string' ? exercise : exercise.name;
+
+  return (
+    <div className="flex items-center justify-between w-full">
+      <div className="flex flex-grow mr-2">
+        {thumbnail && (
+          <div className="mr-3 flex-shrink-0">
+            {thumbnail}
+          </div>
+        )}
+        <div className="flex flex-col flex-grow">
+          <div className="flex items-center space-x-2">
+            <h3 className="font-medium text-gray-100">{exerciseName}</h3>
+            
+            {/* Display variation badge if provided */}
+            {variationBadge && (
+              <div className="ml-2">{variationBadge}</div>
+            )}
+          </div>
+          
+          {typeof exercise !== 'string' && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {primaryMuscleGroups.slice(0, 3).map((muscle, idx) => (
+                <Badge 
+                  key={idx} 
+                  variant="outline" 
+                  className="text-xs bg-gray-800/60 border-gray-700/50 text-gray-300"
+                >
+                  {muscle}
+                </Badge>
+              ))}
+              
+              {equipmentType.slice(0, 1).map((equipment, idx) => (
+                <Badge 
+                  key={idx} 
+                  variant="outline" 
+                  className="text-xs bg-gray-800/80 border-gray-700/50 text-gray-400"
+                >
+                  {equipment}
+                </Badge>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {rightContent && <div>{rightContent}</div>}
+    </div>
+  );
+};
