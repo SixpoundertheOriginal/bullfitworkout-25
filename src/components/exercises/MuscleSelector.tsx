@@ -17,7 +17,7 @@ export function MuscleSelector({
   onPrimarySelect, 
   onSecondarySelect 
 }: MuscleSelectorProps) {
-  // Ensure arrays
+  // Ensure arrays with defensive checks
   const safePrimary = Array.isArray(selectedPrimary) ? selectedPrimary : [];
   const safeSecondary = Array.isArray(selectedSecondary) ? selectedSecondary : [];
   
@@ -121,8 +121,8 @@ export function MuscleSelector({
           <div className="absolute inset-0">
             {MUSCLE_GROUP_CATEGORIES.flatMap(category => 
               category.muscles.map(muscle => {
-                const isPrimary = selectedPrimary.includes(muscle);
-                const isSecondary = selectedSecondary.includes(muscle);
+                const isPrimary = safePrimary.includes(muscle);
+                const isSecondary = safeSecondary.includes(muscle);
                 
                 const getPosition = () => {
                   // Return position coordinates based on muscle

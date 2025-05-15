@@ -16,7 +16,13 @@ export const ExerciseDialogMuscleGroups = React.memo(function ExerciseDialogMusc
   onChangePrimaryMuscles,
   onChangeSecondaryMuscles
 }: ExerciseDialogMuscleGroupsProps) {
-  // Ensure the muscle groups are arrays
+  // Add extra safeguards against undefined
+  if (!exercise) {
+    console.error("Exercise is undefined in ExerciseDialogMuscleGroups");
+    return null;
+  }
+  
+  // Ensure the muscle groups are arrays with defensive programming
   const primaryMuscles = Array.isArray(exercise.primary_muscle_groups) 
     ? exercise.primary_muscle_groups 
     : [];
