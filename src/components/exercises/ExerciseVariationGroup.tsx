@@ -7,7 +7,7 @@ import { useExercises } from '@/hooks/useExercises';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Variation } from '@/types/exerciseVariation';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Edit, Trash } from 'lucide-react';
 
 interface ExerciseVariationGroupProps {
   baseExercise: Exercise;
@@ -84,6 +84,32 @@ export const ExerciseVariationGroup: React.FC<ExerciseVariationGroupProps> = Rea
                 </Badge>
               )
             )}
+            {onEdit && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0 text-gray-400 hover:text-white"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(baseExercise);
+                }}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0 text-red-500 hover:text-red-400"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(baseExercise);
+                }}
+              >
+                <Trash className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         }
       />
@@ -140,6 +166,36 @@ export const ExerciseVariationGroup: React.FC<ExerciseVariationGroupProps> = Rea
                               {variation.variation_type}: {variation.variation_value}
                             </Badge>
                           )
+                        }
+                        rightContent={
+                          <div className="flex items-center gap-2">
+                            {onEdit && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0 text-gray-400 hover:text-white"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onEdit(variation);
+                                }}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {onDelete && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0 text-red-500 hover:text-red-400"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onDelete(variation);
+                                }}
+                              >
+                                <Trash className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         }
                       />
                     </div>
