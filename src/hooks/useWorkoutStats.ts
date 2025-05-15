@@ -1,4 +1,3 @@
-
 // src/hooks/useWorkoutStats.ts
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -18,7 +17,10 @@ export function useWorkoutStats(
 ): WorkoutStatsResult {
   const { weightUnit } = useWeightUnit();
   const { user } = useAuth();
-  const { dateRange } = useDateRange();
+  
+  // Get date range context safely with a default empty object if not available
+  const dateRangeContext = useDateRange();
+  const dateRange = dateRangeContext?.dateRange;
 
   const [loading, setLoading] = useState(true);
   const [workouts, setWorkouts] = useState<any[]>([]);

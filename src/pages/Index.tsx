@@ -15,8 +15,7 @@ import { useWorkoutState } from "@/hooks/useWorkoutState";
 import { DateRangeProvider } from "@/context/DateRangeContext";
 
 const Index = () => {
-  // Wrap the entire component in the DateRangeProvider since both the component
-  // itself and child components need access to the date range context
+  // Wrap the entire component in DateRangeProvider
   return (
     <DateRangeProvider>
       <IndexContent />
@@ -29,7 +28,7 @@ const IndexContent = () => {
   const navigate = useNavigate();
   const [showWorkouts, setShowWorkouts] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { stats } = useWorkoutStats();
+  const { stats } = useWorkoutStats(); // This needs the DateRangeProvider
   const { isActive, lastActiveRoute } = useWorkoutState();
   
   // Replace useElementVisibility with native IntersectionObserver
