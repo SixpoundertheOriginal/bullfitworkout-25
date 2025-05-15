@@ -80,7 +80,7 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
   // Extract recently used exercises from workout history
   const recentExercises = React.useMemo(() => {
     if (!workouts?.length) return [];
-    if (!Array.isArray(exercises)) return [];
+    if (!Array.isArray(exercises) || exercises.length === 0) return [];
     
     const exerciseMap = new Map<string, Exercise>();
     
@@ -109,7 +109,7 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
 
   // Filter exercises based on search query and filters
   const filterExercises = (exercisesList: Exercise[] = []) => {
-    if (!exercisesList || !Array.isArray(exercisesList)) return [];
+    if (!exercisesList || !Array.isArray(exercisesList) || exercisesList.length === 0) return [];
     
     return exercisesList.filter(exercise => {
       if (!exercise) return false;
@@ -120,8 +120,8 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
         exercise.description,
         exercise.variation_type,
         exercise.variation_value,
-        ...(exercise.primary_muscle_groups || []),
-        ...(exercise.secondary_muscle_groups || [])
+        ...(Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : []),
+        ...(Array.isArray(exercise.secondary_muscle_groups) ? exercise.secondary_muscle_groups : [])
       ].filter(Boolean).join(' ').toLowerCase();
       
       const matchesSearch = searchQuery === "" || searchableText.includes(searchQuery.toLowerCase());
@@ -152,13 +152,20 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
   };
 
   // Filter exercises and get only base exercises (those without base_exercise_id)
-  const filteredBaseExercises = filterExercises(Array.isArray(exercises) ? 
-    exercises.filter(ex => ex && !ex.base_exercise_id) : []);
+  const filteredBaseExercises = filterExercises(
+    Array.isArray(exercises) 
+      ? exercises.filter(ex => ex && !ex.base_exercise_id) 
+      : []
+  );
 
   // Define these variables to fix the missing references
-  const suggestedExercises = filterExercises(Array.isArray(exercises) ? 
-    exercises.filter(ex => ex && !ex.base_exercise_id).slice(0, 20) : []); // Limit suggested to top 20 for better performance
-  const filteredRecent = filterExercises(recentExercises || []);
+  const suggestedExercises = filterExercises(
+    Array.isArray(exercises) 
+      ? exercises.filter(ex => ex && !ex.base_exercise_id).slice(0, 20) 
+      : []
+  ); // Limit suggested to top 20 for better performance
+  
+  const filteredRecent = filterExercises(Array.isArray(recentExercises) ? recentExercises : []);
   const filteredAll = filteredBaseExercises;  // Use the filtered base exercises for "all" exercises
 
   // Pagination logic specifically for base exercises
@@ -397,6 +404,16 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
 
     // For base exercises, use ExerciseVariationGroup
     const listToRender = showPagination ? currentBaseExercises : exercisesList;
+    
+    // Ensure listToRender is an array before mapping
+    if (!Array.isArray(listToRender)) {
+      console.error("Expected array but got:", listToRender);
+      return (
+        <div className="text-center py-6 text-gray-400">
+          Error rendering exercises
+        </div>
+      );
+    }
 
     return (
       <div className="space-y-4">
