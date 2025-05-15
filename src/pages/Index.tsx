@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { QuickStatsSection } from "@/components/metrics/QuickStatsSection";
@@ -15,6 +16,17 @@ import { useWorkoutState } from "@/hooks/useWorkoutState";
 import { DateRangeProvider } from "@/context/DateRangeContext";
 
 const Index = () => {
+  // Wrap the entire component in the DateRangeProvider since both the component
+  // itself and child components need access to the date range context
+  return (
+    <DateRangeProvider>
+      <IndexContent />
+    </DateRangeProvider>
+  );
+};
+
+// Extract the content to a separate component that uses the context
+const IndexContent = () => {
   const navigate = useNavigate();
   const [showWorkouts, setShowWorkouts] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -166,9 +178,7 @@ const Index = () => {
           </div>
         </motion.div>
 
-        <DateRangeProvider>
-          <QuickStatsSection />
-        </DateRangeProvider>
+        <QuickStatsSection />
 
         <section ref={sectionRef} className="mb-10 text-center">
           <motion.h2 
