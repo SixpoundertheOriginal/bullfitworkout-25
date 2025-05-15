@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Dumbbell, Clock, Target, Zap, ChevronRight } from 'lucide-react';
-import { WorkoutStats } from '@/types/workout';
+import { WorkoutStats } from '@/types/workoutStats';
 import { ExerciseSelector } from '@/components/exercises/ExerciseSelector';
 import { TrainingConfig } from '../ExerciseSetupWizard';
 
@@ -14,7 +13,7 @@ interface ReviewAndStartStepProps {
 
 export function ReviewAndStartStep({ config, stats }: ReviewAndStartStepProps) {
   // Animated metrics
-  const xpValue = config.expectedXp;
+  const xpValue = config.expectedXp || Math.round(config.duration * 2);
   const [displayedXp, setDisplayedXp] = React.useState(0);
   
   React.useEffect(() => {
@@ -52,7 +51,7 @@ export function ReviewAndStartStep({ config, stats }: ReviewAndStartStepProps) {
         >
           <span className="text-lg">⚡</span>
         </motion.div>;
-      case 'yoga':
+      case 'mobility':
         return <motion.div 
           animate={{ y: [0, -2, 0] }}
           transition={{ duration: 2, repeat: Infinity }}

@@ -43,8 +43,6 @@ export const Typography = React.forwardRef<HTMLElement, TypographyProps>(
 
 Typography.displayName = "Typography";
 
-export { Typography };
-
 // Export commonly used typography styles for direct use
 export const typography = {
   text: {

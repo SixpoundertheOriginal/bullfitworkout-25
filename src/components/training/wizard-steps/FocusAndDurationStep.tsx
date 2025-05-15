@@ -1,9 +1,7 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Slider } from '@/components/ui/slider';
-import { MuscleSelector } from '@/components/exercises/MuscleSelector';
 import { MUSCLE_GROUP_CATEGORIES } from '@/constants/exerciseMetadata';
 
 interface FocusAndDurationStepProps {
@@ -14,6 +12,38 @@ interface FocusAndDurationStepProps {
   onUpdateDuration: (duration: number) => void;
   onUpdateTags: (tags: string[]) => void;
 }
+
+interface MuscleGroupButtonProps {
+  muscle: string;
+  isSelected: boolean;
+  onToggle: (muscle: string) => void;
+}
+
+const MuscleGroupButton = ({ muscle, isSelected, onToggle }: MuscleGroupButtonProps) => {
+  return (
+    <motion.button
+      key={muscle}
+      whileTap={{ scale: 0.96 }}
+      onClick={() => onToggle(muscle)}
+      className={cn(
+        "px-3 py-2 rounded-lg text-sm font-medium transition-all",
+        "flex items-center justify-between",
+        isSelected
+          ? "bg-purple-900/50 border-purple-500/50 border text-white"
+          : "bg-gray-800/50 border-gray-700 border text-gray-400 hover:bg-gray-800"
+      )}
+    >
+      <span className="truncate">{muscle}</span>
+      {isSelected && (
+        <motion.div 
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="w-2 h-2 rounded-full bg-purple-400"
+        />
+      )}
+    </motion.button>
+  );
+};
 
 export function FocusAndDurationStep({ 
   selectedFocus, 
@@ -34,7 +64,7 @@ export function FocusAndDurationStep({
         return ['steady-state', 'intervals', 'endurance', 'recovery'];
       case 'hiit':
         return ['tabata', 'amrap', 'emom', 'circuit'];
-      case 'yoga':
+      case 'mobility':
         return ['flexibility', 'balance', 'recovery', 'core'];
       default:
         return ['general', 'custom', 'full-body'];
@@ -109,35 +139,15 @@ export function FocusAndDurationStep({
             </p>
           </div>
             
-          <MuscleSelector 
-            selectedMuscles={selectedFocus} 
-            onSelectMuscle={toggleMuscleGroup} 
-          />
-          
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
             {MUSCLE_GROUP_CATEGORIES.flatMap(category => 
               category.muscles.map(muscle => (
-                <motion.button
+                <MuscleGroupButton 
                   key={muscle}
-                  whileTap={{ scale: 0.96 }}
-                  onClick={() => toggleMuscleGroup(muscle)}
-                  className={cn(
-                    "px-3 py-2 rounded-lg text-sm font-medium transition-all",
-                    "flex items-center justify-between",
-                    selectedFocus.includes(muscle)
-                      ? "bg-purple-900/50 border-purple-500/50 border text-white"
-                      : "bg-gray-800/50 border-gray-700 border text-gray-400 hover:bg-gray-800"
-                  )}
-                >
-                  <span className="truncate">{muscle}</span>
-                  {selectedFocus.includes(muscle) && (
-                    <motion.div 
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="w-2 h-2 rounded-full bg-purple-400"
-                    />
-                  )}
-                </motion.button>
+                  muscle={muscle}
+                  isSelected={selectedFocus.includes(muscle)}
+                  onToggle={toggleMuscleGroup}
+                />
               ))
             )}
           </div>

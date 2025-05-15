@@ -1,328 +1,247 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useWorkoutStats } from '@/hooks/useWorkoutStats';
-import { useWorkoutRecommendations } from '@/hooks/useWorkoutRecommendations';
-import { cn } from '@/lib/utils';
-import { toast } from '@/hooks/use-toast';
-import { ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Typography } from '@/components/ui/typography';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { TrainingTypeStep } from './wizard-steps/TrainingTypeStep';
 import { FocusAndDurationStep } from './wizard-steps/FocusAndDurationStep';
 import { ReviewAndStartStep } from './wizard-steps/ReviewAndStartStep';
-import { QuickStartOption } from './wizard-steps/QuickStartOption';
 import { WizardProgressBar } from './wizard-steps/WizardProgressBar';
-import { useExerciseSuggestions } from '@/hooks/useExerciseSuggestions';
 import { useTouchGestures } from '@/hooks/useTouchGestures';
-
-type WizardStep = 'training-type' | 'focus-duration' | 'review';
+import { useWorkoutStats } from '@/hooks/useWorkoutStats';
+import { cn } from '@/lib/utils';
+import QuickStartOption from './wizard-steps/QuickStartOption';
 
 export interface TrainingConfig {
   trainingType: string;
   bodyFocus: string[];
   duration: number;
   tags: string[];
-  expectedXp: number;
-  recommendedExercises: string[];
+  expectedXp?: number;
+  recommendedExercises?: any[];
 }
 
 interface ExerciseSetupWizardProps {
-  initialStep?: WizardStep;
-  onComplete: (config: TrainingConfig) => void;
-  onCancel?: () => void;
-  className?: string;
+  onComplete: (config: any) => void;
+  onCancel: () => void;
 }
 
-export function ExerciseSetupWizard({
-  initialStep = 'training-type',
-  onComplete,
-  onCancel,
-  className
-}: ExerciseSetupWizardProps) {
-  const [currentStep, setCurrentStep] = useState<WizardStep>(initialStep);
-  const [config, setConfig] = useState<TrainingConfig>({
-    trainingType: '',
-    bodyFocus: [],
-    duration: 45,
-    tags: [],
-    expectedXp: 0,
-    recommendedExercises: []
-  });
-  const [hasQuickStartOption, setHasQuickStartOption] = useState(false);
-  const [quickStartConfig, setQuickStartConfig] = useState<TrainingConfig | null>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  
-  const navigate = useNavigate();
+export function ExerciseSetupWizard({ onComplete, onCancel }: ExerciseSetupWizardProps) {
+  const [step, setStep] = useState(0);
+  const [showQuickStart, setShowQuickStart] = useState(true);
   const { stats } = useWorkoutStats();
-  const { data: recommendations, isLoading: isLoadingRecommendations } = useWorkoutRecommendations();
-  const { suggestedExercises } = useExerciseSuggestions(config.trainingType);
   
-  // Use our touch gestures hook for swipe navigation
-  const { ref } = useTouchGestures({
-    onSwipeLeft: () => handleNextStep(),
-    onSwipeRight: () => handlePrevStep(),
-    threshold: 50
+  // Training config state
+  const [trainingType, setTrainingType] = useState(stats?.recommendedType?.toLowerCase() || 'strength');
+  const [bodyFocus, setBodyFocus] = useState<string[]>([]);
+  const [duration, setDuration] = useState(stats?.recommendedDuration || 45);
+  const [tags, setTags] = useState<string[]>([]);
+
+  // Calculate expected XP based on duration and other factors
+  const expectedXp = Math.round(duration * 2);
+  
+  // Configure touch gestures for swipe navigation
+  const { ref: touchRef } = useTouchGestures({
+    onSwipeLeft: () => {
+      if (step < 2 && !showQuickStart) {
+        setStep(step + 1);
+      }
+    },
+    onSwipeRight: () => {
+      if (step > 0) {
+        setStep(step - 1);
+      }
+    },
+    threshold: 50,
   });
 
-  // Calculate expected XP based on duration and training type
+  // Start with quick start if first time or special condition
   useEffect(() => {
-    const baseXp = config.duration * 2; // 2 XP per minute
-    const typeMultiplier = config.trainingType === 'strength' ? 1.2 : 
-                          config.trainingType === 'cardio' ? 1.1 : 1.0;
-    
-    const muscleGroupBonus = config.bodyFocus.length * 5; // 5 XP per muscle group focused
-    const expectedXp = Math.round(baseXp * typeMultiplier + muscleGroupBonus);
-    
-    setConfig(prev => ({ ...prev, expectedXp }));
-  }, [config.duration, config.trainingType, config.bodyFocus]);
+    const hasUsedSetupBefore = localStorage.getItem('has_used_setup');
+    if (!hasUsedSetupBefore) {
+      setShowQuickStart(true);
+      localStorage.setItem('has_used_setup', 'true');
+    } else {
+      setShowQuickStart(false);
+    }
+  }, []);
 
-  // Generate quick start option based on metrics
-  useEffect(() => {
-    if (stats && recommendations) {
-      const timeOfDay = new Date().getHours() < 12 ? 'morning' : 
-                       new Date().getHours() < 17 ? 'afternoon' : 'evening';
-      
-      const quickConfig: TrainingConfig = {
-        trainingType: recommendations.trainingType || 'strength',
-        bodyFocus: recommendations.suggestedExercises
-          .slice(0, 2)
-          .map(ex => {
-            const exercise = suggestedExercises.find(e => e.name === ex);
-            return exercise?.primary_muscle_groups[0] || 'full_body';
-          }),
-        duration: recommendations.suggestedDuration || 30,
-        tags: recommendations.tags || [],
-        expectedXp: Math.round((recommendations.suggestedDuration || 30) * 2.5),
-        recommendedExercises: recommendations.suggestedExercises || []
-      };
-      
-      setQuickStartConfig(quickConfig);
-      setHasQuickStartOption(true);
-    }
-  }, [stats, recommendations, suggestedExercises]);
-
-  // Update recommended exercises when training type or body focus changes
-  useEffect(() => {
-    if (config.trainingType && suggestedExercises.length > 0) {
-      const filteredExercises = suggestedExercises
-        .filter(ex => {
-          // Match by body focus if specified
-          if (config.bodyFocus.length > 0) {
-            return ex.primary_muscle_groups.some(mg => 
-              config.bodyFocus.includes(mg)
-            );
-          }
-          return true;
-        })
-        .slice(0, 5)
-        .map(ex => ex.name);
-        
-      setConfig(prev => ({ 
-        ...prev, 
-        recommendedExercises: filteredExercises 
-      }));
-    }
-  }, [config.trainingType, config.bodyFocus, suggestedExercises]);
-
-  const handleNextStep = () => {
-    if (isTransitioning) return;
-    
-    setIsTransitioning(true);
-    
-    if (currentStep === 'training-type') {
-      if (!config.trainingType) {
-        toast({
-          title: "Please select a training type",
-          description: "Choose what type of workout you want to do",
-          variant: "destructive"
-        });
-        setIsTransitioning(false);
-        return;
-      }
-      setCurrentStep('focus-duration');
-    } 
-    else if (currentStep === 'focus-duration') {
-      if (config.bodyFocus.length === 0) {
-        toast({
-          title: "Please select a focus area",
-          description: "Choose at least one muscle group to focus on",
-          variant: "destructive"
-        });
-        setIsTransitioning(false);
-        return;
-      }
-      setCurrentStep('review');
-    }
-    else if (currentStep === 'review') {
-      handleComplete();
-    }
-    
-    // Trigger haptic feedback if available
-    if ('vibrate' in navigator) {
-      navigator.vibrate(5); // Light haptic pulse
-    }
-    
-    setTimeout(() => setIsTransitioning(false), 500);
-  };
-
-  const handlePrevStep = () => {
-    if (isTransitioning) return;
-    
-    setIsTransitioning(true);
-    
-    if (currentStep === 'focus-duration') {
-      setCurrentStep('training-type');
-    }
-    else if (currentStep === 'review') {
-      setCurrentStep('focus-duration');
-    }
-    else if (onCancel) {
-      onCancel();
-    }
-    
-    // Trigger haptic feedback if available
-    if ('vibrate' in navigator) {
-      navigator.vibrate(5); // Light haptic pulse
-    }
-    
-    setTimeout(() => setIsTransitioning(false), 500);
-  };
-
+  // Prepare the configuration object to pass to the parent
   const handleComplete = () => {
-    // Trigger success haptic feedback if available
-    if ('vibrate' in navigator) {
-      navigator.vibrate([10, 30, 10]); // Success pattern
-    }
+    const config: TrainingConfig = {
+      trainingType,
+      bodyFocus,
+      duration,
+      tags,
+      expectedXp
+    };
     
     onComplete(config);
   };
+
+  // Skip the quick start screen
+  const handleSkipQuickStart = () => {
+    setShowQuickStart(false);
+  };
+
+  // Use a quick start option
+  const handleQuickStart = (config: Partial<TrainingConfig>) => {
+    const fullConfig = {
+      trainingType: config.trainingType || trainingType,
+      bodyFocus: config.bodyFocus || [],
+      duration: config.duration || duration,
+      tags: config.tags || [],
+      expectedXp: Math.round((config.duration || duration) * 2)
+    };
+    
+    onComplete(fullConfig);
+  };
   
-  const handleQuickStart = () => {
-    if (quickStartConfig) {
-      // Trigger success haptic feedback if available
-      if ('vibrate' in navigator) {
-        navigator.vibrate([10, 30, 10]); // Success pattern
-      }
-      
-      toast({
-        title: "Quick Start Activated!",
-        description: `Starting a ${quickStartConfig.trainingType} workout optimized for you`
-      });
-      
-      onComplete(quickStartConfig);
+  // Navigate to previous step
+  const handleBack = () => {
+    if (step > 0) {
+      setStep(step - 1);
+    } else {
+      onCancel();
+    }
+  };
+  
+  // Navigate to next step
+  const handleNext = () => {
+    if (step < 2) {
+      setStep(step + 1);
+    } else {
+      handleComplete();
     }
   };
 
-  const updateConfig = (updates: Partial<TrainingConfig>) => {
-    setConfig(prev => ({ ...prev, ...updates }));
+  // Render the appropriate step content
+  const renderStepContent = () => {
+    if (showQuickStart) {
+      return (
+        <QuickStartOption 
+          onSelect={handleQuickStart} 
+          onCustomize={handleSkipQuickStart} 
+          stats={stats}
+        />
+      );
+    }
+    
+    switch (step) {
+      case 0:
+        return <TrainingTypeStep 
+          selectedType={trainingType} 
+          onSelectType={setTrainingType} 
+          stats={stats}
+        />;
+      case 1:
+        return <FocusAndDurationStep 
+          selectedFocus={bodyFocus}
+          duration={duration}
+          trainingType={trainingType}
+          onUpdateFocus={setBodyFocus}
+          onUpdateDuration={setDuration}
+          onUpdateTags={setTags}
+        />;
+      case 2:
+        return <ReviewAndStartStep 
+          config={{
+            trainingType,
+            bodyFocus,
+            duration,
+            tags,
+            expectedXp
+          }}
+          stats={stats}
+        />;
+      default:
+        return null;
+    }
   };
   
-  // Determine current step index for progress bar
-  const currentStepIndex = 
-    currentStep === 'training-type' ? 0 :
-    currentStep === 'focus-duration' ? 1 : 2;
-
+  // Get the label for the next button based on current step
+  const getNextButtonLabel = () => {
+    if (step === 2) return 'Start Workout';
+    return 'Continue';
+  };
+  
+  // Get back button label
+  const getBackButtonLabel = () => {
+    if (step === 0) return 'Cancel';
+    return 'Back';
+  };
+  
   return (
     <div 
-      ref={ref}
-      className={cn(
-        "flex flex-col w-full h-full bg-gray-900 text-white",
-        className
-      )}
+      className="flex flex-col h-full w-full bg-gray-900 text-white"
+      ref={touchRef}
     >
-      {/* Header with progress */}
-      <div className="sticky top-0 z-10 bg-gray-900 py-4 px-4 border-b border-gray-800">
-        <div className="flex items-center justify-between mb-2">
-          <button 
-            onClick={handlePrevStep}
-            className="p-2 rounded-full hover:bg-gray-800 active:bg-gray-700 transition-colors"
-            aria-label="Go back"
+      {/* Header */}
+      <div className="p-4 border-b border-gray-800">
+        <div className="flex items-center justify-between mb-4">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-gray-400"
+            onClick={handleBack}
           >
-            <ChevronRight className="h-5 w-5 transform rotate-180" />
-          </button>
+            <ChevronLeft className="mr-1 h-5 w-5" />
+            {getBackButtonLabel()}
+          </Button>
           
-          <div className="font-semibold text-lg">
-            {currentStep === 'training-type' && "Choose Training Type"}
-            {currentStep === 'focus-duration' && "Set Focus & Duration"}
-            {currentStep === 'review' && "Review & Start"}
-          </div>
+          <h1 className="text-lg font-semibold text-center">
+            {showQuickStart 
+              ? 'Quick Start' 
+              : step === 0 
+                ? 'Choose Training Type' 
+                : step === 1 
+                  ? 'Customize Workout' 
+                  : 'Review & Start'
+            }
+          </h1>
           
-          <div className="w-9" /> {/* Empty space for balance */}
+          {/* Spacer to center the title */}
+          <div className="w-16" />
         </div>
         
-        <WizardProgressBar currentStep={currentStepIndex} totalSteps={3} />
+        {!showQuickStart && (
+          <WizardProgressBar 
+            currentStep={step} 
+            totalSteps={3} 
+          />
+        )}
       </div>
       
-      {/* Quick start option */}
-      {currentStep === 'training-type' && hasQuickStartOption && quickStartConfig && (
-        <QuickStartOption
-          config={quickStartConfig}
-          onQuickStart={handleQuickStart}
-          isLoading={isLoadingRecommendations}
-        />
+      {/* Content area */}
+      <div className="flex-1 overflow-y-auto px-4 py-6 pb-24">
+        {renderStepContent()}
+      </div>
+      
+      {/* Footer - Fixed at bottom */}
+      {!showQuickStart && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gray-900 border-t border-gray-800">
+          <div className="flex justify-between">
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              className="border-gray-700"
+            >
+              {getBackButtonLabel()}
+            </Button>
+            
+            <Button 
+              onClick={handleNext}
+              className={cn(
+                "bg-gradient-to-r from-purple-600 to-pink-500",
+                "hover:from-purple-700 hover:to-pink-600"
+              )}
+            >
+              {getNextButtonLabel()}
+              {step !== 2 && <ChevronRight className="ml-1 h-5 w-5" />}
+            </Button>
+          </div>
+        </div>
       )}
-      
-      {/* Main content area with step components */}
-      <div className="flex-grow overflow-y-auto px-4 py-6">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentStep}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-            className="h-full"
-          >
-            {currentStep === 'training-type' && (
-              <TrainingTypeStep 
-                selectedType={config.trainingType}
-                onSelectType={(type) => updateConfig({ trainingType: type })}
-                stats={stats}
-              />
-            )}
-            
-            {currentStep === 'focus-duration' && (
-              <FocusAndDurationStep 
-                selectedFocus={config.bodyFocus}
-                duration={config.duration}
-                trainingType={config.trainingType}
-                onUpdateFocus={(focus) => updateConfig({ bodyFocus: focus })}
-                onUpdateDuration={(duration) => updateConfig({ duration })}
-                onUpdateTags={(tags) => updateConfig({ tags })}
-              />
-            )}
-            
-            {currentStep === 'review' && (
-              <ReviewAndStartStep 
-                config={config}
-                stats={stats}
-              />
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </div>
-      
-      {/* Footer with navigation */}
-      <div className="sticky bottom-0 z-10 bg-gray-900 px-4 py-4 border-t border-gray-800">
-        <Button
-          onClick={handleNextStep}
-          className={cn(
-            "w-full h-14 text-base font-semibold rounded-xl",
-            "bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600",
-            "flex items-center justify-center gap-2 transform transition-all",
-            "active:scale-[0.98] shadow-lg hover:shadow-purple-500/25"
-          )}
-          disabled={isTransitioning}
-        >
-          {currentStep === 'review' ? (
-            <>Start Workout • {config.expectedXp} XP</>
-          ) : (
-            <>Continue</>
-          )}
-        </Button>
-      </div>
     </div>
   );
 }

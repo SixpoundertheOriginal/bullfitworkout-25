@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Dumbbell, Activity, Compass, Sun, Yoga } from 'lucide-react';
-import { WorkoutStats } from '@/types/workout';
+import { Dumbbell, Activity, Compass, Sun } from 'lucide-react';
+import { WorkoutStats } from '@/types/workoutStats';
 
 interface TrainingTypeStepProps {
   selectedType: string;
@@ -44,10 +43,10 @@ export function TrainingTypeStep({ selectedType, onSelectType, stats }: Training
       color: 'from-yellow-600 to-yellow-400',
     },
     {
-      id: 'yoga',
+      id: 'mobility',
       name: 'Yoga & Mobility',
       description: 'Improve flexibility and mindfulness',
-      icon: Yoga,
+      icon: () => <span className="text-lg">🧘</span>,
       color: 'from-green-600 to-green-400',
     },
     {

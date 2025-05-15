@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -5,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
-import { Dumbbell, Activity, Zap, Yoga, Clock, Target, ChevronRight } from 'lucide-react';
+import { Dumbbell, Activity, Zap, Clock, Target, ChevronRight } from 'lucide-react';
 import { useExerciseSuggestions } from '@/hooks/useExerciseSuggestions';
 import { useWorkoutStats } from '@/hooks/useWorkoutStats';
 import { processExerciseRanking } from '@/utils/processExerciseRanking';

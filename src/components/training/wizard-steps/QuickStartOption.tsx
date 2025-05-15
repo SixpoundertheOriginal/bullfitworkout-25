@@ -2,76 +2,155 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Sparkles, ChevronRight, Loader2 } from 'lucide-react';
-import { TrainingConfig } from '../ExerciseSetupWizard';
+import { Button } from '@/components/ui/button';
+import { Clock, Dumbbell, Activity, Target, ChevronRight } from 'lucide-react';
+import { WorkoutStats } from '@/types/workoutStats';
 
 interface QuickStartOptionProps {
-  config: TrainingConfig;
-  onQuickStart: () => void;
-  isLoading?: boolean;
+  onSelect: (config: any) => void;
+  onCustomize: () => void;
+  stats?: WorkoutStats | null;
 }
 
-export function QuickStartOption({ config, onQuickStart, isLoading = false }: QuickStartOptionProps) {
-  // Calculate time of day greeting
-  const getTimeOfDayGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'morning';
-    if (hour < 17) return 'afternoon';
-    return 'evening';
+export default function QuickStartOption({ onSelect, onCustomize, stats }: QuickStartOptionProps) {
+  // Generate quick start options based on user stats
+  const recommendedType = stats?.recommendedType?.toLowerCase() || 'strength';
+  const recommendedDuration = stats?.recommendedDuration || 30;
+  
+  // Pre-defined quick workouts
+  const quickOptions = [
+    {
+      id: 'recommended',
+      name: 'Recommended Workout',
+      type: recommendedType,
+      duration: recommendedDuration,
+      focus: [],
+      description: 'Based on your workout history',
+      color: 'from-green-500 to-emerald-700',
+      isPrimary: true
+    },
+    {
+      id: 'quick',
+      name: 'Quick Strength',
+      type: 'strength',
+      duration: 20,
+      focus: ['Arms', 'Chest'],
+      description: '20 min upper body workout',
+      color: 'from-blue-600 to-blue-800'
+    },
+    {
+      id: 'cardio',
+      name: 'Cardio Blast',
+      type: 'cardio',
+      duration: 25,
+      focus: [],
+      description: '25 min cardiovascular training',
+      color: 'from-red-500 to-orange-600'
+    },
+    {
+      id: 'hiit',
+      name: 'HIIT Session',
+      type: 'hiit',
+      duration: 15,
+      focus: [],
+      description: '15 min high intensity intervals',
+      color: 'from-yellow-500 to-amber-600'
+    },
+    {
+      id: 'fullBody',
+      name: 'Full Body',
+      type: 'strength',
+      duration: 45,
+      focus: ['Legs', 'Back', 'Chest', 'Arms', 'Core'],
+      description: '45 min complete workout',
+      color: 'from-purple-600 to-indigo-800'
+    }
+  ];
+  
+  // Function to start a quick workout
+  const handleQuickStart = (option: any) => {
+    onSelect({
+      trainingType: option.type,
+      bodyFocus: option.focus,
+      duration: option.duration,
+      tags: [],
+    });
   };
   
-  const timeOfDay = getTimeOfDayGreeting();
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="px-4 py-4"
-    >
-      <motion.button
-        whileHover={{ y: -2 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={onQuickStart}
-        disabled={isLoading}
-        className={cn(
-          "w-full rounded-xl overflow-hidden border border-purple-500/30",
-          "bg-gradient-to-br from-purple-900/40 to-purple-800/20",
-          "p-4 text-left relative shadow-lg"
-        )}
-      >
-        {isLoading ? (
-          <div className="flex items-center justify-center h-20">
-            <Loader2 className="h-6 w-6 text-purple-400 animate-spin" />
-          </div>
-        ) : (
-          <>
-            <div className="absolute top-0 right-0 h-16 w-16 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-bl-3xl" />
-            
-            <div className="flex items-start">
-              <div className="mr-3 mt-1">
-                <Sparkles className="h-5 w-5 text-purple-400" />
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-semibold">Quick Start</h2>
+        <p className="text-gray-400 mt-1">
+          Start a workout in seconds or customize one
+        </p>
+      </div>
+      
+      <div className="space-y-4 mt-6">
+        {quickOptions.map(option => (
+          <motion.div
+            key={option.id}
+            whileTap={{ scale: 0.98 }}
+            className={cn(
+              "rounded-xl overflow-hidden cursor-pointer border border-gray-800",
+              option.isPrimary ? "bg-gradient-to-br from-gray-800/90 to-gray-900" : "bg-gray-900/60"
+            )}
+            onClick={() => handleQuickStart(option)}
+          >
+            <div className="flex items-center p-4">
+              <div className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center mr-4",
+                `bg-gradient-to-br ${option.color}`
+              )}>
+                {option.type === 'strength' && <Dumbbell className="h-6 w-6 text-white" />}
+                {option.type === 'cardio' && <Activity className="h-6 w-6 text-white" />}
+                {option.type === 'hiit' && <span className="text-lg">⚡</span>}
+                {option.type === 'mobility' && <span className="text-lg">🧘</span>}
+                {!['strength', 'cardio', 'hiit', 'mobility'].includes(option.type) && (
+                  <Target className="h-6 w-6 text-white" />
+                )}
               </div>
+              
               <div className="flex-1">
-                <h3 className="font-semibold text-base">Good {timeOfDay}! Quick start?</h3>
-                <p className="text-sm text-gray-400 mt-1">
-                  {config.duration}min {config.trainingType} workout focused on {config.bodyFocus.join(', ')}
+                <h3 className={cn(
+                  "font-semibold text-lg",
+                  option.isPrimary && "text-white"
+                )}>
+                  {option.name}
+                </h3>
+                <p className="text-sm text-gray-400">
+                  {option.description}
                 </p>
                 
-                <div className="flex items-center justify-between mt-2.5">
-                  <div className="flex items-center">
-                    <span className="text-yellow-400 text-xs font-semibold">+{config.expectedXp} XP</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="text-xs text-purple-400 mr-1">Start now</span>
-                    <ChevronRight className="h-3 w-3 text-purple-400" />
-                  </div>
+                <div className="flex items-center mt-2">
+                  <Clock className="h-3 w-3 text-gray-500 mr-1" />
+                  <span className="text-xs text-gray-500">{option.duration} min</span>
+                  
+                  <span className="mx-2 text-gray-700">•</span>
+                  
+                  <span className="text-xs text-gray-500 capitalize">{option.type}</span>
+                  
+                  <span className="text-xs text-yellow-400 ml-auto font-medium">
+                    +{option.duration * 2} XP
+                  </span>
                 </div>
               </div>
+              
+              <ChevronRight className="h-5 w-5 text-gray-500 ml-2" />
             </div>
-          </>
-        )}
-      </motion.button>
-    </motion.div>
+          </motion.div>
+        ))}
+      </div>
+      
+      <div className="mt-6 px-4">
+        <Button 
+          variant="outline"
+          className="w-full border-gray-800 text-purple-400 hover:text-purple-300"
+          onClick={onCustomize}
+        >
+          Customize My Workout
+        </Button>
+      </div>
+    </div>
   );
 }
