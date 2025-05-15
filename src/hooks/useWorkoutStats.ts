@@ -1,3 +1,4 @@
+
 // src/hooks/useWorkoutStats.ts
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -104,16 +105,21 @@ export function useWorkoutStats(
 
       if (error) throw error;
       
+      // Store the fetched sessions
+      const sessions = workoutData || [];
+      console.log(`[useWorkoutStats] Fetched ${sessions.length} sessions`);
+      setWorkouts(sessions);
+      
       // Summaries
       const totalWorkouts = sessions.length;
       const totalDuration = sessions.reduce((sum, w) => sum + (w.duration || 0), 0);
-      const avgDuration   = totalWorkouts > 0 ? totalDuration / totalWorkouts : 0;
+      const avgDuration = totalWorkouts > 0 ? totalDuration / totalWorkouts : 0;
 
       // Counters & buckets
       let exerciseCount = 0;
-      let setCount      = 0;
+      let setCount = 0;
       const typeCounts: Record<string, number> = {};
-      const tagCounts: Record<string, number>  = {};
+      const tagCounts: Record<string, number> = {};
       const daysFrequency = { monday:0, tuesday:0, wednesday:0, thursday:0, friday:0, saturday:0, sunday:0 };
       const durationByTimeOfDay = { morning:0, afternoon:0, evening:0, night:0 };
       const muscleCounts: Record<string, number> = {};
@@ -128,14 +134,15 @@ export function useWorkoutStats(
         // Day frequency
         const dayKey = new Date(w.start_time)
           .toLocaleDateString('en-US', { weekday: 'long' })
-          .toLowerCase();
+          .toLowerCase() as keyof typeof daysFrequency;
+          
         if (daysFrequency[dayKey] !== undefined) daysFrequency[dayKey]++;
 
         // Time of day
         const hr = new Date(w.start_time).getHours();
-        if (hr < 12) durationByTimeOfDay.morning   += w.duration || 0;
+        if (hr < 12) durationByTimeOfDay.morning += w.duration || 0;
         else if (hr < 17) durationByTimeOfDay.afternoon += w.duration || 0;
-        else if (hr < 21) durationByTimeOfDay.evening   += w.duration || 0;
+        else if (hr < 21) durationByTimeOfDay.evening += w.duration || 0;
         else durationByTimeOfDay.night += w.duration || 0;
 
         // Metadata tags
@@ -153,7 +160,7 @@ export function useWorkoutStats(
           const names = w.exercises.map((e: any) => e.exercise_name);
           const unique = Array.from(new Set(names));
           exerciseCount += unique.length;
-          setCount      += w.exercises.length;
+          setCount += w.exercises.length;
 
           unique.forEach(name => {
             const muscle = getExerciseMainMuscleGroup(name);
