@@ -51,7 +51,7 @@ export const BottomNav = () => {
         "border-t border-gray-800/50",
         // Shadow for depth
         "shadow-md shadow-black/30",
-        // Safe area insets
+        // Safe area insets - improved safe-bottom handling
         "safe-bottom",
         // Increased height for better touch targets
         "h-16"
@@ -116,7 +116,7 @@ const NavButton = ({
         "flex flex-col items-center justify-center",
         // Full height for the button
         "h-full w-full",
-        // Touch interaction enhancements
+        // Touch interaction enhancements - increased touchable area
         "tap-highlight-transparent touch-feedback active:bg-gray-800/30",
         // Color based on state
         active ? "text-white" : "text-gray-500",

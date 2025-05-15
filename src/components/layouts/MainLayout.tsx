@@ -1,4 +1,3 @@
-
 import React, { useLayoutEffect } from "react";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { PageHeader } from "@/components/navigation/PageHeader";
@@ -68,7 +67,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   const shouldShowGlobalNav = !noFooter && !hideGlobalNavOn.some(route => location.pathname.startsWith(route));
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 will-change-transform">
+    <div className="flex flex-col min-h-screen bg-gray-900 will-change-transform">
       {!noHeader && (
         <div className="fixed top-0 left-0 right-0 z-50">
           <PageHeader title={title} showBackButton={location.pathname !== '/' && location.pathname !== '/overview'}>
@@ -86,9 +85,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       <main className={cn(
         "flex-grow overflow-y-auto will-change-transform",
         "pt-16 pb-16", // Standard padding for header and footer
-        "w-full"
+        "w-full h-full" // Full width and height
       )}>
-        <div className="content-container w-full">
+        <div className="content-container w-full h-full">
           {children}
         </div>
       </main>
@@ -99,17 +98,16 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         </div>
       )}
       
-      <style>
-        {`
+      <style jsx>{`
+        .content-container {
+          min-height: calc(100vh - 128px); /* Account for header and footer */
+        }
+        
         .force-no-transition * {
           transition: none !important;
           animation: none !important;
         }
-        .content-container {
-          min-height: calc(100vh - 64px);
-        }
-        `}
-      </style>
+      `}</style>
     </div>
   );
 };

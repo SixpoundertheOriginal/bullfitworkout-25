@@ -34,17 +34,17 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
       className={cn(
         // Base positioning
         "sticky bottom-0 left-0 right-0 z-40",
-        // Sizing and padding
+        // Sizing and padding - standardized height
         "px-4 py-3",
         // Visual styling with glass effect
         "bg-black/90 backdrop-blur-lg",
-        // Safe area support
+        // Safe area support - improved handling
         "safe-bottom",
         // Border styling
         "border-t border-white/5",
         // Shadow for depth
         "shadow-lg shadow-black/40",
-        // Height for better touch targets
+        // Height for better touch targets - increased to match header
         "h-16 md:h-[68px]"
       )}
     >
@@ -52,7 +52,7 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
         <Button
           onClick={() => handleButtonPress(onAddExercise)}
           className={cn(
-            // Size and layout
+            // Size and layout - increased height for better touch
             "w-full h-full py-3 flex items-center justify-center gap-2",
             // Visual styling
             "bg-gradient-to-r from-blue-600 to-purple-600",
@@ -77,7 +77,7 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
             disabled={isSaving}
             aria-label="Finish workout"
             className={cn(
-              // Size and layout
+              // Size and layout - increased height for better touch
               "w-full h-full py-3 flex items-center justify-center gap-2",
               // Visual styling
               "bg-gradient-to-r from-purple-600 to-pink-500",

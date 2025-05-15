@@ -42,12 +42,12 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   return (
     <header 
       className={cn(
-        // Base styles
+        // Base positioning
         "fixed top-0 left-0 right-0 z-10",
-        // Height and alignment
+        // Height and alignment - standardized to 64px on mobile for better touch
         "h-16 md:h-[60px] flex items-center",
         // Padding with safe area support
-        "px-4 md:px-6",
+        "px-4 md:px-6 safe-top",
         // Visual styling with glass effect
         "bg-gray-900/95 backdrop-blur-md",
         // Border styling
@@ -62,15 +62,15 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             onClick={handleBackWithFeedback}
             aria-label="Go back"
             className={cn(
-              // Size for better touch targets
-              "w-10 h-10 flex items-center justify-center rounded-full",
+              // Size increased for better touch targets
+              "w-12 h-12 flex items-center justify-center rounded-full",
               // Visual feedback on touch
-              "-ml-2 active:bg-gray-800/50",
+              "-ml-3 active:bg-gray-800/50",
               // Transition for smooth interaction
               "transition-colors duration-200"
             )}
           >
-            <ArrowLeft size={22} />
+            <ArrowLeft size={24} />
           </button>
         )}
         <h1 className={cn(
