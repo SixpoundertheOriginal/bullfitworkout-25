@@ -195,8 +195,9 @@ const Index = () => {
                 <div className="flex flex-col items-center space-y-4">
                   <TrainingStartButton
                     onStartClick={handleContinueWorkout}
-                    trainingType="Continue"
+                    className=""
                     label="Resume"
+                    size={120}
                   />
                   <button 
                     onClick={() => setDialogOpen(true)}
@@ -208,8 +209,9 @@ const Index = () => {
               ) : (
                 <TrainingStartButton
                   onStartClick={() => setDialogOpen(true)}
-                  trainingType={recommendedWorkoutType}
+                  className=""
                   label="Start"
+                  size={120}
                 />
               )}
             </div>
