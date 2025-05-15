@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { QuickStatsSection } from "@/components/metrics/QuickStatsSection";
@@ -8,7 +7,7 @@ import { useWorkoutStats } from "@/hooks/useWorkoutStats";
 import { FeaturesSection } from "@/components/features/FeaturesSection";
 import { WorkoutLogSection } from "@/components/workouts/WorkoutLogSection";
 import { toast } from "@/hooks/use-toast";
-import { TrainingStartButton } from "@/components/training/StartTrainingButton";
+import { TrainingStartButton } from "@/components/training/TrainingStartButton";
 import { motion } from "framer-motion";
 import { typography } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
@@ -194,7 +193,7 @@ const Index = () => {
             )}>
               {isActive ? (
                 <div className="flex flex-col items-center space-y-4">
-                  <StartTrainingButton
+                  <TrainingStartButton
                     onClick={handleContinueWorkout}
                     trainingType="Continue"
                     label="Resume"
@@ -207,7 +206,7 @@ const Index = () => {
                   </button>
                 </div>
               ) : (
-                <StartTrainingButton
+                <TrainingStartButton
                   onClick={() => setDialogOpen(true)}
                   trainingType={recommendedWorkoutType}
                   label="Start"
