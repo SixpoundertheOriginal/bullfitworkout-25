@@ -3,6 +3,7 @@ import React from 'react';
 import { Exercise } from '@/types/exercise';
 import { CommonExerciseCard } from '../exercises/CommonExerciseCard';
 import { ExerciseThumbnail } from '../exercises/cards/ExerciseThumbnail';
+import { cn } from '@/lib/utils';
 
 interface ExerciseCardProps {
   exercise: Exercise | string;
@@ -23,6 +24,7 @@ interface ExerciseCardProps {
   onRestTimeIncrement?: (setIndex: number, increment: number) => void;
   onShowRestTimer?: () => void;
   onResetRestTimer?: () => void;
+  className?: string;
 }
 
 export const ExerciseCard: React.FC<ExerciseCardProps> = ({ 
@@ -43,11 +45,18 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
   onRepsIncrement,
   onRestTimeIncrement,
   onShowRestTimer,
-  onResetRestTimer
+  onResetRestTimer,
+  className
 }) => {
   // Create thumbnail if exercise is an object with a media_url
   const thumbnail = typeof exercise !== 'string' ? 
-    <ExerciseThumbnail exercise={exercise} /> : 
+    <ExerciseThumbnail 
+      exercise={exercise} 
+      className={cn(
+        "transition-all duration-300",
+        isActive ? "ring-2 ring-purple-500/40" : ""
+      )}
+    /> : 
     undefined;
 
   return (
@@ -72,6 +81,13 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
       onShowRestTimer={onShowRestTimer}
       onResetRestTimer={onResetRestTimer}
       thumbnail={thumbnail}
+      className={cn(
+        "transition-all duration-200",
+        isActive ? "border-purple-500/50 shadow-md shadow-purple-500/10" : "",
+        "active:scale-[0.99]",
+        "tap-highlight-transparent",
+        className
+      )}
     />
   );
 };

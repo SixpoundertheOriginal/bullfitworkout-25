@@ -4,6 +4,7 @@ import { WorkoutSaveStatus } from "@/components/WorkoutSaveStatus";
 import { WorkoutMetrics } from "@/components/WorkoutMetrics";
 import { Button } from "@/components/ui/button";
 import { WorkoutStatus } from "@/types/workout";
+import { cn } from '@/lib/utils';
 
 interface WorkoutSessionHeaderProps {
   elapsedTime: number;
@@ -56,9 +57,13 @@ export const WorkoutSessionHeader: React.FC<WorkoutSessionHeaderProps> = ({
     };
   }, [elapsedTime]);
 
+  const timeLabel = elapsedTime >= 3600 
+    ? `${Math.floor(elapsedTime / 3600)}h ${Math.floor((elapsedTime % 3600) / 60)}m`
+    : `${Math.floor(elapsedTime / 60)}m ${elapsedTime % 60}s`;
+
   return (
     <>
-      <div className="sticky top-16 z-10 bg-gray-900/80 backdrop-blur-lg">
+      <div className="sticky top-16 z-10 bg-gray-900/80 backdrop-blur-lg shadow-sm">
         <WorkoutMetrics
           time={elapsedTime}
           exerciseCount={exerciseCount}
@@ -74,7 +79,7 @@ export const WorkoutSessionHeader: React.FC<WorkoutSessionHeaderProps> = ({
       </div>
       
       {workoutStatus !== 'idle' && workoutStatus !== 'active' && (
-        <div className="px-4 mt-2">
+        <div className="px-4 mt-2 animate-fade-in">
           <WorkoutSaveStatus 
             status={workoutStatus}
             saveProgress={saveProgress}
@@ -84,7 +89,7 @@ export const WorkoutSessionHeader: React.FC<WorkoutSessionHeaderProps> = ({
       )}
       
       {isRecoveryMode && (
-        <div className="px-4 mt-2">
+        <div className="px-4 mt-2 animate-fade-in">
           <div className="bg-gray-800 border border-gray-700 rounded-lg p-3">
             <h3 className="text-sm font-medium mb-1">Workout recovery available</h3>
             <p className="text-gray-400 text-xs mb-2">

@@ -13,10 +13,12 @@ interface TimerProps {
 export const Timer: React.FC<TimerProps> = ({ duration, isRunning, onComplete, onTick }) => {
   const [timeLeft, setTimeLeft] = useState(duration);
   const [progress, setProgress] = useState(100);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   useEffect(() => {
     setTimeLeft(duration);
     setProgress(100);
+    setIsCompleting(false);
   }, [duration]);
 
   useEffect(() => {
@@ -26,7 +28,11 @@ export const Timer: React.FC<TimerProps> = ({ duration, isRunning, onComplete, o
       setTimeLeft((prevTime) => {
         if (prevTime <= 1) {
           clearInterval(interval);
-          if (onComplete) onComplete();
+          setIsCompleting(true);
+          setTimeout(() => {
+            if (onComplete) onComplete();
+            setIsCompleting(false);
+          }, 300);
           return 0;
         }
         
@@ -54,8 +60,10 @@ export const Timer: React.FC<TimerProps> = ({ duration, isRunning, onComplete, o
     <div className="w-full max-w-sm mx-auto">
       <div className="text-center mb-2">
         <span className={cn(
-          "text-4xl font-mono tracking-widest transition-colors",
-          timeLeft <= 10 ? "text-red-400" : "text-white"
+          "text-4xl font-mono tracking-widest transition-all duration-300",
+          timeLeft <= 10 ? "text-red-400" : "text-white",
+          timeLeft <= 5 ? "scale-110 font-bold" : "",
+          isCompleting ? "scale-125 opacity-0" : ""
         )}>
           {formatTime(timeLeft)}
         </span>
@@ -63,7 +71,12 @@ export const Timer: React.FC<TimerProps> = ({ duration, isRunning, onComplete, o
       <Progress 
         value={progress} 
         max={100} 
-        className="h-2 bg-gray-800 [&>div]:bg-gradient-to-r [&>div]:from-purple-500 [&>div]:to-pink-500"
+        className={cn(
+          "h-2 bg-gray-800 overflow-hidden transition-all duration-300", 
+          "[&>div]:bg-gradient-to-r [&>div]:from-purple-500 [&>div]:to-pink-500",
+          timeLeft <= 10 ? "[&>div]:from-red-500 [&>div]:to-orange-500" : "",
+          timeLeft <= 5 ? "h-3" : ""
+        )}
       />
     </div>
   );

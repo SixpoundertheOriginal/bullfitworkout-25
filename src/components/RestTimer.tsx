@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect, useRef } from "react";
-import { Timer, X, Play, Pause } from "lucide-react";
+import { Timer, X, Play, Pause, SkipForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 interface RestTimerProps {
   onComplete?: () => void;
@@ -79,6 +80,12 @@ export const RestTimer = ({
           if (newTime >= maxTime && !targetReached) {
             setTargetReached(true);
             if (onComplete) onComplete();
+            
+            // Show a toast notification
+            toast.success("Rest completed! Ready for your next set.", {
+              duration: 3000
+            });
+            
             return maxTime;
           }
           
@@ -102,6 +109,16 @@ export const RestTimer = ({
       startTimerInterval();
     }
   };
+  
+  const skipTimer = () => {
+    setElapsedTime(maxTime);
+    setTargetReached(true);
+    clearTimerInterval();
+    
+    if (onComplete) {
+      onComplete();
+    }
+  };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -115,11 +132,16 @@ export const RestTimer = ({
     <div className={cn(
       "bg-gray-900 border border-gray-800 rounded-lg shadow-xl",
       "transition-all duration-300 ease-in-out",
-      "animate-fade-in"
+      "animate-fade-in",
+      targetReached ? "border-orange-500/30 shadow-orange-500/10" : ""
     )}>
       <div className="flex items-center justify-between p-3 border-b border-gray-800">
         <div className="flex items-center gap-2">
-          <Timer size={18} className="text-purple-400" />
+          <Timer size={18} className={cn(
+            "text-purple-400",
+            targetReached ? "text-orange-400" : "",
+            isActive && !targetReached && "animate-pulse"
+          )} />
           <span className="font-medium">Rest Timer</span>
         </div>
         <button 
@@ -133,13 +155,13 @@ export const RestTimer = ({
       <div className="p-4">
         <div className="text-center mb-3">
           <span className={cn(
-            "text-3xl font-mono",
+            "text-3xl font-mono transition-all duration-300",
             targetReached ? "text-orange-400" : ""
           )}>
             {formatTime(elapsedTime)}
           </span>
           {targetReached && (
-            <div className="text-xs text-orange-400 mt-1">
+            <div className="text-xs text-orange-400 mt-1 animate-pulse">
               Target time reached ({formatTime(maxTime)})
             </div>
           )}
@@ -148,7 +170,7 @@ export const RestTimer = ({
         <Progress 
           value={progressPercentage} 
           className={cn(
-            "h-2 mb-4 bg-gray-800",
+            "h-2 mb-4 bg-gray-800 overflow-hidden",
             targetReached 
               ? "[&>div]:bg-orange-500" 
               : "[&>div]:bg-purple-500"
@@ -168,8 +190,16 @@ export const RestTimer = ({
             className="flex-1 bg-gray-800 border-gray-700 hover:bg-gray-700"
             onClick={toggleTimer}
           >
-            {isActive ? <Pause size={16} /> : <Play size={16} />}
+            {isActive ? <Pause size={16} className="mr-1" /> : <Play size={16} className="mr-1" />}
             {isActive ? 'Pause' : 'Resume'}
+          </Button>
+          <Button 
+            variant="outline" 
+            className="flex-1 bg-gray-800 border-gray-700 hover:bg-gray-700"
+            onClick={skipTimer}
+          >
+            <SkipForward size={16} className="mr-1" />
+            Skip
           </Button>
         </div>
       </div>

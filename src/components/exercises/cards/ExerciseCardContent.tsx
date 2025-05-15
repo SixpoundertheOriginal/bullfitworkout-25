@@ -2,19 +2,22 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Exercise } from '@/types/exercise';
+import { cn } from '@/lib/utils';
 
 interface ExerciseCardContentProps {
   exercise: Exercise | string;
   variationBadge?: React.ReactNode;
   thumbnail?: React.ReactNode;
   rightContent?: React.ReactNode;
+  className?: string;
 }
 
 export const ExerciseCardContent: React.FC<ExerciseCardContentProps> = ({
   exercise,
   variationBadge,
   thumbnail,
-  rightContent
+  rightContent,
+  className
 }) => {
   // Get the exercise properties only if it's an Exercise object
   const primaryMuscleGroups = typeof exercise !== 'string' ? exercise.primary_muscle_groups : [];
@@ -22,7 +25,10 @@ export const ExerciseCardContent: React.FC<ExerciseCardContentProps> = ({
   const exerciseName = typeof exercise === 'string' ? exercise : exercise.name;
 
   return (
-    <div className="flex items-center justify-between w-full">
+    <div className={cn(
+      "flex items-center justify-between w-full",
+      className
+    )}>
       <div className="flex flex-grow mr-2">
         {thumbnail && (
           <div className="mr-3 flex-shrink-0">
@@ -31,7 +37,7 @@ export const ExerciseCardContent: React.FC<ExerciseCardContentProps> = ({
         )}
         <div className="flex flex-col flex-grow">
           <div className="flex items-center space-x-2">
-            <h3 className="font-medium text-gray-100">{exerciseName}</h3>
+            <h3 className="font-medium text-gray-100 line-clamp-1">{exerciseName}</h3>
             
             {/* Display variation badge if provided */}
             {variationBadge && (
@@ -45,7 +51,10 @@ export const ExerciseCardContent: React.FC<ExerciseCardContentProps> = ({
                 <Badge 
                   key={idx} 
                   variant="outline" 
-                  className="text-xs bg-gray-800/60 border-gray-700/50 text-gray-300"
+                  className={cn(
+                    "text-xs bg-gray-800/60 border-gray-700/50 text-gray-300",
+                    "transition-all duration-200 hover:bg-gray-800 hover:border-gray-600/70"
+                  )}
                 >
                   {muscle}
                 </Badge>
@@ -55,7 +64,10 @@ export const ExerciseCardContent: React.FC<ExerciseCardContentProps> = ({
                 <Badge 
                   key={idx} 
                   variant="outline" 
-                  className="text-xs bg-gray-800/80 border-gray-700/50 text-gray-400"
+                  className={cn(
+                    "text-xs bg-gray-800/80 border-gray-700/50 text-gray-400",
+                    "transition-all duration-200 hover:bg-gray-800 hover:border-gray-600/70"
+                  )}
                 >
                   {equipment}
                 </Badge>

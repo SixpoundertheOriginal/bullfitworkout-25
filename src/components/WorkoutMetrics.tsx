@@ -40,6 +40,7 @@ export const WorkoutMetrics = ({
   className
 }: WorkoutMetricsProps) => {
   const [resetCounter, setResetCounter] = useState(0);
+  const [animateProgress, setAnimateProgress] = useState(false);
   
   // Use the external reset signal
   useEffect(() => {
@@ -54,34 +55,14 @@ export const WorkoutMetrics = ({
     }
   }, [showRestTimer]);
 
+  // Trigger animation when completed sets changes
   useEffect(() => {
-    const handleToastReset = () => {
-      if (showRestTimer) {
-        setResetCounter(prev => prev + 1);
-      }
-    };
-
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.addedNodes.length > 0) {
-          mutation.addedNodes.forEach((node) => {
-            if (node instanceof HTMLElement && 
-                (node.classList.contains('toast') || 
-                 node.getAttribute('role') === 'status' || 
-                 node.getAttribute('data-sonner-toast') === 'true')) {
-              if (node.textContent && node.textContent.includes("logged successfully")) {
-                handleToastReset();
-              }
-            }
-          });
-        }
-      });
-    });
-    
-    observer.observe(document.body, { childList: true, subtree: true });
-    
-    return () => observer.disconnect();
-  }, [showRestTimer]);
+    if (completedSets > 0) {
+      setAnimateProgress(true);
+      const timeout = setTimeout(() => setAnimateProgress(false), 1000);
+      return () => clearTimeout(timeout);
+    }
+  }, [completedSets]);
 
   const startTime = new Date();
   startTime.setSeconds(startTime.getSeconds() - time);
@@ -107,7 +88,7 @@ export const WorkoutMetrics = ({
           gradientClass="from-sky-600/10 via-black/5 to-sky-900/10 hover:from-sky-600/20 hover:to-sky-900/20"
           valueClass="text-sky-300 font-semibold bg-gradient-to-br from-sky-200 to-sky-400 bg-clip-text text-transparent text-lg sm:text-xl"
           labelClass={typography.sections.label}
-          className="p-2 sm:p-3"
+          className="p-2 sm:p-3 hover:scale-105 transition-transform duration-200"
         />
 
         {/* Exercise Count Card */}
@@ -119,7 +100,7 @@ export const WorkoutMetrics = ({
           gradientClass="from-emerald-600/10 via-black/5 to-emerald-900/10 hover:from-emerald-600/20 hover:to-emerald-900/20"
           valueClass="text-emerald-300 font-semibold bg-gradient-to-br from-emerald-200 to-emerald-400 bg-clip-text text-transparent text-lg sm:text-xl"
           labelClass={typography.sections.label}
-          className="p-2 sm:p-3"
+          className="p-2 sm:p-3 hover:scale-105 transition-transform duration-200"
         />
 
         {/* Sets Card */}
@@ -129,17 +110,29 @@ export const WorkoutMetrics = ({
           label="Sets"
           tooltip={`${Math.round(completionPercentage)}% sets completed`}
           progressValue={completionPercentage}
-          gradientClass="from-violet-600/10 via-black/5 to-violet-900/10 hover:from-violet-600/20 hover:to-violet-900/20"
-          valueClass="text-violet-300 font-semibold bg-gradient-to-br from-violet-200 to-violet-400 bg-clip-text text-transparent text-lg sm:text-xl"
+          gradientClass={cn(
+            "from-violet-600/10 via-black/5 to-violet-900/10 hover:from-violet-600/20 hover:to-violet-900/20",
+            animateProgress && "from-violet-600/30 to-violet-900/30"
+          )}
+          valueClass={cn(
+            "text-violet-300 font-semibold bg-gradient-to-br from-violet-200 to-violet-400 bg-clip-text text-transparent text-lg sm:text-xl",
+            animateProgress && "scale-110 transition-transform"
+          )}
           labelClass={typography.sections.label}
-          className="p-2 sm:p-3"
+          className={cn(
+            "p-2 sm:p-3 transition-all duration-300",
+            animateProgress && "shadow-md shadow-violet-500/20",
+            "hover:scale-105"
+          )}
         />
 
         {/* Rest Timer Card */}
         <div className={cn(
           "relative flex flex-col items-center justify-center p-2 sm:p-3 rounded-xl border border-white/10 backdrop-blur-xl transition-all duration-300",
-          "bg-gradient-to-br from-gray-900/80 via-gray-800/40 to-gray-900/90 hover:from-orange-600/20 hover:to-orange-900/20",
-          "hover:scale-[1.02] hover:shadow-lg hover:shadow-orange-500/10",
+          "bg-gradient-to-br from-gray-900/80 via-gray-800/40 to-gray-900/90",
+          showRestTimer 
+            ? "from-orange-600/20 to-orange-900/20 shadow-lg shadow-orange-500/10 scale-[1.02]" 
+            : "hover:from-orange-600/20 hover:to-orange-900/20 hover:scale-[1.02] hover:shadow-lg hover:shadow-orange-500/10",
           "min-w-[80px] w-full",
           "relative overflow-hidden"
         )}>
@@ -174,7 +167,7 @@ export const WorkoutMetrics = ({
                 variant="outline"
                 size="sm"
                 onClick={onManualRestStart}
-                className="mt-1 sm:mt-2 bg-orange-500/10 border-orange-500/30 hover:bg-orange-500/20 text-orange-300 transition-all duration-300 text-xs font-medium scale-90 sm:scale-100"
+                className="mt-1 sm:mt-2 bg-orange-500/10 border-orange-500/30 hover:bg-orange-500/20 text-orange-300 transition-all duration-300 text-xs font-medium scale-90 sm:scale-100 shadow-sm hover:shadow-md hover:shadow-orange-500/10"
               >
                 <Play size={12} className="mr-1" /> Start Timer
               </Button>
