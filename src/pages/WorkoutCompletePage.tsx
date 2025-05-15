@@ -4,11 +4,13 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useWorkoutDetails } from '@/hooks/useWorkoutDetails';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { CheckCircle2, Clock, Dumbbell, BarChart, Loader2 } from 'lucide-react';
+import { CheckCircle2, Clock, Dumbbell, BarChart, Loader2, AlertCircle } from 'lucide-react';
 import { useWeightUnit } from '@/context/WeightUnitContext';
 import { toast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export function WorkoutCompletePage() {
+  // Update to use workoutId consistently with route parameters
   const { workoutId } = useParams<{ workoutId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -93,8 +95,13 @@ export function WorkoutCompletePage() {
   if (!effectiveWorkoutDetails) {
     return (
       <div className="p-8 text-center">
-        <h1 className="text-xl font-bold mb-4">Workout Not Found</h1>
-        <p className="mb-4">The workout you're looking for couldn't be found.</p>
+        <Alert variant="destructive" className="mb-6 max-w-md mx-auto bg-red-950/30 border-red-900">
+          <AlertCircle className="h-5 w-5" />
+          <AlertTitle>Workout Not Found</AlertTitle>
+          <AlertDescription>
+            The workout you're looking for couldn't be found. (ID: {effectiveWorkoutId || 'not provided'})
+          </AlertDescription>
+        </Alert>
         <Button onClick={() => navigate('/')}>Return to Dashboard</Button>
       </div>
     );

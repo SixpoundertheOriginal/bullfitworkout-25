@@ -9,16 +9,19 @@ import { toast } from '@/hooks/use-toast';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { deleteWorkout } from '@/services/workoutService';
 import { ExerciseSet } from '@/types/exercise';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 export default function WorkoutDetailsPage() {
-  const { id } = useParams<{ id: string }>();
+  // Update to use workoutId from params
+  const { workoutId } = useParams<{ workoutId: string }>();
   const { 
     workoutDetails, 
     exerciseSets, 
     loading, 
     error, 
     updateExerciseSet 
-  } = useWorkoutDetails(id || '');
+  } = useWorkoutDetails(workoutId || '');
   
   const navigate = useNavigate();
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -36,14 +39,14 @@ export default function WorkoutDetailsPage() {
     // This would typically open a confirmation dialog
     const confirmed = window.confirm("Are you sure you want to delete this workout?");
     
-    if (confirmed && id) {
+    if (confirmed && workoutId) {
       try {
-        await deleteWorkout(id);
+        await deleteWorkout(workoutId);
         toast({
           title: "Success",
           description: "Workout deleted successfully"
         });
-        navigate('/workout-management');
+        navigate('/workouts');
       } catch (err) {
         console.error("Error deleting workout:", err);
         toast({
@@ -63,12 +66,27 @@ export default function WorkoutDetailsPage() {
     return <WorkoutDetailsLoading />;
   }
 
+  // Enhanced error state to provide more information
   if (error || !workoutDetails) {
     return (
       <div className="pt-16 h-full flex items-center justify-center">
-        <div className="text-center p-8">
-          <h2 className="text-xl font-semibold mb-2">Workout Not Found</h2>
-          <p className="text-gray-400">The workout could not be loaded or does not exist.</p>
+        <div className="text-center p-8 max-w-md">
+          <Alert variant="destructive" className="mb-6 bg-red-950/30 border-red-900">
+            <AlertCircle className="h-5 w-5" />
+            <AlertTitle>Workout Not Found</AlertTitle>
+            <AlertDescription className="text-sm">
+              {error ? 
+                `Error: ${error}` : 
+                `The workout could not be loaded or does not exist. ID: ${workoutId || 'not provided'}`
+              }
+            </AlertDescription>
+          </Alert>
+          <button 
+            onClick={() => navigate('/workouts')}
+            className="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-md"
+          >
+            Return to Workouts
+          </button>
         </div>
       </div>
     );
