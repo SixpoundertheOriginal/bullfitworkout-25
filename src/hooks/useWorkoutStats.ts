@@ -18,22 +18,29 @@ export function useWorkoutStats(
   const { weightUnit } = useWeightUnit();
   const { user } = useAuth();
   
-  // Safely access date range context with default values
-  let dateRange;
-  try {
-    const dateRangeContext = useDateRange();
-    dateRange = dateRangeContext?.dateRange;
-  } catch (error) {
-    console.warn("DateRange context not available, using default date range", error);
-    // Set reasonable defaults if context is not available
+  // Create a safer way to get date range that won't throw
+  const getDateRangeSafely = () => {
+    try {
+      return useDateRange();
+    } catch (error) {
+      console.warn("DateRange context not available, using default date range", error);
+      return null;
+    }
+  };
+  
+  // Get the date range context if available
+  const dateRangeContext = getDateRangeSafely();
+  
+  // Use the date range from context or create default values
+  const dateRange = dateRangeContext?.dateRange || (() => {
     const now = new Date();
     const thirtyDaysAgo = new Date(now);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    dateRange = {
+    return {
       from: thirtyDaysAgo,
       to: now
     };
-  }
+  })();
 
   const [loading, setLoading] = useState(true);
   const [workouts, setWorkouts] = useState<any[]>([]);
@@ -75,10 +82,9 @@ export function useWorkoutStats(
 
     try {
       const now = new Date();
-      // If no dateRange is available, use last 30 days as default
-      const defaultFrom = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      const from = dateRange?.from || defaultFrom;
-      const to   = dateRange?.to   || now;
+      // Use the date range or defaults
+      const from = dateRange?.from || new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const to = dateRange?.to || now;
       const adjustedTo = new Date(to);
       adjustedTo.setDate(adjustedTo.getDate() + 1);
 
@@ -89,7 +95,6 @@ export function useWorkoutStats(
         adjustedTo.toISOString()
       );
 
-      // <---- include `duration` in the select ---->
       const { data: workoutData, error } = await supabase
         .from('workout_sessions')
         .select('*, duration, exercises:exercise_sets(*)')
@@ -98,10 +103,7 @@ export function useWorkoutStats(
         .order('start_time', { ascending: false });
 
       if (error) throw error;
-      const sessions = workoutData || [];
-      console.log(`[useWorkoutStats] Fetched ${sessions.length} sessions`);
-      setWorkouts(sessions);
-
+      
       // Summaries
       const totalWorkouts = sessions.length;
       const totalDuration = sessions.reduce((sum, w) => sum + (w.duration || 0), 0);
@@ -215,6 +217,7 @@ export function useWorkoutStats(
         exerciseVolumeHistory,
         lastWorkoutDate
       });
+
     } catch (err) {
       console.error("[useWorkoutStats] fetch error:", err);
     } finally {

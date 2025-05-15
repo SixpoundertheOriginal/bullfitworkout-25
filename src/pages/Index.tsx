@@ -12,7 +12,6 @@ import { motion } from "framer-motion";
 import { typography } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { useWorkoutState } from "@/hooks/useWorkoutState";
-import { DateRangeProvider } from "@/context/DateRangeContext";
 
 // The main component doesn't need DateRangeProvider anymore as it's provided in App.tsx
 const Index = () => {

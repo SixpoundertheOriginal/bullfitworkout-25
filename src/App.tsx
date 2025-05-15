@@ -32,11 +32,11 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <React.StrictMode>
-      <DateRangeProvider>
+    <DateRangeProvider>
+      <React.StrictMode>
         <RouterProvider router={router} />
-      </DateRangeProvider>
-    </React.StrictMode>
+      </React.StrictMode>
+    </DateRangeProvider>
   )
 }
 

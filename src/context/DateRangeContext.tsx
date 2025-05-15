@@ -8,6 +8,7 @@ interface DateRangeContextType {
   setDateRange: (range: DateRange | undefined) => void;
 }
 
+// Create context with default undefined value
 const DateRangeContext = createContext<DateRangeContextType | undefined>(undefined);
 
 export function DateRangeProvider({ children }: { children: React.ReactNode }) {
@@ -18,8 +19,14 @@ export function DateRangeProvider({ children }: { children: React.ReactNode }) {
     to: endOfWeek(now, { weekStartsOn: 1 }), // Sunday
   });
 
+  // Create a memoized value to prevent unnecessary re-renders
+  const contextValue = React.useMemo(() => ({
+    dateRange,
+    setDateRange
+  }), [dateRange]);
+
   return (
-    <DateRangeContext.Provider value={{ dateRange, setDateRange }}>
+    <DateRangeContext.Provider value={contextValue}>
       {children}
     </DateRangeContext.Provider>
   );
@@ -27,7 +34,7 @@ export function DateRangeProvider({ children }: { children: React.ReactNode }) {
 
 export function useDateRange() {
   const context = useContext(DateRangeContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useDateRange must be used within a DateRangeProvider');
   }
   return context;
