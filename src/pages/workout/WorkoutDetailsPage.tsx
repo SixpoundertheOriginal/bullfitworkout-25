@@ -8,6 +8,7 @@ import { WorkoutDetailsHeader } from '@/components/workouts/WorkoutDetailsHeader
 import { toast } from '@/hooks/use-toast';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { deleteWorkout } from '@/services/workoutService';
+import { ExerciseSet } from '@/types/exercise';
 
 export default function WorkoutDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -73,7 +74,8 @@ export default function WorkoutDetailsPage() {
     );
   }
 
-  const handleEditExercise = (exerciseName: string, sets: Record<string, any>[]) => {
+  // Fixed the parameter type to match what WorkoutDetailsEnhanced expects
+  const handleEditExercise = (exerciseName: string, sets: Record<string, ExerciseSet[]>) => {
     // This function will be implemented to handle editing exercises
     toast({
       title: "Edit exercise",
