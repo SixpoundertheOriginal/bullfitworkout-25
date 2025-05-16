@@ -2,7 +2,7 @@
 import React from "react";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useWorkoutState } from "@/hooks/useWorkoutState";
+import { useWorkoutStore } from "@/store/workoutStore";
 import { CircularGradientButton } from "@/components/CircularGradientButton";
 
 interface ExerciseFABProps {
@@ -11,7 +11,7 @@ interface ExerciseFABProps {
   visible?: boolean;
   showOnlyIfActive?: boolean;
   hideOnMobile?: boolean;
-  floatingPosition?: boolean; // New prop to determine if it should float or be inline
+  floatingPosition?: boolean;
 }
 
 export const ExerciseFAB = ({ 
@@ -20,9 +20,9 @@ export const ExerciseFAB = ({
   visible = true,
   showOnlyIfActive = false,
   hideOnMobile = true,
-  floatingPosition = true // Default to floating position
+  floatingPosition = true
 }: ExerciseFABProps) => {
-  const { isActive } = useWorkoutState();
+  const { isActive } = useWorkoutStore();
   
   // Option to only show when workout is active
   if (showOnlyIfActive && !isActive) {
@@ -41,6 +41,7 @@ export const ExerciseFAB = ({
         onClick={onClick}
         icon={<Plus size={24} className="text-white" />}
         size={56}
+        ariaLabel="Add exercise"
       >
         Add Exercise
       </CircularGradientButton>

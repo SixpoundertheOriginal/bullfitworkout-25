@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus, CheckCircle, Target } from "lucide-react";
+import { Plus, CheckCircle, Target, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from '@/hooks/use-mobile';
+import { toast } from "@/hooks/use-toast";
 
 interface WorkoutSessionFooterProps {
   onAddExercise: () => void;
@@ -13,7 +14,7 @@ interface WorkoutSessionFooterProps {
   isSaving: boolean;
   focusedExercise?: string | null;
   onExitFocus?: () => void;
-  visible?: boolean; // New prop to control visibility
+  visible?: boolean;
 }
 
 export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
@@ -23,11 +24,11 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
   isSaving,
   focusedExercise,
   onExitFocus,
-  visible = true // Visible by default
+  visible = true
 }) => {
   const isMobile = useIsMobile();
   
-  // If not visible, don't render the component at all
+  // If not visible and no exercises, don't render
   if (!visible && !hasExercises) {
     return null;
   }
@@ -57,28 +58,43 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
           isMobile && focusedExercise && "flex-col gap-2"
         )}>
           {focusedExercise ? (
-            <Button
-              disabled={isSaving}
-              className={cn(
-                "bg-gradient-to-r from-purple-600 to-purple-800",
-                "hover:from-purple-700 hover:to-purple-900 text-white shadow-lg shadow-purple-900/30",
-                "border border-purple-500/30 transition-all duration-300",
-                isMobile ? "w-full" : "flex-1"
-              )}
-              onClick={onFinishWorkout}
-            >
-              {isSaving ? (
-                <>
-                  <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Target className="mr-2 h-4 w-4" />
-                  Complete "{focusedExercise}"
-                </>
-              )}
-            </Button>
+            <>
+              <Button
+                variant="ghost" 
+                size="sm"
+                className="text-white/70 hover:text-white transition-colors"
+                onClick={onExitFocus}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Workout
+              </Button>
+              
+              <Button
+                disabled={isSaving}
+                className={cn(
+                  "bg-gradient-to-r from-purple-600 to-purple-800",
+                  "hover:from-purple-700 hover:to-purple-900 text-white shadow-lg shadow-purple-900/30",
+                  "border border-purple-500/30 transition-all duration-300",
+                  isMobile ? "w-full" : "flex-1"
+                )}
+                onClick={() => {
+                  if (onExitFocus) onExitFocus();
+                  toast.success(`${focusedExercise} completed!`);
+                }}
+              >
+                {isSaving ? (
+                  <>
+                    <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Target className="mr-2 h-4 w-4" />
+                    Complete "{focusedExercise}"
+                  </>
+                )}
+              </Button>
+            </>
           ) : (
             <>
               <Button
