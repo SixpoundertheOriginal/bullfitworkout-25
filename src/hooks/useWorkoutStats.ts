@@ -48,7 +48,10 @@ export function useWorkoutStats(
     useDateRange,
     { 
       dateRange: DEFAULT_DATE_RANGE,
-      setDateRange: () => {}
+      setDateRange: () => {},
+      comparisonEnabled: false,
+      setComparisonEnabled: () => {},
+      comparisonDateRange: undefined
     }
   );
   
