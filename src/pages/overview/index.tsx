@@ -10,6 +10,7 @@ import { useVolumeChartData } from '@/components/metrics/volume-chart/useVolumeC
 import { useChartData } from '@/components/metrics/workout-density/useChartData';
 import { VolumeDataPoint, DensityDataPoint } from '@/hooks/useProcessWorkoutMetrics';
 import { WeightUnit } from '@/utils/unitConversion';
+import { MainVolumeChart } from './MainVolumeChart';
 
 const OverviewPage: React.FC = () => {
   const { 
@@ -56,6 +57,14 @@ const OverviewPage: React.FC = () => {
     <div className="container py-6">
       <OverviewHeader title="Workout Overview" />
       {stats && <KPISection {...kpiData} />}
+      
+      {/* Main Volume Chart - Restored */}
+      <MainVolumeChart 
+        data={processedMetrics as VolumeDataPoint[]} 
+        height={350}
+        className="mb-6"
+      />
+      
       <ChartsGrid 
         stats={stats || {}} 
         weightUnit={kpiData.weightUnit}

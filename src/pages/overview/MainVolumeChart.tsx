@@ -7,16 +7,18 @@ import { VolumeDataPoint } from '@/hooks/useProcessWorkoutMetrics';
 interface MainVolumeChartProps {
   data?: VolumeDataPoint[];
   height?: number;
+  className?: string;
 }
 
 export const MainVolumeChart: React.FC<MainVolumeChartProps> = ({ 
   data = [], 
-  height = 300 
+  height = 300,
+  className = ""
 }) => {
   return (
-    <Card className="bg-card overflow-hidden" style={{ minHeight: `${height + 60}px` }}>
+    <Card className={`bg-gray-900/80 border-gray-800 shadow-md overflow-hidden ${className}`} style={{ minHeight: `${height + 60}px` }}>
       <CardHeader><CardTitle>Volume Over Time</CardTitle></CardHeader>
-      <CardContent style={{ height: `${height}px` }}>
+      <CardContent className="p-0">
         <WorkoutVolumeOverTimeChart data={data} height={height} />
       </CardContent>
     </Card>
