@@ -15,7 +15,6 @@ const OverviewPage: React.FC = () => {
   const { 
     workouts, 
     loading, 
-    error,
     stats 
   } = useWorkoutStats();
 
@@ -28,7 +27,8 @@ const OverviewPage: React.FC = () => {
     return <LoadingSkeleton />;
   }
 
-  if (error) {
+  // Check if we have valid stats and data - if not, show error state
+  if (!stats || !workouts || workouts.length === 0) {
     return (
       <div className="container py-6">
         <div className="text-center p-8">
