@@ -1,4 +1,3 @@
-
 import { useMemo } from 'react';
 import { format } from 'date-fns';
 import { WeightUnit, convertWeight } from '@/utils/unitConversion';
@@ -8,6 +7,7 @@ export interface VolumeDataPoint {
   originalDate: string;    // ISO string
   formattedDate: string;   // e.g. "May 4"
   volume: number;          // in user's weightUnit
+  workoutId?: string;      // ID of the workout for navigation
 }
 
 export interface DensityDataPoint {
@@ -18,18 +18,20 @@ export interface DensityDataPoint {
   totalTime: number;         // minutes
   restTime: number;          // minutes
   activeTime: number;        // minutes
+  workoutId?: string;        // ID of the workout for navigation
 }
 
 interface WorkoutWithExercises {
-  start_time: string;                 // ISO
-  duration: number;                   // total session length in minutes
+  id?: string;                      // Workout ID for navigation
+  start_time: string;               // ISO
+  duration: number;                 // total session length in minutes
   exercises?: Array<{
     exercise_name: string;
     completed?: boolean;
-    weight?: number;                  // in kg
+    weight?: number;                // in kg
     reps?: number;
-    restTime?: number;                // in seconds
-  }> | Record<string, any[]>;         // support both shapes
+    restTime?: number;              // in seconds
+  }> | Record<string, any[]>;       // support both shapes
 }
 
 // Reusable helper functions, moved outside the hook
@@ -104,7 +106,8 @@ export function useProcessWorkoutMetrics(
           date: workout.start_time,
           originalDate: workout.start_time,
           formattedDate,
-          volume
+          volume,
+          workoutId: workout.id || undefined
         };
       })
       // sort ascending by date
@@ -151,7 +154,8 @@ export function useProcessWorkoutMetrics(
           activeOnlyDensity,
           totalTime,
           restTime,
-          activeTime
+          activeTime,
+          workoutId: workout.id || undefined
         };
       })
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());

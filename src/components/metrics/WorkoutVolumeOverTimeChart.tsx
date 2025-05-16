@@ -1,4 +1,3 @@
-
 // src/components/metrics/WorkoutVolumeOverTimeChart.tsx
 
 import React, { useMemo, useCallback } from 'react';
@@ -16,6 +15,7 @@ import { Dumbbell } from 'lucide-react';
 import { useWeightUnit } from '@/context/WeightUnitContext';
 import { convertWeight, WeightUnit } from '@/utils/unitConversion';
 import { VolumeDataPoint } from '@/hooks/useProcessWorkoutMetrics';
+import { useNavigate } from 'react-router-dom';
 
 interface WorkoutVolumeOverTimeChartProps {
   data?: VolumeDataPoint[];
@@ -28,6 +28,8 @@ const WorkoutVolumeOverTimeChartComponent: React.FC<WorkoutVolumeOverTimeChartPr
   className = '',
   height = 200
 }) => {
+  const navigate = useNavigate();
+  
   // Extract weight unit with error handling - moved to the top level
   // and guaranteed to be the correct type
   const defaultUnit: WeightUnit = 'kg';
@@ -55,13 +57,16 @@ const WorkoutVolumeOverTimeChartComponent: React.FC<WorkoutVolumeOverTimeChartPr
         const safeItem = {
           date: item?.date || new Date().toISOString(),
           volume: typeof item?.volume === 'number' ? item.volume : 0,
+          workoutId: item?.workoutId || null,
         };
         
         return {
           date: format(new Date(safeItem.date), 'MMM d'),
           volume: safeItem.volume,
           originalDate: safeItem.date,
-          formattedValue: `${safeItem.volume.toLocaleString()} ${weightUnit}`
+          formattedValue: `${safeItem.volume.toLocaleString()} ${weightUnit}`,
+          workoutId: safeItem.workoutId,
+          cursor: safeItem.workoutId ? 'pointer' : 'default'
         };
       });
   }, [data, weightUnit, hasData]);
@@ -92,6 +97,14 @@ const WorkoutVolumeOverTimeChartComponent: React.FC<WorkoutVolumeOverTimeChartPr
       </div>
     );
   }, []);
+
+  // Handle bar click event
+  const handleBarClick = useCallback((data: any) => {
+    if (data && data.workoutId) {
+      console.log('Navigating to workout details:', data.workoutId);
+      navigate(`/workout-details/${data.workoutId}`);
+    }
+  }, [navigate]);
 
   return (
     <div
@@ -156,7 +169,10 @@ const WorkoutVolumeOverTimeChartComponent: React.FC<WorkoutVolumeOverTimeChartPr
                   dataKey="volume" 
                   fill="url(#volumeGradient)" 
                   radius={[4, 4, 0, 0]} 
-                  isAnimationActive={false} 
+                  isAnimationActive={false}
+                  onClick={handleBarClick}
+                  cursor="pointer"
+                  className="hover:opacity-80 transition-opacity"
                 />
               </BarChart>
             </ResponsiveContainer>

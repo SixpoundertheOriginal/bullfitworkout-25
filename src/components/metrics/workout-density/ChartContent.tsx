@@ -12,6 +12,7 @@ import {
 import { WeightUnit } from '@/utils/unitConversion';
 import { ChartTooltip } from './ChartTooltip';
 import { DensityDataPoint } from '@/hooks/useProcessWorkoutMetrics';
+import { useNavigate } from 'react-router-dom';
 
 interface ChartContentProps {
   data: any[];
@@ -24,6 +25,8 @@ export const ChartContent: React.FC<ChartContentProps> = ({
   weightUnit,
   height
 }) => {
+  const navigate = useNavigate();
+
   // Render empty state if no data
   if (!data.length) {
     return (
@@ -35,6 +38,14 @@ export const ChartContent: React.FC<ChartContentProps> = ({
       </div>
     );
   }
+  
+  // Handle data point click
+  const handleDataPointClick = (data: any) => {
+    if (data && data.payload && data.payload.workoutId) {
+      console.log('Navigating to workout details:', data.payload.workoutId);
+      navigate(`/workout-details/${data.payload.workoutId}`);
+    }
+  };
   
   return (
     <div style={{ width: '100%', height }} className="flex-1">
@@ -79,8 +90,8 @@ export const ChartContent: React.FC<ChartContentProps> = ({
             dataKey="overallDensity"
             stroke="#9B87F5"
             strokeWidth={2}
-            dot={{ r: 4, fill: "#9B87F5" }}
-            activeDot={{ r: 6 }}
+            dot={{ r: 4, fill: "#9B87F5", cursor: 'pointer' }}
+            activeDot={{ r: 6, cursor: 'pointer', onClick: handleDataPointClick }}
             isAnimationActive={false}
           />
           <Line
@@ -88,8 +99,8 @@ export const ChartContent: React.FC<ChartContentProps> = ({
             dataKey="activeOnlyDensity"
             stroke="#0EA5E9"
             strokeWidth={2}
-            dot={{ r: 4, fill: "#0EA5E9" }}
-            activeDot={{ r: 6 }}
+            dot={{ r: 4, fill: "#0EA5E9", cursor: 'pointer' }}
+            activeDot={{ r: 6, cursor: 'pointer', onClick: handleDataPointClick }}
             isAnimationActive={false}
           />
         </LineChart>
