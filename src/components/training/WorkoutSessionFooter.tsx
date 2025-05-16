@@ -42,42 +42,28 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
           isMobile && focusedExercise && "flex-col gap-2"
         )}>
           {focusedExercise ? (
-            <>
-              <Button
-                variant="outline"
-                className={cn(
-                  "border border-purple-500/30 bg-gray-900/80 text-purple-300 hover:bg-purple-800/20",
-                  isMobile && "w-full"
-                )}
-                onClick={onExitFocus}
-              >
-                <RotateCcw className="mr-2 h-4 w-4" />
-                Exit Focus Mode
-              </Button>
-              
-              <Button
-                disabled={isSaving}
-                className={cn(
-                  "bg-gradient-to-r from-purple-600 to-purple-800",
-                  "hover:from-purple-700 hover:to-purple-900 text-white shadow-lg shadow-purple-900/30",
-                  "border border-purple-500/30 transition-all duration-300",
-                  isMobile ? "w-full" : "ml-0 flex-1 md:flex-none"
-                )}
-                onClick={onFinishWorkout}
-              >
-                {isSaving ? (
-                  <>
-                    <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Target className="mr-2 h-4 w-4" />
-                    Complete "{focusedExercise}"
-                  </>
-                )}
-              </Button>
-            </>
+            <Button
+              disabled={isSaving}
+              className={cn(
+                "bg-gradient-to-r from-purple-600 to-purple-800",
+                "hover:from-purple-700 hover:to-purple-900 text-white shadow-lg shadow-purple-900/30",
+                "border border-purple-500/30 transition-all duration-300",
+                isMobile ? "w-full" : "flex-1"
+              )}
+              onClick={onFinishWorkout}
+            >
+              {isSaving ? (
+                <>
+                  <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Target className="mr-2 h-4 w-4" />
+                  Complete "{focusedExercise}"
+                </>
+              )}
+            </Button>
           ) : (
             <>
               <Button

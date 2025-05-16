@@ -151,7 +151,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
         isFocused ? "z-20" : "",
         className
       )}
-      onClick={!isFocused && onFocus ? onFocus : undefined}
+      onClick={onFocus ? onFocus : undefined}
     >
       <CommonExerciseCard
         exercise={exercise}
