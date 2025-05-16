@@ -80,9 +80,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
             <MainMenu />
           </PageHeader>
           
-          {/* Date range filter in a dedicated section below the header */}
+          {/* Date range filter in a dedicated section below the header with improved visibility */}
           {isFilterVisible && (
-            <div className="bg-gray-900/95 backdrop-blur-md border-b border-gray-800/50 py-3 px-4">
+            <div className="bg-gray-800 border-b border-gray-700 py-3 px-4 shadow-md relative z-40">
               <DateRangeFilter />
             </div>
           )}
@@ -94,7 +94,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       <main className={cn(
         "flex-grow overflow-y-auto will-change-transform",
         "pt-16", // Standard padding for header
-        isFilterVisible ? "pt-[90px]" : "", // Extra padding when filter is visible - increased
+        isFilterVisible ? "pt-28" : "", // Increased extra padding when filter is visible
         shouldShowGlobalNav ? "pb-24" : "pb-6", // Extra padding when nav is shown
         isOverviewPage ? "pb-40" : "", // Even more padding for overview page
         "w-full h-full" // Full width and height

@@ -23,10 +23,14 @@ export const LayoutProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     setCurrentRoute(location.pathname);
     
-    // Explicitly show filter on overview page, hide on others
+    // Force show filter on overview page, hide on others
     const shouldShowFilter = location.pathname === '/overview';
     console.log('LayoutContext: Setting filter visibility to', shouldShowFilter, 'for path', location.pathname);
-    setFilterVisible(shouldShowFilter);
+    
+    // Use a timeout to ensure the state update happens after route transition
+    setTimeout(() => {
+      setFilterVisible(shouldShowFilter);
+    }, 0);
     
   }, [location.pathname]);
   

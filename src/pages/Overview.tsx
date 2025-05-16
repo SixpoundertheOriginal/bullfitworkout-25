@@ -18,6 +18,7 @@ import { useWeightUnit } from "@/context/WeightUnitContext";
 import { useDateRange } from '@/context/DateRangeContext';
 import { useProcessWorkoutMetrics } from '@/hooks/useProcessWorkoutMetrics';
 import { WeightUnit } from '@/utils/unitConversion';
+import { useLayout } from '@/context/LayoutContext';
 
 // Prevent excess renders by defining these outside component
 const DEFAULT_DATE_RANGE = { 
@@ -27,6 +28,14 @@ const DEFAULT_DATE_RANGE = {
 
 const Overview: React.FC = () => {
   console.log('[Overview] Rendering Overview component');
+  
+  // Make sure filter is visible
+  const { setFilterVisible } = useLayout();
+  
+  // Force filter to be visible on component mount
+  useEffect(() => {
+    setFilterVisible(true);
+  }, [setFilterVisible]);
   
   // Access contexts safely outside of render
   const authContext = useAuth();
@@ -148,7 +157,7 @@ const Overview: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto py-6 px-4 space-y-6 pb-40">
+    <div className="container mx-auto py-6 px-4 space-y-6 pb-48">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Workout Overview</h1>
       </div>
@@ -201,8 +210,8 @@ const Overview: React.FC = () => {
         ))}
       </div>
 
-      {/* Density over time - with fixed dimensions */}
-      <Card className="bg-card overflow-hidden" style={{ minHeight: '300px', marginBottom: '80px' }}>
+      {/* Density over time - with fixed dimensions and extra margin */}
+      <Card className="bg-card overflow-hidden mb-24" style={{ minHeight: '300px' }}>
         <CardHeader><CardTitle>Volume Rate Over Time</CardTitle></CardHeader>
         <CardContent style={{ height: '250px' }}>
           <WorkoutDensityOverTimeChart data={densityOverTimeData} height={250} />

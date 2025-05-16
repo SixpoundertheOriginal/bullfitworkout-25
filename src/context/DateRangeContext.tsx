@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useMemo } from 'react';
+import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
 import { DateRange } from 'react-day-picker';
 import { subDays, startOfWeek, endOfWeek } from 'date-fns';
 
@@ -25,6 +25,11 @@ export function DateRangeProvider({ children }: { children: React.ReactNode }) {
     to: endOfWeek(now, { weekStartsOn: 1 }), // Sunday
   });
 
+  // Log when context is created to help debugging
+  useEffect(() => {
+    console.log('DateRangeContext initialized with range:', dateRange);
+  }, []);
+
   // Handle undefined values gracefully to maintain stable state
   const handleSetDateRange = (newRange: DateRange | undefined) => {
     if (!newRange) return;
@@ -34,6 +39,7 @@ export function DateRangeProvider({ children }: { children: React.ReactNode }) {
       to: newRange.to || dateRange.to
     };
     
+    console.log('DateRangeContext: Setting new date range:', safeRange);
     setDateRange(safeRange);
   };
 
@@ -52,5 +58,18 @@ export function DateRangeProvider({ children }: { children: React.ReactNode }) {
 
 export function useDateRange(): DateRangeContextType {
   const context = useContext(DateRangeContext);
-  return context; // Now we can safely return context without undefined check
+  
+  if (!context) {
+    console.error('useDateRange must be used within a DateRangeProvider');
+    // Provide fallback default to prevent crashes
+    return {
+      dateRange: {
+        from: startOfWeek(new Date(), { weekStartsOn: 1 }),
+        to: endOfWeek(new Date(), { weekStartsOn: 1 })
+      },
+      setDateRange: () => {}
+    };
+  }
+  
+  return context;
 }

@@ -98,7 +98,7 @@ export function DateRangeFilter() {
           >
             <div className="flex items-center gap-2">
               <CalendarIcon className="h-4 w-4 text-purple-400" />
-              <span>
+              <span className="font-medium">
                 {selectedPreset === 'Custom Range' && dateRange?.from ? (
                   <>
                     {format(dateRange.from, "MMM d")} -{" "}
@@ -112,7 +112,7 @@ export function DateRangeFilter() {
             <ChevronDown className="ml-2 h-4 w-4 text-gray-400" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 bg-gray-800 border-gray-700" align="end">
+        <PopoverContent className="w-auto p-0 bg-gray-800 border-gray-700 shadow-lg" align="end" sideOffset={5}>
           <div className="grid gap-4 p-3">
             <div className="flex flex-col space-y-2">
               {dateRangeOptions.map((option) => (
