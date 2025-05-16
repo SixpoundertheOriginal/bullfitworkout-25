@@ -1,20 +1,13 @@
 
 import React from 'react'
-import {
-  createBrowserRouter,
-  RouterProvider,
-} from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import Index from "@/pages/Index";
-import TrainingSession from "@/pages/TrainingSession";
-import Overview from "@/pages/Overview";
-import ExerciseSetup from "@/pages/ExerciseSetup";
 import { DateRangeProvider } from '@/context/DateRangeContext';
 import { WeightUnitContextProvider } from '@/context/WeightUnitContext';
 import { AuthProvider } from '@/context/AuthContext';
-import { MainLayout } from '@/components/layouts/MainLayout';
 import { LayoutProvider } from '@/context/LayoutContext';
 import { RouterProvider as AppRouterProvider } from '@/context/RouterProvider';
+import { WorkoutNavigationProvider } from '@/context/WorkoutNavigationContext';
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -27,20 +20,23 @@ const queryClient = new QueryClient({
   },
 });
 
-// We'll now use the RouterProvider component to handle all routes
 function App() {
   return (
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <DateRangeProvider>
-            <WeightUnitContextProvider>
-              <LayoutProvider>
-                <AppRouterProvider />
-              </LayoutProvider>
-            </WeightUnitContextProvider>
-          </DateRangeProvider>
-        </AuthProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <DateRangeProvider>
+              <WeightUnitContextProvider>
+                <LayoutProvider>
+                  <WorkoutNavigationProvider>
+                    <AppRouterProvider />
+                  </WorkoutNavigationProvider>
+                </LayoutProvider>
+              </WeightUnitContextProvider>
+            </DateRangeProvider>
+          </AuthProvider>
+        </BrowserRouter>
       </QueryClientProvider>
     </React.StrictMode>
   )
