@@ -8,7 +8,7 @@ import { useWeightUnit } from "@/context/WeightUnitContext";
 import { useWorkoutStore } from "@/store/workoutStore";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
-import { useExperiencePoints } from '@/hooks/useExperiencePoints';
+import { useExperiencePoints, ExperienceAddResult } from '@/hooks/useExperiencePoints';
 import { showExperienceGain, ExperienceGainOverlay } from '@/components/training/ExperienceGainToast';
 import { standardizeTrainingType, getTrainingTypeXpMultiplier } from '@/utils/trainingTypeUtils';
 import { motion } from 'framer-motion';
@@ -77,7 +77,7 @@ export const WorkoutCompletion = ({
     navigate('/');
   };
 
-  const handleSuccessfulSave = async (workout) => {
+  const handleSuccessfulSave = async (workout: any) => {
     try {
       // Calculate XP based on duration and workout type
       const workoutDuration = workout.duration || 0;
@@ -97,7 +97,7 @@ export const WorkoutCompletion = ({
       });
       
       // Capture level info if available
-      if (result?.previousLevel !== undefined && result?.newLevel !== undefined) {
+      if (result.previousLevel !== undefined && result.newLevel !== undefined) {
         setPreviousLevel(result.previousLevel);
         setNewLevel(result.newLevel);
       }
@@ -109,8 +109,8 @@ export const WorkoutCompletion = ({
       showExperienceGain({
         amount: totalXp,
         trainingType: workoutTrainingType || undefined,
-        previousLevel: result?.previousLevel,
-        newLevel: result?.newLevel
+        previousLevel: result.previousLevel,
+        newLevel: result.newLevel
       });
       
       console.log(`Added ${totalXp} XP for ${workoutTrainingType} workout`);

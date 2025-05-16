@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -43,6 +42,15 @@ interface TrainingExperience {
 interface UserProfileWithExperience {
   id: string;
   training_experience?: TrainingExperience;
+}
+
+// New interface for the return value of addExperienceAsync
+export interface ExperienceAddResult {
+  addedXp: number;
+  newTotalXp: number;
+  trainingType: string | null;
+  previousLevel?: number;
+  newLevel?: number;
 }
 
 export const calculateLevelRequirement = (level: number): number => {
@@ -189,7 +197,7 @@ export function useExperiencePoints() {
       xp: number | string; 
       trainingType?: string;
       exerciseName?: string;
-    }) => {
+    }): Promise<ExperienceAddResult> => {
       if (!user) throw new Error("User not authenticated");
 
       // Ensure xp is a number at all times
@@ -254,7 +262,11 @@ export function useExperiencePoints() {
         throw new Error("Invalid current XP value");
       }
 
+      // Calculate levels before and after XP addition
+      const { level: previousLevel } = calculateLevelFromXP(currentTotalXp);
       const newTotalXp = currentTotalXp + xpAmount;
+      const { level: newLevel } = calculateLevelFromXP(newTotalXp);
+      
       // Copy and update
       const updatedExp: TrainingExperience = JSON.parse(JSON.stringify(currentExp));
       updatedExp.totalXp = newTotalXp;
@@ -281,7 +293,6 @@ export function useExperiencePoints() {
 
       if (updateError) throw updateError;
 
-      // Log the experience gain
       try {
         // Enhanced logging with exercise name
         const metadata = {
@@ -306,10 +317,13 @@ export function useExperiencePoints() {
         console.error("Error logging experience gain:", logError);
       }
 
+      // Return the result with level information
       return {
         addedXp: xpAmount,
         newTotalXp,
-        trainingType: standardizedTrainingType
+        trainingType: standardizedTrainingType,
+        previousLevel,
+        newLevel
       };
     },
     onSuccess: () => {
