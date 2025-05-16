@@ -10,13 +10,15 @@ export interface VolumeDataPoint {
   sets?: number;
 }
 
-// Add the missing DensityDataPoint interface
+// Add the missing DensityDataPoint interface with all needed properties
 export interface DensityDataPoint {
   date: string;
   density: number;
   volume?: number;
   duration?: number;
   workoutId?: string | null;
+  overallDensity?: number;
+  activeOnlyDensity?: number;
 }
 
 export const useProcessWorkoutMetrics = (workouts: any[]) => {

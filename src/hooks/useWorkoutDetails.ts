@@ -46,12 +46,15 @@ export function useWorkoutDetails(workoutId: string) {
       const formattedExercises: Record<string, ExerciseSet[]> = {};
       Object.entries(groupedExercises).forEach(([name, sets]) => {
         formattedExercises[name] = (sets as any[]).map((set: any) => ({
+          id: set.id,
+          workout_id: set.workout_id,
+          exercise_name: set.exercise_name,
           weight: set.weight,
           reps: set.reps,
+          set_number: set.set_number,
           restTime: set.rest_time || 60,
           completed: set.completed,
-          isEditing: false,
-          id: set.id
+          isEditing: false
         }));
       });
 
