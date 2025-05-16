@@ -138,7 +138,7 @@ const WorkoutDensityOverTimeChartComponent: React.FC<WorkoutDensityOverTimeChart
           </div>
         ) : (
           <div style={{ width: '100%', height }} className="flex-1">
-            <ResponsiveContainer width="100%" height={height}>
+            <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={formattedData}
                 margin={{ top: 5, right: 5, left: 5, bottom: 20 }}

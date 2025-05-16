@@ -1,3 +1,4 @@
+
 // src/pages/Overview.tsx
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -147,7 +148,7 @@ const Overview: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto py-6 px-4 space-y-6">
+    <div className="container mx-auto py-6 px-4 space-y-6 pb-28">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Workout Overview</h1>
       </div>
@@ -201,7 +202,7 @@ const Overview: React.FC = () => {
       </div>
 
       {/* Density over time - with fixed dimensions */}
-      <Card className="bg-card overflow-hidden" style={{ minHeight: '300px' }}>
+      <Card className="bg-card overflow-hidden" style={{ minHeight: '300px', marginBottom: '32px' }}>
         <CardHeader><CardTitle>Volume Rate Over Time</CardTitle></CardHeader>
         <CardContent style={{ height: '250px' }}>
           <WorkoutDensityOverTimeChart data={densityOverTimeData} height={250} />

@@ -1,3 +1,4 @@
+
 import React, { useLayoutEffect } from "react";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { PageHeader } from "@/components/navigation/PageHeader";
@@ -65,6 +66,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   // Hide global bottom nav only on workout complete page
   const hideGlobalNavOn = ['/workout-complete'];
   const shouldShowGlobalNav = !noFooter && !hideGlobalNavOn.some(route => location.pathname.startsWith(route));
+  
+  // Check if we're on the overview page
+  const isOverviewPage = location.pathname === '/overview';
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 will-change-transform">
@@ -84,7 +88,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       
       <main className={cn(
         "flex-grow overflow-y-auto will-change-transform",
-        "pt-16 pb-16", // Standard padding for header and footer
+        "pt-16", // Standard padding for header
+        shouldShowGlobalNav ? "pb-24" : "pb-6", // Extra padding when nav is shown
+        isOverviewPage ? "pb-32" : "", // Even more padding for overview page
         "w-full h-full" // Full width and height
       )}>
         <div className="content-container w-full h-full">
