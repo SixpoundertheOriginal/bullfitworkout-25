@@ -38,7 +38,7 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
     >
       <div className="container max-w-5xl mx-auto">
         <div className={cn(
-          "flex justify-between items-center",
+          "flex justify-between items-center gap-3",
           isMobile && focusedExercise && "flex-col gap-2"
         )}>
           {focusedExercise ? (
@@ -61,7 +61,7 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
                   "bg-gradient-to-r from-purple-600 to-purple-800",
                   "hover:from-purple-700 hover:to-purple-900 text-white shadow-lg shadow-purple-900/30",
                   "border border-purple-500/30 transition-all duration-300",
-                  isMobile ? "w-full" : "ml-4 flex-1 md:flex-none md:ml-0"
+                  isMobile ? "w-full" : "ml-0 flex-1 md:flex-none"
                 )}
                 onClick={onFinishWorkout}
               >
@@ -97,7 +97,7 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
                   hasExercises 
                     ? "from-green-600 to-emerald-800 hover:from-green-700 hover:to-emerald-900 text-white shadow-lg" 
                     : "from-gray-700 to-gray-800 text-gray-300 cursor-not-allowed opacity-70",
-                  isMobile ? "flex-1" : "ml-4"
+                  isMobile ? "flex-1" : "ml-0"
                 )}
                 onClick={onFinishWorkout}
               >

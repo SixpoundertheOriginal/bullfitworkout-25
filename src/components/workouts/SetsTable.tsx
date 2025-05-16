@@ -3,7 +3,7 @@ import React from 'react';
 import { ExerciseSet } from '@/types/exercise';
 import { SetRow } from '@/components/SetRow';
 import { Button } from "@/components/ui/button";
-import { Plus, Clock, ChevronUp, ChevronDown, Target, ThumbsUp } from "lucide-react";
+import { Plus, Clock, ChevronUp, ChevronDown, ThumbsUp } from "lucide-react";
 import { useWeightUnit } from '@/context/WeightUnitContext';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -211,26 +211,9 @@ export const SetsTable: React.FC<SetsTableProps> = ({
         </motion.div>
       ) : null}
       
-      {/* Separate focus mode bar that doesn't overlap with content */}
-      {highlightActive && (
-        <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-2 mb-3 shadow-md">
-          <div className="flex items-center justify-center">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onFocusSet && onFocusSet(0)}
-              className="bg-gray-800/80 hover:bg-gray-700 border-gray-700 text-gray-300"
-            >
-              <Target className="mr-1 h-4 w-4" />
-              Exit Focus Mode
-            </Button>
-          </div>
-        </div>
-      )}
-      
-      {/* Actions bar - now separate from focus mode controls */}
+      {/* Actions bar - now without focus controls */}
       <div className={cn(
-        "flex justify-between items-center",
+        "flex justify-between items-center mb-10", // Added bottom margin to create space for footer
         isMobile && "flex-col space-y-2"
       )}>
         <Button
@@ -284,21 +267,6 @@ export const SetsTable: React.FC<SetsTableProps> = ({
             <Clock className="mr-1 h-4 w-4" />
             Rest
           </Button>
-          
-          {onFocusSet && !highlightActive && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onFocusSet(0)}
-              className={cn(
-                "bg-gray-800/80 hover:bg-gray-700 border-gray-700 text-gray-300",
-                isMobile && "flex-1 h-10"
-              )}
-            >
-              <Target className="mr-1 h-4 w-4" />
-              Focus
-            </Button>
-          )}
         </div>
       </div>
     </div>
