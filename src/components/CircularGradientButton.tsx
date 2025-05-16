@@ -11,6 +11,7 @@ interface CircularGradientButtonProps {
   children?: React.ReactNode;
   size?: number;
   disabled?: boolean;
+  ariaLabel?: string; // Added ariaLabel prop
 }
 
 export const CircularGradientButton: React.FC<CircularGradientButtonProps> = ({
@@ -20,6 +21,7 @@ export const CircularGradientButton: React.FC<CircularGradientButtonProps> = ({
   children,
   size = 72,
   disabled = false,
+  ariaLabel,
 }) => {
   return (
     <motion.button
@@ -27,6 +29,7 @@ export const CircularGradientButton: React.FC<CircularGradientButtonProps> = ({
       whileTap={{ scale: disabled ? 1 : 0.96 }}
       onClick={onClick}
       disabled={disabled}
+      aria-label={ariaLabel} // Use the ariaLabel prop for accessibility
       className={cn(
         "relative flex flex-col items-center justify-center group transition-all duration-300",
         "bg-gradient-to-r from-purple-600 to-pink-500 shadow-lg hover:shadow-purple-500/30 text-white font-semibold",
