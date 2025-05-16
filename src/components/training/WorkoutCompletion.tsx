@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { IntelligentMetricsDisplay } from '@/components/metrics/IntelligentMetricsDisplay';
@@ -8,6 +7,9 @@ import { useWeightUnit } from "@/context/WeightUnitContext";
 import { useWorkoutStore } from "@/store/workoutStore";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
+import { useExperiencePoints } from '@/hooks/useExperiencePoints';
+import { showExperienceGain } from '@/components/training/ExperienceGainToast';
+import { standardizeTrainingType, getTrainingTypeXpMultiplier } from '@/utils/trainingTypeUtils';
 
 // Define a local version of ExerciseSet to match what's used in the workout state
 interface LocalExerciseSet {
@@ -36,6 +38,7 @@ export const WorkoutCompletion = ({
   const { weightUnit } = useWeightUnit();
   const { resetSession } = useWorkoutStore();
   const navigate = useNavigate();
+  const { addExperienceAsync } = useExperiencePoints();
 
   // Convert LocalExerciseSet to ExerciseSet for the chart components
   const convertedExercises = Object.entries(exercises).reduce((acc, [exerciseName, sets]) => {
@@ -66,6 +69,38 @@ export const WorkoutCompletion = ({
     navigate('/');
   };
 
+  const handleSuccessfulSave = async (workout) => {
+    try {
+      // Calculate XP based on duration and workout type
+      const workoutDuration = workout.duration || 0;
+      const trainingType = standardizeTrainingType(workout.training_type);
+      const baseXp = Math.max(10, Math.floor(workoutDuration / 60) * 10); // 10 XP per minute
+      const multiplier = getTrainingTypeXpMultiplier(trainingType);
+      const totalXp = Math.round(baseXp * multiplier);
+      
+      // Add the experience
+      const result = await addExperienceAsync({
+        xp: totalXp,
+        trainingType: trainingType || undefined
+      });
+      
+      // Show the experience gain toast
+      showExperienceGain({
+        amount: totalXp,
+        trainingType: trainingType || undefined
+      });
+      
+      console.log(`Added ${totalXp} XP for ${trainingType} workout`);
+      
+      // Continue with existing completion logic
+      onComplete();
+    } catch (error) {
+      console.error("Error adding experience:", error);
+      // Continue with existing completion logic anyway
+      onComplete();
+    }
+  };
+
   return (
     <div className="mt-8 flex flex-col items-center">
       <div className="flex w-full justify-between gap-3 mb-4">
@@ -81,7 +116,7 @@ export const WorkoutCompletion = ({
           className="w-1/2 py-3 bg-gradient-to-r from-green-600 to-emerald-500 
             hover:from-green-700 hover:to-emerald-600 text-white font-medium 
             rounded-full shadow-lg hover:shadow-xl"
-          onClick={onComplete}
+          onClick={handleSuccessfulSave}
         >
           Complete Workout
         </Button>

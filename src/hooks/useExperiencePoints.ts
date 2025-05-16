@@ -1,7 +1,9 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { Json } from "@/integrations/supabase/types";
+import { standardizeTrainingType } from "@/utils/trainingTypeUtils";
 
 // Utility to ensure safe conversion for arithmetic, with fallback to 0
 const toSafeNumber = (value: unknown): number => {
@@ -99,7 +101,9 @@ export function useExperiencePoints() {
             "Strength": { level: 1, xp: 0, progress: 0 },
             "Cardio": { level: 1, xp: 0, progress: 0 },
             "Yoga": { level: 1, xp: 0, progress: 0 },
-            "Calisthenics": { level: 1, xp: 0, progress: 0 }
+            "Calisthenics": { level: 1, xp: 0, progress: 0 },
+            "Hypertrophy": { level: 1, xp: 0, progress: 0 },
+            "Stretching": { level: 1, xp: 0, progress: 0 }
           }
         };
 
@@ -125,15 +129,21 @@ export function useExperiencePoints() {
           "Strength": { xp: 0 },
           "Cardio": { xp: 0 },
           "Yoga": { xp: 0 },
-          "Calisthenics": { xp: 0 }
+          "Calisthenics": { xp: 0 },
+          "Hypertrophy": { xp: 0 },
+          "Stretching": { xp: 0 }
         };
 
         const processedTrainingTypes: ExperienceData['trainingTypeLevels'] = {};
+        
+        // Process each training type and standardize the names
         Object.entries(rawTrainingTypeLevels).forEach(([key, value]) => {
+          // Standardize the training type name
+          const standardizedKey = standardizeTrainingType(key) || key;
           const typeXp = toSafeNumber(value.xp);
           const levelData = calculateLevelFromXP(typeXp);
 
-          processedTrainingTypes[key] = {
+          processedTrainingTypes[standardizedKey] = {
             xp: typeXp,
             level: levelData.level,
             progress: levelData.progress
@@ -160,7 +170,9 @@ export function useExperiencePoints() {
             "Strength": { level: 1, xp: 0, progress: 0 },
             "Cardio": { level: 1, xp: 0, progress: 0 },
             "Yoga": { level: 1, xp: 0, progress: 0 },
-            "Calisthenics": { level: 1, xp: 0, progress: 0 }
+            "Calisthenics": { level: 1, xp: 0, progress: 0 },
+            "Hypertrophy": { level: 1, xp: 0, progress: 0 },
+            "Stretching": { level: 1, xp: 0, progress: 0 }
           }
         };
       }
@@ -171,10 +183,12 @@ export function useExperiencePoints() {
   const addExperienceMutation = useMutation({
     mutationFn: async ({ 
       xp, 
-      trainingType 
+      trainingType,
+      exerciseName 
     }: { 
       xp: number | string; 
       trainingType?: string;
+      exerciseName?: string;
     }) => {
       if (!user) throw new Error("User not authenticated");
 
@@ -184,6 +198,9 @@ export function useExperiencePoints() {
       if (isNaN(xpAmount)) {
         throw new Error("Invalid XP amount");
       }
+
+      // Standardize training type
+      const standardizedTrainingType = standardizeTrainingType(trainingType);
 
       const { data: currentData, error: fetchError } = await supabase
         .from('user_profiles')
@@ -199,11 +216,13 @@ export function useExperiencePoints() {
           "Strength": { xp: 0 },
           "Cardio": { xp: 0 },
           "Yoga": { xp: 0 },
-          "Calisthenics": { xp: 0 }
+          "Calisthenics": { xp: 0 },
+          "Hypertrophy": { xp: 0 },
+          "Stretching": { xp: 0 }
         }
       };
 
-      // Defensive: ensure all XP values are numbers NOW
+      // Defensive: ensure all XP values are numbers
       let currentExp: TrainingExperience;
       if (currentData?.training_experience) {
         const teRaw = currentData.training_experience as Record<string, any>;
@@ -211,11 +230,20 @@ export function useExperiencePoints() {
           totalXp: toSafeNumber(teRaw.totalXp),
           trainingTypeLevels: {}
         };
+        
         const typeLevels = teRaw.trainingTypeLevels || {};
-        ["Strength", "Cardio", "Yoga", "Calisthenics"].forEach(type => {
-          currentExp.trainingTypeLevels[type] = {
+        Object.keys(typeLevels).forEach(type => {
+          const standardizedType = standardizeTrainingType(type) || type;
+          currentExp.trainingTypeLevels[standardizedType] = {
             xp: toSafeNumber(typeLevels[type]?.xp)
           };
+        });
+        
+        // Make sure all default types exist
+        ["Strength", "Cardio", "Yoga", "Calisthenics", "Hypertrophy", "Stretching"].forEach(type => {
+          if (!Object.prototype.hasOwnProperty.call(currentExp.trainingTypeLevels, type)) {
+            currentExp.trainingTypeLevels[type] = { xp: 0 };
+          }
         });
       } else {
         currentExp = defaultExp;
@@ -231,16 +259,17 @@ export function useExperiencePoints() {
       const updatedExp: TrainingExperience = JSON.parse(JSON.stringify(currentExp));
       updatedExp.totalXp = newTotalXp;
 
-      if (
-        trainingType &&
-        updatedExp.trainingTypeLevels &&
-        Object.prototype.hasOwnProperty.call(updatedExp.trainingTypeLevels, trainingType)
-      ) {
-        const currentTypeXp = toSafeNumber(updatedExp.trainingTypeLevels[trainingType].xp);
+      if (standardizedTrainingType && updatedExp.trainingTypeLevels) {
+        // If this training type doesn't exist yet, create it
+        if (!Object.prototype.hasOwnProperty.call(updatedExp.trainingTypeLevels, standardizedTrainingType)) {
+          updatedExp.trainingTypeLevels[standardizedTrainingType] = { xp: 0 };
+        }
+        
+        const currentTypeXp = toSafeNumber(updatedExp.trainingTypeLevels[standardizedTrainingType].xp);
         if (isNaN(currentTypeXp)) {
           throw new Error("Invalid training type XP value");
         }
-        updatedExp.trainingTypeLevels[trainingType].xp = currentTypeXp + xpAmount;
+        updatedExp.trainingTypeLevels[standardizedTrainingType].xp = currentTypeXp + xpAmount;
       }
 
       const { error: updateError } = await supabase
@@ -252,17 +281,22 @@ export function useExperiencePoints() {
 
       if (updateError) throw updateError;
 
+      // Log the experience gain
       try {
+        // Enhanced logging with exercise name
+        const metadata = {
+          timestamp: new Date().toISOString(),
+          exercise_name: exerciseName || null
+        };
+        
         const { error: logError } = await supabase
           .from('experience_logs')
           .insert({
             user_id: user.id,
             amount: xpAmount,
-            training_type: trainingType || null,
-            source: 'workout_completion',
-            metadata: {
-              timestamp: new Date().toISOString()
-            }
+            training_type: standardizedTrainingType || null,
+            source: exerciseName ? 'exercise_completion' : 'workout_completion',
+            metadata
           });
 
         if (logError) {
@@ -275,7 +309,7 @@ export function useExperiencePoints() {
       return {
         addedXp: xpAmount,
         newTotalXp,
-        trainingType
+        trainingType: standardizedTrainingType
       };
     },
     onSuccess: () => {
