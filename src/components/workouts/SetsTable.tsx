@@ -3,7 +3,7 @@ import React from 'react';
 import { ExerciseSet } from '@/types/exercise';
 import { SetRow } from '@/components/SetRow';
 import { Button } from "@/components/ui/button";
-import { Plus, Clock, ChevronUp, ChevronDown, Target } from "lucide-react";
+import { Plus, Clock, ChevronUp, ChevronDown, Target, ThumbsUp } from "lucide-react";
 import { useWeightUnit } from '@/context/WeightUnitContext';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -32,6 +32,9 @@ export const SetsTable: React.FC<SetsTableProps> = ({
   onToggleExpanded
 }) => {
   const { weightUnit } = useWeightUnit();
+  
+  // Check if any sets have been auto-adjusted
+  const hasAutoAdjustedSets = sets.some(set => set.metadata?.autoAdjusted);
   
   return (
     <div className="w-full">
@@ -71,6 +74,14 @@ export const SetsTable: React.FC<SetsTableProps> = ({
               </tbody>
             </table>
           </div>
+          
+          {/* Legend for auto-adjusted sets */}
+          {hasAutoAdjustedSets && (
+            <div className="flex items-center gap-1 text-xs text-gray-400 mt-1 px-2">
+              <ThumbsUp className="h-3 w-3 text-green-500" />
+              <span>Auto-adjusted based on your feedback</span>
+            </div>
+          )}
         </motion.div>
       ) : null}
       

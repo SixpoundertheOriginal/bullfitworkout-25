@@ -4,7 +4,7 @@ import { ExerciseSet } from '@/types/exercise';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Timer, Trash2, Check, ChevronUp, ChevronDown, Target } from "lucide-react";
+import { Timer, Trash2, Check, ChevronUp, ChevronDown, Target, ThumbsUp } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useWeightUnit } from '@/context/WeightUnitContext';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export interface SetRowProps {
   exerciseSet: ExerciseSet;
@@ -36,6 +37,9 @@ export function SetRow({
   const [completed, setCompleted] = useState(exerciseSet.completed || false);
   const [restTime, setRestTime] = useState<number>(exerciseSet.restTime || 60);
   const { weightUnit } = useWeightUnit();
+  
+  const isAutoAdjusted = !!exerciseSet.metadata?.autoAdjusted;
+  const previousValues = exerciseSet.metadata?.previousValues;
 
   useEffect(() => {
     // Sync component state with the incoming props
@@ -138,12 +142,43 @@ export function SetRow({
     }, 0);
   };
 
+  // Helper to format weight difference
+  const getWeightDifference = () => {
+    if (!previousValues || previousValues.weight === undefined) return '';
+    const diff = exerciseSet.weight - previousValues.weight;
+    return diff > 0 ? `+${diff}` : diff.toString();
+  };
+
+  // Helper to format reps difference
+  const getRepsDifference = () => {
+    if (!previousValues || previousValues.reps === undefined) return '';
+    const diff = exerciseSet.reps - previousValues.reps;
+    return diff > 0 ? `+${diff}` : diff.toString();
+  };
+
   return (
     <tr className={cn(
       "border-b border-gray-800/50 last:border-none transition-all duration-200",
-      highlightActive && "bg-purple-500/10 hover:bg-purple-500/15"
+      highlightActive && "bg-purple-500/10 hover:bg-purple-500/15",
+      isAutoAdjusted && "bg-green-500/5"
     )}>
-      <td className="text-center py-3 px-3 text-sm font-mono">{exerciseSet.set_number}</td>
+      <td className="text-center py-3 px-3 text-sm font-mono">
+        {exerciseSet.set_number}
+        {isAutoAdjusted && (
+          <span className="ml-1">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <ThumbsUp className="inline-block h-3 w-3 text-green-500" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Auto-adjusted based on your feedback</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </span>
+        )}
+      </td>
       
       {/* Weight cell with editable field */}
       <td className="py-3 px-3">
@@ -157,16 +192,39 @@ export function SetRow({
             <ChevronDown className="h-4 w-4" />
           </Button>
           
-          <Input
-            type="number"
-            className={cn(
-              "h-9 w-20 mx-1 text-center border-gray-700 text-white",
-              highlightActive ? "bg-gray-900" : "bg-gray-800"
+          <div className="relative">
+            <Input
+              type="number"
+              className={cn(
+                "h-9 w-20 mx-1 text-center border-gray-700 text-white",
+                highlightActive ? "bg-gray-900" : "bg-gray-800",
+                isAutoAdjusted && "border-green-500/30"
+              )}
+              value={weight}
+              onChange={handleWeightChange}
+              onBlur={handleUpdate}
+            />
+            
+            {isAutoAdjusted && previousValues?.weight !== undefined && (
+              <div className="absolute -right-2 -top-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className={cn(
+                        "text-xs font-medium px-1 rounded",
+                        getWeightDifference().startsWith('+') ? "text-green-400" : "text-amber-400"
+                      )}>
+                        {getWeightDifference()}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Changed from {previousValues.weight}{weightUnit}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             )}
-            value={weight}
-            onChange={handleWeightChange}
-            onBlur={handleUpdate}
-          />
+          </div>
           
           <Button 
             variant="ghost" 
@@ -193,16 +251,39 @@ export function SetRow({
             <ChevronDown className="h-4 w-4" />
           </Button>
           
-          <Input
-            type="number"
-            className={cn(
-              "h-9 w-16 mx-1 text-center border-gray-700 text-white",
-              highlightActive ? "bg-gray-900" : "bg-gray-800"
+          <div className="relative">
+            <Input
+              type="number"
+              className={cn(
+                "h-9 w-16 mx-1 text-center border-gray-700 text-white",
+                highlightActive ? "bg-gray-900" : "bg-gray-800",
+                isAutoAdjusted && "border-green-500/30"
+              )}
+              value={reps}
+              onChange={handleRepsChange}
+              onBlur={handleUpdate}
+            />
+            
+            {isAutoAdjusted && previousValues?.reps !== undefined && (
+              <div className="absolute -right-2 -top-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className={cn(
+                        "text-xs font-medium px-1 rounded",
+                        getRepsDifference().startsWith('+') ? "text-green-400" : "text-amber-400"
+                      )}>
+                        {getRepsDifference()}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Changed from {previousValues.reps} reps</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             )}
-            value={reps}
-            onChange={handleRepsChange}
-            onBlur={handleUpdate}
-          />
+          </div>
           
           <Button 
             variant="ghost" 
@@ -231,7 +312,8 @@ export function SetRow({
             type="number"
             className={cn(
               "h-9 w-16 mx-1 text-center border-gray-700 text-white",
-              highlightActive ? "bg-gray-900" : "bg-gray-800"
+              highlightActive ? "bg-gray-900" : "bg-gray-800",
+              isAutoAdjusted && "border-green-500/30"
             )}
             value={restTime.toString()}
             onChange={handleRestTimeChange}

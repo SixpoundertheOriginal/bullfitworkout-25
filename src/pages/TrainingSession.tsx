@@ -13,9 +13,12 @@ import { Loader2, Dumbbell } from "lucide-react";
 import { Exercise } from "@/types/exercise";
 import { useSound } from "@/hooks/useSound";
 import { RestTimer } from "@/components/RestTimer";
+import { EnhancedRestTimer } from "@/components/training/EnhancedRestTimer";
+import { PostSetRatingSheet } from "@/components/training/PostSetRatingSheet";
 import { WorkoutSessionFooter } from "@/components/training/WorkoutSessionFooter";
 import { adaptExerciseSets, adaptToStoreFormat } from "@/utils/exerciseAdapter";
 import { useWorkoutSave } from "@/hooks/useWorkoutSave";
+import { calculateVolumeStats, generateMotivationalContent, getNextSetRecommendation } from "@/utils/setRecommendations";
 
 const TrainingSessionPage = () => {
   const navigate = useNavigate();
@@ -45,7 +48,16 @@ const TrainingSessionPage = () => {
     trainingConfig,
     isActive,
     setTrainingConfig,
-    setWorkoutStatus
+    setWorkoutStatus,
+    focusedExercise,
+    focusedSetIndex,
+    setFocusedExercise,
+    setFocusedSetIndex,
+    postSetFlow,
+    setPostSetFlow,
+    lastCompletedExercise,
+    lastCompletedSetIndex,
+    submitSetRating
   } = useWorkoutStore();
   
   // Initialize the useWorkoutSave hook
@@ -67,20 +79,26 @@ const TrainingSessionPage = () => {
     [0, 0]
   );
 
-  // Add focus state tracking
-  const [focusedExercise, setFocusedExercise] = useState<string | null>(null);
-
   useWorkoutTimer();
   const { play: playBell } = useSound('/sounds/bell.mp3');
   const { play: playTick } = useSound('/sounds/tick.mp3');
+  const { play: playSuccess } = useSound('/sounds/success.mp3');
+  
   const [isAddExerciseSheetOpen, setIsAddExerciseSheetOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showRestTimerModal, setShowRestTimerModal] = useState(false);
+  const [showEnhancedRestTimer, setShowEnhancedRestTimer] = useState(false);
   const [restTimerResetSignal, setRestTimerResetSignal] = useState(0);
   const [pageLoaded, setPageLoaded] = useState(false);
+  const [nextSetRecommendation, setNextSetRecommendation] = useState(null);
+  const [motivationalMessage, setMotivationalMessage] = useState('');
+  const [volumeStats, setVolumeStats] = useState('');
 
   const exerciseCount = Object.keys(exercises).length;
   const hasExercises = exerciseCount > 0;
+  
+  // State for post-set rating
+  const [isRatingSheetOpen, setIsRatingSheetOpen] = useState(false);
   
   useEffect(() => { setPageLoaded(true); }, []);
 
@@ -143,7 +161,46 @@ const TrainingSessionPage = () => {
     if (focusedExercise && !exercises[focusedExercise]) {
       setFocusedExercise(null);
     }
-  }, [exercises, focusedExercise]);
+  }, [exercises, focusedExercise, setFocusedExercise]);
+
+  // Handle post-set flow state changes
+  useEffect(() => {
+    if (postSetFlow === 'rating' && lastCompletedExercise && lastCompletedSetIndex !== null) {
+      setIsRatingSheetOpen(true);
+      
+      // Generate next set recommendation
+      if (lastCompletedExercise && 
+          lastCompletedSetIndex !== null && 
+          storeExercises[lastCompletedExercise]?.length > lastCompletedSetIndex + 1) {
+        
+        const currentSet = storeExercises[lastCompletedExercise][lastCompletedSetIndex];
+        const nextSetIndex = lastCompletedSetIndex + 1;
+        const nextSet = storeExercises[lastCompletedExercise][nextSetIndex];
+        
+        // Generate motivational content
+        const motivational = generateMotivationalContent(
+          lastCompletedExercise, 
+          currentSet,
+          []
+        );
+        setMotivationalMessage(motivational);
+        
+        // Calculate volume stats
+        const stats = calculateVolumeStats(
+          lastCompletedExercise,
+          storeExercises[lastCompletedExercise]
+        );
+        setVolumeStats(stats.message);
+      }
+    } else if (postSetFlow === 'resting') {
+      setIsRatingSheetOpen(false);
+      setShowEnhancedRestTimer(true);
+      triggerRestTimerReset();
+    } else if (postSetFlow === 'idle') {
+      setIsRatingSheetOpen(false);
+      setShowEnhancedRestTimer(false);
+    }
+  }, [postSetFlow, lastCompletedExercise, lastCompletedSetIndex, storeExercises]);
 
   const triggerRestTimerReset = () => setRestTimerResetSignal(x => x + 1);
 
@@ -169,6 +226,16 @@ const TrainingSessionPage = () => {
     playBell(); // Provide audio feedback for added exercise
   };
 
+  // Enhanced rest timer helpers
+  const getNextSetDetails = () => {
+    if (!lastCompletedExercise || lastCompletedSetIndex === null) return null;
+    
+    const sets = storeExercises[lastCompletedExercise];
+    if (!sets || lastCompletedSetIndex + 1 >= sets.length) return null;
+    
+    return sets[lastCompletedSetIndex + 1];
+  };
+
   const handleShowRestTimer = () => { 
     setRestTimerActive(true); 
     setShowRestTimerModal(true); 
@@ -176,9 +243,16 @@ const TrainingSessionPage = () => {
   };
   
   const handleRestTimerComplete = () => { 
-    setRestTimerActive(false); 
-    setShowRestTimerModal(false); 
+    setRestTimerActive(false);
+    setShowRestTimerModal(false);
+    setShowEnhancedRestTimer(false);
+    setPostSetFlow('idle');
     playBell(); 
+  };
+
+  const handleSubmitRating = (rating: number) => {
+    submitSetRating(rating);
+    playSuccess();
   };
 
   const handleFocusExercise = (exerciseName: string | null) => {
@@ -188,6 +262,7 @@ const TrainingSessionPage = () => {
       playTick();
     } else {
       setFocusedExercise(exerciseName);
+      setFocusedSetIndex(0); // Focus on the first set by default
       playBell();
       // Auto scroll to the focused exercise with smooth behavior
       if (exerciseName) {
@@ -289,13 +364,36 @@ const TrainingSessionPage = () => {
               currentRestTime={currentRestTime}
               focusedExercise={focusedExercise}
             />
-            {showRestTimerModal && (
+            
+            {/* Standard rest timer (when manually triggered) */}
+            {showRestTimerModal && !showEnhancedRestTimer && (
               <div className="fixed right-4 top-32 z-50 w-72">
                 <RestTimer
                   isVisible={showRestTimerModal}
                   onClose={() => { setShowRestTimerModal(false); setRestTimerActive(false); }}
                   onComplete={handleRestTimerComplete}
                   maxTime={currentRestTime || 60}
+                />
+              </div>
+            )}
+            
+            {/* Enhanced rest timer (shown after rating a set) */}
+            {showEnhancedRestTimer && (
+              <div className="fixed right-4 top-32 z-50 w-72">
+                <EnhancedRestTimer
+                  isVisible={showEnhancedRestTimer}
+                  onClose={() => { 
+                    setShowEnhancedRestTimer(false); 
+                    setRestTimerActive(false);
+                    setPostSetFlow('idle');
+                  }}
+                  onComplete={handleRestTimerComplete}
+                  maxTime={currentRestTime || 60}
+                  exerciseName={lastCompletedExercise || undefined}
+                  nextSet={getNextSetDetails()}
+                  recommendation={nextSetRecommendation}
+                  motivationalMessage={motivationalMessage}
+                  volumeStats={volumeStats}
                 />
               </div>
             )}
@@ -365,11 +463,25 @@ const TrainingSessionPage = () => {
         onExitFocus={() => setFocusedExercise(null)}
       />
 
+      {/* Sheets */}
       <AddExerciseSheet
         open={isAddExerciseSheetOpen}
         onOpenChange={setIsAddExerciseSheetOpen}
         onSelectExercise={handleAddExercise}
         trainingType={trainingConfig?.trainingType}
+      />
+      
+      <PostSetRatingSheet
+        open={isRatingSheetOpen}
+        onOpenChange={(open) => {
+          setIsRatingSheetOpen(open);
+          if (!open) setPostSetFlow('idle');
+        }}
+        onSubmitRating={handleSubmitRating}
+        exerciseName={lastCompletedExercise || ''}
+        setDetails={lastCompletedExercise && lastCompletedSetIndex !== null && storeExercises[lastCompletedExercise]
+          ? storeExercises[lastCompletedExercise][lastCompletedSetIndex]
+          : undefined}
       />
     </div>
   );

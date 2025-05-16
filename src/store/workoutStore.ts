@@ -11,6 +11,15 @@ export interface ExerciseSet {
   restTime: number;
   completed: boolean;
   isEditing: boolean;
+  rpe?: number; // Rate of Perceived Exertion (1-10 scale)
+  metadata?: {
+    autoAdjusted?: boolean;
+    previousValues?: {
+      weight?: number;
+      reps?: number;
+      restTime?: number;
+    };
+  };
 }
 
 export interface WorkoutExercises {
@@ -33,6 +42,13 @@ export interface WorkoutError {
   recoverable: boolean;
 }
 
+// Extend with new interface for post-set flow
+export type PostSetFlowState =
+  | 'idle'        // No active post-set flow
+  | 'rating'      // Showing RPE rating UI
+  | 'resting'     // In rest period with enhanced timer
+  | 'preparing';  // Preparing for next set
+
 export interface WorkoutState {
   // Core workout data
   exercises: WorkoutExercises;
@@ -44,6 +60,15 @@ export interface WorkoutState {
   
   // Configuration
   trainingConfig: TrainingConfig | null;
+  
+  // Focus state
+  focusedExercise: string | null;
+  focusedSetIndex: number | null;
+  
+  // Post-set feedback flow
+  postSetFlow: PostSetFlowState;
+  lastCompletedExercise: string | null;
+  lastCompletedSetIndex: number | null;
   
   // Rest timer state
   restTimerActive: boolean;
@@ -62,12 +87,15 @@ export interface WorkoutState {
   // Action functions
   setExercises: (exercises: WorkoutExercises | ((prev: WorkoutExercises) => WorkoutExercises)) => void;
   setActiveExercise: (exerciseName: string | null) => void;
+  setFocusedExercise: (exerciseName: string | null) => void;
+  setFocusedSetIndex: (index: number | null) => void;
   setElapsedTime: (time: number | ((prev: number) => number)) => void;
   setRestTimerActive: (active: boolean) => void;
   setCurrentRestTime: (time: number) => void;
   setTrainingConfig: (config: TrainingConfig | null) => void;
   updateLastActiveRoute: (route: string) => void;
   setWorkoutStatus: (status: WorkoutStatus) => void;
+  setPostSetFlow: (state: PostSetFlowState) => void;
   
   // Workout lifecycle actions
   startWorkout: () => void;
@@ -82,6 +110,11 @@ export interface WorkoutState {
   // Exercise management
   handleCompleteSet: (exerciseName: string, setIndex: number) => void;
   deleteExercise: (exerciseName: string) => void;
+  
+  // New post-set flow management
+  startPostSetFlow: (exerciseName: string, setIndex: number) => void;
+  submitSetRating: (rpe: number) => void;
+  applySetRecommendation: (exerciseName: string, setIndex: number, weight: number, reps: number, restTime: number) => void;
 }
 
 // Generate a unique session ID
@@ -102,6 +135,15 @@ export const useWorkoutStore = create<WorkoutState>()(
       
       // Configuration
       trainingConfig: null,
+      
+      // Focus state
+      focusedExercise: null,
+      focusedSetIndex: null,
+      
+      // Post-set feedback flow
+      postSetFlow: 'idle',
+      lastCompletedExercise: null,
+      lastCompletedSetIndex: null,
       
       // Rest timer state
       restTimerActive: false,
@@ -125,6 +167,17 @@ export const useWorkoutStore = create<WorkoutState>()(
       
       setActiveExercise: (exerciseName) => set({ 
         activeExercise: exerciseName,
+        lastTabActivity: Date.now(),
+      }),
+      
+      setFocusedExercise: (exerciseName) => set({ 
+        focusedExercise: exerciseName,
+        focusedSetIndex: exerciseName ? 0 : null, // Reset set index when changing focus
+        lastTabActivity: Date.now(),
+      }),
+      
+      setFocusedSetIndex: (index) => set({ 
+        focusedSetIndex: index,
         lastTabActivity: Date.now(),
       }),
       
@@ -164,6 +217,11 @@ export const useWorkoutStore = create<WorkoutState>()(
       // New action to directly modify workout status
       setWorkoutStatus: (status) => set({ 
         workoutStatus: status,
+        lastTabActivity: Date.now(),
+      }),
+      
+      setPostSetFlow: (state) => set({
+        postSetFlow: state,
         lastTabActivity: Date.now(),
       }),
       
@@ -214,6 +272,11 @@ export const useWorkoutStore = create<WorkoutState>()(
           sessionId: generateSessionId(),
           lastTabActivity: Date.now(),
           savingErrors: [],
+          focusedExercise: null,
+          focusedSetIndex: null,
+          postSetFlow: 'idle',
+          lastCompletedExercise: null,
+          lastCompletedSetIndex: null,
         });
         console.log("Workout session reset");
       },
@@ -254,10 +317,18 @@ export const useWorkoutStore = create<WorkoutState>()(
           i === setIndex ? { ...set, completed: true } : set
         );
         
+        // Start the post-set flow
+        setTimeout(() => {
+          const store = get();
+          store.startPostSetFlow(exerciseName, setIndex);
+        }, 10);
+        
         return { 
           exercises: newExercises,
-          restTimerActive: true,
+          // Don't immediately activate rest timer - we'll do that after rating
           lastTabActivity: Date.now(),
+          lastCompletedExercise: exerciseName,
+          lastCompletedSetIndex: setIndex,
         };
       }),
       
@@ -267,6 +338,17 @@ export const useWorkoutStore = create<WorkoutState>()(
         
         // Show notification
         toast.success(`Removed ${exerciseName} from workout`);
+        
+        // Clear focus if this was the focused exercise
+        const newState: Partial<WorkoutState> = {
+          exercises: newExercises,
+          lastTabActivity: Date.now(),
+        };
+        
+        if (state.focusedExercise === exerciseName) {
+          newState.focusedExercise = null;
+          newState.focusedSetIndex = null;
+        }
         
         // Check if this was the last exercise, and if so, ask if user wants to end workout
         setTimeout(() => {
@@ -284,10 +366,116 @@ export const useWorkoutStore = create<WorkoutState>()(
           }
         }, 500);
         
-        return { 
-          exercises: newExercises,
+        return newState;
+      }),
+      
+      // New functions for post-set flow
+      startPostSetFlow: (exerciseName, setIndex) => set((state) => {
+        if (!state.exercises[exerciseName] || setIndex >= state.exercises[exerciseName].length) {
+          return {}; // Invalid exercise or set index
+        }
+        
+        return {
+          postSetFlow: 'rating',
+          lastCompletedExercise: exerciseName,
+          lastCompletedSetIndex: setIndex,
+          focusedExercise: exerciseName,
+          focusedSetIndex: setIndex,
           lastTabActivity: Date.now(),
         };
+      }),
+      
+      submitSetRating: (rpe) => set((state) => {
+        const { lastCompletedExercise, lastCompletedSetIndex } = state;
+        
+        if (!lastCompletedExercise || lastCompletedSetIndex === null) {
+          return { postSetFlow: 'idle' }; // Reset if no context
+        }
+        
+        const newExercises = { ...state.exercises };
+        
+        // Update the set with the RPE rating
+        if (newExercises[lastCompletedExercise] && lastCompletedSetIndex < newExercises[lastCompletedExercise].length) {
+          newExercises[lastCompletedExercise] = newExercises[lastCompletedExercise].map((set, i) => 
+            i === lastCompletedSetIndex ? { ...set, rpe } : set
+          );
+          
+          // Find the next set if it exists
+          const nextSetIndex = lastCompletedSetIndex + 1;
+          const hasNextSet = nextSetIndex < newExercises[lastCompletedExercise].length;
+          
+          // If there's a next set, try to adjust it based on the RPE
+          if (hasNextSet) {
+            const { weight, reps, restTime } = newExercises[lastCompletedExercise][lastCompletedSetIndex];
+            
+            // Import recommendations dynamically to avoid circular dependencies
+            import('@/utils/setRecommendations').then(({ getNextSetRecommendation }) => {
+              const recommendation = getNextSetRecommendation(
+                { weight, reps, restTime, completed: true, isEditing: false, rpe },
+                rpe,
+                lastCompletedExercise,
+                []
+              );
+              
+              // Apply the recommendation to the next set
+              get().applySetRecommendation(
+                lastCompletedExercise, 
+                nextSetIndex,
+                recommendation.weight,
+                recommendation.reps,
+                recommendation.restTime
+              );
+            });
+          }
+        }
+        
+        // Start rest timer
+        return { 
+          exercises: newExercises,
+          postSetFlow: 'resting',
+          restTimerActive: true,
+          currentRestTime: newExercises[lastCompletedExercise]?.[lastCompletedSetIndex]?.restTime || 60,
+          lastTabActivity: Date.now(),
+        };
+      }),
+      
+      applySetRecommendation: (exerciseName, setIndex, weight, reps, restTime) => set((state) => {
+        if (!state.exercises[exerciseName] || setIndex >= state.exercises[exerciseName].length) {
+          return {}; // Invalid exercise or set index
+        }
+        
+        const newExercises = { ...state.exercises };
+        const currentSet = newExercises[exerciseName][setIndex];
+        
+        // Only update if values are actually different
+        if (currentSet.weight !== weight || currentSet.reps !== reps || currentSet.restTime !== restTime) {
+          // Store previous values for reference
+          const previousValues = {
+            weight: currentSet.weight,
+            reps: currentSet.reps,
+            restTime: currentSet.restTime
+          };
+          
+          // Update the set with new values and mark as auto-adjusted
+          newExercises[exerciseName][setIndex] = {
+            ...currentSet,
+            weight,
+            reps,
+            restTime,
+            metadata: {
+              ...currentSet.metadata,
+              autoAdjusted: true,
+              previousValues
+            }
+          };
+          
+          return { 
+            exercises: newExercises,
+            lastTabActivity: Date.now(),
+          };
+        }
+        
+        return {}; // No changes needed
       }),
     }),
     {
@@ -306,6 +494,8 @@ export const useWorkoutStore = create<WorkoutState>()(
         lastActiveRoute: state.lastActiveRoute,
         sessionId: state.sessionId,
         explicitlyEnded: state.explicitlyEnded,
+        focusedExercise: state.focusedExercise,
+        focusedSetIndex: state.focusedSetIndex,
       }),
       onRehydrateStorage: () => {
         return (rehydratedState, error) => {
