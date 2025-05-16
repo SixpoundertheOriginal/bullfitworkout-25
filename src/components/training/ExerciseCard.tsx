@@ -6,13 +6,14 @@ import { ExerciseThumbnail } from '../exercises/cards/ExerciseThumbnail';
 import { cn } from '@/lib/utils';
 import { SetsTable } from '../workouts/SetsTable';
 import { motion } from 'framer-motion';
-import { Dumbbell } from 'lucide-react';
+import { Dumbbell, Target } from 'lucide-react';
 
 interface ExerciseCardProps {
   exercise: Exercise | string;
   onAdd?: (exercise: Exercise | string) => void;
   sets?: any[];
   isActive?: boolean;
+  isFocused?: boolean;
   onAddSet?: () => void;
   onCompleteSet?: (setIndex: number) => void;
   onDeleteExercise?: () => void;
@@ -27,6 +28,7 @@ interface ExerciseCardProps {
   onRestTimeIncrement?: (setIndex: number, increment: number) => void;
   onShowRestTimer?: () => void;
   onResetRestTimer?: () => void;
+  onFocus?: () => void;
   className?: string;
 }
 
@@ -35,6 +37,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
   onAdd,
   sets = [],
   isActive,
+  isFocused,
   onAddSet,
   onCompleteSet,
   onDeleteExercise,
@@ -49,6 +52,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
   onRestTimeIncrement,
   onShowRestTimer,
   onResetRestTimer,
+  onFocus,
   className
 }) => {
   const [expanded, setExpanded] = useState(true);
@@ -59,7 +63,8 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
       exercise={exercise} 
       className={cn(
         "transition-all duration-300",
-        isActive ? "ring-2 ring-purple-500/40 shadow-lg shadow-purple-500/20" : ""
+        isActive ? "ring-2 ring-purple-500/40 shadow-lg shadow-purple-500/20" : "",
+        isFocused ? "ring-2 ring-purple-500/60 shadow-lg shadow-purple-500/30 scale-105" : ""
       )}
       size="lg"
     /> : 
@@ -67,9 +72,13 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
       "w-12 h-12 rounded-lg flex items-center justify-center",
       "bg-gradient-to-br from-purple-600/20 to-purple-800/20",
       "transition-all duration-300",
-      isActive ? "ring-2 ring-purple-500/40 shadow-lg shadow-purple-500/20" : ""
+      isActive ? "ring-2 ring-purple-500/40 shadow-lg shadow-purple-500/20" : "",
+      isFocused ? "ring-2 ring-purple-500/60 shadow-lg shadow-purple-500/30 scale-110" : ""
     )}>
-      <Dumbbell className="w-6 h-6 text-purple-400" />
+      {isFocused ? 
+        <Target className="w-6 h-6 text-purple-400" /> : 
+        <Dumbbell className="w-6 h-6 text-purple-400" />
+      }
     </div>;
 
   // Handle set update
@@ -125,20 +134,24 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
         onShowRestTimer={onShowRestTimer || (() => {})}
         expanded={expanded}
         onToggleExpanded={() => setExpanded(!expanded)}
+        onFocusSet={(setIndex) => onFocus && onFocus()}
+        highlightActive={!!isFocused}
       />
     </div>
   ) : null;
 
   return (
     <motion.div
-      whileHover={{ scale: 1.01 }}
-      whileTap={{ scale: 0.99 }}
+      whileHover={{ scale: isFocused ? 1.0 : 1.01 }}
+      whileTap={{ scale: isFocused ? 1.0 : 0.99 }}
       transition={{ type: "spring", stiffness: 300, damping: 15 }}
       className={cn(
         "w-full",
         isActive ? "z-10" : "",
+        isFocused ? "z-20" : "",
         className
       )}
+      onClick={!isFocused && onFocus ? onFocus : undefined}
     >
       <CommonExerciseCard
         exercise={exercise}
@@ -146,7 +159,6 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
         onAdd={onAdd ? () => onAdd(exercise) : undefined}
         sets={sets}
         isActive={isActive}
-        onDeleteExercise={onDeleteExercise}
         thumbnail={thumbnail}
         customContent={customContent}
         className={cn(
@@ -155,6 +167,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
           "bg-gradient-to-br from-gray-900/90 to-gray-800/70",
           "border border-white/5",
           isActive ? "border-purple-500/40 shadow-lg shadow-purple-500/10" : "",
+          isFocused ? "border-purple-500/60 shadow-xl shadow-purple-500/20 scale-[1.02]" : "",
           "tap-highlight-transparent",
           className
         )}

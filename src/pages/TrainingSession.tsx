@@ -67,6 +67,9 @@ const TrainingSessionPage = () => {
     [0, 0]
   );
 
+  // Add focus state tracking
+  const [focusedExercise, setFocusedExercise] = useState<string | null>(null);
+
   useWorkoutTimer();
   const { play: playBell } = useSound('/sounds/bell.mp3');
   const { play: playTick } = useSound('/sounds/tick.mp3');
@@ -135,6 +138,13 @@ const TrainingSessionPage = () => {
     }
   }, [saveStatus, savingErrors]);
 
+  // Exit focus mode when exercise is deleted
+  useEffect(() => {
+    if (focusedExercise && !exercises[focusedExercise]) {
+      setFocusedExercise(null);
+    }
+  }, [exercises, focusedExercise]);
+
   const triggerRestTimerReset = () => setRestTimerResetSignal(x => x + 1);
 
   // Define the onAddSet function to add a basic set to an exercise
@@ -153,12 +163,43 @@ const TrainingSessionPage = () => {
     }
     setStoreExercises(prev => ({ ...prev, [name]: [{ weight: 0, reps: 0, restTime: 60, completed: false, isEditing: false }] }));
     setActiveExercise(name);
+    setFocusedExercise(name); // Auto-focus the newly added exercise
     if (workoutStatus === 'idle') startWorkout();
     setIsAddExerciseSheetOpen(false);
+    playBell(); // Provide audio feedback for added exercise
   };
 
-  const handleShowRestTimer = () => { setRestTimerActive(true); setShowRestTimerModal(true); playBell(); };
-  const handleRestTimerComplete = () => { setRestTimerActive(false); setShowRestTimerModal(false); playBell(); };
+  const handleShowRestTimer = () => { 
+    setRestTimerActive(true); 
+    setShowRestTimerModal(true); 
+    playBell(); 
+  };
+  
+  const handleRestTimerComplete = () => { 
+    setRestTimerActive(false); 
+    setShowRestTimerModal(false); 
+    playBell(); 
+  };
+
+  const handleFocusExercise = (exerciseName: string | null) => {
+    if (focusedExercise === exerciseName) {
+      // Toggle off if clicking the same exercise
+      setFocusedExercise(null);
+      playTick();
+    } else {
+      setFocusedExercise(exerciseName);
+      playBell();
+      // Auto scroll to the focused exercise with smooth behavior
+      if (exerciseName) {
+        setTimeout(() => {
+          const element = document.querySelector(`[data-exercise="${exerciseName}"]`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
+      }
+    }
+  };
 
   const handleFinishWorkout = async () => {
     if (!hasExercises) {
@@ -246,6 +287,7 @@ const TrainingSessionPage = () => {
               onRestTimerReset={triggerRestTimerReset}
               restTimerResetSignal={restTimerResetSignal}
               currentRestTime={currentRestTime}
+              focusedExercise={focusedExercise}
             />
             {showRestTimerModal && (
               <div className="fixed right-4 top-32 z-50 w-72">
@@ -263,6 +305,7 @@ const TrainingSessionPage = () => {
             <ExerciseList
               exercises={exercises}
               activeExercise={activeExercise}
+              focusedExercise={focusedExercise}
               onAddSet={handleAddSet}
               onCompleteSet={handleCompleteSet}
               onDeleteExercise={deleteExercise}
@@ -304,6 +347,7 @@ const TrainingSessionPage = () => {
               }}
               onShowRestTimer={handleShowRestTimer}
               onResetRestTimer={triggerRestTimerReset}
+              onFocusExercise={handleFocusExercise}
               onOpenAddExercise={() => setIsAddExerciseSheetOpen(true)}
               setExercises={handleSetExercises}
             />
@@ -317,6 +361,8 @@ const TrainingSessionPage = () => {
         onFinishWorkout={handleFinishWorkout}
         hasExercises={hasExercises}
         isSaving={isSaving || saveStatus === 'saving'}
+        focusedExercise={focusedExercise}
+        onExitFocus={() => setFocusedExercise(null)}
       />
 
       <AddExerciseSheet

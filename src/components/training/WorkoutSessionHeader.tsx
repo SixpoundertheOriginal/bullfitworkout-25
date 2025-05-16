@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { WorkoutStatus } from "@/types/workout";
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dumbbell } from 'lucide-react';
+import { Dumbbell, Target, Award } from 'lucide-react';
 
 interface WorkoutSessionHeaderProps {
   elapsedTime: number;
@@ -24,6 +24,7 @@ interface WorkoutSessionHeaderProps {
   onRestTimerReset: () => void;
   restTimerResetSignal: number;
   currentRestTime: number;
+  focusedExercise?: string | null;
 }
 
 export const WorkoutSessionHeader: React.FC<WorkoutSessionHeaderProps> = ({
@@ -41,7 +42,8 @@ export const WorkoutSessionHeader: React.FC<WorkoutSessionHeaderProps> = ({
   onShowRestTimer,
   onRestTimerReset,
   restTimerResetSignal,
-  currentRestTime
+  currentRestTime,
+  focusedExercise
 }) => {
   useEffect(() => {
     // Ensure timer continuity by setting document title when component mounts
@@ -51,17 +53,24 @@ export const WorkoutSessionHeader: React.FC<WorkoutSessionHeaderProps> = ({
       return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
     
-    document.title = `Workout - ${formatTime(elapsedTime)}`;
+    const title = focusedExercise 
+      ? `${focusedExercise} - ${formatTime(elapsedTime)}`
+      : `Workout - ${formatTime(elapsedTime)}`;
+    
+    document.title = title;
     
     // Cleanup on unmount
     return () => {
       document.title = 'Fitness App';
     };
-  }, [elapsedTime]);
+  }, [elapsedTime, focusedExercise]);
 
   const formattedElapsedTime = elapsedTime >= 3600 
     ? `${Math.floor(elapsedTime / 3600)}h ${Math.floor((elapsedTime % 3600) / 60)}m`
     : `${Math.floor(elapsedTime / 60)}m ${elapsedTime % 60}s`;
+
+  // Calculate overall workout progress percentage
+  const workoutProgress = totalSets > 0 ? (completedSets / totalSets) * 100 : 0;
 
   return (
     <div className="space-y-4">
@@ -70,23 +79,43 @@ export const WorkoutSessionHeader: React.FC<WorkoutSessionHeaderProps> = ({
         // Base positioning
         "sticky top-16 z-10",
         // Visual styling with glass effect
-        "bg-gray-900/80 backdrop-blur-lg",
+        "bg-gradient-to-br from-gray-900/90 to-black/90 backdrop-blur-lg",
         // Shadow for depth
-        "shadow-md border-b border-white/5",
+        "shadow-lg shadow-purple-500/5 border-b border-white/5",
         // Transitions
-        "transition-all duration-300"
+        "transition-all duration-300",
+        // Focused state styling
+        focusedExercise ? "pb-1" : ""
       )}>
         <div className="container max-w-5xl mx-auto px-4 py-4">
-          {/* Optional workout type header */}
-          {exerciseCount > 0 && (
-            <div className="flex items-center mb-3">
-              <Dumbbell className="h-5 w-5 text-purple-400 mr-2" />
-              <h1 className="text-xl font-bold text-white">Active Workout</h1>
-              <div className="ml-auto text-sm text-gray-400">
+          {/* Workout type header with progress indicator */}
+          <div className="flex items-center mb-3">
+            {focusedExercise ? (
+              <>
+                <Target className="h-5 w-5 text-purple-400 mr-2" />
+                <h1 className="text-xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-purple-200 to-purple-400">
+                  {focusedExercise}
+                </h1>
+              </>
+            ) : (
+              <>
+                <Dumbbell className="h-5 w-5 text-purple-400 mr-2" />
+                <h1 className="text-xl font-bold text-white">Active Workout</h1>
+              </>
+            )}
+            
+            <div className="ml-auto flex items-center space-x-3">
+              {completedSets > 0 && (
+                <div className="flex items-center text-sm">
+                  <Award className="h-4 w-4 text-purple-400 mr-1" />
+                  <span className="text-purple-200">{completedSets}/{totalSets} sets</span>
+                </div>
+              )}
+              <div className="text-sm text-gray-400">
                 Session time: <span className="text-white">{formattedElapsedTime}</span>
               </div>
             </div>
-          )}
+          </div>
           
           {/* Metrics panel */}
           <WorkoutMetrics
@@ -100,6 +129,7 @@ export const WorkoutSessionHeader: React.FC<WorkoutSessionHeaderProps> = ({
             onRestTimerReset={onRestTimerReset}
             restTimerResetSignal={restTimerResetSignal}
             currentRestTime={currentRestTime}
+            focusedExercise={focusedExercise}
           />
         </div>
       </div>

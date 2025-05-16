@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 interface ExerciseListProps {
   exercises: Record<string, ExerciseSet[]>;
   activeExercise: string | null;
+  focusedExercise?: string | null;
   onAddSet: (exerciseName: string) => void;
   onCompleteSet: (exerciseName: string, setIndex: number) => void;
   onDeleteExercise: (exerciseName: string) => void;
@@ -24,6 +25,7 @@ interface ExerciseListProps {
   onRestTimeIncrement: (exerciseName: string, setIndex: number, increment: number) => void;
   onShowRestTimer: () => void;
   onResetRestTimer: () => void;
+  onFocusExercise?: (exerciseName: string | null) => void;
   onOpenAddExercise: () => void;
   setExercises: (exercises: Record<string, ExerciseSet[]> | ((prev: Record<string, ExerciseSet[]>) => Record<string, ExerciseSet[]>)) => void;
 }
@@ -31,6 +33,7 @@ interface ExerciseListProps {
 export const ExerciseList: React.FC<ExerciseListProps> = ({
   exercises,
   activeExercise,
+  focusedExercise,
   onAddSet,
   onCompleteSet,
   onDeleteExercise,
@@ -45,6 +48,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
   onRestTimeIncrement,
   onShowRestTimer,
   onResetRestTimer,
+  onFocusExercise,
   onOpenAddExercise,
   setExercises
 }) => {
@@ -136,6 +140,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
               exercise={exerciseName}
               sets={exercises[exerciseName]}
               isActive={activeExercise === exerciseName}
+              isFocused={focusedExercise === exerciseName}
               onAddSet={() => handleAddSet(exerciseName)}
               onCompleteSet={(setIndex) => onCompleteSet(exerciseName, setIndex)}
               onDeleteExercise={() => onDeleteExercise(exerciseName)}
@@ -150,6 +155,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
               onRestTimeIncrement={(setIndex, increment) => onRestTimeIncrement(exerciseName, setIndex, increment)}
               onShowRestTimer={onShowRestTimer}
               onResetRestTimer={onResetRestTimer}
+              onFocus={onFocusExercise ? () => onFocusExercise(exerciseName) : undefined}
             />
           </motion.div>
         ))}

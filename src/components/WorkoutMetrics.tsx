@@ -22,6 +22,7 @@ interface WorkoutMetricsProps {
   onRestTimerReset?: () => void;
   restTimerResetSignal?: number;
   currentRestTime?: number;
+  focusedExercise?: string | null;
   className?: string;
 }
 
@@ -37,6 +38,7 @@ export const WorkoutMetrics = ({
   onRestTimerReset,
   restTimerResetSignal = 0,
   currentRestTime,
+  focusedExercise,
   className
 }: WorkoutMetricsProps) => {
   const [resetCounter, setResetCounter] = useState(0);
@@ -83,7 +85,13 @@ export const WorkoutMetrics = ({
       <div className="absolute -top-10 -left-20 w-60 h-60 bg-purple-600/10 rounded-full blur-3xl" />
       <div className="absolute -top-10 -right-20 w-60 h-60 bg-pink-600/10 rounded-full blur-3xl" />
       
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 sm:p-4 rounded-xl bg-gradient-to-br from-gray-900/90 to-gray-800/60 backdrop-blur-md border border-white/5 shadow-lg">
+      <div className={cn(
+        "grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 sm:p-4 rounded-xl",
+        "bg-gradient-to-br from-gray-900/90 to-gray-800/60 backdrop-blur-md",
+        "border border-white/5 shadow-lg",
+        "transition-all duration-300",
+        focusedExercise ? "border-purple-500/20 shadow-purple-500/10" : ""
+      )}>
         {/* Time Card */}
         <MetricCard
           icon={Clock}
@@ -133,11 +141,11 @@ export const WorkoutMetrics = ({
 
         {/* Rest Timer Card */}
         <div className={cn(
-          "relative flex flex-col items-center justify-center p-2 sm:p-3 rounded-xl border border-white/10 backdrop-blur-xl transition-all duration-300",
+          "relative flex flex-col items-center justify-center p-2 sm:p-3 rounded-xl border backdrop-blur-xl transition-all duration-300",
           "bg-gradient-to-br from-gray-900/90 via-gray-800/50 to-gray-900/90",
           showRestTimer 
-            ? "from-orange-600/30 to-orange-900/30 shadow-lg shadow-orange-500/20 scale-[1.02]" 
-            : "hover:from-orange-600/20 hover:to-orange-900/20 hover:scale-[1.02] hover:shadow-lg hover:shadow-orange-500/10",
+            ? "border-orange-500/30 from-orange-600/30 to-orange-900/30 shadow-lg shadow-orange-500/20 scale-[1.02]" 
+            : "border-white/10 hover:from-orange-600/20 hover:to-orange-900/20 hover:scale-[1.02] hover:shadow-lg hover:shadow-orange-500/10",
           "min-w-[80px] w-full",
           "relative overflow-hidden touch-feedback"
         )}>

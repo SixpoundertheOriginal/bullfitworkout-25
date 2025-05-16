@@ -3,9 +3,10 @@ import React from 'react';
 import { ExerciseSet } from '@/types/exercise';
 import { SetRow } from '@/components/SetRow';
 import { Button } from "@/components/ui/button";
-import { Plus, Clock, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, Clock, ChevronUp, ChevronDown, Target } from "lucide-react";
 import { useWeightUnit } from '@/context/WeightUnitContext';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 interface SetsTableProps {
   sets: ExerciseSet[];
@@ -13,6 +14,8 @@ interface SetsTableProps {
   onUpdateSet: (updatedSet: ExerciseSet) => void;
   onDeleteSet: (setToDelete: ExerciseSet) => void;
   onShowRestTimer: () => void;
+  onFocusSet?: (setIndex: number) => void;
+  highlightActive?: boolean;
   expanded?: boolean;
   onToggleExpanded?: () => void;
 }
@@ -23,6 +26,8 @@ export const SetsTable: React.FC<SetsTableProps> = ({
   onUpdateSet,
   onDeleteSet,
   onShowRestTimer,
+  onFocusSet,
+  highlightActive = false,
   expanded = true,
   onToggleExpanded
 }) => {
@@ -37,7 +42,10 @@ export const SetsTable: React.FC<SetsTableProps> = ({
           exit={{ opacity: 0, height: 0 }}
           className="overflow-hidden mb-4"
         >
-          <div className="overflow-x-auto">
+          <div className={cn(
+            "overflow-x-auto rounded-lg",
+            highlightActive && "bg-purple-500/5 border border-purple-500/10 p-2"
+          )}>
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-700">
@@ -49,13 +57,15 @@ export const SetsTable: React.FC<SetsTableProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {sets.map((set) => (
+                {sets.map((set, index) => (
                   <SetRow
                     key={set.id || `set-${set.set_number}`}
                     exerciseSet={set}
                     onUpdate={onUpdateSet}
                     onDelete={onDeleteSet}
                     onTimerStart={onShowRestTimer}
+                    onFocusSet={onFocusSet ? () => onFocusSet(index) : undefined}
+                    highlightActive={highlightActive}
                   />
                 ))}
               </tbody>
@@ -104,6 +114,22 @@ export const SetsTable: React.FC<SetsTableProps> = ({
             <Clock className="mr-1 h-4 w-4" />
             Rest
           </Button>
+          
+          {onFocusSet && (
+            <Button
+              variant={highlightActive ? "default" : "outline"}
+              size="sm"
+              onClick={() => onFocusSet(0)}
+              className={cn(
+                highlightActive 
+                  ? "bg-purple-600 hover:bg-purple-700 text-white" 
+                  : "bg-gray-800/80 hover:bg-gray-700 border-gray-700 text-gray-300"
+              )}
+            >
+              <Target className="mr-1 h-4 w-4" />
+              Focus
+            </Button>
+          )}
         </div>
       </div>
     </div>

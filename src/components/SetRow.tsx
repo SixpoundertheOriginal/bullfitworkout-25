@@ -4,7 +4,7 @@ import { ExerciseSet } from '@/types/exercise';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Timer, Trash2, Check, ChevronUp, ChevronDown } from "lucide-react";
+import { Timer, Trash2, Check, ChevronUp, ChevronDown, Target } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,15 +12,25 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useWeightUnit } from '@/context/WeightUnitContext';
+import { cn } from '@/lib/utils';
 
 export interface SetRowProps {
   exerciseSet: ExerciseSet;
   onUpdate: (updatedSet: ExerciseSet) => void;
   onDelete: (setToDelete: ExerciseSet) => void;
   onTimerStart?: () => void;
+  onFocusSet?: () => void;
+  highlightActive?: boolean;
 }
 
-export function SetRow({ exerciseSet, onUpdate, onDelete, onTimerStart }: SetRowProps) {
+export function SetRow({ 
+  exerciseSet, 
+  onUpdate, 
+  onDelete, 
+  onTimerStart,
+  onFocusSet,
+  highlightActive = false 
+}: SetRowProps) {
   const [weight, setWeight] = useState(exerciseSet.weight?.toString() || '');
   const [reps, setReps] = useState(exerciseSet.reps?.toString() || '');
   const [completed, setCompleted] = useState(exerciseSet.completed || false);
@@ -129,7 +139,10 @@ export function SetRow({ exerciseSet, onUpdate, onDelete, onTimerStart }: SetRow
   };
 
   return (
-    <tr className="border-b border-gray-800/50 last:border-none">
+    <tr className={cn(
+      "border-b border-gray-800/50 last:border-none transition-all duration-200",
+      highlightActive && "bg-purple-500/10 hover:bg-purple-500/15"
+    )}>
       <td className="text-center py-3 px-3 text-sm font-mono">{exerciseSet.set_number}</td>
       
       {/* Weight cell with editable field */}
@@ -146,7 +159,10 @@ export function SetRow({ exerciseSet, onUpdate, onDelete, onTimerStart }: SetRow
           
           <Input
             type="number"
-            className="h-9 w-20 mx-1 text-center bg-gray-800 border-gray-700 text-white"
+            className={cn(
+              "h-9 w-20 mx-1 text-center border-gray-700 text-white",
+              highlightActive ? "bg-gray-900" : "bg-gray-800"
+            )}
             value={weight}
             onChange={handleWeightChange}
             onBlur={handleUpdate}
@@ -179,7 +195,10 @@ export function SetRow({ exerciseSet, onUpdate, onDelete, onTimerStart }: SetRow
           
           <Input
             type="number"
-            className="h-9 w-16 mx-1 text-center bg-gray-800 border-gray-700 text-white"
+            className={cn(
+              "h-9 w-16 mx-1 text-center border-gray-700 text-white",
+              highlightActive ? "bg-gray-900" : "bg-gray-800"
+            )}
             value={reps}
             onChange={handleRepsChange}
             onBlur={handleUpdate}
@@ -210,7 +229,10 @@ export function SetRow({ exerciseSet, onUpdate, onDelete, onTimerStart }: SetRow
           
           <Input
             type="number"
-            className="h-9 w-16 mx-1 text-center bg-gray-800 border-gray-700 text-white"
+            className={cn(
+              "h-9 w-16 mx-1 text-center border-gray-700 text-white",
+              highlightActive ? "bg-gray-900" : "bg-gray-800"
+            )}
             value={restTime.toString()}
             onChange={handleRestTimeChange}
             onBlur={handleUpdate}
@@ -266,6 +288,22 @@ export function SetRow({ exerciseSet, onUpdate, onDelete, onTimerStart }: SetRow
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          
+          {onFocusSet && (
+            <Button
+              variant={highlightActive ? "default" : "outline"}
+              size="icon"
+              className={cn(
+                "h-8 w-8 rounded-full",
+                highlightActive 
+                  ? "bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-500/20" 
+                  : "text-purple-400 hover:bg-purple-600/20 hover:text-purple-300"
+              )}
+              onClick={onFocusSet}
+            >
+              <Target className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </td>
     </tr>
