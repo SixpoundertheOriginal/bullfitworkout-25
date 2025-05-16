@@ -1,7 +1,7 @@
 
 // src/components/metrics/WorkoutDensityOverTimeChart.tsx
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   LineChart,
   Line,
@@ -14,6 +14,7 @@ import {
 import { format } from 'date-fns';
 import { Activity } from 'lucide-react';
 import { useWeightUnit } from '@/context/WeightUnitContext';
+import { WeightUnit } from '@/utils/unitConversion';
 import { DensityDataPoint } from '@/hooks/useProcessWorkoutMetrics';
 
 interface WorkoutDensityOverTimeChartProps {
@@ -27,52 +28,88 @@ const WorkoutDensityOverTimeChartComponent: React.FC<WorkoutDensityOverTimeChart
   className = '',
   height = 200
 }) => {
-  // Extract weight unit outside of render calculations to reduce re-renders
+  // Extract weight unit with stable typing
   const weightUnitContext = useWeightUnit();
-  const weightUnit = weightUnitContext?.weightUnit || 'kg';
+  const weightUnit: WeightUnit = 
+    (weightUnitContext?.weightUnit === 'kg' || weightUnitContext?.weightUnit === 'lb') 
+      ? weightUnitContext.weightUnit 
+      : 'kg';
 
-  // Determine if there's valid density data
+  // Determine if there's valid density data - moved out of render and memoized
   const hasData = useMemo(
     () =>
       Array.isArray(data) &&
       data.length > 0 &&
-      data.some(item => item.overallDensity > 0),
+      data.some(item => item && typeof item.overallDensity === 'number' && item.overallDensity > 0),
     [data]
   );
 
   // Memoize formatted data for the chart
   const formattedData = useMemo(() => {
     if (!hasData) return [];
-    return data.map(item => ({
-      date: format(new Date(item.date), 'MMM d'),
-      overallDensity: Number(item.overallDensity.toFixed(1)),
-      activeOnlyDensity:
-        item.activeOnlyDensity !== undefined
-          ? Number(item.activeOnlyDensity.toFixed(1))
-          : undefined,
-      originalDate: item.date
-    }));
+    
+    return data
+      .filter(item => item && typeof item === 'object')
+      .map(item => {
+        // Always provide safe defaults
+        const safeItem = {
+          date: item?.date || new Date().toISOString(),
+          overallDensity: typeof item?.overallDensity === 'number' ? Number(item.overallDensity.toFixed(1)) : 0,
+          activeOnlyDensity: typeof item?.activeOnlyDensity === 'number' ? Number(item.activeOnlyDensity.toFixed(1)) : undefined
+        };
+        
+        return {
+          date: format(new Date(safeItem.date), 'MMM d'),
+          overallDensity: safeItem.overallDensity,
+          activeOnlyDensity: safeItem.activeOnlyDensity,
+          originalDate: safeItem.date
+        };
+      });
   }, [data, hasData]);
 
   // Memoize average densities
   const averages = useMemo(() => {
     if (!hasData) return { overall: 0, activeOnly: 0 };
-    const sumOverall = data.reduce((acc, item) => acc + item.overallDensity, 0);
-    const overall = Number((sumOverall / data.length).toFixed(1));
-    const validActive = data.filter(item => item.activeOnlyDensity !== undefined);
-    const activeOnly =
-      validActive.length === 0
-        ? 0
-        : Number(
-            (
-              validActive.reduce(
-                (acc, item) => acc + (item.activeOnlyDensity || 0),
-                0
-              ) / validActive.length
-            ).toFixed(1)
-          );
+    
+    // Use safer calculations with type checking
+    const validItems = data.filter(item => 
+      item && typeof item.overallDensity === 'number' && !isNaN(item.overallDensity)
+    );
+    
+    const sumOverall = validItems.reduce((acc, item) => acc + item.overallDensity, 0);
+    const overall = validItems.length > 0 ? Number((sumOverall / validItems.length).toFixed(1)) : 0;
+    
+    const validActive = validItems.filter(item => 
+      typeof item.activeOnlyDensity === 'number' && !isNaN(item.activeOnlyDensity)
+    );
+    
+    const activeOnly = validActive.length > 0
+      ? Number((validActive.reduce((acc, item) => acc + item.activeOnlyDensity!, 0) / validActive.length).toFixed(1))
+      : 0;
+      
     return { overall, activeOnly };
   }, [data, hasData]);
+
+  // Custom tooltip content with memoization
+  const renderTooltipContent = useCallback(({ active, payload }) => {
+    if (!active || !payload || !payload.length) return null;
+    
+    return (
+      <div className="bg-gray-800 border border-gray-700 p-2 rounded-lg shadow-lg">
+        <p className="text-gray-300">
+          {format(new Date(payload[0].payload.originalDate), 'MMM d, yyyy')}
+        </p>
+        <p className="text-purple-400 font-semibold">
+          Overall: {payload[0].value} {weightUnit}/min
+        </p>
+        {payload[1] && payload[1].value !== undefined && (
+          <p className="text-blue-400 font-semibold">
+            Active Only: {payload[1].value} {weightUnit}/min
+          </p>
+        )}
+      </div>
+    );
+  }, [weightUnit]);
 
   return (
     <div
@@ -134,31 +171,7 @@ const WorkoutDensityOverTimeChartComponent: React.FC<WorkoutDensityOverTimeChart
                   }}
                 />
                 <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="bg-gray-800 border border-gray-700 p-2 rounded-lg shadow-lg">
-                          <p className="text-gray-300">
-                            {format(
-                              new Date(payload[0].payload.originalDate),
-                              'MMM d, yyyy'
-                            )}
-                          </p>
-                          <p className="text-purple-400 font-semibold">
-                            Overall: {payload[0].value} {weightUnit}/min
-                          </p>
-                          {payload[1] &&
-                            payload[1].value !== undefined && (
-                              <p className="text-blue-400 font-semibold">
-                                Active Only: {payload[1].value}{' '}
-                                {weightUnit}/min
-                              </p>
-                            )}
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
+                  content={renderTooltipContent}
                   isAnimationActive={false}
                 />
                 <Line

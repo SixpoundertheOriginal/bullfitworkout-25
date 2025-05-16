@@ -32,9 +32,10 @@ interface WorkoutWithExercises {
   }> | Record<string, any[]>;         // support both shapes
 }
 
+// Reusable helper functions, moved outside the hook
 function flattenExercises(
   exercises: WorkoutWithExercises['exercises']
-) {
+): any[] {
   if (!exercises) return [];
   if (Array.isArray(exercises)) return exercises;
   // else it's already grouped by exerciseName
@@ -50,13 +51,39 @@ function categorizeTimeOfDay(date: Date): 'morning' | 'afternoon' | 'evening' | 
   return 'night';
 }
 
+// Helper for safe date parsing
+function safeParseDate(dateStr: string): Date {
+  try {
+    return new Date(dateStr);
+  } catch (e) {
+    console.warn('Invalid date format:', dateStr);
+    return new Date();
+  }
+}
+
+// Helper to calculate workout volume
+function calculateWorkoutVolume(workout: WorkoutWithExercises | null | undefined, weightUnit: WeightUnit): number {
+  if (!workout) return 0;
+  
+  const allSets = flattenExercises(workout.exercises || []);
+  const rawVolume = allSets.reduce((sum, set) => {
+    if (set && set.completed && set.weight && set.reps) {
+      return sum + (set.weight * set.reps);
+    }
+    return sum;
+  }, 0);
+  
+  return convertWeight(rawVolume, 'kg', weightUnit);
+}
+
 export function useProcessWorkoutMetrics(
   workouts: WorkoutWithExercises[] | null | undefined,
   weightUnit: WeightUnit
 ) {
   // Added console log for debugging
   console.log('[useProcessWorkoutMetrics] Processing workouts:', 
-    Array.isArray(workouts) ? workouts.length : 'no workouts');
+    Array.isArray(workouts) ? workouts.length : 'no workouts',
+    'with weight unit:', weightUnit);
   
   // --- Volume over time ---
   const volumeOverTimeData = useMemo<VolumeDataPoint[]>(() => {
@@ -65,24 +92,13 @@ export function useProcessWorkoutMetrics(
       return [];
     }
 
-    const result = workouts
+    // Use stable sorting and data transformation
+    return workouts
       .filter(workout => workout && workout.start_time) // Ensure valid workouts only
       .map((workout) => {
-        // flatten all sets
-        const allSets = flattenExercises(workout.exercises || []);
-
-        // sum raw volume in KG
-        const rawVolume = allSets.reduce((sum, set) => {
-          if (set && set.completed && set.weight && set.reps) {
-            return sum + set.weight * set.reps;
-          }
-          return sum;
-        }, 0);
-
-        // convert to user's unit (e.g. lb)
-        const volume = convertWeight(rawVolume, 'kg', weightUnit);
-
-        const formattedDate = format(new Date(workout.start_time), 'MMM d');
+        const volume = calculateWorkoutVolume(workout, weightUnit);
+        const dateObj = safeParseDate(workout.start_time);
+        const formattedDate = format(dateObj, 'MMM d');
 
         return {
           date: workout.start_time,
@@ -93,9 +109,6 @@ export function useProcessWorkoutMetrics(
       })
       // sort ascending by date
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      
-    console.log('[useProcessWorkoutMetrics] Processed volume data:', result.length);
-    return result;
   }, [workouts, weightUnit]);
 
   // --- Density over time ---
@@ -105,45 +118,31 @@ export function useProcessWorkoutMetrics(
       return [];
     }
 
-    const result = workouts
+    return workouts
       .filter(workout => workout && workout.start_time) // Ensure valid workouts only
       .map((workout) => {
-        const allSets = flattenExercises(workout.exercises || []);
-
-        // raw volume in KG
-        const rawVolume = allSets.reduce((sum, set) => {
-          if (set && set.completed && set.weight && set.reps) {
-            return sum + set.weight * set.reps;
-          }
-          return sum;
-        }, 0);
-
-        // convert volume
-        const volume = convertWeight(rawVolume, 'kg', weightUnit);
-
-        // total session time in minutes
+        const volume = calculateWorkoutVolume(workout, weightUnit);
+        
+        // total session time in minutes (with fallback)
         const totalTime = workout.duration || 0;
 
-        // total rest in minutes (converting from seconds)
+        // Calculate rest time with better error handling
+        const allSets = flattenExercises(workout.exercises || []);
         const restTimeSec = allSets.reduce(
-          (sum, set) => sum + (set && set.restTime ? set.restTime : 0),
+          (sum, set) => sum + (set && typeof set.restTime === 'number' ? set.restTime : 0),
           0
         );
         const restTime = restTimeSec / 60;
 
-        // active time in minutes
+        // active time in minutes (with bounds check)
         const activeTime = Math.max(0, totalTime - restTime);
 
-        // density metrics - CORRECTED FORMULA:
-        // overallDensity = volume / totalTime
-        // activeOnlyDensity = volume / activeTime (with safeguard for division by zero)
+        // density metrics - CORRECTED FORMULA with safety checks:
         const overallDensity = totalTime > 0 ? volume / totalTime : 0;
         const activeOnlyDensity = activeTime > 0 ? volume / activeTime : 0;
 
-        const formattedDate = format(
-          new Date(workout.start_time),
-          'MMM d'
-        );
+        const dateObj = safeParseDate(workout.start_time);
+        const formattedDate = format(dateObj, 'MMM d');
 
         return {
           date: workout.start_time,
@@ -156,12 +155,9 @@ export function useProcessWorkoutMetrics(
         };
       })
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      
-    console.log('[useProcessWorkoutMetrics] Processed density data:', result.length);
-    return result;
   }, [workouts, weightUnit]);
 
-  // --- Time of Day distribution ---
+  // --- Time of Day distribution --- (with additional safety)
   const durationByTimeOfDay = useMemo(() => {
     const timeDistribution = {
       morning: 0,
@@ -177,46 +173,64 @@ export function useProcessWorkoutMetrics(
     workouts.forEach(workout => {
       if (!workout || !workout.start_time) return;
       
-      const workoutDate = new Date(workout.start_time);
-      const category = categorizeTimeOfDay(workoutDate);
-      timeDistribution[category] += workout.duration || 0;
+      try {
+        const workoutDate = new Date(workout.start_time);
+        const category = categorizeTimeOfDay(workoutDate);
+        timeDistribution[category] += Number(workout.duration) || 0;
+      } catch (e) {
+        console.warn('Error processing workout time data:', e);
+      }
     });
 
     return timeDistribution;
   }, [workouts]);
 
-  // --- Volume statistics ---
+  // --- Volume statistics --- (improved with additional safety)
   const volumeStats = useMemo(() => {
-    if (volumeOverTimeData.length === 0) {
+    if (!Array.isArray(volumeOverTimeData) || volumeOverTimeData.length === 0) {
       return { total: 0, average: 0 };
     }
-    const total = volumeOverTimeData.reduce((sum, pt) => sum + pt.volume, 0);
-    const average = total / volumeOverTimeData.length;
+    
+    const total = volumeOverTimeData.reduce((sum, pt) => sum + (pt.volume || 0), 0);
+    const average = volumeOverTimeData.length > 0 ? total / volumeOverTimeData.length : 0;
+    
     return { total, average };
   }, [volumeOverTimeData]);
 
-  // --- Density statistics ---
+  // --- Density statistics --- (improved with additional safety)
   const densityStats = useMemo(() => {
-    if (densityOverTimeData.length === 0) {
+    if (!Array.isArray(densityOverTimeData) || densityOverTimeData.length === 0) {
       return {
         avgOverallDensity: 0,
         avgActiveOnlyDensity: 0,
         mostEfficientWorkout: null as DensityDataPoint | null
       };
     }
+    
     const avgOverallDensity =
-      densityOverTimeData.reduce((sum, pt) => sum + pt.overallDensity, 0) /
+      densityOverTimeData.reduce((sum, pt) => sum + (pt.overallDensity || 0), 0) /
       densityOverTimeData.length;
+      
     const avgActiveOnlyDensity =
-      densityOverTimeData.reduce((sum, pt) => sum + pt.activeOnlyDensity, 0) /
+      densityOverTimeData.reduce((sum, pt) => sum + (pt.activeOnlyDensity || 0), 0) /
       densityOverTimeData.length;
+      
     const mostEfficientWorkout = densityOverTimeData.reduce(
       (best, pt) =>
-        !best || pt.activeOnlyDensity > best.activeOnlyDensity ? pt : best,
+        !best || (pt.activeOnlyDensity > best.activeOnlyDensity) ? pt : best,
       null as DensityDataPoint | null
     );
+    
     return { avgOverallDensity, avgActiveOnlyDensity, mostEfficientWorkout };
   }, [densityOverTimeData]);
+
+  // Include debug logs
+  console.log('[useProcessWorkoutMetrics] Results:', {
+    volumeDataPoints: volumeOverTimeData.length,
+    densityDataPoints: densityOverTimeData.length,
+    hasVolumeData: volumeOverTimeData.length > 0,
+    hasDensityData: densityOverTimeData.length > 0
+  });
 
   return {
     volumeOverTimeData,

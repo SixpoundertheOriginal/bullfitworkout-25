@@ -1,15 +1,21 @@
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useMemo } from 'react';
 import { DateRange } from 'react-day-picker';
 import { subDays, startOfWeek, endOfWeek } from 'date-fns';
 
 interface DateRangeContextType {
-  dateRange: DateRange | undefined;
+  dateRange: DateRange;  // No longer undefined
   setDateRange: (range: DateRange | undefined) => void;
 }
 
-// Create context with default undefined value
-const DateRangeContext = createContext<DateRangeContextType | undefined>(undefined);
+// Create context with meaningful default values
+const DateRangeContext = createContext<DateRangeContextType>({
+  dateRange: {
+    from: startOfWeek(new Date(), { weekStartsOn: 1 }),
+    to: endOfWeek(new Date(), { weekStartsOn: 1 })
+  },
+  setDateRange: () => {}
+});
 
 export function DateRangeProvider({ children }: { children: React.ReactNode }) {
   // Initialize with the current week (Monday to Sunday)
@@ -19,10 +25,22 @@ export function DateRangeProvider({ children }: { children: React.ReactNode }) {
     to: endOfWeek(now, { weekStartsOn: 1 }), // Sunday
   });
 
+  // Handle undefined values gracefully to maintain stable state
+  const handleSetDateRange = (newRange: DateRange | undefined) => {
+    if (!newRange) return;
+    
+    const safeRange: DateRange = {
+      from: newRange.from || dateRange.from,
+      to: newRange.to || dateRange.to
+    };
+    
+    setDateRange(safeRange);
+  };
+
   // Create a memoized value to prevent unnecessary re-renders
-  const contextValue = React.useMemo(() => ({
+  const contextValue = useMemo(() => ({
     dateRange,
-    setDateRange
+    setDateRange: handleSetDateRange
   }), [dateRange]);
 
   return (
@@ -32,10 +50,7 @@ export function DateRangeProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useDateRange() {
+export function useDateRange(): DateRangeContextType {
   const context = useContext(DateRangeContext);
-  if (context === undefined) {
-    throw new Error('useDateRange must be used within a DateRangeProvider');
-  }
-  return context;
+  return context; // Now we can safely return context without undefined check
 }

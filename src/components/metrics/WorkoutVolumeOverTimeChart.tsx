@@ -1,7 +1,7 @@
 
 // src/components/metrics/WorkoutVolumeOverTimeChart.tsx
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   BarChart,
   Bar,
@@ -28,63 +28,70 @@ const WorkoutVolumeOverTimeChartComponent: React.FC<WorkoutVolumeOverTimeChartPr
   className = '',
   height = 200
 }) => {
-  // Extract weight unit with error handling
+  // Extract weight unit with error handling - moved to the top level
+  // and guaranteed to be the correct type
   const defaultUnit: WeightUnit = 'kg';
-  let weightUnit: WeightUnit = defaultUnit;
+  const weightUnitContext = useWeightUnit();
+  const weightUnit: WeightUnit = 
+    (weightUnitContext?.weightUnit === 'kg' || weightUnitContext?.weightUnit === 'lb') 
+      ? weightUnitContext.weightUnit 
+      : defaultUnit;
   
-  try {
-    const weightUnitContext = useWeightUnit();
-    if (weightUnitContext?.weightUnit === 'kg' || weightUnitContext?.weightUnit === 'lb') {
-      weightUnit = weightUnitContext.weightUnit;
-    }
-  } catch (error) {
-    console.warn("Failed to access WeightUnit context:", error);
-  }
-
-  // Determine if we have any volume data - with null checking
-  const hasData = useMemo(
-    () => Array.isArray(data) && data.length > 0 && data.some(item => item && item.volume > 0),
+  // Check for valid data once, and memoize the result
+  const hasData = useMemo(() => 
+    Array.isArray(data) && data.length > 0 && data.some(item => item && typeof item.volume === 'number' && item.volume > 0),
     [data]
   );
-
+  
   // Memoize formatted data for the chart
   const formattedData = useMemo(() => {
-    if (!hasData || !Array.isArray(data)) return [];
+    if (!hasData) return [];
     
-    return data.map(item => {
-      if (!item || typeof item !== 'object') {
-        return {
-          date: 'Unknown',
-          volume: 0,
-          originalDate: new Date().toISOString(),
-          formattedValue: `0 ${weightUnit}`
+    // More defensive data transformation
+    return data
+      .filter(item => item && typeof item === 'object')
+      .map(item => {
+        // Always provide safe defaults
+        const safeItem = {
+          date: item?.date || new Date().toISOString(),
+          volume: typeof item?.volume === 'number' ? item.volume : 0,
         };
-      }
-      
-      const vol = convertWeight(item.volume || 0, 'kg', weightUnit);
-      return {
-        date: format(new Date(item.date || new Date()), 'MMM d'),
-        volume: vol,
-        originalDate: item.date || new Date().toISOString(),
-        formattedValue: `${vol.toLocaleString()} ${weightUnit}`
-      };
-    });
+        
+        return {
+          date: format(new Date(safeItem.date), 'MMM d'),
+          volume: safeItem.volume,
+          originalDate: safeItem.date,
+          formattedValue: `${safeItem.volume.toLocaleString()} ${weightUnit}`
+        };
+      });
   }, [data, weightUnit, hasData]);
-
-  // Memoize total & average volume stats
+  
+  // Memoize volume stats calculations
   const volumeStats = useMemo(() => {
-    if (!hasData || !Array.isArray(data)) return { total: 0, average: 0 };
+    if (!hasData) return { total: 0, average: 0 };
     
-    const validData = data.filter(item => item && typeof item === 'object' && typeof item.volume === 'number');
+    const validVolumes = formattedData.map(d => d.volume).filter(v => !isNaN(v));
+    const total = validVolumes.reduce((sum, vol) => sum + vol, 0);
+    const average = validVolumes.length > 0 ? total / validVolumes.length : 0;
     
-    const totalRaw = validData.reduce((sum, item) => sum + (item.volume || 0), 0);
-    const avgRaw = validData.length > 0 ? totalRaw / validData.length : 0;
+    return { total, average };
+  }, [formattedData, hasData]);
+
+  // Custom tooltip content with memoization
+  const renderTooltipContent = useCallback(({ active, payload }) => {
+    if (!active || !payload || !payload.length) return null;
     
-    return {
-      total: convertWeight(totalRaw, 'kg', weightUnit),
-      average: convertWeight(avgRaw, 'kg', weightUnit)
-    };
-  }, [data, weightUnit, hasData]);
+    return (
+      <div className="bg-gray-800 border border-gray-700 p-2 rounded-lg shadow-lg">
+        <p className="text-gray-300">
+          {format(new Date(payload[0].payload.originalDate), 'MMM d, yyyy')}
+        </p>
+        <p className="text-purple-400 font-semibold">
+          {payload[0].payload.formattedValue}
+        </p>
+      </div>
+    );
+  }, []);
 
   return (
     <div
@@ -136,24 +143,7 @@ const WorkoutVolumeOverTimeChartComponent: React.FC<WorkoutVolumeOverTimeChartPr
                   }}
                 />
                 <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="bg-gray-800 border border-gray-700 p-2 rounded-lg shadow-lg">
-                          <p className="text-gray-300">
-                            {format(
-                              new Date(payload[0].payload.originalDate),
-                              'MMM d, yyyy'
-                            )}
-                          </p>
-                          <p className="text-purple-400 font-semibold">
-                            {payload[0].payload.formattedValue}
-                          </p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
+                  content={renderTooltipContent}
                   isAnimationActive={false}
                 />
                 <defs>
@@ -162,7 +152,12 @@ const WorkoutVolumeOverTimeChartComponent: React.FC<WorkoutVolumeOverTimeChartPr
                     <stop offset="95%" stopColor="#D946EF" stopOpacity={0.6} />
                   </linearGradient>
                 </defs>
-                <Bar dataKey="volume" fill="url(#volumeGradient)" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                <Bar 
+                  dataKey="volume" 
+                  fill="url(#volumeGradient)" 
+                  radius={[4, 4, 0, 0]} 
+                  isAnimationActive={false} 
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
