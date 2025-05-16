@@ -1,4 +1,3 @@
-
 // src/pages/Overview.tsx
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -137,7 +136,7 @@ const Overview: React.FC = () => {
   // Show a complete loading state instead of partial renders
   if (loading) {
     return (
-      <div className="container mx-auto py-6 px-4 space-y-6">
+      <div className="container mx-auto py-10 px-4 space-y-6 mt-4">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">Workout Overview</h1>
         </div>
@@ -157,7 +156,7 @@ const Overview: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto py-6 px-4 space-y-6 pb-48">
+    <div className="container mx-auto py-10 px-4 space-y-6 pb-56 mt-4">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Workout Overview</h1>
       </div>

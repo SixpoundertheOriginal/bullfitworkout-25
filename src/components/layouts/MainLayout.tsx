@@ -72,29 +72,40 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
   console.log('MainLayout rendering, isFilterVisible:', isFilterVisible);
 
+  const headerHeight = 64; // 16 * 4 = 64px (h-16)
+  const filterHeight = 56; // Typical height for filter section
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 will-change-transform">
       {!noHeader && (
-        <div className="fixed top-0 left-0 right-0 z-50">
-          <PageHeader title={title} showBackButton={location.pathname !== '/' && location.pathname !== '/overview'}>
-            <MainMenu />
-          </PageHeader>
+        <>
+          {/* Fixed header section */}
+          <div className="fixed top-0 left-0 right-0 z-50">
+            <PageHeader title={title} showBackButton={location.pathname !== '/' && location.pathname !== '/overview'}>
+              <MainMenu />
+            </PageHeader>
+          </div>
           
-          {/* Date range filter in a dedicated section below the header with improved visibility */}
+          {/* Fixed filter section with appropriate positioning */}
           {isFilterVisible && (
-            <div className="bg-gray-800 border-b border-gray-700 py-3 px-4 shadow-md relative z-40">
-              <DateRangeFilter />
+            <div 
+              className="fixed left-0 right-0 z-40 bg-gray-800 border-b border-gray-700 shadow-md"
+              style={{ top: `${headerHeight}px` }}
+            >
+              <div className="container mx-auto py-3 px-4">
+                <DateRangeFilter />
+              </div>
             </div>
           )}
           
           <WorkoutBanner />
-        </div>
+        </>
       )}
       
       <main className={cn(
         "flex-grow overflow-y-auto will-change-transform",
         "pt-16", // Standard padding for header
-        isFilterVisible ? "pt-28" : "", // Increased extra padding when filter is visible
+        isFilterVisible ? "pt-32" : "", // Increased padding when filter is visible
         shouldShowGlobalNav ? "pb-24" : "pb-6", // Extra padding when nav is shown
         isOverviewPage ? "pb-40" : "", // Even more padding for overview page
         "w-full h-full" // Full width and height
@@ -115,6 +126,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         {`
           .content-container {
             min-height: calc(100vh - 128px); /* Account for header and footer */
+            padding-top: ${isFilterVisible ? '40px' : '0'};
           }
           
           .force-no-transition * {

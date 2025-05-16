@@ -1,7 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { DateRange } from 'react-day-picker';
 
 interface LayoutContextProps {
   currentRoute: string;
@@ -27,10 +26,7 @@ export const LayoutProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const shouldShowFilter = location.pathname === '/overview';
     console.log('LayoutContext: Setting filter visibility to', shouldShowFilter, 'for path', location.pathname);
     
-    // Use a timeout to ensure the state update happens after route transition
-    setTimeout(() => {
-      setFilterVisible(shouldShowFilter);
-    }, 0);
+    setFilterVisible(shouldShowFilter);
     
   }, [location.pathname]);
   

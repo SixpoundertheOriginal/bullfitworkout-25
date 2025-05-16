@@ -32,11 +32,11 @@ export function DateRangeProvider({ children }: { children: React.ReactNode }) {
 
   // Handle undefined values gracefully to maintain stable state
   const handleSetDateRange = (newRange: DateRange | undefined) => {
-    if (!newRange) return;
+    if (!newRange || !newRange.from) return;
     
     const safeRange: DateRange = {
-      from: newRange.from || dateRange.from,
-      to: newRange.to || dateRange.to
+      from: newRange.from,
+      to: newRange.to || newRange.from
     };
     
     console.log('DateRangeContext: Setting new date range:', safeRange);

@@ -58,7 +58,7 @@ export function DateRangeFilter() {
   // Initialize with "This Week" on component mount
   useEffect(() => {
     console.log('DateRangeFilter init effect running, dateRange:', dateRange, 'isInitialized:', isInitialized);
-    if (!isInitialized && !dateRange) {
+    if (!isInitialized) {
       const thisWeekRange = dateRangeOptions.find(option => option.label === 'This Week');
       if (thisWeekRange) {
         setDateRange(thisWeekRange.value());
@@ -86,13 +86,14 @@ export function DateRangeFilter() {
   };
   
   return (
-    <div className="flex items-center justify-end w-full">
+    <div className="w-full flex items-center justify-end">
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             className={cn(
               "w-auto justify-between text-sm bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600",
+              "shadow-sm py-2 px-4",
               !dateRange && "text-gray-400"
             )}
           >
@@ -112,7 +113,7 @@ export function DateRangeFilter() {
             <ChevronDown className="ml-2 h-4 w-4 text-gray-400" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 bg-gray-800 border-gray-700 shadow-lg" align="end" sideOffset={5}>
+        <PopoverContent className="w-auto p-0 bg-gray-800 border-gray-700 shadow-lg z-50" align="end" sideOffset={5}>
           <div className="grid gap-4 p-3">
             <div className="flex flex-col space-y-2">
               {dateRangeOptions.map((option) => (
