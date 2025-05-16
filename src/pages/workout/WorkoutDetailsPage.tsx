@@ -6,7 +6,7 @@ import { WorkoutDetailsLoading } from '@/components/workouts/WorkoutDetailsLoadi
 import { useParams, useNavigate } from 'react-router-dom';
 import { WorkoutDetailsHeader } from '@/components/workouts/WorkoutDetailsHeader';
 import { toast } from '@/hooks/use-toast';
-import { ExerciseSet } from '@/types/exercise';
+import { Exercise, ExerciseSet } from '@/types/exercise';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { EditWorkoutModal } from '@/components/EditWorkoutModal';
@@ -92,6 +92,12 @@ export default function WorkoutDetailsPage() {
         variant: "destructive" 
       });
     }
+  };
+
+  // Handle add exercise - wrap the function to ensure type compatibility
+  const handleAddExerciseWrapper = (exercise: Exercise) => {
+    // Convert Exercise to string (exerciseName) for handleAddExercise
+    handleAddExercise(exercise.name);
   };
 
   if (loading) {
@@ -186,7 +192,7 @@ export default function WorkoutDetailsPage() {
           <ExerciseDialog
             open={showAddDialog}
             onOpenChange={setShowAddDialog}
-            onSelect={handleAddExercise}
+            onSelect={handleAddExerciseWrapper}
           />
         </div>
       )}

@@ -80,7 +80,6 @@ export const ExerciseDialog: React.FC<ExerciseDialogProps> = ({
               return (
                 <ExerciseCard
                   key={exercise.id}
-                  id={exercise.id}
                   exercise={exercise}
                   onClick={() => {
                     if (onSelect) {

@@ -15,7 +15,7 @@ const OverviewPage: React.FC = () => {
   const { 
     workouts, 
     loading, 
-    error,
+    isError,
     stats 
   } = useWorkoutStats();
 
@@ -28,12 +28,12 @@ const OverviewPage: React.FC = () => {
     return <LoadingSkeleton />;
   }
 
-  if (error) {
+  if (isError) {
     return (
       <div className="container py-6">
         <div className="text-center p-8">
           <h2 className="text-xl font-semibold mb-2">Error Loading Data</h2>
-          <p className="text-gray-400">{error}</p>
+          <p className="text-gray-400">Failed to load workout data</p>
         </div>
       </div>
     );
