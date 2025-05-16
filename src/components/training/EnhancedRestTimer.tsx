@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Timer, X, ChevronUp, ChevronDown, SkipForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,8 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExerciseSet } from "@/types/exercise";
-import { SetRecommendation } from "@/utils/setRecommendations";
+import { MinimalExerciseSet, SetRecommendation } from "@/utils/setRecommendations";
 
 interface EnhancedRestTimerProps {
   onComplete?: () => void;
@@ -15,7 +13,7 @@ interface EnhancedRestTimerProps {
   isVisible: boolean;
   onClose: () => void;
   exerciseName?: string;
-  nextSet?: ExerciseSet;
+  nextSet?: MinimalExerciseSet;
   recommendation?: SetRecommendation;
   motivationalMessage?: string;
   volumeStats?: string;
@@ -234,7 +232,7 @@ export const EnhancedRestTimer: React.FC<EnhancedRestTimerProps> = ({
               <div className="flex flex-col">
                 <span className="text-purple-300 font-medium">{exerciseName}</span>
                 <div className="flex items-center gap-2 mt-1 text-sm">
-                  <span>Set {nextSet.set_number}:</span>
+                  <span>Set {nextSet.set_number || "next"}:</span>
                   <span className={cn(
                     "font-medium",
                     recommendation && nextSet.weight !== recommendation.weight ? "text-green-400" : ""

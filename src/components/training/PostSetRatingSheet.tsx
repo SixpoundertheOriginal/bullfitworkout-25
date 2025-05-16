@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ExerciseSet } from '@/types/exercise';
+import { MinimalExerciseSet } from '@/utils/setRecommendations';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { CheckCircle, Dumbbell, ThumbsUp } from 'lucide-react';
@@ -26,7 +26,7 @@ interface PostSetRatingSheetProps {
   onOpenChange: (open: boolean) => void;
   onSubmitRating: (rating: number) => void;
   exerciseName: string;
-  setDetails?: ExerciseSet;
+  setDetails?: MinimalExerciseSet;
 }
 
 export const PostSetRatingSheet: React.FC<PostSetRatingSheetProps> = ({
@@ -78,7 +78,7 @@ export const PostSetRatingSheet: React.FC<PostSetRatingSheetProps> = ({
             </h3>
             {setDetails && (
               <p className="text-gray-400 text-sm">
-                Set {setDetails.set_number}: {setDetails.weight}kg × {setDetails.reps} reps
+                Set {setDetails.set_number || "-"}: {setDetails.weight}kg × {setDetails.reps} reps
               </p>
             )}
           </div>

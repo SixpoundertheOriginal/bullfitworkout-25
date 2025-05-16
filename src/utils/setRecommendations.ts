@@ -14,11 +14,21 @@ export interface SetRecommendation {
   message?: string;
 }
 
+// Accepting a more generic exercise set type for compatibility
+export interface MinimalExerciseSet {
+  weight: number;
+  reps: number;
+  restTime?: number;
+  completed?: boolean;
+  rpe?: number;
+  [key: string]: any; // Allow other properties
+}
+
 /**
  * Calculates a recommendation for the next set based on current performance and RPE
  */
 export function getNextSetRecommendation(
-  currentSet: ExerciseSet, 
+  currentSet: MinimalExerciseSet, 
   rpe: number | undefined,
   exerciseName: string,
   exerciseHistory: ExerciseHistory[] = []
@@ -51,7 +61,7 @@ export function getNextSetRecommendation(
 /**
  * Calculate adjustments based on RPE (Rate of Perceived Exertion)
  */
-function getRpeAdjustments(rpe: number, currentSet: ExerciseSet): { 
+function getRpeAdjustments(rpe: number, currentSet: MinimalExerciseSet): { 
   weightChange: number; 
   repsChange: number; 
   restChange: number;
@@ -98,7 +108,7 @@ function getRpeAdjustments(rpe: number, currentSet: ExerciseSet): {
  */
 export function generateMotivationalContent(
   exerciseName: string,
-  currentSet: ExerciseSet,
+  currentSet: MinimalExerciseSet,
   exerciseHistory: ExerciseHistory[] = []
 ): string {
   const messages = [
@@ -119,7 +129,7 @@ export function generateMotivationalContent(
  */
 export function calculateVolumeStats(
   exerciseName: string, 
-  sets: ExerciseSet[]
+  sets: MinimalExerciseSet[]
 ): { 
   currentWorkout: number;
   message: string;

@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { TrainingConfig } from '@/hooks/useTrainingSetupPersistence';
@@ -406,12 +405,12 @@ export const useWorkoutStore = create<WorkoutState>()(
           
           // If there's a next set, try to adjust it based on the RPE
           if (hasNextSet) {
-            const { weight, reps, restTime } = newExercises[lastCompletedExercise][lastCompletedSetIndex];
+            const currentSet = newExercises[lastCompletedExercise][lastCompletedSetIndex];
             
             // Import recommendations dynamically to avoid circular dependencies
             import('@/utils/setRecommendations').then(({ getNextSetRecommendation }) => {
               const recommendation = getNextSetRecommendation(
-                { weight, reps, restTime, completed: true, isEditing: false, rpe },
+                currentSet,
                 rpe,
                 lastCompletedExercise,
                 []
