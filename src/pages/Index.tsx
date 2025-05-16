@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { QuickStatsSection } from "@/components/metrics/QuickStatsSection";
@@ -13,14 +12,21 @@ import { motion } from "framer-motion";
 import { typography } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { useWorkoutState } from "@/hooks/useWorkoutState";
+import { useExperiencePoints } from "@/hooks/useExperiencePoints";
+import { ExperienceDisplay } from "@/components/training/ExperienceDisplay";
+import { useWorkoutRecommendations } from "@/hooks/useWorkoutRecommendations";
+import { format } from "date-fns";
+import { Calendar, Dumbbell, Trophy, Zap } from "lucide-react";
 
 // The main Index component
 const Index = () => {
   const navigate = useNavigate();
   const [showWorkouts, setShowWorkouts] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { stats, loading } = useWorkoutStats(); // Now using context from App.tsx
+  const { stats, loading } = useWorkoutStats();
   const { isActive, lastActiveRoute } = useWorkoutState();
+  const { experienceData } = useExperiencePoints();
+  const { data: recommendations } = useWorkoutRecommendations();
   
   // Use IntersectionObserver for section visibility
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -117,111 +123,133 @@ const Index = () => {
     setShowWorkouts(!showWorkouts);
   };
 
-  const recommendedWorkoutType = stats?.recommendedType || "Strength";
-  const recommendedDuration = stats?.recommendedDuration || 45;
+  // Get recommended training type
+  const recommendedWorkoutType = stats?.recommendedType || recommendations?.trainingType || "Strength";
+  const recommendedDuration = stats?.recommendedDuration || recommendations?.suggestedDuration || 45;
+
+  // Generate greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 via-gray-900/98 to-gray-900/95">
-      <main className="flex-1 overflow-auto px-4 py-6 space-y-6 mt-20 pb-20">
+      <main className="flex-1 overflow-auto px-4 py-6 space-y-6 mt-14 pb-20">
+        {/* Personalized Welcome */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="rounded-xl p-6 bg-gradient-to-r from-purple-600/30 to-pink-500/30 border border-purple-500/20 
-                   shadow-lg backdrop-blur-sm hover:shadow-purple-500/10 transition-all duration-300
-                   transform hover:-translate-y-0.5"
+                   shadow-lg backdrop-blur-sm hover:shadow-purple-500/10 transition-all duration-300"
         >
-          <div className="flex items-center">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center">
             <div className="flex-1">
               <p className={cn(typography.text.primary, "text-xl")}>
-                Begin your fitness adventure! 💪
+                {getGreeting()}! Ready for your next challenge? 💪
               </p>
               <p className={cn(typography.text.secondary, "text-sm mt-1")}>
-                Complete quests, gain XP, and level up your fitness journey
+                {recommendations?.bestTimeOfDay === format(new Date(), 'a').toLowerCase() 
+                  ? "Perfect timing! This is your optimal workout window." 
+                  : `Today's focus: ${recommendations?.trainingType || "Building strength"}`}
               </p>
             </div>
             
-            {stats?.totalWorkouts && stats.totalWorkouts > 0 && (
-              <div className="flex items-center gap-2 bg-black/30 px-3 py-1.5 rounded-full">
-                <div className="flex items-center">
-                  <motion.div 
-                    className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center"
-                    whileHover={{ scale: 1.1 }}
-                  >
-                    <span className="text-white font-bold text-sm">
-                      {Math.min(99, Math.floor(stats.totalWorkouts / 5) + 1)}
-                    </span>
-                  </motion.div>
-                  <div className="ml-2">
-                    <p className="text-xs text-white/80">Fitness Level</p>
-                    <div className="w-16 h-1.5 bg-gray-800/70 rounded-full mt-1">
-                      <div 
-                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
-                        style={{ width: `${(stats.totalWorkouts % 5) * 20}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Current Date Display */}
+            <div className="flex items-center gap-2 bg-black/30 px-3 py-2 rounded-lg">
+              <Calendar className="h-4 w-4 text-purple-300" />
+              <span className="text-sm">{format(new Date(), "EEEE, MMM d")}</span>
+            </div>
           </div>
         </motion.div>
 
+        {/* Quick Stats with enhanced data */}
         <QuickStatsSection />
 
-        <section ref={sectionRef} className="mb-10 text-center">
-          <motion.h2 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            className={cn(typography.text.secondary, "mb-6")}
-          >
-            Embark on a new fitness adventure
-          </motion.h2>
-          
-          <div style={{ height: "12rem" }} className="relative">
-            <ExerciseFAB 
-              onClick={() => setDialogOpen(true)}
-              visible={stableFabVisibility}
-              className="!bottom-20"
-            />
+        {/* Experience Display & Start Button Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Experience Display */}
+          {experienceData && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="md:col-span-1"
+            >
+              <ExperienceDisplay 
+                level={experienceData.level} 
+                xp={experienceData.totalXp}
+                progress={experienceData.progress}
+                trainingType={recommendedWorkoutType}
+              />
+            </motion.div>
+          )}
 
-            <div className={cn(
-              "absolute left-1/2 transform -translate-x-1/2 transition-all duration-300",
-              isSectionVisible ? "scale-100 opacity-100" : "scale-95 opacity-90"
-            )}>
-              {isActive ? (
-                <div className="flex flex-col items-center space-y-4">
+          {/* Workout Start Section */}
+          <section ref={sectionRef} className="md:col-span-2 text-center flex flex-col justify-center">
+            <motion.h2 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+              className={cn(typography.text.secondary, "mb-6")}
+            >
+              Embark on a new fitness adventure
+            </motion.h2>
+            
+            <div style={{ height: "12rem" }} className="relative">
+              <ExerciseFAB 
+                onClick={() => setDialogOpen(true)}
+                visible={stableFabVisibility}
+                className="!bottom-20"
+              />
+
+              <div className={cn(
+                "absolute left-1/2 transform -translate-x-1/2 transition-all duration-300",
+                isSectionVisible ? "scale-100 opacity-100" : "scale-95 opacity-90"
+              )}>
+                {isActive ? (
+                  <div className="flex flex-col items-center space-y-4">
+                    <TrainingStartButton
+                      onStartClick={handleContinueWorkout}
+                      className=""
+                      label="Resume"
+                      size={120}
+                    />
+                    <button 
+                      onClick={() => setDialogOpen(true)}
+                      className="text-sm text-white/70 hover:text-white/90 underline"
+                    >
+                      Start a new workout
+                    </button>
+                  </div>
+                ) : (
                   <TrainingStartButton
-                    onStartClick={handleContinueWorkout}
+                    onStartClick={() => setDialogOpen(true)}
                     className=""
-                    label="Resume"
+                    label="Start"
                     size={120}
                   />
-                  <button 
-                    onClick={() => setDialogOpen(true)}
-                    className="text-sm text-white/70 hover:text-white/90 underline"
-                  >
-                    Start a new workout
-                  </button>
-                </div>
-              ) : (
-                <TrainingStartButton
-                  onStartClick={() => setDialogOpen(true)}
-                  className=""
-                  label="Start"
-                  size={120}
-                />
-              )}
+                )}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
+        {/* Personalized Recommendations */}
+        {recommendations && (
+          <RecommendationSection recommendations={recommendations} onStartClick={() => setDialogOpen(true)} />
+        )}
+
+        {/* Workout Log */}
         <WorkoutLogSection 
           showWorkouts={showWorkouts}
           onToggle={toggleWorkoutDisplay}
         />
 
+        {/* Features Section - Keep this for navigational purposes */}
         <FeaturesSection onNavigate={navigate} />
       </main>
 
@@ -233,6 +261,66 @@ const Index = () => {
       
       <AnimatedLevelUp show={showLevelUp} />
     </div>
+  );
+};
+
+// Recommendation section based on user data
+const RecommendationSection = ({ recommendations, onStartClick }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.3 }}
+      className="rounded-xl overflow-hidden bg-gray-800/50 border border-gray-700/50"
+    >
+      <div className="px-4 py-3 bg-gray-800/80 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Zap className="h-5 w-5 text-yellow-400" />
+          <h3 className="font-medium text-white">Recommended for You</h3>
+        </div>
+        <span className="text-xs text-white/60 px-2 py-1 rounded-full bg-white/10">
+          {Math.round(recommendations.confidence * 100)}% match
+        </span>
+      </div>
+      
+      <div className="p-4">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <Dumbbell className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <p className="font-medium">{recommendations.trainingType} Workout</p>
+                <p className="text-sm text-gray-400">{recommendations.suggestedDuration} minutes • {recommendations.bestTimeOfDay}</p>
+              </div>
+            </div>
+            
+            <button 
+              onClick={onStartClick}
+              className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm flex items-center gap-2"
+            >
+              <Trophy className="h-4 w-4" />
+              Start Quest
+            </button>
+          </div>
+          
+          {recommendations.reasoning && (
+            <div className="mt-1">
+              <p className="text-xs text-gray-400 mb-2">Why this recommendation:</p>
+              <ul className="text-sm space-y-1">
+                {recommendations.reasoning.slice(0, 2).map((reason, i) => (
+                  <li key={i} className="flex items-start">
+                    <div className="h-1.5 w-1.5 mt-1.5 bg-purple-400 rounded-full mr-2"></div>
+                    <span className="text-gray-300">{reason}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
   );
 };
 

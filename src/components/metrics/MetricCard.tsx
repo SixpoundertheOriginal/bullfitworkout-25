@@ -1,111 +1,80 @@
 
-import React from "react";
-import { Progress } from "@/components/ui/progress";
+import React from 'react';
+import { BaseCard } from "@/components/ui/BaseCard";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
-import { theme, withTheme } from "@/lib/theme";
-import { typography } from "@/lib/typography";
+import { LucideIcon } from 'lucide-react';
 
 interface MetricCardProps {
-  icon: React.ElementType;
+  icon: LucideIcon;
   value: string | number;
   label: string;
   tooltip?: string;
   description?: string;
-  progressValue?: number;
   gradientClass?: string;
-  valueClass?: string;
-  labelClass?: string;
-  className?: string;
+  valueClass?: string; 
+  progressValue?: number;
+  badgeText?: string;
+  badgeColor?: string;
+  onClick?: () => void;
 }
 
-export const MetricCard = ({
+export function MetricCard({
   icon: Icon,
   value,
   label,
   tooltip,
   description,
+  gradientClass = "from-primary/20 via-transparent to-primary/20",
+  valueClass = "text-primary",
   progressValue,
-  gradientClass,
-  valueClass,
-  labelClass,
-  className
-}: MetricCardProps) => {
+  badgeText,
+  badgeColor = "text-green-400",
+  onClick
+}: MetricCardProps) {
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div
-            className={cn(
-              "flex flex-col items-center justify-center p-4 rounded-2xl border border-white/10 backdrop-blur-xl transition-all duration-300",
-              "bg-card card-gradient",
-              gradientClass,
-              "hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/10",
-              "min-w-[100px] w-full",
-              "relative overflow-hidden",
-              className
-            )}
-          >
-            {/* Subtle glow effect in background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-pink-500/5 opacity-80" />
-
-            {/* Content */}
-            <div className="relative z-10 flex flex-col items-center">
-              <div className="mb-2 rounded-full bg-white/8 shadow-inner flex h-12 w-12 items-center justify-center">
-                <Icon className={cn("h-6 w-6", theme.colors.text.accent)} />
-              </div>
-
-              {/* Value (prominent heading) */}
-              <div
-                className={cn(
-                  typography.headings.h3,
-                  "mt-1 text-center font-bold text-2xl",
-                  valueClass
-                )}
-              >
-                {value}
-              </div>
-
-              {/* Label (subheading, muted) */}
-              <div className={cn(
-                typography.text.secondary,
-                "text-center mt-1.5",
-                labelClass
-              )}>
-                {label}
-              </div>
-
-              {/* Description (smaller text, optional) */}
-              {description && (
-                <div className={cn(
-                  typography.text.muted,
-                  "text-center text-xs mt-1"
-                )}>
-                  {description}
-                </div>
-              )}
-
-              {/* Progress (if present) */}
-              {progressValue !== undefined && (
-                <div className="w-full mt-3">
-                  <Progress
-                    value={progressValue}
-                    className="h-1.5 bg-gray-800/60 [&>div]:bg-gradient-to-r [&>div]:from-purple-500 [&>div]:to-pink-500 rounded-full"
-                  />
-                </div>
-              )}
-            </div>
+    <BaseCard 
+      className={`rounded-lg relative transition-all overflow-hidden ${onClick ? 'cursor-pointer hover:scale-105 active:scale-95' : ''} ${gradientClass}`}
+      onClick={onClick}
+    >
+      <div className="relative z-10">
+        <div className="flex justify-between items-start mb-2.5">
+          <div className="bg-white/5 rounded-full p-1.5">
+            <Icon className="h-3.5 w-3.5 text-white/70" />
           </div>
-        </TooltipTrigger>
-        {tooltip && (
-          <TooltipContent
-            side="bottom"
-            className={withTheme("bg-gray-900 border border-gray-800", theme.colors.text.light)}
-          >
-            {tooltip}
-          </TooltipContent>
+          
+          {badgeText && (
+            <div className={`text-xs font-medium flex items-center ${badgeColor}`}>
+              {badgeText}
+            </div>
+          )}
+        </div>
+
+        <TooltipProvider>
+          <Tooltip delayDuration={300}>
+            <TooltipTrigger asChild>
+              <div>
+                <div className={`text-xl font-bold mb-1 ${valueClass}`}>{value}</div>
+                <div className="text-xs text-white/60">{label}</div>
+                {description && <div className="text-[10px] text-white/40 mt-0.5">{description}</div>}
+              </div>
+            </TooltipTrigger>
+            {tooltip && (
+              <TooltipContent>
+                <p className="text-xs">{tooltip}</p>
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
+          
+        {typeof progressValue === 'number' && (
+          <div className="mt-3 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
+              style={{ width: `${progressValue}%` }}
+            />
+          </div>
         )}
-      </Tooltip>
-    </TooltipProvider>
+      </div>
+    </BaseCard>
   );
-};
+}

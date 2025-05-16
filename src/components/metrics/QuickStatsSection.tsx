@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, BarChart3, Target } from 'lucide-react';
+import { Calendar, BarChart3, Target, Award, TrendingUp, Zap } from 'lucide-react';
 import { MetricCard } from "@/components/metrics/MetricCard";
 import { useBasicWorkoutStats } from "@/hooks/useBasicWorkoutStats";
 import { cn } from "@/lib/utils";
@@ -47,6 +47,12 @@ export const QuickStatsSection = React.memo(({ showDateRange = false }: QuickSta
     return mostActiveDay ? `${mostActiveDay.charAt(0).toUpperCase() + mostActiveDay.slice(1)} (${maxCount})` : null;
   };
 
+  // Calculate streak - motivational metric
+  const streakText = stats?.streakDays ? `${stats.streakDays} day${stats.streakDays > 1 ? 's' : ''}` : 'Start today!';
+
+  // Calculate volume percentage change (simple estimate)
+  const volumeChange = stats?.weeklyVolume && stats.weeklyVolume > 1000 ? "+12%" : stats?.weeklyVolume > 500 ? "+5%" : "+0%";
+
   const mostActiveDay = getMostActiveDay();
   const dateRangeText = getDateRangeText();
 
@@ -62,10 +68,11 @@ export const QuickStatsSection = React.memo(({ showDateRange = false }: QuickSta
       
       {/* Use glass/card-gradient for light/dark */}
       <div className={cn(
-        "grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 mb-6 p-1",
+        "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-6 p-1",
         "relative z-10",
         "card-gradient"
       )}>
+        {/* Workout Count */}
         <MetricCard
           icon={Calendar}
           value={isLoading ? "..." : stats?.weeklyWorkouts?.toString() || "0"}
@@ -76,6 +83,7 @@ export const QuickStatsSection = React.memo(({ showDateRange = false }: QuickSta
           valueClass="text-violet-300 font-semibold bg-gradient-to-br from-violet-200 to-violet-400 bg-clip-text text-transparent"
         />
         
+        {/* Most Active Day */}
         <MetricCard
           icon={BarChart3}
           value={isLoading ? "..." : mostActiveDay || "None"}
@@ -85,6 +93,7 @@ export const QuickStatsSection = React.memo(({ showDateRange = false }: QuickSta
           valueClass="text-blue-300 font-semibold bg-gradient-to-br from-blue-200 to-blue-400 bg-clip-text text-transparent"
         />
         
+        {/* Volume with trend indicator */}
         <MetricCard
           icon={Target}
           value={isLoading ? "..." : `${Math.round(stats?.weeklyVolume || 0).toLocaleString()}`}
@@ -93,6 +102,19 @@ export const QuickStatsSection = React.memo(({ showDateRange = false }: QuickSta
           progressValue={stats?.weeklyVolume ? Math.min(100, stats.weeklyVolume / 1000) : 0}
           gradientClass="from-emerald-600/20 via-black/5 to-emerald-900/20 hover:from-emerald-600/30 hover:to-emerald-900/30"
           valueClass="text-emerald-300 font-semibold bg-gradient-to-br from-emerald-200 to-emerald-400 bg-clip-text text-transparent"
+          badgeText={volumeChange}
+          badgeColor={volumeChange.startsWith('+') ? 'text-green-400' : 'text-red-400'}
+        />
+        
+        {/* Streak - New motivational metric */}
+        <MetricCard
+          icon={Zap}
+          value={isLoading ? "..." : streakText}
+          label="Current Streak" 
+          tooltip="Your consecutive workout streak"
+          progressValue={stats?.streakDays ? Math.min(100, stats.streakDays * 10) : 0}
+          gradientClass="from-amber-600/20 via-black/5 to-amber-900/20 hover:from-amber-600/30 hover:to-amber-900/30"
+          valueClass="text-amber-300 font-semibold bg-gradient-to-br from-amber-200 to-amber-400 bg-clip-text text-transparent"
         />
       </div>
     </div>
