@@ -15,7 +15,7 @@ const OverviewPage: React.FC = () => {
   const { 
     workouts, 
     loading, 
-    isError,
+    error,
     stats 
   } = useWorkoutStats();
 
@@ -28,7 +28,7 @@ const OverviewPage: React.FC = () => {
     return <LoadingSkeleton />;
   }
 
-  if (isError) {
+  if (error) {
     return (
       <div className="container py-6">
         <div className="text-center p-8">
