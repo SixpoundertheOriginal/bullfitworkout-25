@@ -1,5 +1,6 @@
 
 import { VolumeDataPoint } from '@/hooks/useProcessWorkoutMetrics';
+import { WeightUnit } from '@/utils/unitConversion';
 
 export interface WorkoutVolumeChartProps {
   data?: VolumeDataPoint[];
@@ -15,5 +16,5 @@ export interface VolumeTooltipProps {
 export interface VolumeStatsProps {
   total: number;
   average: number;
-  weightUnit: string;
+  weightUnit: WeightUnit | string;
 }

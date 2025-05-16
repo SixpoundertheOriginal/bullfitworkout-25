@@ -6,7 +6,6 @@ import { WorkoutDetailsLoading } from '@/components/workouts/WorkoutDetailsLoadi
 import { useParams, useNavigate } from 'react-router-dom';
 import { WorkoutDetailsHeader } from '@/components/workouts/WorkoutDetailsHeader';
 import { toast } from '@/hooks/use-toast';
-import { deleteWorkout } from '@/services/workoutService';
 import { ExerciseSet } from '@/types/exercise';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
@@ -16,6 +15,17 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Button } from '@/components/ui/button';
 import { useExerciseManagement } from '@/hooks/useExerciseManagement';
 import { ExerciseDialog } from '@/components/ExerciseDialog';
+
+// Define WorkoutDetails interface to match expected types
+interface WorkoutDetails {
+  id: string;
+  name: string;
+  training_type: string;
+  start_time: string;
+  end_time: string;
+  duration: number;
+  notes: string | null;
+}
 
 export default function WorkoutDetailsPage() {
   // Update to use workoutId from params
@@ -57,6 +67,12 @@ export default function WorkoutDetailsPage() {
   
   const handleDeleteClick = async () => {
     setDeleteAlertOpen(true);
+  };
+
+  // Wrapper function to handle the type mismatch with Promise<void>
+  const handleSaveWorkout = async (updatedWorkout: WorkoutDetails): Promise<void> => {
+    await handleSaveWorkoutEdit(updatedWorkout);
+    // Function returns void as required by the interface
   };
 
   if (loading) {
@@ -112,7 +128,7 @@ export default function WorkoutDetailsPage() {
             workout={workoutDetails}
             open={editModalOpen}
             onOpenChange={setEditModalOpen}
-            onSave={handleSaveWorkoutEdit}
+            onSave={handleSaveWorkout}
           />
           
           {/* Edit Exercise Sets Modal */}
@@ -147,11 +163,11 @@ export default function WorkoutDetailsPage() {
             </AlertDialogContent>
           </AlertDialog>
           
-          {/* Add Exercise Dialog */}
+          {/* Add Exercise Dialog - use proper props */}
           <ExerciseDialog
             open={showAddDialog}
             onOpenChange={setShowAddDialog}
-            onExerciseSelect={handleAddExercise}
+            onSelect={handleAddExercise}
           />
         </div>
       )}

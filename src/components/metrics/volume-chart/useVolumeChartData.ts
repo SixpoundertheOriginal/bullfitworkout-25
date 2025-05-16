@@ -5,7 +5,7 @@ import { WeightUnit } from '@/utils/unitConversion';
 import { VolumeDataPoint } from '@/hooks/useProcessWorkoutMetrics';
 import { useNavigate } from 'react-router-dom';
 
-export function useVolumeChartData(data: VolumeDataPoint[] = [], weightUnit: WeightUnit) {
+export function useVolumeChartData(data: VolumeDataPoint[] = []) {
   const navigate = useNavigate();
 
   // Check for valid data once, and memoize the result
@@ -26,19 +26,22 @@ export function useVolumeChartData(data: VolumeDataPoint[] = [], weightUnit: Wei
         const safeItem = {
           date: item?.date || new Date().toISOString(),
           volume: typeof item?.volume === 'number' ? item.volume : 0,
+          sets: item?.sets || 0,
           workoutId: item?.workoutId || null,
         };
         
         return {
           date: format(new Date(safeItem.date), 'MMM d'),
+          dateLabel: format(new Date(safeItem.date), 'MMM d, yyyy'),
           volume: safeItem.volume,
+          sets: safeItem.sets,
           originalDate: safeItem.date,
-          formattedValue: `${safeItem.volume.toLocaleString()} ${weightUnit}`,
+          formattedValue: `${safeItem.volume.toLocaleString()}`,
           workoutId: safeItem.workoutId,
           cursor: safeItem.workoutId ? 'pointer' : 'default'
         };
       });
-  }, [data, weightUnit, hasData]);
+  }, [data, hasData]);
   
   // Memoize volume stats calculations
   const volumeStats = useMemo(() => {

@@ -7,6 +7,7 @@ import { WorkoutVolumeChartProps, VolumeTooltipProps } from './types';
 import { EmptyState } from './EmptyState';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useVolumeChartData } from './useVolumeChartData';
+import { useWeightUnit } from '@/context/WeightUnitContext';
 
 export const VolumeTooltip = ({ active, payload }: VolumeTooltipProps) => {
   if (!active || !payload || !payload.length) {
@@ -29,9 +30,10 @@ export const VolumeTooltip = ({ active, payload }: VolumeTooltipProps) => {
 };
 
 export const WorkoutVolumeChart = ({ data = [], className = '', height = 300 }: WorkoutVolumeChartProps) => {
-  const { chartData, totalVolume, averageVolume, weightUnit } = useVolumeChartData(data);
+  const { weightUnit } = useWeightUnit();
+  const { hasData, formattedData, volumeStats, handleBarClick } = useVolumeChartData(data);
   
-  const isEmpty = !chartData || chartData.length === 0;
+  const isEmpty = !hasData || formattedData.length === 0;
 
   return (
     <Card className={`bg-gray-900/80 border-gray-800 shadow-md ${className}`}>
@@ -44,14 +46,16 @@ export const WorkoutVolumeChart = ({ data = [], className = '', height = 300 }: 
         ) : (
           <>
             <VolumeStats 
-              total={totalVolume}
-              average={averageVolume}
+              total={volumeStats.total}
+              average={volumeStats.average}
               weightUnit={weightUnit}
             />
             <div className="mt-4" style={{ height: `${height}px` }}>
               <VolumeBarChart 
-                data={chartData} 
+                data={formattedData} 
                 height={height}
+                weightUnit={weightUnit}
+                onBarClick={handleBarClick}
               />
             </div>
           </>
