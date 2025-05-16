@@ -60,8 +60,9 @@ export const QuickStatsSection = React.memo(({ showDateRange = false }: QuickSta
   const dateRangeText = getDateRangeText();
 
   // Ensure we have a valid density value or default to 0
-  const densityValue = stats?.density !== undefined && stats?.density !== null 
-    ? Number(stats.density).toFixed(1) 
+  // Handle undefined density property safely
+  const densityValue = typeof stats?.density === 'number'
+    ? Number(stats.density).toFixed(1)
     : "0.0";
 
   // Debug the density value

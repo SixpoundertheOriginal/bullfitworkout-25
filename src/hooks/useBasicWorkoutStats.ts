@@ -18,6 +18,7 @@ export interface BasicWorkoutStats {
   weeklyWorkouts: number;
   weeklyVolume: number;
   dailyWorkouts: Record<string, number>;
+  density?: number; // Added density property as optional
 }
 
 export const useBasicWorkoutStats = (dateRange?: DateRange) => {
@@ -107,6 +108,42 @@ export const useBasicWorkoutStats = (dateRange?: DateRange) => {
           }
           return sum;
         }, 0);
+
+        // Calculate density (volume / duration)
+        let density = 0;
+        if (safeSets.length > 0) {
+          // Group sets by workout
+          const workoutSets: Record<string, Array<any>> = {};
+          safeSets.forEach(set => {
+            const workoutId = set.workout_id || set.workout_sessions?.id;
+            if (workoutId) {
+              if (!workoutSets[workoutId]) {
+                workoutSets[workoutId] = [];
+              }
+              workoutSets[workoutId].push(set);
+            }
+          });
+          
+          // Calculate density for each workout and then average
+          let totalDensity = 0;
+          let workoutCount = 0;
+          
+          for (const workoutId in workoutSets) {
+            const sets = workoutSets[workoutId];
+            const workout = safePeriodWorkouts.find(w => w.id === workoutId);
+            
+            if (workout && workout.duration && workout.duration > 0) {
+              const workoutVolume = sets.reduce((sum, set) => {
+                return sum + (set.weight * set.reps);
+              }, 0);
+              
+              totalDensity += workoutVolume / workout.duration;
+              workoutCount++;
+            }
+          }
+          
+          density = workoutCount > 0 ? totalDensity / workoutCount : 0;
+        }
         
         // Calculate daily workout counts with a consistent day format
         const dailyWorkouts: Record<string, number> = {};
@@ -145,7 +182,8 @@ export const useBasicWorkoutStats = (dateRange?: DateRange) => {
           totalWorkouts,
           periodWorkouts: safePeriodWorkouts.length,
           dailyWorkouts,
-          weeklyVolume
+          weeklyVolume,
+          density
         });
         
         return {
@@ -156,7 +194,8 @@ export const useBasicWorkoutStats = (dateRange?: DateRange) => {
           streakDays,
           weeklyWorkouts: safePeriodWorkouts.length,
           weeklyVolume,
-          dailyWorkouts
+          dailyWorkouts,
+          density // Include the calculated density in the returned stats
         };
       } catch (error) {
         console.error("Error fetching workout stats:", error);
