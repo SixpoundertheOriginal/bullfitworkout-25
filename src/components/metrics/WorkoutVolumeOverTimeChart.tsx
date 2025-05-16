@@ -14,7 +14,7 @@ import {
 import { format } from 'date-fns';
 import { Dumbbell } from 'lucide-react';
 import { useWeightUnit } from '@/context/WeightUnitContext';
-import { convertWeight } from '@/utils/unitConversion';
+import { convertWeight, WeightUnit } from '@/utils/unitConversion';
 import { VolumeDataPoint } from '@/hooks/useProcessWorkoutMetrics';
 
 interface WorkoutVolumeOverTimeChartProps {
@@ -29,10 +29,14 @@ const WorkoutVolumeOverTimeChartComponent: React.FC<WorkoutVolumeOverTimeChartPr
   height = 200
 }) => {
   // Extract weight unit with error handling
-  let weightUnit = 'kg';
+  const defaultUnit: WeightUnit = 'kg';
+  let weightUnit: WeightUnit = defaultUnit;
+  
   try {
     const weightUnitContext = useWeightUnit();
-    weightUnit = weightUnitContext?.weightUnit || 'kg';
+    if (weightUnitContext?.weightUnit === 'kg' || weightUnitContext?.weightUnit === 'lb') {
+      weightUnit = weightUnitContext.weightUnit;
+    }
   } catch (error) {
     console.warn("Failed to access WeightUnit context:", error);
   }

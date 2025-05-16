@@ -1,3 +1,4 @@
+
 // src/hooks/useWorkoutStats.ts
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -10,6 +11,7 @@ import { getExerciseGroup } from '@/utils/exerciseUtils';
 import { useDateRange } from '@/context/DateRangeContext';
 import { useWeightUnit } from '@/context/WeightUnitContext';
 import { DateRange } from 'react-day-picker';
+import { WeightUnit } from '@/utils/unitConversion';
 
 // Use a safe wrapper to get context values with fallbacks
 const useSafeContext = <T,>(useHook: () => T, fallback: T): T => {
@@ -29,7 +31,7 @@ export function useWorkoutStats(
   // Safely access contexts with fallbacks
   const weightUnitContext = useSafeContext(
     useWeightUnit, 
-    { weightUnit: "kg", setWeightUnit: () => {}, saveWeightUnitPreference: async () => {}, isDefaultUnit: true, isLoading: false }
+    { weightUnit: "kg" as WeightUnit, setWeightUnit: () => {}, saveWeightUnitPreference: async () => {}, isDefaultUnit: true, isLoading: false }
   );
   
   const weightUnit = weightUnitContext.weightUnit || "kg";
@@ -40,7 +42,7 @@ export function useWorkoutStats(
       dateRange: {
         from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), 
         to: new Date()
-      },
+      } as DateRange,
       setDateRange: () => {}
     }
   );

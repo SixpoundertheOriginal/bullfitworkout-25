@@ -17,23 +17,31 @@ import { WorkoutDensityOverTimeChart } from '@/components/metrics/WorkoutDensity
 import { useWeightUnit } from "@/context/WeightUnitContext";
 import { useDateRange } from '@/context/DateRangeContext';
 import { useProcessWorkoutMetrics } from '@/hooks/useProcessWorkoutMetrics';
+import { WeightUnit } from '@/utils/unitConversion';
 
 const Overview: React.FC = () => {
   // Access contexts safely with fallbacks
-  let weightUnit = 'kg';
+  let weightUnit: WeightUnit = 'kg';
   let dateRange = { from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), to: new Date() };
   let user = null;
   
   try {
     const weightUnitContext = useWeightUnit();
-    weightUnit = weightUnitContext?.weightUnit || 'kg';
+    if (weightUnitContext?.weightUnit === 'kg' || weightUnitContext?.weightUnit === 'lb') {
+      weightUnit = weightUnitContext.weightUnit;
+    }
   } catch (error) {
     console.error("Error accessing weight unit context:", error);
   }
 
   try {
     const dateRangeContext = useDateRange();
-    dateRange = dateRangeContext?.dateRange || dateRange;
+    if (dateRangeContext?.dateRange) {
+      // Ensure both from and to are defined
+      const from = dateRangeContext.dateRange.from || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const to = dateRangeContext.dateRange.to || new Date();
+      dateRange = { from, to };
+    }
   } catch (error) {
     console.error("Error accessing date range context:", error);
   }

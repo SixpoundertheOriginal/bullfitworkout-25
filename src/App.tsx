@@ -6,7 +6,7 @@ import { DateRangeProvider } from '@/context/DateRangeContext';
 import { WeightUnitContextProvider } from '@/context/WeightUnitContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { LayoutProvider } from '@/context/LayoutContext';
-import { AppRouterProvider } from '@/context/RouterProvider';
+import { RouterProvider } from '@/context/RouterProvider';
 import { WorkoutNavigationProvider } from '@/context/WorkoutNavigationContext';
 
 // Create a new QueryClient instance
@@ -30,7 +30,7 @@ function App() {
             <DateRangeProvider>
               <LayoutProvider>
                 <WorkoutNavigationProvider>
-                  <AppRouterProvider />
+                  <RouterProvider />
                 </WorkoutNavigationProvider>
               </LayoutProvider>
             </DateRangeProvider>
