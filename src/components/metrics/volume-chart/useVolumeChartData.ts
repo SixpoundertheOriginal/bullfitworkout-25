@@ -26,7 +26,7 @@ export function useVolumeChartData(data: VolumeDataPoint[] = []) {
         const safeItem = {
           date: item?.date || new Date().toISOString(),
           volume: typeof item?.volume === 'number' ? item.volume : 0,
-          sets: item?.sets || 0,
+          sets: item?.sets !== undefined ? item.sets : 0,  // Handle sets being potentially undefined
           workoutId: item?.workoutId || null,
         };
         

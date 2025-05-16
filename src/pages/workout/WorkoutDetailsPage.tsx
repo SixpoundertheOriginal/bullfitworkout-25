@@ -15,6 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Button } from '@/components/ui/button';
 import { useExerciseManagement } from '@/hooks/useExerciseManagement';
 import { ExerciseDialog } from '@/components/ExerciseDialog';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Define WorkoutDetails interface to match expected types
 interface WorkoutDetails {
@@ -36,11 +37,13 @@ export default function WorkoutDetailsPage() {
     loading, 
     error, 
     updateExerciseSet,
-    setExerciseSets
+    setExerciseSets,
+    refetch
   } = useWorkoutDetails(workoutId || '');
   
   const navigate = useNavigate();
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const queryClient = useQueryClient();
   
   // Exercise management setup
   const {
@@ -71,8 +74,24 @@ export default function WorkoutDetailsPage() {
 
   // Wrapper function to handle the type mismatch with Promise<void>
   const handleSaveWorkout = async (updatedWorkout: WorkoutDetails): Promise<void> => {
-    await handleSaveWorkoutEdit(updatedWorkout);
-    // Function returns void as required by the interface
+    try {
+      await handleSaveWorkoutEdit(updatedWorkout);
+      
+      // Force refetch to update calculations with new duration
+      refetch();
+      
+      // Also invalidate all related queries to ensure data refreshes everywhere
+      queryClient.invalidateQueries({ queryKey: ['workout-details', workoutId] });
+      queryClient.invalidateQueries({ queryKey: ['workout-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['workout-volume'] });
+      queryClient.invalidateQueries({ queryKey: ['workout-density'] });
+    } catch (error) {
+      console.error("Error in handleSaveWorkout:", error);
+      toast({ 
+        title: "Failed to update workout", 
+        variant: "destructive" 
+      });
+    }
   };
 
   if (loading) {
@@ -163,7 +182,7 @@ export default function WorkoutDetailsPage() {
             </AlertDialogContent>
           </AlertDialog>
           
-          {/* Add Exercise Dialog - use proper props */}
+          {/* Add Exercise Dialog */}
           <ExerciseDialog
             open={showAddDialog}
             onOpenChange={setShowAddDialog}
