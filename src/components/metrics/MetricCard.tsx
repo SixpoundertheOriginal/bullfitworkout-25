@@ -11,11 +11,13 @@ interface MetricCardProps {
   tooltip?: string;
   description?: string;
   gradientClass?: string;
-  valueClass?: string; 
+  valueClass?: string;
+  labelClass?: string; // Added labelClass prop
   progressValue?: number;
   badgeText?: string;
   badgeColor?: string;
   onClick?: () => void;
+  className?: string; // Added className prop for better composition
 }
 
 export function MetricCard({
@@ -26,14 +28,16 @@ export function MetricCard({
   description,
   gradientClass = "from-primary/20 via-transparent to-primary/20",
   valueClass = "text-primary",
+  labelClass = "", // Default value for labelClass
   progressValue,
   badgeText,
   badgeColor = "text-green-400",
-  onClick
+  onClick,
+  className
 }: MetricCardProps) {
   return (
     <BaseCard 
-      className={`rounded-lg relative transition-all overflow-hidden ${onClick ? 'cursor-pointer hover:scale-105 active:scale-95' : ''} ${gradientClass}`}
+      className={`rounded-lg relative transition-all overflow-hidden ${onClick ? 'cursor-pointer hover:scale-105 active:scale-95' : ''} ${gradientClass} ${className || ''}`}
       onClick={onClick}
     >
       <div className="relative z-10">
@@ -54,7 +58,7 @@ export function MetricCard({
             <TooltipTrigger asChild>
               <div>
                 <div className={`text-xl font-bold mb-1 ${valueClass}`}>{value}</div>
-                <div className="text-xs text-white/60">{label}</div>
+                <div className={`text-xs text-white/60 ${labelClass}`}>{label}</div>
                 {description && <div className="text-[10px] text-white/40 mt-0.5">{description}</div>}
               </div>
             </TooltipTrigger>
