@@ -6,11 +6,16 @@ import { WorkoutDetailsLoading } from '@/components/workouts/WorkoutDetailsLoadi
 import { useParams, useNavigate } from 'react-router-dom';
 import { WorkoutDetailsHeader } from '@/components/workouts/WorkoutDetailsHeader';
 import { toast } from '@/hooks/use-toast';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { deleteWorkout } from '@/services/workoutService';
 import { ExerciseSet } from '@/types/exercise';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { EditWorkoutModal } from '@/components/EditWorkoutModal';
+import { EditExerciseSetModal } from '@/components/EditExerciseSetModal';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { useExerciseManagement } from '@/hooks/useExerciseManagement';
+import { ExerciseDialog } from '@/components/ExerciseDialog';
 
 export default function WorkoutDetailsPage() {
   // Update to use workoutId from params
@@ -20,46 +25,38 @@ export default function WorkoutDetailsPage() {
     exerciseSets, 
     loading, 
     error, 
-    updateExerciseSet 
+    updateExerciseSet,
+    setExerciseSets
   } = useWorkoutDetails(workoutId || '');
   
   const navigate = useNavigate();
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  
+  // Exercise management setup
+  const {
+    exerciseSetModalOpen,
+    setExerciseSetModalOpen,
+    currentExercise,
+    exerciseSetsToEdit,
+    deleteAlertOpen,
+    setDeleteAlertOpen,
+    exerciseToDelete,
+    showAddDialog,
+    setShowAddDialog,
+    handleSaveWorkoutEdit,
+    handleEditExercise,
+    handleSaveExerciseSets,
+    handleAddExercise,
+    handleDeleteExercise,
+    confirmDeleteExercise
+  } = useExerciseManagement(workoutId, setExerciseSets);
   
   const handleEditClick = () => {
-    // Navigate to edit page or open edit modal
-    toast({
-      title: "Edit functionality",
-      description: "Edit functionality will be implemented soon."
-    });
+    setEditModalOpen(true);
   };
   
   const handleDeleteClick = async () => {
-    setIsDeleteConfirmOpen(true);
-    // This would typically open a confirmation dialog
-    const confirmed = window.confirm("Are you sure you want to delete this workout?");
-    
-    if (confirmed && workoutId) {
-      try {
-        await deleteWorkout(workoutId);
-        toast({
-          title: "Success",
-          description: "Workout deleted successfully"
-        });
-        navigate('/workouts');
-      } catch (err) {
-        console.error("Error deleting workout:", err);
-        toast({
-          title: "Error",
-          description: "Failed to delete workout",
-          variant: "destructive"
-        });
-      } finally {
-        setIsDeleteConfirmOpen(false);
-      }
-    } else {
-      setIsDeleteConfirmOpen(false);
-    }
+    setDeleteAlertOpen(true);
   };
 
   if (loading) {
@@ -92,15 +89,6 @@ export default function WorkoutDetailsPage() {
     );
   }
 
-  // Fixed the parameter type to match what WorkoutDetailsEnhanced expects
-  const handleEditExercise = (exerciseName: string, sets: Record<string, ExerciseSet[]>) => {
-    // This function will be implemented to handle editing exercises
-    toast({
-      title: "Edit exercise",
-      description: `Edit functionality for ${exerciseName} will be implemented soon.`
-    });
-  };
-
   return (
     <div className="container py-6 max-w-5xl mx-auto">
       {workoutDetails && (
@@ -117,6 +105,53 @@ export default function WorkoutDetailsPage() {
             onEditClick={handleEditClick}
             onEditExercise={handleEditExercise}
             className="mt-6"
+          />
+          
+          {/* Edit Workout Modal */}
+          <EditWorkoutModal
+            workout={workoutDetails}
+            open={editModalOpen}
+            onOpenChange={setEditModalOpen}
+            onSave={handleSaveWorkoutEdit}
+          />
+          
+          {/* Edit Exercise Sets Modal */}
+          <EditExerciseSetModal
+            open={exerciseSetModalOpen}
+            onOpenChange={setExerciseSetModalOpen}
+            exerciseName={currentExercise}
+            sets={exerciseSetsToEdit}
+            onSave={handleSaveExerciseSets}
+          />
+          
+          {/* Delete Workout Confirmation */}
+          <AlertDialog open={deleteAlertOpen} onOpenChange={setDeleteAlertOpen}>
+            <AlertDialogContent className="bg-gray-900 border-gray-800">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Workout</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete this workout? This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="bg-gray-800 text-white border-gray-700 hover:bg-gray-700">
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-red-700 hover:bg-red-600"
+                  onClick={handleDeleteExercise}
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          
+          {/* Add Exercise Dialog */}
+          <ExerciseDialog
+            open={showAddDialog}
+            onOpenChange={setShowAddDialog}
+            onExerciseSelect={handleAddExercise}
           />
         </div>
       )}

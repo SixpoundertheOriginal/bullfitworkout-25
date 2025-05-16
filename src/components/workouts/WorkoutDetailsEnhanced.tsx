@@ -52,12 +52,6 @@ export const WorkoutDetailsEnhanced = ({
     weightUnit as 'kg' | 'lb'
   ), [exercises, workout.duration, weightUnit]);
   
-  const handleEditExercise = (exerciseName: string) => {
-    if (onEditExercise) {
-      onEditExercise(exerciseName, exercises);
-    }
-  };
-  
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Add WorkoutAnalysisSection component here */}
@@ -311,7 +305,7 @@ export const WorkoutDetailsEnhanced = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleEditExercise(exerciseName)}
+                      onClick={() => onEditExercise && onEditExercise(exerciseName, exercises)}
                       className="bg-gray-800 text-white hover:bg-gray-700"
                     >
                       Edit Sets
