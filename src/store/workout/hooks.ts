@@ -1,6 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { useWorkoutStore } from './store';
+import { getStore } from './store';
 import { toast } from '@/hooks/use-toast';
 
 // Hook for using workout timer functionality
@@ -63,7 +64,8 @@ export const useAddExercise = () => {
     const name = typeof exercise === 'string' ? exercise : exercise.name;
     
     // Check if exercise already exists
-    const exercises = useWorkoutStore.getState().exercises;
+    // Use getStore() instead of useWorkoutStore.getState()
+    const exercises = getStore().getState().exercises;
     if (exercises[name]) {
       toast({ 
         title: "Exercise already added", 
