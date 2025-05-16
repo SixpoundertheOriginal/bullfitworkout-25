@@ -12,6 +12,9 @@ import ExerciseSetup from "@/pages/ExerciseSetup";
 import { DateRangeProvider } from '@/context/DateRangeContext';
 import { WeightUnitContextProvider } from '@/context/WeightUnitContext';
 import { AuthProvider } from '@/context/AuthContext';
+import { MainLayout } from '@/components/layouts/MainLayout';
+import { LayoutProvider } from '@/context/LayoutContext';
+import { RouterProvider as AppRouterProvider } from '@/context/RouterProvider';
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -24,26 +27,7 @@ const queryClient = new QueryClient({
   },
 });
 
-// Create router with pages that actually exist
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Index />,
-  },
-  {
-    path: "/training-session",
-    element: <TrainingSession />
-  },
-  {
-    path: "/overview",
-    element: <Overview />
-  },
-  {
-    path: "/setup-workout",
-    element: <ExerciseSetup />
-  }
-]);
-
+// We'll now use the RouterProvider component to handle all routes
 function App() {
   return (
     <React.StrictMode>
@@ -51,7 +35,9 @@ function App() {
         <AuthProvider>
           <DateRangeProvider>
             <WeightUnitContextProvider>
-              <RouterProvider router={router} />
+              <LayoutProvider>
+                <AppRouterProvider />
+              </LayoutProvider>
             </WeightUnitContextProvider>
           </DateRangeProvider>
         </AuthProvider>

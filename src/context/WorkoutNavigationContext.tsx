@@ -1,120 +1,46 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { createContext, useContext, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useWorkoutState } from '@/hooks/useWorkoutState';
-import { usePageVisibility } from '@/hooks/usePageVisibility';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { createContext } from '@/utils/createContext';
+import { toast } from '@/hooks/use-toast';
 
 interface WorkoutNavigationContextType {
-  confirmNavigation: (to: string) => void;
+  confirmNavigation: (path: string) => void;
 }
 
-const [Provider, useWorkoutNavigation] = createContext<WorkoutNavigationContextType>();
+const WorkoutNavigationContext = createContext<WorkoutNavigationContextType | undefined>(undefined);
 
-export function WorkoutNavigationContextProvider({ 
-  children 
-}: { 
-  children: React.ReactNode 
-}) {
+export const useWorkoutNavigation = () => {
+  const context = useContext(WorkoutNavigationContext);
+  if (!context) {
+    throw new Error('useWorkoutNavigation must be used within a WorkoutNavigationProvider');
+  }
+  return context;
+};
+
+export const WorkoutNavigationProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { isActive, updateLastActiveRoute, persistWorkoutState } = useWorkoutState();
-  const { isVisible } = usePageVisibility();
-  const [showDialog, setShowDialog] = useState(false);
-  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
-  const [lastPath, setLastPath] = useState<string>(location.pathname);
-
-  const isTrainingRoute = location.pathname === '/training-session';
+  const { isActive } = useWorkoutState();
   
-  // Update last active route if we're on the training session page
-  useEffect(() => {
-    if (isTrainingRoute) {
-      updateLastActiveRoute(location.pathname);
-      console.log('Updated last active route:', location.pathname);
-    }
+  const confirmNavigation = (path: string) => {
+    // If we're already on this path, do nothing
+    if (window.location.pathname === path) return;
     
-    // Keep track of last path for recovery
-    setLastPath(location.pathname);
-  }, [isTrainingRoute, location.pathname, updateLastActiveRoute]);
-
-  // Log debug info for navigation context
-  useEffect(() => {
-    console.log('WorkoutNavigationContext state:', { 
-      isActive, 
-      currentPath: location.pathname,
-      isTrainingRoute,
-      isVisible
-    });
-  }, [isActive, location.pathname, isTrainingRoute, isVisible]);
-
-  // When tab becomes visible again, ensure we persist state
-  useEffect(() => {
-    if (isVisible && isActive) {
-      persistWorkoutState?.();
-    }
-  }, [isVisible, isActive, persistWorkoutState]);
-
-  // Navigation confirmation logic
-  const confirmNavigation = useCallback((to: string) => {
-    // Skip confirmation if navigating to the same page
-    if (to === location.pathname) {
-      return;
-    }
-    
-    if (isActive && isTrainingRoute) {
-      setShowDialog(true);
-      setPendingNavigation(to);
-      console.log('Confirming navigation from workout to:', to);
-      
-      // Make sure state is persisted before potential navigation
-      persistWorkoutState?.();
+    // If there's an active workout, show a confirmation toast
+    if (isActive && path !== '/training-session') {
+      navigate(path);
+      toast({
+        title: "Navigation complete",
+        description: "Your workout is still in progress. You can return via the banner."
+      });
     } else {
-      navigate(to);
+      // Otherwise just navigate
+      navigate(path);
     }
-  }, [isActive, isTrainingRoute, navigate, location.pathname, persistWorkoutState]);
-
+  };
+  
   return (
-    <Provider value={{ confirmNavigation }}>
+    <WorkoutNavigationContext.Provider value={{ confirmNavigation }}>
       {children}
-      <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Active Workout in Progress</AlertDialogTitle>
-            <AlertDialogDescription>
-              You have an active workout. Are you sure you want to leave? Your progress will be saved and you can return any time.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowDialog(false)}>
-              Return to Workout
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                // Extra persistence before navigation
-                persistWorkoutState?.();
-                
-                if (pendingNavigation) {
-                  navigate(pendingNavigation);
-                }
-                setShowDialog(false);
-              }}
-            >
-              Leave Workout
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </Provider>
+    </WorkoutNavigationContext.Provider>
   );
-}
-
-export { useWorkoutNavigation };
+};
