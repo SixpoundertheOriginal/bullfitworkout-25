@@ -1,4 +1,3 @@
-
 // src/hooks/useWorkoutStats.ts
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
@@ -8,51 +7,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { WorkoutStats, WorkoutStatsResult } from '@/types/workout-metrics';
 import { getExerciseGroup } from '@/utils/exerciseUtils';
-import { useContext } from 'react';
+import { useDateRange } from '@/context/DateRangeContext';
+import { useWeightUnit } from '@/context/WeightUnitContext';
 import { DateRange } from 'react-day-picker';
 
-// Import contexts but don't throw if they're not available
-const safeImport = <T,>(importFn: () => T): T | undefined => {
+// Use a safe wrapper to get context values with fallbacks
+const useSafeContext = <T,>(useHook: () => T, fallback: T): T => {
   try {
-    return importFn();
+    return useHook() || fallback;
   } catch (e) {
-    console.warn("Failed to import context:", e);
-    return undefined;
-  }
-};
-
-// Create wrapper functions to safely access contexts
-const useDateRangeSafe = () => {
-  try {
-    // Dynamic import to prevent errors if the context isn't available
-    const { useDateRange } = require('@/context/DateRangeContext');
-    return useDateRange();
-  } catch (error) {
-    console.warn("DateRange context not available:", error);
-    // Return a default object that matches the shape of the context
-    return {
-      dateRange: {
-        from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-        to: new Date()
-      },
-      setDateRange: () => {}
-    };
-  }
-};
-
-const useWeightUnitSafe = () => {
-  try {
-    const { useWeightUnit } = require('@/context/WeightUnitContext');
-    return useWeightUnit();
-  } catch (error) {
-    console.warn("WeightUnit context not available:", error);
-    return {
-      weightUnit: "kg",
-      setWeightUnit: () => {},
-      saveWeightUnitPreference: async () => {},
-      isDefaultUnit: true,
-      isLoading: false
-    };
+    console.warn("Context access error:", e);
+    return fallback;
   }
 };
 
@@ -61,16 +26,26 @@ export function useWorkoutStats(
   duration?: number,
   userBodyInfo?: { weight: number; unit: string }
 ): WorkoutStatsResult {
-  // Safely access contexts
-  const weightUnitContext = useWeightUnitSafe();
-  const weightUnit = weightUnitContext?.weightUnit || "kg";
-  const dateRangeContext = useDateRangeSafe();
+  // Safely access contexts with fallbacks
+  const weightUnitContext = useSafeContext(
+    useWeightUnit, 
+    { weightUnit: "kg", setWeightUnit: () => {}, saveWeightUnitPreference: async () => {}, isDefaultUnit: true, isLoading: false }
+  );
   
-  // Use context values if available, otherwise use defaults
-  const dateRange: DateRange | undefined = dateRangeContext?.dateRange || {
-    from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-    to: new Date()
-  };
+  const weightUnit = weightUnitContext.weightUnit || "kg";
+  
+  const dateRangeContext = useSafeContext(
+    useDateRange,
+    { 
+      dateRange: {
+        from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), 
+        to: new Date()
+      },
+      setDateRange: () => {}
+    }
+  );
+  
+  const dateRange = dateRangeContext.dateRange;
 
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -108,6 +83,12 @@ export function useWorkoutStats(
 
   // Fetch from Supabase when no specific exercises are passed
   const fetchWorkoutData = useCallback(async () => {
+    if (!user) {
+      console.warn("Cannot fetch workout data: User not authenticated");
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     console.log("[useWorkoutStats] Fetching workouts with dateRange:", dateRange);
 
@@ -272,8 +253,8 @@ export function useWorkoutStats(
   }, [fetchWorkoutData, exercises, user]);
 
   const refetch = useCallback(() => {
-    if (!exercises) fetchWorkoutData();
-  }, [exercises, fetchWorkoutData]);
+    if (!exercises && user) fetchWorkoutData();
+  }, [exercises, fetchWorkoutData, user]);
 
   // Return both processed & backward-compatible stats
   return {

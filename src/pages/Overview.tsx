@@ -19,28 +19,40 @@ import { useDateRange } from '@/context/DateRangeContext';
 import { useProcessWorkoutMetrics } from '@/hooks/useProcessWorkoutMetrics';
 
 const Overview: React.FC = () => {
-  // Since we're seeing context access issues, let's add some error handling
-  let weightUnitContext = null;
-  let dateRangeContext = null;
+  // Access contexts safely with fallbacks
+  let weightUnit = 'kg';
+  let dateRange = { from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), to: new Date() };
   let user = null;
-
+  
   try {
-    weightUnitContext = useWeightUnit();
-    dateRangeContext = useDateRange();
-    user = useAuth()?.user;
+    const weightUnitContext = useWeightUnit();
+    weightUnit = weightUnitContext?.weightUnit || 'kg';
   } catch (error) {
-    console.error("Error accessing contexts:", error);
+    console.error("Error accessing weight unit context:", error);
   }
 
-  // Default values if contexts are unavailable
-  const weightUnit = weightUnitContext?.weightUnit || 'kg';
-  const dateRange = dateRangeContext?.dateRange;
+  try {
+    const dateRangeContext = useDateRange();
+    dateRange = dateRangeContext?.dateRange || dateRange;
+  } catch (error) {
+    console.error("Error accessing date range context:", error);
+  }
+
+  try {
+    const authContext = useAuth();
+    user = authContext?.user;
+  } catch (error) {
+    console.error("Error accessing auth context:", error);
+  }
   
   const [userWeight, setUserWeight] = useState<number | null>(null);
   const [userWeightUnit, setUserWeightUnit] = useState<string | null>(null);
 
   // Fetch historical stats with error handling
   const { stats, loading, refetch, workouts } = useWorkoutStats();
+  
+  // Add console log for debugging
+  console.log('[Overview] Stats loading:', loading, ', Workouts length:', workouts?.length);
   
   // Process raw metrics - memoized to prevent unnecessary recalculation
   const {
@@ -49,7 +61,9 @@ const Overview: React.FC = () => {
     volumeStats,
     densityStats
   } = useProcessWorkoutMetrics(workouts, weightUnit);
-
+  
+  console.log('[Overview] Volume data points:', volumeOverTimeData?.length);
+  
   // Refetch on date range change
   useEffect(() => {
     if (dateRange) refetch();
@@ -112,7 +126,9 @@ const Overview: React.FC = () => {
               <WorkoutVolumeOverTimeChart data={volumeOverTimeData} height={300} />
             </div>
           ) : (
-            <div className="flex items-center justify-center h-full text-gray-500">No volume data available</div>
+            <div className="flex items-center justify-center h-full text-gray-500">
+              No volume data available
+            </div>
           )}
         </CardContent>
       </Card>
@@ -122,14 +138,14 @@ const Overview: React.FC = () => {
         <Card className="bg-gray-900 border-gray-800">
           <CardHeader><CardTitle>Total Workouts</CardTitle></CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold">{stats.totalWorkouts || 0}</div>
+            <div className="text-4xl font-bold">{stats?.totalWorkouts || 0}</div>
           </CardContent>
         </Card>
         <Card className="bg-gray-900 border-gray-800">
           <CardHeader><CardTitle>Total Volume</CardTitle></CardHeader>
           <CardContent>
             <div className="text-4xl font-bold">
-              {Math.round(volumeStats.total).toLocaleString()} {weightUnit}
+              {Math.round(volumeStats?.total || 0).toLocaleString()} {weightUnit}
             </div>
           </CardContent>
         </Card>
@@ -137,7 +153,7 @@ const Overview: React.FC = () => {
           <CardHeader><CardTitle>Avg Volume Rate</CardTitle></CardHeader>
           <CardContent>
             <div className="text-4xl font-bold">
-              {densityStats.avgOverallDensity.toFixed(1)} {weightUnit}/min
+              {(densityStats?.avgOverallDensity || 0).toFixed(1)} {weightUnit}/min
             </div>
           </CardContent>
         </Card>

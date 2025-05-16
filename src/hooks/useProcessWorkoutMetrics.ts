@@ -1,3 +1,4 @@
+
 import { useMemo } from 'react';
 import { format } from 'date-fns';
 import { WeightUnit, convertWeight } from '@/utils/unitConversion';
@@ -53,18 +54,26 @@ export function useProcessWorkoutMetrics(
   workouts: WorkoutWithExercises[] | null | undefined,
   weightUnit: WeightUnit
 ) {
+  // Added console log for debugging
+  console.log('[useProcessWorkoutMetrics] Processing workouts:', 
+    Array.isArray(workouts) ? workouts.length : 'no workouts');
+  
   // --- Volume over time ---
   const volumeOverTimeData = useMemo<VolumeDataPoint[]>(() => {
-    if (!Array.isArray(workouts) || workouts.length === 0) return [];
+    if (!Array.isArray(workouts) || workouts.length === 0) {
+      console.log('[useProcessWorkoutMetrics] No valid workouts to process for volume data');
+      return [];
+    }
 
-    return workouts
+    const result = workouts
+      .filter(workout => workout && workout.start_time) // Ensure valid workouts only
       .map((workout) => {
         // flatten all sets
-        const allSets = flattenExercises(workout.exercises);
+        const allSets = flattenExercises(workout.exercises || []);
 
         // sum raw volume in KG
         const rawVolume = allSets.reduce((sum, set) => {
-          if (set.completed && set.weight && set.reps) {
+          if (set && set.completed && set.weight && set.reps) {
             return sum + set.weight * set.reps;
           }
           return sum;
@@ -84,19 +93,26 @@ export function useProcessWorkoutMetrics(
       })
       // sort ascending by date
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      
+    console.log('[useProcessWorkoutMetrics] Processed volume data:', result.length);
+    return result;
   }, [workouts, weightUnit]);
 
   // --- Density over time ---
   const densityOverTimeData = useMemo<DensityDataPoint[]>(() => {
-    if (!Array.isArray(workouts) || workouts.length === 0) return [];
+    if (!Array.isArray(workouts) || workouts.length === 0) {
+      console.log('[useProcessWorkoutMetrics] No valid workouts to process for density data');
+      return [];
+    }
 
-    return workouts
+    const result = workouts
+      .filter(workout => workout && workout.start_time) // Ensure valid workouts only
       .map((workout) => {
-        const allSets = flattenExercises(workout.exercises);
+        const allSets = flattenExercises(workout.exercises || []);
 
         // raw volume in KG
         const rawVolume = allSets.reduce((sum, set) => {
-          if (set.completed && set.weight && set.reps) {
+          if (set && set.completed && set.weight && set.reps) {
             return sum + set.weight * set.reps;
           }
           return sum;
@@ -110,7 +126,7 @@ export function useProcessWorkoutMetrics(
 
         // total rest in minutes (converting from seconds)
         const restTimeSec = allSets.reduce(
-          (sum, set) => sum + (set.restTime || 0),
+          (sum, set) => sum + (set && set.restTime ? set.restTime : 0),
           0
         );
         const restTime = restTimeSec / 60;
@@ -140,6 +156,9 @@ export function useProcessWorkoutMetrics(
         };
       })
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      
+    console.log('[useProcessWorkoutMetrics] Processed density data:', result.length);
+    return result;
   }, [workouts, weightUnit]);
 
   // --- Time of Day distribution ---
@@ -156,6 +175,8 @@ export function useProcessWorkoutMetrics(
     }
 
     workouts.forEach(workout => {
+      if (!workout || !workout.start_time) return;
+      
       const workoutDate = new Date(workout.start_time);
       const category = categorizeTimeOfDay(workoutDate);
       timeDistribution[category] += workout.duration || 0;

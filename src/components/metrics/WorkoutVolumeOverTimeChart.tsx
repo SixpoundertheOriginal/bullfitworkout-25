@@ -28,25 +28,40 @@ const WorkoutVolumeOverTimeChartComponent: React.FC<WorkoutVolumeOverTimeChartPr
   className = '',
   height = 200
 }) => {
-  // Extract weight unit outside of render calculations to reduce re-renders
-  const weightUnitContext = useWeightUnit();
-  const weightUnit = weightUnitContext?.weightUnit || 'kg';
+  // Extract weight unit with error handling
+  let weightUnit = 'kg';
+  try {
+    const weightUnitContext = useWeightUnit();
+    weightUnit = weightUnitContext?.weightUnit || 'kg';
+  } catch (error) {
+    console.warn("Failed to access WeightUnit context:", error);
+  }
 
-  // Determine if we have any volume data
+  // Determine if we have any volume data - with null checking
   const hasData = useMemo(
-    () => Array.isArray(data) && data.length > 0 && data.some(item => item.volume > 0),
+    () => Array.isArray(data) && data.length > 0 && data.some(item => item && item.volume > 0),
     [data]
   );
 
   // Memoize formatted data for the chart
   const formattedData = useMemo(() => {
-    if (!hasData) return [];
+    if (!hasData || !Array.isArray(data)) return [];
+    
     return data.map(item => {
-      const vol = convertWeight(item.volume, 'kg', weightUnit);
+      if (!item || typeof item !== 'object') {
+        return {
+          date: 'Unknown',
+          volume: 0,
+          originalDate: new Date().toISOString(),
+          formattedValue: `0 ${weightUnit}`
+        };
+      }
+      
+      const vol = convertWeight(item.volume || 0, 'kg', weightUnit);
       return {
-        date: format(new Date(item.date), 'MMM d'),
+        date: format(new Date(item.date || new Date()), 'MMM d'),
         volume: vol,
-        originalDate: item.date,
+        originalDate: item.date || new Date().toISOString(),
         formattedValue: `${vol.toLocaleString()} ${weightUnit}`
       };
     });
@@ -54,9 +69,13 @@ const WorkoutVolumeOverTimeChartComponent: React.FC<WorkoutVolumeOverTimeChartPr
 
   // Memoize total & average volume stats
   const volumeStats = useMemo(() => {
-    if (!hasData) return { total: 0, average: 0 };
-    const totalRaw = data.reduce((sum, item) => sum + item.volume, 0);
-    const avgRaw = totalRaw / data.length;
+    if (!hasData || !Array.isArray(data)) return { total: 0, average: 0 };
+    
+    const validData = data.filter(item => item && typeof item === 'object' && typeof item.volume === 'number');
+    
+    const totalRaw = validData.reduce((sum, item) => sum + (item.volume || 0), 0);
+    const avgRaw = validData.length > 0 ? totalRaw / validData.length : 0;
+    
     return {
       total: convertWeight(totalRaw, 'kg', weightUnit),
       average: convertWeight(avgRaw, 'kg', weightUnit)
@@ -66,7 +85,7 @@ const WorkoutVolumeOverTimeChartComponent: React.FC<WorkoutVolumeOverTimeChartPr
   return (
     <div
       className={`bg-gray-900 border-gray-800 hover:border-purple-500/50 transition-all ${className}`}
-      style={{ minHeight: `${height + 60}px` }} // ensure card is tall enough
+      style={{ minHeight: `${height + 60}px` }}
     >
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <div className="flex items-center text-sm text-gray-300">
@@ -118,7 +137,10 @@ const WorkoutVolumeOverTimeChartComponent: React.FC<WorkoutVolumeOverTimeChartPr
                       return (
                         <div className="bg-gray-800 border border-gray-700 p-2 rounded-lg shadow-lg">
                           <p className="text-gray-300">
-                            {format(new Date(payload[0].payload.originalDate), 'MMM d, yyyy')}
+                            {format(
+                              new Date(payload[0].payload.originalDate),
+                              'MMM d, yyyy'
+                            )}
                           </p>
                           <p className="text-purple-400 font-semibold">
                             {payload[0].payload.formattedValue}

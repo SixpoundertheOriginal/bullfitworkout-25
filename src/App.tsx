@@ -6,7 +6,7 @@ import { DateRangeProvider } from '@/context/DateRangeContext';
 import { WeightUnitContextProvider } from '@/context/WeightUnitContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { LayoutProvider } from '@/context/LayoutContext';
-import { RouterProvider as AppRouterProvider } from '@/context/RouterProvider';
+import { AppRouterProvider } from '@/context/RouterProvider';
 import { WorkoutNavigationProvider } from '@/context/WorkoutNavigationContext';
 
 // Create a new QueryClient instance
@@ -21,20 +21,20 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  // Remove StrictMode to prevent double rendering in production
   return (
-    // Removed React.StrictMode to prevent double rendering
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <DateRangeProvider>
-            <WeightUnitContextProvider>
+          <WeightUnitContextProvider>
+            <DateRangeProvider>
               <LayoutProvider>
                 <WorkoutNavigationProvider>
                   <AppRouterProvider />
                 </WorkoutNavigationProvider>
               </LayoutProvider>
-            </WeightUnitContextProvider>
-          </DateRangeProvider>
+            </DateRangeProvider>
+          </WeightUnitContextProvider>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
