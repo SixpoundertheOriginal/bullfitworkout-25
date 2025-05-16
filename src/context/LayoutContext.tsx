@@ -20,14 +20,14 @@ export const LayoutProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [activeWorkoutId, setActiveWorkoutId] = useState<string | null>(null);
   const [isFilterVisible, setFilterVisible] = useState(false);
   
-  // Update current route when location changes
+  // Update current route and filter visibility when location changes
   useEffect(() => {
     setCurrentRoute(location.pathname);
     
     // Show filter on overview page, hide on others
-    setFilterVisible(location.pathname === '/overview');
+    const shouldShowFilter = location.pathname === '/overview';
+    setFilterVisible(shouldShowFilter);
     
-    // This effect should run whenever the path changes
   }, [location.pathname]);
   
   const value = {

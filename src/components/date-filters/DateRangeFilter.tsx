@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -81,7 +80,7 @@ export function DateRangeFilter() {
   };
   
   return (
-    <div className="flex items-center justify-end py-1 w-full">
+    <div className="flex items-center justify-end w-full">
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -130,7 +129,7 @@ export function DateRangeFilter() {
                 selected={dateRange}
                 onSelect={handleCalendarSelect}
                 numberOfMonths={1}
-                className="bg-gray-800"
+                className={cn("bg-gray-800", "pointer-events-auto")}
               />
             </div>
           </div>
