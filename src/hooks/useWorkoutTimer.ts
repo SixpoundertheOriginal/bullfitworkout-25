@@ -1,20 +1,9 @@
 
-import { useEffect } from 'react';
-import { useWorkoutStore } from '@/store/workoutStore';
+// This file is maintained for backward compatibility
+// The functionality has been moved to src/store/workout/hooks.ts
+
+import { useWorkoutTimer as useWorkoutTimerNew } from '../store/workout';
 
 export function useWorkoutTimer() {
-  const { isActive, setElapsedTime } = useWorkoutStore();
-
-  // Timer effect to update elapsed time
-  useEffect(() => {
-    if (isActive) {
-      const timer = setInterval(() => {
-        setElapsedTime(prev => prev + 1);
-      }, 1000);
-      
-      return () => clearInterval(timer);
-    }
-  }, [isActive, setElapsedTime]);
-
-  return { isActive };
+  return useWorkoutTimerNew();
 }

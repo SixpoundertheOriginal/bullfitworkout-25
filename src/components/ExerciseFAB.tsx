@@ -2,7 +2,7 @@
 import React from "react";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useWorkoutStore } from "@/store/workoutStore";
+import { useWorkoutStore } from "@/store/workout"; // Updated import path
 import { CircularGradientButton } from "@/components/CircularGradientButton";
 
 interface ExerciseFABProps {
