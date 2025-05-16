@@ -105,7 +105,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
 
   if (exerciseList.length === 0) {
     return (
-      <div className="container max-w-5xl mx-auto pb-40"> {/* Added bottom padding */}
+      <div className="container max-w-5xl mx-auto pb-28"> {/* Reduced bottom padding */}
         <Card className="bg-gradient-to-br from-gray-900/90 to-gray-800/70 border-white/5 overflow-hidden">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center px-4">
             <div className="w-16 h-16 rounded-full bg-purple-900/20 flex items-center justify-center mb-4">
@@ -113,13 +113,18 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
             </div>
             <h3 className="text-xl font-semibold mb-2 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">No exercises added yet</h3>
             <p className="text-gray-400 max-w-md mb-6">Start building your workout by adding exercises to track your sets, weights, and reps.</p>
-            <Button 
-              onClick={onOpenAddExercise}
-              className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 shadow-lg"
-              size="lg"
+            <motion.div
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.98 }}
             >
-              <PlusCircle className="mr-2 h-5 w-5" /> Add Your First Exercise
-            </Button>
+              <Button 
+                onClick={onOpenAddExercise}
+                className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 shadow-lg shadow-purple-900/20 h-12 px-6"
+                size="lg"
+              >
+                <PlusCircle className="mr-2 h-5 w-5" /> Add Your First Exercise
+              </Button>
+            </motion.div>
           </CardContent>
         </Card>
       </div>
@@ -129,7 +134,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
   return (
     <div className="container max-w-5xl mx-auto">
       <motion.div 
-        className="space-y-4 mb-40 pb-10" // Substantially increased bottom margin and added padding
+        className="space-y-4 mb-40 pb-10" // Keep the increased padding for when exercises exist
         variants={container}
         initial="hidden"
         animate="show"

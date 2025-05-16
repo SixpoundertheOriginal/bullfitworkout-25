@@ -13,6 +13,7 @@ interface WorkoutSessionFooterProps {
   isSaving: boolean;
   focusedExercise?: string | null;
   onExitFocus?: () => void;
+  visible?: boolean; // New prop to control visibility
 }
 
 export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
@@ -21,9 +22,15 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
   hasExercises,
   isSaving,
   focusedExercise,
-  onExitFocus
+  onExitFocus,
+  visible = true // Visible by default
 }) => {
   const isMobile = useIsMobile();
+  
+  // If not visible, don't render the component at all
+  if (!visible && !hasExercises) {
+    return null;
+  }
   
   return (
     <motion.div
@@ -31,17 +38,17 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className={cn(
-        "fixed bottom-0 left-0 right-0 z-[100]", // Increased z-index further to ensure it's always on top
-        "bg-gradient-to-t from-black/95 via-black/90 to-black/70 pt-6 pb-6 px-4", // More solid gradient for better separation
-        "border-t border-gray-800/50 shadow-lg", // Enhanced border and added shadow for visual separation
+        "fixed bottom-0 left-0 right-0 z-[100]", 
+        "bg-gradient-to-t from-black/95 via-black/90 to-black/70 pt-6 pb-6 px-4", 
+        "border-t border-gray-800/50 shadow-lg", 
         focusedExercise ? "from-purple-900/40 via-black/90 to-black/70" : ""
       )}
       style={{ 
-        position: "fixed", // Explicitly set fixed position
+        position: "fixed",
         bottom: 0,
         width: "100%",
-        backdropFilter: "blur(8px)", // Add blur effect for modern UI
-        WebkitBackdropFilter: "blur(8px)" // For Safari support
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)"
       }}
     >
       <div className="container max-w-5xl mx-auto">

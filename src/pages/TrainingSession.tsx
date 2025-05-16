@@ -345,7 +345,7 @@ const TrainingSessionPage = () => {
   return (
     <div className="flex flex-col min-h-screen bg-black text-white pt-16 pb-16">
       <main className="flex-1 overflow-auto">
-        <div className="mx-auto py-6 pb-40">
+        <div className="mx-auto py-6 pb-20"> {/* Reduced bottom padding */}
           <div className="relative">
             <WorkoutSessionHeader
               elapsedTime={elapsedTime}
@@ -454,7 +454,7 @@ const TrainingSessionPage = () => {
         </div>
       </main>
 
-      {/* Bottom drawer for Add & Finish */}
+      {/* Show WorkoutSessionFooter only when there are exercises */}
       <WorkoutSessionFooter
         onAddExercise={() => setIsAddExerciseSheetOpen(true)}
         onFinishWorkout={handleFinishWorkout}
@@ -462,6 +462,7 @@ const TrainingSessionPage = () => {
         isSaving={isSaving || saveStatus === 'saving'}
         focusedExercise={focusedExercise}
         onExitFocus={() => setFocusedExercise(null)}
+        visible={hasExercises} // Only show the footer when there are exercises
       />
 
       {/* Sheets */}

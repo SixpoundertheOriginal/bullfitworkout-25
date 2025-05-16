@@ -213,7 +213,7 @@ export const SetsTable: React.FC<SetsTableProps> = ({
       
       {/* Actions bar */}
       <div className={cn(
-        "flex justify-between items-center mb-40", // Further increased bottom margin for more space
+        "flex justify-between items-center mb-28", // Reduced from mb-40 to mb-28
         isMobile && "flex-col space-y-2"
       )}>
         <Button

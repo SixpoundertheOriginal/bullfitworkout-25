@@ -11,6 +11,7 @@ interface ExerciseFABProps {
   visible?: boolean;
   showOnlyIfActive?: boolean;
   hideOnMobile?: boolean;
+  floatingPosition?: boolean; // New prop to determine if it should float or be inline
 }
 
 export const ExerciseFAB = ({ 
@@ -18,7 +19,8 @@ export const ExerciseFAB = ({
   className, 
   visible = true,
   showOnlyIfActive = false,
-  hideOnMobile = true
+  hideOnMobile = true,
+  floatingPosition = true // Default to floating position
 }: ExerciseFABProps) => {
   const { isActive } = useWorkoutState();
   
@@ -29,7 +31,7 @@ export const ExerciseFAB = ({
   
   return (
     <div className={cn(
-      "fixed bottom-24 right-6 z-50", 
+      floatingPosition ? "fixed bottom-24 right-6 z-50" : "relative", 
       "transform transition-all duration-300 ease-in-out",
       visible ? "translate-y-0 opacity-100" : "translate-y-16 opacity-0 pointer-events-none",
       hideOnMobile ? "hidden md:block" : "",
