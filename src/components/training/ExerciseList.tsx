@@ -105,7 +105,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
 
   if (exerciseList.length === 0) {
     return (
-      <div className="container max-w-5xl mx-auto">
+      <div className="container max-w-5xl mx-auto pb-40"> {/* Added bottom padding */}
         <Card className="bg-gradient-to-br from-gray-900/90 to-gray-800/70 border-white/5 overflow-hidden">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center px-4">
             <div className="w-16 h-16 rounded-full bg-purple-900/20 flex items-center justify-center mb-4">
@@ -129,7 +129,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
   return (
     <div className="container max-w-5xl mx-auto">
       <motion.div 
-        className="space-y-4 mb-32" // Increased bottom margin for more space
+        className="space-y-4 mb-40 pb-10" // Substantially increased bottom margin and added padding
         variants={container}
         initial="hidden"
         animate="show"

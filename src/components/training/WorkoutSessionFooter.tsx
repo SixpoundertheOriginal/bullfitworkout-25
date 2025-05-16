@@ -31,15 +31,17 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className={cn(
-        "fixed bottom-0 left-0 right-0 z-50", // High z-index to stay on top
-        "bg-gradient-to-t from-black via-black/95 to-black/0 pt-8 pb-6 px-4 mt-16", // Added top margin
-        "border-t border-gray-800/30", // Added subtle border for separation
-        focusedExercise ? "from-purple-900/20 via-black/95 to-black/0" : ""
+        "fixed bottom-0 left-0 right-0 z-[100]", // Increased z-index further to ensure it's always on top
+        "bg-gradient-to-t from-black/95 via-black/90 to-black/70 pt-6 pb-6 px-4", // More solid gradient for better separation
+        "border-t border-gray-800/50 shadow-lg", // Enhanced border and added shadow for visual separation
+        focusedExercise ? "from-purple-900/40 via-black/90 to-black/70" : ""
       )}
       style={{ 
-        position: "fixed", // Ensure it's fixed at the bottom
+        position: "fixed", // Explicitly set fixed position
         bottom: 0,
-        width: "100%"
+        width: "100%",
+        backdropFilter: "blur(8px)", // Add blur effect for modern UI
+        WebkitBackdropFilter: "blur(8px)" // For Safari support
       }}
     >
       <div className="container max-w-5xl mx-auto">
@@ -75,6 +77,7 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
               <Button
                 className={cn(
                   "bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-700 hover:to-indigo-900 text-white shadow-lg",
+                  "border border-indigo-500/20 transition-all duration-300",
                   isMobile && "flex-1"
                 )}
                 onClick={onAddExercise}
@@ -87,8 +90,9 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
                 className={cn(
                   "bg-gradient-to-r",
                   hasExercises 
-                    ? "from-green-600 to-emerald-800 hover:from-green-700 hover:to-emerald-900 text-white shadow-lg" 
+                    ? "from-green-600 to-emerald-800 hover:from-green-700 hover:to-emerald-900 text-white shadow-lg border border-green-500/20" 
                     : "from-gray-700 to-gray-800 text-gray-300 cursor-not-allowed opacity-70",
+                  "transition-all duration-300",
                   isMobile ? "flex-1" : "ml-0"
                 )}
                 onClick={onFinishWorkout}
