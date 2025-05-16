@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Timer, Dumbbell, Clock, Play, Activity } from "lucide-react";
+import { Timer, Dumbbell, Clock, Play, Activity, Zap } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { MetricCard } from "./metrics/MetricCard";
@@ -75,9 +75,14 @@ export const WorkoutMetrics = ({
   };
 
   const completionPercentage = totalSets > 0 ? (completedSets / totalSets) * 100 : 0;
+  const efficiency = totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0;
 
   return (
     <div className={cn("relative w-full", className)}>
+      {/* Background glow effects - matching home page aesthetics */}
+      <div className="absolute -top-10 -left-20 w-60 h-60 bg-purple-600/10 rounded-full blur-3xl" />
+      <div className="absolute -top-10 -right-20 w-60 h-60 bg-pink-600/10 rounded-full blur-3xl" />
+      
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 sm:p-4 rounded-xl bg-gradient-to-br from-gray-900/90 to-gray-800/60 backdrop-blur-md border border-white/5 shadow-lg">
         {/* Time Card */}
         <MetricCard
@@ -108,7 +113,7 @@ export const WorkoutMetrics = ({
           icon={Activity}
           value={`${completedSets}/${totalSets}`}
           label="Sets"
-          tooltip={`${Math.round(completionPercentage)}% sets completed`}
+          tooltip={`${efficiency}% sets completed`}
           progressValue={completionPercentage}
           gradientClass={cn(
             "from-purple-600/20 via-black/5 to-purple-900/20 hover:from-purple-600/30 hover:to-purple-900/30",

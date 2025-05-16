@@ -6,6 +6,7 @@ import { ExerciseThumbnail } from '../exercises/cards/ExerciseThumbnail';
 import { cn } from '@/lib/utils';
 import { SetsTable } from '../workouts/SetsTable';
 import { motion } from 'framer-motion';
+import { Dumbbell } from 'lucide-react';
 
 interface ExerciseCardProps {
   exercise: Exercise | string;
@@ -62,7 +63,14 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
       )}
       size="lg"
     /> : 
-    undefined;
+    <div className={cn(
+      "w-12 h-12 rounded-lg flex items-center justify-center",
+      "bg-gradient-to-br from-purple-600/20 to-purple-800/20",
+      "transition-all duration-300",
+      isActive ? "ring-2 ring-purple-500/40 shadow-lg shadow-purple-500/20" : ""
+    )}>
+      <Dumbbell className="w-6 h-6 text-purple-400" />
+    </div>;
 
   // Handle set update
   const handleSetUpdate = (updatedSet: ExerciseSet) => {
@@ -126,6 +134,11 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
       transition={{ type: "spring", stiffness: 300, damping: 15 }}
+      className={cn(
+        "w-full",
+        isActive ? "z-10" : "",
+        className
+      )}
     >
       <CommonExerciseCard
         exercise={exercise}

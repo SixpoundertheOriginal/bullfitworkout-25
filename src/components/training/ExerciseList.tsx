@@ -1,8 +1,11 @@
 
 import React from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { ExerciseSet } from "@/types/exercise";
 import ExerciseCard from './ExerciseCard';
+import { PlusCircle, Dumbbell } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
 interface ExerciseListProps {
   exercises: Record<string, ExerciseSet[]>;
@@ -42,25 +45,17 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
   onRestTimeIncrement,
   onShowRestTimer,
   onResetRestTimer,
+  onOpenAddExercise,
   setExercises
 }) => {
   const exerciseList = Object.keys(exercises);
   
-  if (exerciseList.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-        <p className="text-lg mb-4">No exercises added yet</p>
-      </div>
-    );
-  }
-
   // Function to handle adding a set that copies the previous set values
   const handleAddSet = (exerciseName: string) => {
     const existingSets = exercises[exerciseName];
     const lastSet = existingSets.length > 0 ? existingSets[existingSets.length - 1] : null;
     
     // Call the onAddSet function that was passed as prop
-    // This lets the parent component handle the actual set creation
     onAddSet(exerciseName);
     
     // If there's a last set, update the newly created set with its values
@@ -89,30 +84,76 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
     }
   };
 
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+  };
+
+  if (exerciseList.length === 0) {
+    return (
+      <div className="container max-w-5xl mx-auto">
+        <Card className="bg-gradient-to-br from-gray-900/90 to-gray-800/70 border-white/5 overflow-hidden">
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center px-4">
+            <div className="w-16 h-16 rounded-full bg-purple-900/20 flex items-center justify-center mb-4">
+              <Dumbbell className="w-8 h-8 text-purple-400" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">No exercises added yet</h3>
+            <p className="text-gray-400 max-w-md mb-6">Start building your workout by adding exercises to track your sets, weights, and reps.</p>
+            <Button 
+              onClick={onOpenAddExercise}
+              className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 shadow-lg"
+              size="lg"
+            >
+              <PlusCircle className="mr-2 h-5 w-5" /> Add Your First Exercise
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6 mb-32">
-      {exerciseList.map(exerciseName => (
-        <ExerciseCard
-          key={exerciseName}
-          exercise={exerciseName}
-          sets={exercises[exerciseName]}
-          isActive={activeExercise === exerciseName}
-          onAddSet={() => handleAddSet(exerciseName)}
-          onCompleteSet={(setIndex) => onCompleteSet(exerciseName, setIndex)}
-          onDeleteExercise={() => onDeleteExercise(exerciseName)}
-          onRemoveSet={(setIndex) => onRemoveSet(exerciseName, setIndex)}
-          onEditSet={(setIndex) => onEditSet(exerciseName, setIndex)}
-          onSaveSet={(setIndex) => onSaveSet(exerciseName, setIndex)}
-          onWeightChange={(setIndex, value) => onWeightChange(exerciseName, setIndex, value)}
-          onRepsChange={(setIndex, value) => onRepsChange(exerciseName, setIndex, value)}
-          onRestTimeChange={(setIndex, value) => onRestTimeChange(exerciseName, setIndex, value)}
-          onWeightIncrement={(setIndex, increment) => onWeightIncrement(exerciseName, setIndex, increment)}
-          onRepsIncrement={(setIndex, increment) => onRepsIncrement(exerciseName, setIndex, increment)}
-          onRestTimeIncrement={(setIndex, increment) => onRestTimeIncrement(exerciseName, setIndex, increment)}
-          onShowRestTimer={onShowRestTimer}
-          onResetRestTimer={onResetRestTimer}
-        />
-      ))}
+    <div className="container max-w-5xl mx-auto">
+      <motion.div 
+        className="space-y-4 mb-32"
+        variants={container}
+        initial="hidden"
+        animate="show"
+      >
+        {exerciseList.map(exerciseName => (
+          <motion.div key={exerciseName} variants={item}>
+            <ExerciseCard
+              exercise={exerciseName}
+              sets={exercises[exerciseName]}
+              isActive={activeExercise === exerciseName}
+              onAddSet={() => handleAddSet(exerciseName)}
+              onCompleteSet={(setIndex) => onCompleteSet(exerciseName, setIndex)}
+              onDeleteExercise={() => onDeleteExercise(exerciseName)}
+              onRemoveSet={(setIndex) => onRemoveSet(exerciseName, setIndex)}
+              onEditSet={(setIndex) => onEditSet(exerciseName, setIndex)}
+              onSaveSet={(setIndex) => onSaveSet(exerciseName, setIndex)}
+              onWeightChange={(setIndex, value) => onWeightChange(exerciseName, setIndex, value)}
+              onRepsChange={(setIndex, value) => onRepsChange(exerciseName, setIndex, value)}
+              onRestTimeChange={(setIndex, value) => onRestTimeChange(exerciseName, setIndex, value)}
+              onWeightIncrement={(setIndex, increment) => onWeightIncrement(exerciseName, setIndex, increment)}
+              onRepsIncrement={(setIndex, increment) => onRepsIncrement(exerciseName, setIndex, increment)}
+              onRestTimeIncrement={(setIndex, increment) => onRestTimeIncrement(exerciseName, setIndex, increment)}
+              onShowRestTimer={onShowRestTimer}
+              onResetRestTimer={onResetRestTimer}
+            />
+          </motion.div>
+        ))}
+      </motion.div>
     </div>
   );
-}
+};

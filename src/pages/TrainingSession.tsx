@@ -9,7 +9,7 @@ import { useExercises } from "@/hooks/useExercises";
 import { WorkoutSessionHeader } from "@/components/training/WorkoutSessionHeader";
 import { ExerciseList } from "@/components/training/ExerciseList";
 import { AddExerciseSheet } from "@/components/training/AddExerciseSheet";
-import { Loader2 } from "lucide-react";
+import { Loader2, Dumbbell } from "lucide-react";
 import { Exercise } from "@/types/exercise";
 import { useSound } from "@/hooks/useSound";
 import { RestTimer } from "@/components/RestTimer";
@@ -92,7 +92,7 @@ const TrainingSessionPage = () => {
     if (location.pathname === '/training-session') {
       updateLastActiveRoute('/training-session');
     }
-  }, []);
+  }, [location.pathname, updateLastActiveRoute]);
 
   useEffect(() => {
     if (pageLoaded && workoutStatus === 'idle' && hasExercises) {
@@ -170,17 +170,6 @@ const TrainingSessionPage = () => {
       setIsSaving(true);
       markAsSaving();
       
-      // Prepare workout data
-      const workoutData = {
-        name: trainingConfig?.trainingType ? `${trainingConfig.trainingType} Workout` : "Workout",
-        training_type: trainingConfig?.trainingType || 'Strength',
-        start_time: new Date(new Date().getTime() - elapsedTime * 1000).toISOString(),
-        end_time: new Date().toISOString(),
-        duration: elapsedTime || 0,
-        notes: null,
-        metadata: trainingConfig ? JSON.stringify({ trainingConfig }) : null
-      };
-      
       // Save the workout using the useWorkoutSave hook
       const savedId = await handleCompleteWorkout(trainingConfig);
       
@@ -190,9 +179,6 @@ const TrainingSessionPage = () => {
         toast.error("Failed to save workout");
         return;
       }
-      
-      // Success will be handled by the useEffect that watches saveStatus
-      console.log("Workout saved with ID:", savedId);
       
     } catch (err) {
       console.error("Error saving workout data:", err);
@@ -215,8 +201,17 @@ const TrainingSessionPage = () => {
   if (loadingExercises) {
     return (
       <div className="flex items-center justify-center h-screen bg-black text-white">
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        Loading exercises...
+        <div className="flex flex-col items-center">
+          <div className="mb-4 relative">
+            <div className="w-16 h-16 rounded-full bg-purple-900/20 flex items-center justify-center">
+              <Dumbbell className="w-8 h-8 text-purple-400 animate-pulse" />
+            </div>
+            <div className="absolute -bottom-1 -right-1">
+              <Loader2 className="h-6 w-6 animate-spin text-purple-500" />
+            </div>
+          </div>
+          <p className="text-gray-400">Loading your workout...</p>
+        </div>
       </div>
     );
   }
@@ -233,8 +228,8 @@ const TrainingSessionPage = () => {
   return (
     <div className="flex flex-col min-h-screen bg-black text-white pt-16 pb-16">
       <main className="flex-1 overflow-auto">
-        <div className="mx-auto max-w-3xl px-4 py-6 pb-40">
-          <div className="mb-6 relative">
+        <div className="mx-auto py-6 pb-40">
+          <div className="relative">
             <WorkoutSessionHeader
               elapsedTime={elapsedTime}
               exerciseCount={exerciseCount}
@@ -253,7 +248,7 @@ const TrainingSessionPage = () => {
               currentRestTime={currentRestTime}
             />
             {showRestTimerModal && (
-              <div className="absolute right-4 top-full z-50 mt-2 w-72">
+              <div className="fixed right-4 top-32 z-50 w-72">
                 <RestTimer
                   isVisible={showRestTimerModal}
                   onClose={() => { setShowRestTimerModal(false); setRestTimerActive(false); }}
@@ -263,53 +258,56 @@ const TrainingSessionPage = () => {
               </div>
             )}
           </div>
-          <ExerciseList
-            exercises={exercises}
-            activeExercise={activeExercise}
-            onAddSet={handleAddSet}
-            onCompleteSet={handleCompleteSet}
-            onDeleteExercise={deleteExercise}
-            onRemoveSet={(name, i) => {
-              setStoreExercises(prev => ({ ...prev, [name]: prev[name].filter((_, idx) => idx !== i) }));
-            }}
-            onEditSet={(name, i) => {
-              setStoreExercises(prev => ({ ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, isEditing: true } : s) }));
-            }}
-            onSaveSet={(name, i) => {
-              setStoreExercises(prev => ({ ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, isEditing: false } : s) }));
-            }}
-            onWeightChange={(name, i, v) => {
-              setStoreExercises(prev => ({ ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, weight: +v || 0 } : s) }));
-            }}
-            onRepsChange={(name, i, v) => {
-              setStoreExercises(prev => ({ ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, reps: parseInt(v) || 0 } : s) }));
-            }}
-            onRestTimeChange={(name, i, v) => {
-              setStoreExercises(prev => ({ ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, restTime: parseInt(v) || 60 } : s) }));
-            }}
-            onWeightIncrement={(name, i, inc) => {
-              setStoreExercises(prev => {
-                const set = prev[name][i];
-                return { ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, weight: Math.max(0, (set.weight || 0) + inc) } : s) };
-              });
-            }}
-            onRepsIncrement={(name, i, inc) => {
-              setStoreExercises(prev => {
-                const set = prev[name][i];
-                return { ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, reps: Math.max(0, (set.reps || 0) + inc) } : s) };
-              });
-            }}
-            onRestTimeIncrement={(name, i, inc) => {
-              setStoreExercises(prev => {
-                const set = prev[name][i];
-                return { ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, restTime: Math.max(0, (set.restTime || 60) + inc) } : s) };
-              });
-            }}
-            onShowRestTimer={handleShowRestTimer}
-            onResetRestTimer={triggerRestTimerReset}
-            onOpenAddExercise={() => setIsAddExerciseSheetOpen(true)}
-            setExercises={handleSetExercises}
-          />
+          
+          <div className="mt-6">
+            <ExerciseList
+              exercises={exercises}
+              activeExercise={activeExercise}
+              onAddSet={handleAddSet}
+              onCompleteSet={handleCompleteSet}
+              onDeleteExercise={deleteExercise}
+              onRemoveSet={(name, i) => {
+                setStoreExercises(prev => ({ ...prev, [name]: prev[name].filter((_, idx) => idx !== i) }));
+              }}
+              onEditSet={(name, i) => {
+                setStoreExercises(prev => ({ ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, isEditing: true } : s) }));
+              }}
+              onSaveSet={(name, i) => {
+                setStoreExercises(prev => ({ ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, isEditing: false } : s) }));
+              }}
+              onWeightChange={(name, i, v) => {
+                setStoreExercises(prev => ({ ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, weight: +v || 0 } : s) }));
+              }}
+              onRepsChange={(name, i, v) => {
+                setStoreExercises(prev => ({ ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, reps: parseInt(v) || 0 } : s) }));
+              }}
+              onRestTimeChange={(name, i, v) => {
+                setStoreExercises(prev => ({ ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, restTime: parseInt(v) || 60 } : s) }));
+              }}
+              onWeightIncrement={(name, i, inc) => {
+                setStoreExercises(prev => {
+                  const set = prev[name][i];
+                  return { ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, weight: Math.max(0, (set.weight || 0) + inc) } : s) };
+                });
+              }}
+              onRepsIncrement={(name, i, inc) => {
+                setStoreExercises(prev => {
+                  const set = prev[name][i];
+                  return { ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, reps: Math.max(0, (set.reps || 0) + inc) } : s) };
+                });
+              }}
+              onRestTimeIncrement={(name, i, inc) => {
+                setStoreExercises(prev => {
+                  const set = prev[name][i];
+                  return { ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, restTime: Math.max(0, (set.restTime || 60) + inc) } : s) };
+                });
+              }}
+              onShowRestTimer={handleShowRestTimer}
+              onResetRestTimer={triggerRestTimerReset}
+              onOpenAddExercise={() => setIsAddExerciseSheetOpen(true)}
+              setExercises={handleSetExercises}
+            />
+          </div>
         </div>
       </main>
 
