@@ -4,45 +4,75 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { ExerciseSet } from '@/types/exercise';
 import { processWorkoutMetrics, ProcessedWorkoutMetrics } from '@/utils/workoutMetricsProcessor';
-import { useWeightUnit } from '@/context/WeightUnitContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { WorkoutStats, WorkoutStatsResult } from '@/types/workout-metrics';
-import { useDateRange } from '@/context/DateRangeContext';
 import { getExerciseGroup } from '@/utils/exerciseUtils';
+import { useContext } from 'react';
+import { DateRange } from 'react-day-picker';
+
+// Import contexts but don't throw if they're not available
+const safeImport = <T,>(importFn: () => T): T | undefined => {
+  try {
+    return importFn();
+  } catch (e) {
+    console.warn("Failed to import context:", e);
+    return undefined;
+  }
+};
+
+// Create wrapper functions to safely access contexts
+const useDateRangeSafe = () => {
+  try {
+    // Dynamic import to prevent errors if the context isn't available
+    const { useDateRange } = require('@/context/DateRangeContext');
+    return useDateRange();
+  } catch (error) {
+    console.warn("DateRange context not available:", error);
+    // Return a default object that matches the shape of the context
+    return {
+      dateRange: {
+        from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+        to: new Date()
+      },
+      setDateRange: () => {}
+    };
+  }
+};
+
+const useWeightUnitSafe = () => {
+  try {
+    const { useWeightUnit } = require('@/context/WeightUnitContext');
+    return useWeightUnit();
+  } catch (error) {
+    console.warn("WeightUnit context not available:", error);
+    return {
+      weightUnit: "kg",
+      setWeightUnit: () => {},
+      saveWeightUnitPreference: async () => {},
+      isDefaultUnit: true,
+      isLoading: false
+    };
+  }
+};
 
 export function useWorkoutStats(
   exercises?: Record<string, ExerciseSet[]>,
   duration?: number,
   userBodyInfo?: { weight: number; unit: string }
 ): WorkoutStatsResult {
-  const { weightUnit } = useWeightUnit();
-  const { user } = useAuth();
+  // Safely access contexts
+  const weightUnitContext = useWeightUnitSafe();
+  const weightUnit = weightUnitContext?.weightUnit || "kg";
+  const dateRangeContext = useDateRangeSafe();
   
-  // Create a safer way to get date range that won't throw
-  const getDateRangeSafely = () => {
-    try {
-      return useDateRange();
-    } catch (error) {
-      console.warn("DateRange context not available, using default date range", error);
-      return null;
-    }
+  // Use context values if available, otherwise use defaults
+  const dateRange: DateRange | undefined = dateRangeContext?.dateRange || {
+    from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    to: new Date()
   };
-  
-  // Get the date range context if available
-  const dateRangeContext = getDateRangeSafely();
-  
-  // Use the date range from context or create default values
-  const dateRange = dateRangeContext?.dateRange || (() => {
-    const now = new Date();
-    const thirtyDaysAgo = new Date(now);
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    return {
-      from: thirtyDaysAgo,
-      to: now
-    };
-  })();
 
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [workouts, setWorkouts] = useState<any[]>([]);
   const [stats, setStats] = useState<WorkoutStats>({
