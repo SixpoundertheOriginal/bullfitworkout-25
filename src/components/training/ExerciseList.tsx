@@ -129,13 +129,13 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
   return (
     <div className="container max-w-5xl mx-auto">
       <motion.div 
-        className="space-y-4 mb-32"
+        className="space-y-4 mb-32" // Increased bottom margin for more space
         variants={container}
         initial="hidden"
         animate="show"
       >
         {exerciseList.map(exerciseName => (
-          <motion.div key={exerciseName} variants={item}>
+          <motion.div key={exerciseName} variants={item} data-exercise={exerciseName}>
             <ExerciseCard
               exercise={exerciseName}
               sets={exercises[exerciseName]}

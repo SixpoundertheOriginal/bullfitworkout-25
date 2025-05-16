@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { RotateCcw, Plus, CheckCircle, Target } from "lucide-react";
+import { Plus, CheckCircle, Target } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -31,7 +31,7 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className={cn(
-        "fixed bottom-0 left-0 right-0 z-40",
+        "fixed bottom-0 left-0 right-0 z-50", // Increased z-index to ensure it's always on top
         "bg-gradient-to-t from-black via-black/95 to-black/0 pt-8 pb-6 px-4",
         focusedExercise ? "from-purple-900/20 via-black/95 to-black/0" : ""
       )}

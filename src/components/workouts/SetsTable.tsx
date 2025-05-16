@@ -211,9 +211,9 @@ export const SetsTable: React.FC<SetsTableProps> = ({
         </motion.div>
       ) : null}
       
-      {/* Actions bar - now without focus controls */}
+      {/* Actions bar */}
       <div className={cn(
-        "flex justify-between items-center mb-10", // Added bottom margin to create space for footer
+        "flex justify-between items-center mb-24", // Increased bottom margin to create more space for footer
         isMobile && "flex-col space-y-2"
       )}>
         <Button
