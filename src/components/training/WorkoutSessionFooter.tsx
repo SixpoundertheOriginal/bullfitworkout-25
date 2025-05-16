@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { RotateCcw, Plus, CheckCircle, Target } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface WorkoutSessionFooterProps {
   onAddExercise: () => void;
@@ -22,6 +23,8 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
   focusedExercise,
   onExitFocus
 }) => {
+  const isMobile = useIsMobile();
+  
   return (
     <motion.div
       initial={{ y: 100, opacity: 0 }}
@@ -34,12 +37,18 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
       )}
     >
       <div className="container max-w-5xl mx-auto">
-        <div className="flex justify-between items-center">
+        <div className={cn(
+          "flex justify-between items-center",
+          isMobile && focusedExercise && "flex-col gap-2"
+        )}>
           {focusedExercise ? (
             <>
               <Button
                 variant="outline"
-                className="border border-purple-500/30 bg-gray-900/80 text-purple-300 hover:bg-purple-800/20"
+                className={cn(
+                  "border border-purple-500/30 bg-gray-900/80 text-purple-300 hover:bg-purple-800/20",
+                  isMobile && "w-full"
+                )}
                 onClick={onExitFocus}
               >
                 <RotateCcw className="mr-2 h-4 w-4" />
@@ -49,9 +58,10 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
               <Button
                 disabled={isSaving}
                 className={cn(
-                  "ml-4 flex-1 md:flex-none md:ml-0 bg-gradient-to-r from-purple-600 to-purple-800",
+                  "bg-gradient-to-r from-purple-600 to-purple-800",
                   "hover:from-purple-700 hover:to-purple-900 text-white shadow-lg shadow-purple-900/30",
-                  "border border-purple-500/30 transition-all duration-300"
+                  "border border-purple-500/30 transition-all duration-300",
+                  isMobile ? "w-full" : "ml-4 flex-1 md:flex-none md:ml-0"
                 )}
                 onClick={onFinishWorkout}
               >
@@ -71,7 +81,10 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
           ) : (
             <>
               <Button
-                className="bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-700 hover:to-indigo-900 text-white shadow-lg"
+                className={cn(
+                  "bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-700 hover:to-indigo-900 text-white shadow-lg",
+                  isMobile && "flex-1"
+                )}
                 onClick={onAddExercise}
               >
                 <Plus className="mr-2 h-4 w-4" /> Add Exercise
@@ -80,10 +93,11 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
               <Button
                 disabled={!hasExercises || isSaving}
                 className={cn(
-                  "ml-4 bg-gradient-to-r",
+                  "bg-gradient-to-r",
                   hasExercises 
                     ? "from-green-600 to-emerald-800 hover:from-green-700 hover:to-emerald-900 text-white shadow-lg" 
-                    : "from-gray-700 to-gray-800 text-gray-300 cursor-not-allowed opacity-70"
+                    : "from-gray-700 to-gray-800 text-gray-300 cursor-not-allowed opacity-70",
+                  isMobile ? "flex-1" : "ml-4"
                 )}
                 onClick={onFinishWorkout}
               >

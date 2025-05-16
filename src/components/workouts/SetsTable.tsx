@@ -211,15 +211,36 @@ export const SetsTable: React.FC<SetsTableProps> = ({
         </motion.div>
       ) : null}
       
+      {/* Separate focus mode bar that doesn't overlap with content */}
+      {highlightActive && (
+        <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-2 mb-3 shadow-md">
+          <div className="flex items-center justify-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onFocusSet && onFocusSet(0)}
+              className="bg-gray-800/80 hover:bg-gray-700 border-gray-700 text-gray-300"
+            >
+              <Target className="mr-1 h-4 w-4" />
+              Exit Focus Mode
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      {/* Actions bar - now separate from focus mode controls */}
       <div className={cn(
-        "flex justify-between items-center mt-3 pt-2",
-        isMobile && "flex-wrap gap-2"
+        "flex justify-between items-center",
+        isMobile && "flex-col space-y-2"
       )}>
         <Button
           variant="outline"
           size="sm"
           onClick={onToggleExpanded}
-          className="bg-gray-800/80 hover:bg-gray-700 border-gray-700 text-gray-300"
+          className={cn(
+            "bg-gray-800/80 hover:bg-gray-700 border-gray-700 text-gray-300",
+            isMobile && "w-full"
+          )}
         >
           {expanded ? (
             <>
@@ -235,8 +256,8 @@ export const SetsTable: React.FC<SetsTableProps> = ({
         </Button>
         
         <div className={cn(
-          "flex space-x-2",
-          isMobile && "w-full mt-2"
+          "flex",
+          isMobile ? "w-full space-x-2" : "space-x-2"
         )}>
           <Button
             variant="outline"
@@ -264,16 +285,14 @@ export const SetsTable: React.FC<SetsTableProps> = ({
             Rest
           </Button>
           
-          {onFocusSet && (
+          {onFocusSet && !highlightActive && (
             <Button
-              variant={highlightActive ? "default" : "outline"}
+              variant="outline"
               size="sm"
               onClick={() => onFocusSet(0)}
               className={cn(
-                isMobile && "flex-1 h-10",
-                highlightActive 
-                  ? "bg-purple-600 hover:bg-purple-700 text-white" 
-                  : "bg-gray-800/80 hover:bg-gray-700 border-gray-700 text-gray-300"
+                "bg-gray-800/80 hover:bg-gray-700 border-gray-700 text-gray-300",
+                isMobile && "flex-1 h-10"
               )}
             >
               <Target className="mr-1 h-4 w-4" />
