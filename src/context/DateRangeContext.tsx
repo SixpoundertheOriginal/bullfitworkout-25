@@ -1,75 +1,70 @@
 
-import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { DateRange } from 'react-day-picker';
-import { subDays, startOfWeek, endOfWeek } from 'date-fns';
+import { addDays, subDays, startOfWeek, endOfWeek, subWeeks } from 'date-fns';
 
 interface DateRangeContextType {
-  dateRange: DateRange;  // No longer undefined
+  dateRange: DateRange | undefined;
   setDateRange: (range: DateRange | undefined) => void;
+  comparisonEnabled: boolean;
+  setComparisonEnabled: (enabled: boolean) => void;
+  comparisonDateRange: DateRange | undefined;
 }
 
-// Create context with meaningful default values
-const DateRangeContext = createContext<DateRangeContextType>({
-  dateRange: {
-    from: startOfWeek(new Date(), { weekStartsOn: 1 }),
-    to: endOfWeek(new Date(), { weekStartsOn: 1 })
-  },
-  setDateRange: () => {}
-});
+const DateRangeContext = createContext<DateRangeContextType | undefined>(undefined);
 
-export function DateRangeProvider({ children }: { children: React.ReactNode }) {
-  // Initialize with the current week (Monday to Sunday)
-  const now = new Date();
-  const [dateRange, setDateRange] = useState<DateRange>({
-    from: startOfWeek(now, { weekStartsOn: 1 }), // Monday
-    to: endOfWeek(now, { weekStartsOn: 1 }), // Sunday
-  });
-
-  // Log when context is created to help debugging
-  useEffect(() => {
-    console.log('DateRangeContext initialized with range:', dateRange);
-  }, []);
-
-  // Handle undefined values gracefully to maintain stable state
-  const handleSetDateRange = (newRange: DateRange | undefined) => {
-    if (!newRange || !newRange.from) return;
-    
-    const safeRange: DateRange = {
-      from: newRange.from,
-      to: newRange.to || newRange.from
-    };
-    
-    console.log('DateRangeContext: Setting new date range:', safeRange);
-    setDateRange(safeRange);
+export function DateRangeProvider({ children }: { children: ReactNode }) {
+  // Default to current week
+  const today = new Date();
+  const defaultDateRange: DateRange = {
+    from: startOfWeek(today, { weekStartsOn: 1 }),
+    to: today
   };
 
-  // Create a memoized value to prevent unnecessary re-renders
-  const contextValue = useMemo(() => ({
-    dateRange,
-    setDateRange: handleSetDateRange
-  }), [dateRange]);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(defaultDateRange);
+  const [comparisonEnabled, setComparisonEnabled] = useState<boolean>(false);
+
+  // Calculate the comparison date range based on the current date range
+  const comparisonDateRange = React.useMemo(() => {
+    if (!dateRange?.from || !dateRange?.to || !comparisonEnabled) return undefined;
+    
+    const currentFrom = dateRange.from;
+    const currentTo = dateRange.to;
+    const rangeDays = Math.floor((currentTo.getTime() - currentFrom.getTime()) / (1000 * 60 * 60 * 24));
+    
+    return {
+      from: subDays(currentFrom, rangeDays + 1),
+      to: subDays(currentTo, rangeDays + 1)
+    };
+  }, [dateRange, comparisonEnabled]);
+
+  // Log the current and comparison date ranges
+  React.useEffect(() => {
+    console.log("DateRangeContext initialized with range:", dateRange);
+    if (comparisonEnabled) {
+      console.log("Comparison date range:", comparisonDateRange);
+    }
+  }, [dateRange, comparisonDateRange, comparisonEnabled]);
 
   return (
-    <DateRangeContext.Provider value={contextValue}>
+    <DateRangeContext.Provider 
+      value={{ 
+        dateRange, 
+        setDateRange, 
+        comparisonEnabled, 
+        setComparisonEnabled,
+        comparisonDateRange 
+      }}
+    >
       {children}
     </DateRangeContext.Provider>
   );
 }
 
-export function useDateRange(): DateRangeContextType {
+export function useDateRange() {
   const context = useContext(DateRangeContext);
-  
-  if (!context) {
-    console.error('useDateRange must be used within a DateRangeProvider');
-    // Provide fallback default to prevent crashes
-    return {
-      dateRange: {
-        from: startOfWeek(new Date(), { weekStartsOn: 1 }),
-        to: endOfWeek(new Date(), { weekStartsOn: 1 })
-      },
-      setDateRange: () => {}
-    };
+  if (context === undefined) {
+    throw new Error('useDateRange must be used within a DateRangeProvider');
   }
-  
   return context;
 }

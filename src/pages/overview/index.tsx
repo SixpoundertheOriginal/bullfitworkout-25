@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { OverviewHeader } from './OverviewHeader';
 import { ChartsGrid } from './ChartsGrid';
@@ -13,6 +12,7 @@ import { WeightUnit } from '@/utils/unitConversion';
 import { MainVolumeChart } from './MainVolumeChart';
 
 const OverviewPage: React.FC = () => {
+  // Keep using the existing hook for overall data
   const { 
     workouts, 
     loading, 
