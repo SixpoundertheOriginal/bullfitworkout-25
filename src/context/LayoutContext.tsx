@@ -26,6 +26,8 @@ export const LayoutProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     
     // Show filter on overview page, hide on others
     setFilterVisible(location.pathname === '/overview');
+    
+    // This effect should run whenever the path changes
   }, [location.pathname]);
   
   const value = {

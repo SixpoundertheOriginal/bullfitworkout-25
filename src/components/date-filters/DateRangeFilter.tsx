@@ -81,7 +81,7 @@ export function DateRangeFilter() {
   };
   
   return (
-    <div className="flex items-center space-x-2 flex-shrink-0">
+    <div className="flex items-center justify-end py-1 w-full">
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button

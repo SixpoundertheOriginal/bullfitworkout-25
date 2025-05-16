@@ -76,12 +76,15 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         <div className="fixed top-0 left-0 right-0 z-50">
           <PageHeader title={title} showBackButton={location.pathname !== '/' && location.pathname !== '/overview'}>
             <MainMenu />
-            {isFilterVisible && (
-              <div className="h-[36px] overflow-hidden">
-                <DateRangeFilter />
-              </div>
-            )}
           </PageHeader>
+          
+          {/* Date range filter moved outside the header, but still in the fixed container */}
+          {isFilterVisible && (
+            <div className="bg-gray-900/95 backdrop-blur-md border-b border-gray-800/50 py-2 px-4">
+              <DateRangeFilter />
+            </div>
+          )}
+          
           <WorkoutBanner />
         </div>
       )}
@@ -89,6 +92,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       <main className={cn(
         "flex-grow overflow-y-auto will-change-transform",
         "pt-16", // Standard padding for header
+        isFilterVisible ? "pt-[84px]" : "", // Extra padding when filter is visible
         shouldShowGlobalNav ? "pb-24" : "pb-6", // Extra padding when nav is shown
         isOverviewPage ? "pb-40" : "", // Even more padding for overview page
         "w-full h-full" // Full width and height
