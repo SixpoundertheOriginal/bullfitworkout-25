@@ -31,10 +31,16 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className={cn(
-        "fixed bottom-0 left-0 right-0 z-50", // Increased z-index to ensure it's always on top
-        "bg-gradient-to-t from-black via-black/95 to-black/0 pt-8 pb-6 px-4",
+        "fixed bottom-0 left-0 right-0 z-50", // High z-index to stay on top
+        "bg-gradient-to-t from-black via-black/95 to-black/0 pt-8 pb-6 px-4 mt-16", // Added top margin
+        "border-t border-gray-800/30", // Added subtle border for separation
         focusedExercise ? "from-purple-900/20 via-black/95 to-black/0" : ""
       )}
+      style={{ 
+        position: "fixed", // Ensure it's fixed at the bottom
+        bottom: 0,
+        width: "100%"
+      }}
     >
       <div className="container max-w-5xl mx-auto">
         <div className={cn(
