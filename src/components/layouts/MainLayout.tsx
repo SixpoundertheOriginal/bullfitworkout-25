@@ -90,7 +90,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         "flex-grow overflow-y-auto will-change-transform",
         "pt-16", // Standard padding for header
         shouldShowGlobalNav ? "pb-24" : "pb-6", // Extra padding when nav is shown
-        isOverviewPage ? "pb-32" : "", // Even more padding for overview page
+        isOverviewPage ? "pb-40" : "", // Even more padding for overview page
         "w-full h-full" // Full width and height
       )}>
         <div className="content-container w-full h-full">

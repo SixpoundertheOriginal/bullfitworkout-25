@@ -114,7 +114,7 @@ const WorkoutDensityOverTimeChartComponent: React.FC<WorkoutDensityOverTimeChart
   return (
     <div
       className={`bg-gray-900 border-gray-800 hover:border-purple-500/50 transition-all ${className}`}
-      style={{ minHeight: `${height + 60}px` }}
+      style={{ minHeight: `${height + 80}px` }}
     >
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <div className="flex items-center text-sm text-gray-300">
@@ -141,7 +141,7 @@ const WorkoutDensityOverTimeChartComponent: React.FC<WorkoutDensityOverTimeChart
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={formattedData}
-                margin={{ top: 5, right: 5, left: 5, bottom: 20 }}
+                margin={{ top: 5, right: 5, left: 5, bottom: 30 }}
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
@@ -155,7 +155,7 @@ const WorkoutDensityOverTimeChartComponent: React.FC<WorkoutDensityOverTimeChart
                   tickLine={{ stroke: '#333333' }}
                   angle={-45}
                   textAnchor="end"
-                  height={50}
+                  height={60}
                 />
                 <YAxis
                   tick={{ fill: '#888888', fontSize: 12 }}
