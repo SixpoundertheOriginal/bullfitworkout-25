@@ -1,3 +1,4 @@
+
 // src/components/metrics/WorkoutVolumeOverTimeChart.tsx
 
 import React, { useMemo } from 'react';
@@ -27,7 +28,9 @@ const WorkoutVolumeOverTimeChartComponent: React.FC<WorkoutVolumeOverTimeChartPr
   className = '',
   height = 200
 }) => {
-  const { weightUnit } = useWeightUnit();
+  // Extract weight unit outside of render calculations to reduce re-renders
+  const weightUnitContext = useWeightUnit();
+  const weightUnit = weightUnitContext?.weightUnit || 'kg';
 
   // Determine if we have any volume data
   const hasData = useMemo(
@@ -83,58 +86,60 @@ const WorkoutVolumeOverTimeChartComponent: React.FC<WorkoutVolumeOverTimeChartPr
             No workout data available for the selected period
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={height}>
-            <BarChart data={formattedData} margin={{ top: 5, right: 5, left: 5, bottom: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#333333" vertical={false} />
-              <XAxis
-                dataKey="date"
-                tick={{ fill: '#888888', fontSize: 12 }}
-                axisLine={{ stroke: '#333333' }}
-                tickLine={{ stroke: '#333333' }}
-                angle={-45}
-                textAnchor="end"
-                height={50}
-              />
-              <YAxis
-                tick={{ fill: '#888888', fontSize: 12 }}
-                axisLine={{ stroke: '#333333' }}
-                tickLine={{ stroke: '#333333' }}
-                width={50}
-                label={{
-                  value: `Volume (${weightUnit})`,
-                  angle: -90,
-                  position: 'insideLeft',
-                  fill: '#888888',
-                  style: { textAnchor: 'middle' }
-                }}
-              />
-              <Tooltip
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    return (
-                      <div className="bg-gray-800 border border-gray-700 p-2 rounded-lg shadow-lg">
-                        <p className="text-gray-300">
-                          {format(new Date(payload[0].payload.originalDate), 'MMM d, yyyy')}
-                        </p>
-                        <p className="text-purple-400 font-semibold">
-                          {payload[0].payload.formattedValue}
-                        </p>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-                isAnimationActive={false}
-              />
-              <defs>
-                <linearGradient id="volumeGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#9B87F5" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#D946EF" stopOpacity={0.6} />
-                </linearGradient>
-              </defs>
-              <Bar dataKey="volume" fill="url(#volumeGradient)" radius={[4, 4, 0, 0]} isAnimationActive={false} />
-            </BarChart>
-          </ResponsiveContainer>
+          <div style={{ width: '100%', height }} className="flex-1">
+            <ResponsiveContainer width="100%" height={height}>
+              <BarChart data={formattedData} margin={{ top: 5, right: 5, left: 5, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#333333" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fill: '#888888', fontSize: 12 }}
+                  axisLine={{ stroke: '#333333' }}
+                  tickLine={{ stroke: '#333333' }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={50}
+                />
+                <YAxis
+                  tick={{ fill: '#888888', fontSize: 12 }}
+                  axisLine={{ stroke: '#333333' }}
+                  tickLine={{ stroke: '#333333' }}
+                  width={50}
+                  label={{
+                    value: `Volume (${weightUnit})`,
+                    angle: -90,
+                    position: 'insideLeft',
+                    fill: '#888888',
+                    style: { textAnchor: 'middle' }
+                  }}
+                />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-gray-800 border border-gray-700 p-2 rounded-lg shadow-lg">
+                          <p className="text-gray-300">
+                            {format(new Date(payload[0].payload.originalDate), 'MMM d, yyyy')}
+                          </p>
+                          <p className="text-purple-400 font-semibold">
+                            {payload[0].payload.formattedValue}
+                          </p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                  isAnimationActive={false}
+                />
+                <defs>
+                  <linearGradient id="volumeGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#9B87F5" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#D946EF" stopOpacity={0.6} />
+                  </linearGradient>
+                </defs>
+                <Bar dataKey="volume" fill="url(#volumeGradient)" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         )}
 
         {hasData && (

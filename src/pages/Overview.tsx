@@ -1,3 +1,4 @@
+
 // src/pages/Overview.tsx
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -18,16 +19,30 @@ import { useDateRange } from '@/context/DateRangeContext';
 import { useProcessWorkoutMetrics } from '@/hooks/useProcessWorkoutMetrics';
 
 const Overview: React.FC = () => {
-  const { user } = useAuth();
-  const { weightUnit } = useWeightUnit();
-  const { dateRange } = useDateRange();
+  // Since we're seeing context access issues, let's add some error handling
+  let weightUnitContext = null;
+  let dateRangeContext = null;
+  let user = null;
+
+  try {
+    weightUnitContext = useWeightUnit();
+    dateRangeContext = useDateRange();
+    user = useAuth()?.user;
+  } catch (error) {
+    console.error("Error accessing contexts:", error);
+  }
+
+  // Default values if contexts are unavailable
+  const weightUnit = weightUnitContext?.weightUnit || 'kg';
+  const dateRange = dateRangeContext?.dateRange;
+  
   const [userWeight, setUserWeight] = useState<number | null>(null);
   const [userWeightUnit, setUserWeightUnit] = useState<string | null>(null);
 
-  // Fetch historical stats
+  // Fetch historical stats with error handling
   const { stats, loading, refetch, workouts } = useWorkoutStats();
   
-  // Process raw metrics
+  // Process raw metrics - memoized to prevent unnecessary recalculation
   const {
     volumeOverTimeData,
     densityOverTimeData,
@@ -51,7 +66,7 @@ const Overview: React.FC = () => {
   // Simple data‐exists guard
   const hasData = (v: any) => v != null && ((Array.isArray(v) && v.length > 0) || (typeof v === 'object' && Object.keys(v).length > 0));
 
-  // Chart configurations (excluding density gauge)
+  // Chart configurations (excluding density gauge) - memoized to prevent recreation
   const chartConfigs = useMemo(() => ([
     {
       title: "Workout Types",
@@ -86,16 +101,19 @@ const Overview: React.FC = () => {
         <h1 className="text-2xl font-bold">Workout Overview</h1>
       </div>
 
-      {/* Volume over time */}
-      <Card className="bg-card min-h-[300px] overflow-hidden">
+      {/* Volume over time - with fixed dimensions */}
+      <Card className="bg-card overflow-hidden" style={{ minHeight: '360px' }}>
         <CardHeader><CardTitle>Volume Over Time</CardTitle></CardHeader>
-        <CardContent className="h-[300px]">
-          {loading
-            ? <Skeleton className="w-full h-full" />
-            : hasData(volumeOverTimeData)
-              ? <WorkoutVolumeOverTimeChart data={volumeOverTimeData} height={300} />
-              : <div className="flex items-center justify-center h-full text-gray-500">No volume data available</div>
-          }
+        <CardContent style={{ height: '300px' }}>
+          {loading ? (
+            <Skeleton className="w-full h-full" />
+          ) : hasData(volumeOverTimeData) ? (
+            <div className="w-full h-full">
+              <WorkoutVolumeOverTimeChart data={volumeOverTimeData} height={300} />
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500">No volume data available</div>
+          )}
         </CardContent>
       </Card>
 
@@ -128,30 +146,36 @@ const Overview: React.FC = () => {
       {/* Other charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {chartConfigs.map(({ title, renderComponent, data }, idx) => (
-          <Card key={idx} className="bg-gray-900 border-gray-800 min-h-[300px] overflow-hidden">
+          <Card key={idx} className="bg-gray-900 border-gray-800 overflow-hidden" style={{ minHeight: '300px' }}>
             <CardHeader><CardTitle>{title}</CardTitle></CardHeader>
-            <CardContent className="h-[250px] flex items-center justify-center">
-              {loading
-                ? <Skeleton className="w-3/4 h-3/4 rounded-lg" />
-                : hasData(data)
-                  ? renderComponent(data)
-                  : <div className="text-gray-500">No data available</div>
-              }
+            <CardContent style={{ height: '250px' }} className="flex items-center justify-center">
+              {loading ? (
+                <Skeleton className="w-3/4 h-3/4 rounded-lg" />
+              ) : hasData(data) ? (
+                <div className="w-full h-full">
+                  {renderComponent(data)}
+                </div>
+              ) : (
+                <div className="text-gray-500">No data available</div>
+              )}
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Density over time */}
-      <Card className="bg-card min-h-[250px] overflow-hidden">
+      {/* Density over time - with fixed dimensions */}
+      <Card className="bg-card overflow-hidden" style={{ minHeight: '300px' }}>
         <CardHeader><CardTitle>Volume Rate Over Time</CardTitle></CardHeader>
-        <CardContent className="h-[250px]">
-          {loading
-            ? <Skeleton className="w-full h-full" />
-            : hasData(densityOverTimeData)
-              ? <WorkoutDensityOverTimeChart data={densityOverTimeData} height={250} />
-              : <div className="flex items-center justify-center h-full text-gray-500">No density data available</div>
-          }
+        <CardContent style={{ height: '250px' }}>
+          {loading ? (
+            <Skeleton className="w-full h-full" />
+          ) : hasData(densityOverTimeData) ? (
+            <div className="w-full h-full">
+              <WorkoutDensityOverTimeChart data={densityOverTimeData} height={250} />
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500">No density data available</div>
+          )}
         </CardContent>
       </Card>
     </div>

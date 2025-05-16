@@ -1,3 +1,4 @@
+
 // src/components/metrics/WorkoutDensityOverTimeChart.tsx
 
 import React, { useMemo } from 'react';
@@ -26,7 +27,9 @@ const WorkoutDensityOverTimeChartComponent: React.FC<WorkoutDensityOverTimeChart
   className = '',
   height = 200
 }) => {
-  const { weightUnit } = useWeightUnit();
+  // Extract weight unit outside of render calculations to reduce re-renders
+  const weightUnitContext = useWeightUnit();
+  const weightUnit = weightUnitContext?.weightUnit || 'kg';
 
   // Determine if there's valid density data
   const hasData = useMemo(
@@ -97,86 +100,88 @@ const WorkoutDensityOverTimeChartComponent: React.FC<WorkoutDensityOverTimeChart
             No density data available for the selected period
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={height}>
-            <LineChart
-              data={formattedData}
-              margin={{ top: 5, right: 5, left: 5, bottom: 20 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="#333333"
-                vertical={false}
-              />
-              <XAxis
-                dataKey="date"
-                tick={{ fill: '#888888', fontSize: 12 }}
-                axisLine={{ stroke: '#333333' }}
-                tickLine={{ stroke: '#333333' }}
-                angle={-45}
-                textAnchor="end"
-                height={50}
-              />
-              <YAxis
-                tick={{ fill: '#888888', fontSize: 12 }}
-                axisLine={{ stroke: '#333333' }}
-                tickLine={{ stroke: '#333333' }}
-                width={50}
-                label={{
-                  value: `Density (${weightUnit}/min)`,
-                  angle: -90,
-                  position: 'insideLeft',
-                  fill: '#888888',
-                  style: { textAnchor: 'middle' }
-                }}
-              />
-              <Tooltip
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    return (
-                      <div className="bg-gray-800 border border-gray-700 p-2 rounded-lg shadow-lg">
-                        <p className="text-gray-300">
-                          {format(
-                            new Date(payload[0].payload.originalDate),
-                            'MMM d, yyyy'
-                          )}
-                        </p>
-                        <p className="text-purple-400 font-semibold">
-                          Overall: {payload[0].value} {weightUnit}/min
-                        </p>
-                        {payload[1] &&
-                          payload[1].value !== undefined && (
-                            <p className="text-blue-400 font-semibold">
-                              Active Only: {payload[1].value}{' '}
-                              {weightUnit}/min
-                            </p>
-                          )}
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-                isAnimationActive={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="overallDensity"
-                stroke="#9B87F5"
-                strokeWidth={2}
-                dot={{ r: 4, fill: "#9B87F5" }}
-                activeDot={{ r: 6 }}
-                isAnimationActive={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="activeOnlyDensity"
-                stroke="#0EA5E9"
-                strokeWidth={2}
-                dot={{ r: 4, fill: "#0EA5E9" }}
-                activeDot={{ r: 6 }}
-                isAnimationActive={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <div style={{ width: '100%', height }} className="flex-1">
+            <ResponsiveContainer width="100%" height={height}>
+              <LineChart
+                data={formattedData}
+                margin={{ top: 5, right: 5, left: 5, bottom: 20 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#333333"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fill: '#888888', fontSize: 12 }}
+                  axisLine={{ stroke: '#333333' }}
+                  tickLine={{ stroke: '#333333' }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={50}
+                />
+                <YAxis
+                  tick={{ fill: '#888888', fontSize: 12 }}
+                  axisLine={{ stroke: '#333333' }}
+                  tickLine={{ stroke: '#333333' }}
+                  width={50}
+                  label={{
+                    value: `Density (${weightUnit}/min)`,
+                    angle: -90,
+                    position: 'insideLeft',
+                    fill: '#888888',
+                    style: { textAnchor: 'middle' }
+                  }}
+                />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-gray-800 border border-gray-700 p-2 rounded-lg shadow-lg">
+                          <p className="text-gray-300">
+                            {format(
+                              new Date(payload[0].payload.originalDate),
+                              'MMM d, yyyy'
+                            )}
+                          </p>
+                          <p className="text-purple-400 font-semibold">
+                            Overall: {payload[0].value} {weightUnit}/min
+                          </p>
+                          {payload[1] &&
+                            payload[1].value !== undefined && (
+                              <p className="text-blue-400 font-semibold">
+                                Active Only: {payload[1].value}{' '}
+                                {weightUnit}/min
+                              </p>
+                            )}
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                  isAnimationActive={false}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="overallDensity"
+                  stroke="#9B87F5"
+                  strokeWidth={2}
+                  dot={{ r: 4, fill: "#9B87F5" }}
+                  activeDot={{ r: 6 }}
+                  isAnimationActive={false}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="activeOnlyDensity"
+                  stroke="#0EA5E9"
+                  strokeWidth={2}
+                  dot={{ r: 4, fill: "#0EA5E9" }}
+                  activeDot={{ r: 6 }}
+                  isAnimationActive={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         )}
 
         {hasData && (

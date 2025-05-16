@@ -22,23 +22,22 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <AuthProvider>
-            <DateRangeProvider>
-              <WeightUnitContextProvider>
-                <LayoutProvider>
-                  <WorkoutNavigationProvider>
-                    <AppRouterProvider />
-                  </WorkoutNavigationProvider>
-                </LayoutProvider>
-              </WeightUnitContextProvider>
-            </DateRangeProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </QueryClientProvider>
-    </React.StrictMode>
+    // Removed React.StrictMode to prevent double rendering
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <DateRangeProvider>
+            <WeightUnitContextProvider>
+              <LayoutProvider>
+                <WorkoutNavigationProvider>
+                  <AppRouterProvider />
+                </WorkoutNavigationProvider>
+              </LayoutProvider>
+            </WeightUnitContextProvider>
+          </DateRangeProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   )
 }
 

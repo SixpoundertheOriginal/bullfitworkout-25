@@ -11,7 +11,7 @@ if (!rootElement) throw new Error('Root element not found');
 // Create a root
 const root = createRoot(rootElement);
 
-// Render the app
+// Render the app without StrictMode
 root.render(
   <App />
 );
