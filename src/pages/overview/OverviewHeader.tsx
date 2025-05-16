@@ -1,7 +1,7 @@
 
 import React from 'react';
 
-interface OverviewHeaderProps {
+export interface OverviewHeaderProps {
   title: string;
 }
 

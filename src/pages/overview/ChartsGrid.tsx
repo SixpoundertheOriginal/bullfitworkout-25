@@ -7,7 +7,7 @@ import { TimeOfDayChart } from "@/components/metrics/TimeOfDayChart";
 import { WorkoutDaysChart } from "@/components/metrics/WorkoutDaysChart";
 import { TopExercisesTable } from "@/components/metrics/TopExercisesTable";
 
-interface ChartsGridProps {
+export interface ChartsGridProps {
   stats: any;
   weightUnit: string;
 }

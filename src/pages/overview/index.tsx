@@ -9,6 +9,7 @@ import { useProcessWorkoutMetrics } from '@/hooks/useProcessWorkoutMetrics';
 import { useVolumeChartData } from '@/components/metrics/volume-chart/useVolumeChartData';
 import { useChartData } from '@/components/metrics/workout-density/useChartData';
 import { VolumeDataPoint, DensityDataPoint } from '@/hooks/useProcessWorkoutMetrics';
+import { WeightUnit } from '@/utils/unitConversion';
 
 const OverviewPage: React.FC = () => {
   const { 
@@ -38,22 +39,27 @@ const OverviewPage: React.FC = () => {
     );
   }
 
-  // Manually construct the data structure with proper types
-  const overviewData = {
-    volumeOverTimeData: volumeChartData.formattedData || [],
-    densityOverTimeData: densityChartData.formattedData || [],
-    volumeStats: volumeChartData.volumeStats || { total: 0, average: 0 },
-    densityStats: densityChartData.densityStats || { average: 0 },
-    hasVolumeData: volumeChartData.hasData || false,
-    hasDensityData: densityChartData.hasData || false,
-    handleBarClick: volumeChartData.handleBarClick
+  // Get density stats from the averages property
+  const densityStats = {
+    average: densityChartData.averages?.overall || 0
+  };
+
+  // Prepare data for KPI section
+  const kpiData = {
+    totalWorkouts: stats?.totalWorkouts || 0,
+    volumeTotal: volumeChartData.volumeStats?.total || 0,
+    avgDensity: densityStats.average,
+    weightUnit: "kg" as WeightUnit
   };
 
   return (
     <div className="container py-6">
-      <OverviewHeader />
-      {stats && <KPISection stats={stats} />}
-      <ChartsGrid data={overviewData} />
+      <OverviewHeader title="Workout Overview" />
+      {stats && <KPISection {...kpiData} />}
+      <ChartsGrid 
+        stats={stats || {}} 
+        weightUnit={kpiData.weightUnit}
+      />
     </div>
   );
 };
