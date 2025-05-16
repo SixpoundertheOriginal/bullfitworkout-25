@@ -2,7 +2,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { DateRange } from 'react-day-picker';
-import { startOfWeek, endOfWeek } from 'date-fns';
 
 interface LayoutContextProps {
   currentRoute: string;
@@ -24,8 +23,9 @@ export const LayoutProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     setCurrentRoute(location.pathname);
     
-    // Show filter on overview page, hide on others
+    // Explicitly show filter on overview page, hide on others
     const shouldShowFilter = location.pathname === '/overview';
+    console.log('LayoutContext: Setting filter visibility to', shouldShowFilter, 'for path', location.pathname);
     setFilterVisible(shouldShowFilter);
     
   }, [location.pathname]);

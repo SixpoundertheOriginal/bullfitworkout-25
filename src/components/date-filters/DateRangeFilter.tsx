@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -14,6 +15,7 @@ type DateRangeOption = {
 };
 
 export function DateRangeFilter() {
+  console.log('DateRangeFilter rendering');
   const { dateRange, setDateRange } = useDateRange();
   const [isOpen, setIsOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -55,12 +57,14 @@ export function DateRangeFilter() {
 
   // Initialize with "This Week" on component mount
   useEffect(() => {
+    console.log('DateRangeFilter init effect running, dateRange:', dateRange, 'isInitialized:', isInitialized);
     if (!isInitialized && !dateRange) {
       const thisWeekRange = dateRangeOptions.find(option => option.label === 'This Week');
       if (thisWeekRange) {
         setDateRange(thisWeekRange.value());
         setSelectedPreset(thisWeekRange.label);
         setIsInitialized(true);
+        console.log('DateRangeFilter initialized with This Week');
       }
     }
   }, [dateRange, isInitialized, setDateRange]);
@@ -70,12 +74,14 @@ export function DateRangeFilter() {
     setDateRange(range);
     setSelectedPreset(preset.label);
     setIsOpen(false);
+    console.log('Date range preset selected:', preset.label);
   };
   
   const handleCalendarSelect = (range: DateRange | undefined) => {
     if (range?.from && range?.to) {
       setDateRange(range);
       setSelectedPreset('Custom Range');
+      console.log('Custom date range selected:', range);
     }
   };
   

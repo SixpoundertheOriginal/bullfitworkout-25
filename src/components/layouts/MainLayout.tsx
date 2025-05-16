@@ -70,6 +70,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   // Check if we're on the overview page
   const isOverviewPage = location.pathname === '/overview';
 
+  console.log('MainLayout rendering, isFilterVisible:', isFilterVisible);
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 will-change-transform">
       {!noHeader && (
