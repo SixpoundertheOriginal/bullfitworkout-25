@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { toast } from '@/hooks/use-toast';
-import { Trophy, Star, ArrowUp } from 'lucide-react';
+import { Trophy, Star, ArrowUp, Award, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -130,11 +130,46 @@ export const ExperienceGainOverlay: React.FC<ExperienceGainProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.8 }}
             transition={{ delay: 0.5 }}
-            className="text-white/80 text-sm"
+            className="text-white/80 text-sm mb-2"
           >
             {trainingType} Training
           </motion.div>
         )}
+        
+        {/* Animated XP particles */}
+        <div className="relative w-40 h-20">
+          {Array(8).fill(0).map((_, i) => (
+            <motion.div
+              key={i}
+              initial={{ 
+                x: 0, 
+                y: 0, 
+                opacity: 0,
+                scale: 0.2 
+              }}
+              animate={{ 
+                x: Math.random() * 120 - 60,
+                y: Math.random() * -80 - 20,
+                opacity: [0, 1, 0],
+                scale: [0.2, 0.8, 0.1]
+              }}
+              transition={{ 
+                duration: 1.2 + Math.random() * 0.8,
+                delay: 0.5 + Math.random() * 0.5,
+                ease: "easeOut"
+              }}
+              className="absolute left-1/2 top-1/2"
+            >
+              {i % 4 === 0 ? (
+                <Star className="w-4 h-4 text-yellow-400" />
+              ) : i % 3 === 0 ? (
+                <Zap className="w-4 h-4 text-yellow-300" />
+              ) : (
+                <span className="text-xs font-bold text-yellow-400">+XP</span>
+              )}
+            </motion.div>
+          ))}
+        </div>
         
         {children}
       </motion.div>
