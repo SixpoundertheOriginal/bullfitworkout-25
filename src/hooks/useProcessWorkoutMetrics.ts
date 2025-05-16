@@ -1,3 +1,4 @@
+
 import { useMemo } from 'react';
 import { ExerciseSet } from '@/types/exercise';
 
@@ -7,6 +8,15 @@ export interface VolumeDataPoint {
   volume: number;
   workoutId?: string | null;
   sets?: number;
+}
+
+// Add the missing DensityDataPoint interface
+export interface DensityDataPoint {
+  date: string;
+  density: number;
+  volume?: number;
+  duration?: number;
+  workoutId?: string | null;
 }
 
 export const useProcessWorkoutMetrics = (workouts: any[]) => {

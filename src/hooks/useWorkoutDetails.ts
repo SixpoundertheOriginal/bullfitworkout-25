@@ -2,8 +2,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { ExerciseSet } from '@/types/exercise';
 import { groupBy } from 'lodash';
+import { ExerciseSet } from '@/types/exercise';
 
 export function useWorkoutDetails(workoutId: string) {
   const [workoutDetails, setWorkoutDetails] = useState<any>(null);
@@ -40,12 +40,12 @@ export function useWorkoutDetails(workoutId: string) {
       }
 
       // Group exercise sets by exercise name
-      const groupedExercises = groupBy(sets, 'exercise_name');
+      const groupedExercises = groupBy(sets || [], 'exercise_name');
 
       // Convert to expected format
       const formattedExercises: Record<string, ExerciseSet[]> = {};
       Object.entries(groupedExercises).forEach(([name, sets]) => {
-        formattedExercises[name] = sets.map((set: any) => ({
+        formattedExercises[name] = (sets as any[]).map((set: any) => ({
           weight: set.weight,
           reps: set.reps,
           restTime: set.rest_time || 60,
