@@ -18,6 +18,9 @@ export const QuickStatsSection = React.memo(({ showDateRange = false }: QuickSta
   // Use the basic stats hook with the date range from context
   const { data: stats, isLoading } = useBasicWorkoutStats(dateRange);
 
+  // Log the stats data for debugging
+  console.log("[QuickStatsSection] Stats:", stats);
+
   // Calculate date range text based on dateRange from context
   const getDateRangeText = () => {
     if (!dateRange || !dateRange.from) {
@@ -55,6 +58,14 @@ export const QuickStatsSection = React.memo(({ showDateRange = false }: QuickSta
 
   const mostActiveDay = getMostActiveDay();
   const dateRangeText = getDateRangeText();
+
+  // Ensure we have a valid density value or default to 0
+  const densityValue = stats?.density !== undefined && stats?.density !== null 
+    ? Number(stats.density).toFixed(1) 
+    : "0.0";
+
+  // Debug the density value
+  console.log("[QuickStatsSection] Density value:", densityValue, "Original:", stats?.density);
 
   return (
     <div className="relative">

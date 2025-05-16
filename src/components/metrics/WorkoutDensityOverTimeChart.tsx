@@ -29,6 +29,11 @@ const WorkoutDensityOverTimeChartComponent: React.FC<WorkoutDensityOverTimeChart
   // Process chart data using the custom hook
   const { hasData, formattedData, averages } = useChartData(data);
 
+  // Add logging to debug density data
+  console.log("[WorkoutDensityOverTimeChart] Data:", data);
+  console.log("[WorkoutDensityOverTimeChart] Averages:", averages);
+  console.log("[WorkoutDensityOverTimeChart] Has data:", hasData);
+
   return (
     <div
       className={`bg-gray-900 border-gray-800 hover:border-purple-500/50 transition-all ${className}`}
@@ -41,7 +46,7 @@ const WorkoutDensityOverTimeChartComponent: React.FC<WorkoutDensityOverTimeChart
         </div>
         {hasData && (
           <div className="text-xs text-gray-400">
-            Avg: {averages.overall} {weightUnit}/min
+            Avg: {averages.overall.toFixed(1)} {weightUnit}/min
           </div>
         )}
       </div>

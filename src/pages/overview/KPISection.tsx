@@ -16,6 +16,14 @@ export const KPISection: React.FC<KPISectionProps> = ({
   avgDensity,
   weightUnit
 }) => {
+  // Log the input values for debugging
+  console.log("[KPISection] Props:", { totalWorkouts, volumeTotal, avgDensity, weightUnit });
+
+  // Ensure the density value is valid and formatted properly
+  const formattedDensity = typeof avgDensity === 'number' && !isNaN(avgDensity) 
+    ? avgDensity.toFixed(1) 
+    : "0.0";
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
       <Card className="bg-gray-900 border-gray-800">
@@ -36,7 +44,7 @@ export const KPISection: React.FC<KPISectionProps> = ({
         <CardHeader className="pb-2"><CardTitle>Avg Volume Rate</CardTitle></CardHeader>
         <CardContent>
           <div className="text-4xl font-bold">
-            {(avgDensity || 0).toFixed(1)} {weightUnit}/min
+            {formattedDensity} {weightUnit}/min
           </div>
         </CardContent>
       </Card>

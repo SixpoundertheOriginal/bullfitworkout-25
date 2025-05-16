@@ -19,10 +19,21 @@ const OverviewPage: React.FC = () => {
     stats 
   } = useWorkoutStats();
 
+  // Log the raw data for debugging
+  console.log("[OverviewPage] Raw workouts:", workouts?.length);
+  console.log("[OverviewPage] Stats:", stats);
+
   const processedMetrics = useProcessWorkoutMetrics(workouts || []);
+  
+  // Log the processed metrics to debug density calculation
+  console.log("[OverviewPage] Processed metrics:", processedMetrics);
   
   const volumeChartData = useVolumeChartData(processedMetrics as VolumeDataPoint[]);
   const densityChartData = useChartData(processedMetrics as unknown as DensityDataPoint[]);
+
+  // Log the chart data results
+  console.log("[OverviewPage] Volume chart data:", volumeChartData);
+  console.log("[OverviewPage] Density chart data:", densityChartData);
 
   if (loading) {
     return <LoadingSkeleton />;
@@ -44,6 +55,9 @@ const OverviewPage: React.FC = () => {
   const densityStats = {
     average: densityChartData.averages?.overall || 0
   };
+
+  // Log the density value being used
+  console.log("[OverviewPage] Density value for KPI:", densityStats.average);
 
   // Prepare data for KPI section
   const kpiData = {

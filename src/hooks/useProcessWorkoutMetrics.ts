@@ -24,16 +24,24 @@ export interface DensityDataPoint {
 export const useProcessWorkoutMetrics = (workouts: any[]) => {
   const processedMetrics = useMemo(() => {
     if (!workouts || workouts.length === 0) {
+      console.log("[useProcessWorkoutMetrics] No workouts data");
       return [];
     }
+
+    console.log("[useProcessWorkoutMetrics] Processing workouts:", workouts.length);
 
     return workouts.map(workout => {
       const workoutDate = new Date(workout.start_time).toISOString().split('T')[0];
       let totalVolume = 0;
       let totalSets = 0;
+      
+      // Safely access exercises and handle different data structures
+      const exercises = Array.isArray(workout.exercises) 
+        ? workout.exercises 
+        : [];
 
-      if (workout.exercises && Array.isArray(workout.exercises)) {
-        workout.exercises.forEach(exercise => {
+      if (exercises && exercises.length > 0) {
+        exercises.forEach(exercise => {
           if (exercise && exercise.weight && exercise.reps && exercise.completed) {
             totalVolume += exercise.weight * exercise.reps;
             totalSets++;
@@ -41,11 +49,20 @@ export const useProcessWorkoutMetrics = (workouts: any[]) => {
         });
       }
 
+      // Calculate density if duration is available
+      const duration = workout.duration || 0;
+      const density = duration > 0 ? totalVolume / duration : 0;
+      
+      // Log the calculations
+      console.log(`[useProcessWorkoutMetrics] Workout ${workout.id}: volume=${totalVolume}, duration=${duration}, density=${density}`);
+
       return {
         date: workoutDate,
         volume: totalVolume,
         workoutId: workout.id,
-        sets: totalSets
+        sets: totalSets,
+        duration: duration,
+        density: density
       };
     });
   }, [workouts]);
