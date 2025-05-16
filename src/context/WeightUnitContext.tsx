@@ -22,7 +22,16 @@ export { useWeightUnit, WeightUnitProvider };
 export const WeightUnitContextProvider: React.FC<{ children: React.ReactNode }> = ({ 
   children 
 }) => {
-  const { user } = useAuth();
+  // Try to get auth context, but provide fallbacks if it's not available
+  let user;
+  try {
+    const authContext = useAuth();
+    user = authContext?.user;
+  } catch (error) {
+    console.warn("Auth context not available:", error);
+    user = null;
+  }
+  
   const [weightUnit, setWeightUnit] = useState<WeightUnit>("kg");
   const [defaultWeightUnit, setDefaultWeightUnit] = useState<WeightUnit>("kg");
   const { isLoading, withLoading } = useLoadingState(true);

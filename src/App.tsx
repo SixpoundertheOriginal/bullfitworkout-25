@@ -10,6 +10,7 @@ import Overview from "@/pages/Overview";
 import ExerciseSetup from "@/pages/ExerciseSetup";
 import { DateRangeProvider } from '@/context/DateRangeContext';
 import { WeightUnitContextProvider } from '@/context/WeightUnitContext';
+import { AuthProvider } from '@/context/AuthContext';
 
 // Create router with pages that actually exist
 const router = createBrowserRouter([
@@ -34,11 +35,13 @@ const router = createBrowserRouter([
 function App() {
   return (
     <React.StrictMode>
-      <DateRangeProvider>
-        <WeightUnitContextProvider>
-          <RouterProvider router={router} />
-        </WeightUnitContextProvider>
-      </DateRangeProvider>
+      <AuthProvider>
+        <DateRangeProvider>
+          <WeightUnitContextProvider>
+            <RouterProvider router={router} />
+          </WeightUnitContextProvider>
+        </DateRangeProvider>
+      </AuthProvider>
     </React.StrictMode>
   )
 }
