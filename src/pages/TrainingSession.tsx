@@ -18,6 +18,8 @@ import { WorkoutSessionFooter } from "@/components/training/WorkoutSessionFooter
 import { adaptExerciseSets, adaptToStoreFormat } from "@/utils/exerciseAdapter";
 import { useWorkoutSave } from "@/hooks/useWorkoutSave";
 import { calculateVolumeStats, generateMotivationalContent, getNextSetRecommendation } from "@/utils/setRecommendations";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 const TrainingSessionPage = () => {
   const navigate = useNavigate();

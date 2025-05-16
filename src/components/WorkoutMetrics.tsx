@@ -9,6 +9,7 @@ import { CircularProgress } from "@/components/ui/circular-progress";
 import { cn } from "@/lib/utils";
 import { theme } from "@/lib/theme";
 import { typography } from "@/lib/typography";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface WorkoutMetricsProps {
   time: number;
@@ -43,6 +44,7 @@ export const WorkoutMetrics = ({
 }: WorkoutMetricsProps) => {
   const [resetCounter, setResetCounter] = useState(0);
   const [animateProgress, setAnimateProgress] = useState(false);
+  const isMobile = useIsMobile();
   
   // Use the external reset signal
   useEffect(() => {
@@ -86,7 +88,8 @@ export const WorkoutMetrics = ({
       <div className="absolute -top-10 -right-20 w-60 h-60 bg-pink-600/10 rounded-full blur-3xl" />
       
       <div className={cn(
-        "grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 sm:p-4 rounded-xl",
+        "grid gap-2 p-3 sm:p-4 rounded-xl",
+        isMobile ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4",
         "bg-gradient-to-br from-gray-900/90 to-gray-800/60 backdrop-blur-md",
         "border border-white/5 shadow-lg",
         "transition-all duration-300",
@@ -99,7 +102,7 @@ export const WorkoutMetrics = ({
           label="Time"
           tooltip={`Tracked since ${formattedStartTime}`}
           gradientClass="from-blue-600/20 via-black/5 to-blue-900/20 hover:from-blue-600/30 hover:to-blue-900/30"
-          valueClass="text-blue-300 font-semibold bg-gradient-to-br from-blue-200 to-blue-400 bg-clip-text text-transparent text-lg sm:text-xl"
+          valueClass="text-blue-300 font-semibold bg-gradient-to-br from-blue-200 to-blue-400 bg-clip-text text-transparent text-base sm:text-xl"
           labelClass={typography.sections.label}
           className="p-2 sm:p-3 hover:scale-105 transition-transform duration-200 active:scale-95 touch-feedback"
         />
@@ -111,7 +114,7 @@ export const WorkoutMetrics = ({
           label="Exercises"
           tooltip="Active exercises in your workout"
           gradientClass="from-emerald-600/20 via-black/5 to-emerald-900/20 hover:from-emerald-600/30 hover:to-emerald-900/30"
-          valueClass="text-emerald-300 font-semibold bg-gradient-to-br from-emerald-200 to-emerald-400 bg-clip-text text-transparent text-lg sm:text-xl"
+          valueClass="text-emerald-300 font-semibold bg-gradient-to-br from-emerald-200 to-emerald-400 bg-clip-text text-transparent text-base sm:text-xl"
           labelClass={typography.sections.label}
           className="p-2 sm:p-3 hover:scale-105 transition-transform duration-200 active:scale-95 touch-feedback"
         />
@@ -128,7 +131,7 @@ export const WorkoutMetrics = ({
             animateProgress && "from-purple-600/40 to-purple-900/40"
           )}
           valueClass={cn(
-            "text-purple-300 font-semibold bg-gradient-to-br from-purple-200 to-purple-400 bg-clip-text text-transparent text-lg sm:text-xl",
+            "text-purple-300 font-semibold bg-gradient-to-br from-purple-200 to-purple-400 bg-clip-text text-transparent text-base sm:text-xl",
             animateProgress && "scale-110 transition-transform"
           )}
           labelClass={typography.sections.label}
@@ -146,8 +149,9 @@ export const WorkoutMetrics = ({
           showRestTimer 
             ? "border-orange-500/30 from-orange-600/30 to-orange-900/30 shadow-lg shadow-orange-500/20 scale-[1.02]" 
             : "border-white/10 hover:from-orange-600/20 hover:to-orange-900/20 hover:scale-[1.02] hover:shadow-lg hover:shadow-orange-500/10",
-          "min-w-[80px] w-full",
-          "relative overflow-hidden touch-feedback"
+          "w-full",
+          "relative overflow-hidden touch-feedback",
+          isMobile && "col-span-2"
         )}>
           {showRestTimer && (
             <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-transparent animate-pulse"></div>
@@ -182,9 +186,14 @@ export const WorkoutMetrics = ({
             {!showRestTimer && (
               <Button
                 variant="outline"
-                size="sm"
+                size={isMobile ? "default" : "sm"}
                 onClick={onManualRestStart}
-                className="mt-1 sm:mt-2 bg-gradient-to-r from-orange-500/20 to-orange-600/20 border-orange-500/30 hover:bg-orange-500/30 text-orange-300 transition-all duration-300 text-xs font-medium scale-90 sm:scale-100 shadow-sm hover:shadow-md hover:shadow-orange-500/10 active:scale-95"
+                className={cn(
+                  "mt-1 sm:mt-2 bg-gradient-to-r from-orange-500/20 to-orange-600/20 border-orange-500/30",
+                  "hover:bg-orange-500/30 text-orange-300 transition-all duration-300 shadow-sm",
+                  "hover:shadow-md hover:shadow-orange-500/10 active:scale-95",
+                  isMobile ? "w-full h-9 text-sm font-medium" : "text-xs font-medium scale-90 sm:scale-100"
+                )}
               >
                 <Play size={12} className="mr-1" /> Start Timer
               </Button>

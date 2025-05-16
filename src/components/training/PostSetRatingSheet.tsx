@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { CheckCircle, Dumbbell, ThumbsUp } from 'lucide-react';
 import { useSound } from '@/hooks/useSound';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const RPE_RATINGS = [
   { value: 1, label: "Very Easy", description: "Could do many more reps" },
@@ -39,6 +40,7 @@ export const PostSetRatingSheet: React.FC<PostSetRatingSheetProps> = ({
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const { play: playSuccess } = useSound('/sounds/success.mp3');
   const { play: playClick } = useSound('/sounds/tick.mp3');
+  const isMobile = useIsMobile();
 
   const handleRatingSelect = (rating: number) => {
     setSelectedRating(rating);
@@ -62,7 +64,10 @@ export const PostSetRatingSheet: React.FC<PostSetRatingSheetProps> = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="bg-gray-900 border-l border-gray-800 w-full sm:max-w-md overflow-y-auto">
+      <SheetContent className={cn(
+        "bg-gray-900 border-l border-gray-800 overflow-y-auto",
+        isMobile ? "w-full px-2" : "sm:max-w-md"
+      )}>
         <SheetHeader className="pb-4 border-b border-gray-800">
           <SheetTitle className="text-xl flex items-center">
             <CheckCircle className="h-5 w-5 mr-2 text-green-500" />
@@ -85,7 +90,10 @@ export const PostSetRatingSheet: React.FC<PostSetRatingSheetProps> = ({
           
           <div className="mb-8">
             <h4 className="font-medium mb-3">How difficult was this set?</h4>
-            <div className="grid grid-cols-5 gap-2">
+            <div className={cn(
+              "grid gap-2",
+              isMobile ? "grid-cols-5" : "grid-cols-5"
+            )}>
               {RPE_RATINGS.map(rating => (
                 <button
                   key={rating.value}
@@ -93,6 +101,7 @@ export const PostSetRatingSheet: React.FC<PostSetRatingSheetProps> = ({
                   className={cn(
                     "flex flex-col items-center justify-center p-2 rounded-lg transition-all",
                     "hover:bg-gray-800 hover:shadow-md",
+                    "min-h-[60px]", // Ensure minimum touch target height
                     selectedRating === rating.value 
                       ? "bg-purple-600/20 border border-purple-500/40 shadow-lg shadow-purple-500/10" 
                       : "border border-gray-800"
@@ -104,7 +113,7 @@ export const PostSetRatingSheet: React.FC<PostSetRatingSheetProps> = ({
                   )}>
                     {rating.value}
                   </span>
-                  <span className="text-xs text-gray-400">{rating.label}</span>
+                  <span className="text-xs text-gray-400 text-center">{rating.label}</span>
                 </button>
               ))}
             </div>
@@ -127,6 +136,7 @@ export const PostSetRatingSheet: React.FC<PostSetRatingSheetProps> = ({
             disabled={selectedRating === null}
             className={cn(
               "w-full transition-all duration-300",
+              "h-12", // Larger touch target
               selectedRating !== null 
                 ? "bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 shadow-lg" 
                 : "bg-gray-800 text-gray-400"
