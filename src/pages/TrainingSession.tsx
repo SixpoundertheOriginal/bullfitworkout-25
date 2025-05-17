@@ -1,414 +1,85 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { toast } from "@/hooks/use-toast";
-import { useAuth } from "@/context/AuthContext";
-import { useWorkoutStore } from '@/store/workoutStore';
+
+import React from "react";
 import { useWorkoutTimer } from '@/hooks/useWorkoutTimer';
 import { useExercises } from "@/hooks/useExercises";
 import { WorkoutSessionHeader } from "@/components/training/WorkoutSessionHeader";
 import { ExerciseList } from "@/components/training/ExerciseList";
 import { AddExerciseSheet } from "@/components/training/AddExerciseSheet";
-import { Loader2, Dumbbell } from "lucide-react";
-import { Exercise } from "@/types/exercise";
-import { useSound } from "@/hooks/useSound";
-import { RestTimer } from "@/components/RestTimer";
-import { EnhancedRestTimer } from "@/components/training/EnhancedRestTimer";
 import { PostSetRatingSheet } from "@/components/training/PostSetRatingSheet";
 import { ExerciseCompletionConfirmation } from "@/components/training/ExerciseCompletionConfirmation";
-import { adaptExerciseSets, adaptToStoreFormat } from "@/utils/exerciseAdapter";
-import { useWorkoutSave } from "@/hooks/useWorkoutSave";
-import { calculateVolumeStats, generateMotivationalContent, getNextSetRecommendation } from "@/utils/setRecommendations";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { cn } from "@/lib/utils";
+import { TrainingSessionLoading } from "@/components/training/TrainingSessionLoading";
+import { TrainingSessionTimers } from "@/components/training/TrainingSessionTimers";
+import { useTrainingSession } from "@/hooks/useTrainingSession";
 
 const TrainingSessionPage = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { user } = useAuth();
-  const { exercises: allExercises, isLoading: loadingExercises } = useExercises();
-  
+  const { isLoading: loadingExercises } = useExercises();
   const {
-    exercises: storeExercises,
-    setExercises: setStoreExercises,
+    // State
+    exercises,
     activeExercise,
-    setActiveExercise,
     elapsedTime,
-    resetSession,
-    restTimerActive,
-    setRestTimerActive,
-    currentRestTime,
-    setCurrentRestTime,
-    handleCompleteSet,
+    hasExercises,
+    exerciseCount,
+    completedSets,
+    totalSets,
     workoutStatus,
-    markAsSaving,
-    markAsFailed,
     workoutId,
-    deleteExercise,
-    startWorkout,
-    updateLastActiveRoute,
-    trainingConfig,
-    isActive,
-    setTrainingConfig,
-    setWorkoutStatus,
+    restTimerActive,
+    isSaving,
+    saveStatus,
+    showRestTimerModal,
+    showEnhancedRestTimer,
+    restTimerResetSignal,
+    currentRestTime,
+    isAddExerciseSheetOpen,
+    setIsAddExerciseSheetOpen,
     focusedExercise,
-    focusedSetIndex,
-    setFocusedExercise,
-    setFocusedSetIndex,
+    showCompletionConfirmation,
+    completedExerciseName,
+    nextExerciseName,
+    isRatingSheetOpen,
+    setIsRatingSheetOpen,
     postSetFlow,
-    setPostSetFlow,
     lastCompletedExercise,
     lastCompletedSetIndex,
-    submitSetRating
-  } = useWorkoutStore();
-  
-  // Initialize the useWorkoutSave hook
-  const { 
-    handleCompleteWorkout,
-    saveStatus,
-    savingErrors,
-    workoutId: savedWorkoutId 
-  } = useWorkoutSave(storeExercises, elapsedTime, resetSession);
-  
-  // Convert store exercises to the format expected by components
-  const exercises = adaptExerciseSets(storeExercises);
-  
-  const [completedSets, totalSets] = Object.entries(exercises).reduce(
-    ([completed, total], [_, sets]) => [
-      completed + sets.filter(s => s.completed).length,
-      total + sets.length
-    ],
-    [0, 0]
-  );
+    trainingConfig,
+    
+    // Methods
+    handleAddSet,
+    handleAddExercise,
+    handleShowRestTimer,
+    handleRestTimerComplete,
+    handleSubmitRating,
+    handleFocusExercise,
+    handleFinishWorkout,
+    attemptRecovery,
+    handleNextExercise,
+    handleCompleteExercise,
+    handleSetExercises,
+    handleCompleteSet,
+    deleteExercise,
+    setFocusedExercise,
+    triggerRestTimerReset,
+    getNextSetDetails,
+    
+    // UI state setters
+    setShowCompletionConfirmation,
+    setPostSetFlow,
+    setRestTimerActive,
+    setShowEnhancedRestTimer
+  } = useTrainingSession();
 
+  // Initialize the workout timer
   useWorkoutTimer();
-  const { play: playBell } = useSound('/sounds/bell.mp3');
-  const { play: playTick } = useSound('/sounds/tick.mp3');
-  const { play: playSuccess } = useSound('/sounds/success.mp3');
-  
-  const [isAddExerciseSheetOpen, setIsAddExerciseSheetOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [showRestTimerModal, setShowRestTimerModal] = useState(false);
-  const [showEnhancedRestTimer, setShowEnhancedRestTimer] = useState(false);
-  const [restTimerResetSignal, setRestTimerResetSignal] = useState(0);
-  const [pageLoaded, setPageLoaded] = useState(false);
-  const [nextSetRecommendation, setNextSetRecommendation] = useState(null);
-  const [motivationalMessage, setMotivationalMessage] = useState('');
-  const [volumeStats, setVolumeStats] = useState('');
-  const [showCompletionConfirmation, setShowCompletionConfirmation] = useState(false);
-  const [completedExerciseName, setCompletedExerciseName] = useState<string | null>(null);
-  const [nextExerciseName, setNextExerciseName] = useState<string | null>(null);
-
-  const exerciseCount = Object.keys(exercises).length;
-  const hasExercises = exerciseCount > 0;
-  
-  // State for post-set rating
-  const [isRatingSheetOpen, setIsRatingSheetOpen] = useState(false);
-  
-  useEffect(() => { setPageLoaded(true); }, []);
-
-  useEffect(() => {
-    if (Object.keys(exercises).length > 0 && workoutStatus === 'saving') {
-      setIsSaving(false);
-      if (isActive) setWorkoutStatus('active');
-    }
-  }, [exercises, workoutStatus, isActive, setWorkoutStatus]);
-
-  useEffect(() => {
-    if (location.pathname === '/training-session') {
-      updateLastActiveRoute('/training-session');
-    }
-  }, [location.pathname, updateLastActiveRoute]);
-
-  useEffect(() => {
-    if (pageLoaded && workoutStatus === 'idle' && hasExercises) {
-      startWorkout();
-    }
-  }, [pageLoaded, workoutStatus, hasExercises, startWorkout]);
-
-  useEffect(() => {
-    if (location.state?.trainingConfig && !isActive) {
-      setTrainingConfig(location.state.trainingConfig);
-    }
-    if (location.state?.fromDiscard) {
-      setIsSaving(false);
-    }
-  }, [location.state, isActive, setTrainingConfig]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get('reset') === 'true') {
-      resetSession();
-      toast.info("Workout session reset");
-      navigate('/training-session', { replace: true });
-    }
-  }, [location.search, resetSession, navigate]);
-
-  // Track saved workout ID and navigate when save is successful
-  useEffect(() => {
-    if (saveStatus === 'saved' && savedWorkoutId) {
-      console.log('Workout saved successfully, navigating to complete page with ID:', savedWorkoutId);
-      navigate(`/workout-complete/${savedWorkoutId}`);
-    }
-  }, [saveStatus, savedWorkoutId, navigate]);
-
-  // Handle save errors
-  useEffect(() => {
-    if (saveStatus === 'failed' && savingErrors.length > 0) {
-      setIsSaving(false);
-      const errorMessage = savingErrors[0]?.message || 'Failed to save workout';
-      toast.error("Save Error", { description: errorMessage });
-    }
-  }, [saveStatus, savingErrors]);
-
-  // Exit focus mode when exercise is deleted
-  useEffect(() => {
-    if (focusedExercise && !exercises[focusedExercise]) {
-      setFocusedExercise(null);
-    }
-  }, [exercises, focusedExercise, setFocusedExercise]);
-
-  // Handle post-set flow state changes
-  useEffect(() => {
-    if (postSetFlow === 'rating' && lastCompletedExercise && lastCompletedSetIndex !== null) {
-      setIsRatingSheetOpen(true);
-      
-      // Generate next set recommendation
-      if (lastCompletedExercise && 
-          lastCompletedSetIndex !== null && 
-          storeExercises[lastCompletedExercise]?.length > lastCompletedSetIndex + 1) {
-        
-        const currentSet = storeExercises[lastCompletedExercise][lastCompletedSetIndex];
-        const nextSetIndex = lastCompletedSetIndex + 1;
-        const nextSet = storeExercises[lastCompletedExercise][nextSetIndex];
-        
-        // Generate motivational content
-        const motivational = generateMotivationalContent(
-          lastCompletedExercise, 
-          currentSet,
-          []
-        );
-        setMotivationalMessage(motivational);
-        
-        // Calculate volume stats
-        const stats = calculateVolumeStats(
-          lastCompletedExercise,
-          storeExercises[lastCompletedExercise]
-        );
-        setVolumeStats(stats.message);
-      }
-    } else if (postSetFlow === 'resting') {
-      setIsRatingSheetOpen(false);
-      setShowEnhancedRestTimer(true);
-      triggerRestTimerReset();
-    } else if (postSetFlow === 'idle') {
-      setIsRatingSheetOpen(false);
-      setShowEnhancedRestTimer(false);
-    }
-  }, [postSetFlow, lastCompletedExercise, lastCompletedSetIndex, storeExercises]);
-
-  const triggerRestTimerReset = () => setRestTimerResetSignal(x => x + 1);
-
-  // Define the onAddSet function to add a basic set to an exercise
-  const handleAddSet = (exerciseName: string) => {
-    setStoreExercises(prev => ({
-      ...prev,
-      [exerciseName]: [...prev[exerciseName], { weight: 0, reps: 0, restTime: 60, completed: false, isEditing: false }]
-    }));
-  };
-
-  const handleAddExercise = (exercise: Exercise | string) => {
-    const name = typeof exercise === 'string' ? exercise : exercise.name;
-    if (storeExercises[name]) {
-      toast({ title: "Exercise already added", description: `${name} is already in your workout` });
-      return;
-    }
-    setStoreExercises(prev => ({ ...prev, [name]: [{ weight: 0, reps: 0, restTime: 60, completed: false, isEditing: false }] }));
-    setActiveExercise(name);
-    setFocusedExercise(name); // Auto-focus the newly added exercise
-    if (workoutStatus === 'idle') startWorkout();
-    setIsAddExerciseSheetOpen(false);
-    playBell(); // Provide audio feedback for added exercise
-  };
-
-  // Enhanced rest timer helpers
-  const getNextSetDetails = () => {
-    if (!lastCompletedExercise || lastCompletedSetIndex === null) return null;
-    
-    const sets = storeExercises[lastCompletedExercise];
-    if (!sets || lastCompletedSetIndex + 1 >= sets.length) return null;
-    
-    return sets[lastCompletedSetIndex + 1];
-  };
-
-  const handleShowRestTimer = () => { 
-    setRestTimerActive(true); 
-    setShowRestTimerModal(true); 
-    playBell(); 
-  };
-  
-  const handleRestTimerComplete = () => { 
-    setRestTimerActive(false);
-    setShowRestTimerModal(false);
-    setShowEnhancedRestTimer(false);
-    setPostSetFlow('idle');
-    playBell(); 
-  };
-
-  const handleSubmitRating = (rating: number) => {
-    submitSetRating(rating);
-    playSuccess();
-  };
-
-  const handleFocusExercise = (exerciseName: string | null) => {
-    if (focusedExercise === exerciseName) {
-      // Toggle off if clicking the same exercise
-      setFocusedExercise(null);
-      playTick();
-    } else {
-      setFocusedExercise(exerciseName);
-      setFocusedSetIndex(0); // Focus on the first set by default
-      playBell();
-      // Auto scroll to the focused exercise with smooth behavior
-      if (exerciseName) {
-        setTimeout(() => {
-          const element = document.querySelector(`[data-exercise="${exerciseName}"]`);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 100);
-      }
-    }
-  };
-
-  const handleFinishWorkout = async () => {
-    if (!hasExercises) {
-      toast.error("Add at least one exercise before finishing your workout");
-      return;
-    }
-    
-    try {
-      setIsSaving(true);
-      markAsSaving();
-      
-      // Save the workout using the useWorkoutSave hook
-      const savedId = await handleCompleteWorkout(trainingConfig);
-      
-      // If save failed or returned null, handle the error
-      if (!savedId) {
-        setIsSaving(false);
-        toast.error("Failed to save workout");
-        return;
-      }
-      
-    } catch (err) {
-      console.error("Error saving workout data:", err);
-      setIsSaving(false);
-      markAsFailed({ 
-        type: 'unknown', 
-        message: err instanceof Error ? err.message : 'Save failed', 
-        timestamp: new Date().toISOString(), 
-        recoverable: true 
-      });
-      toast.error("Failed to complete workout");
-    }
-  };
-
-  const attemptRecovery = () => {
-    console.log("Recovery attempt for workout:", workoutId);
-    toast.info("Attempting to recover workout data...");
-  };
-
-  const handleNextExercise = useCallback(() => {
-    if (!focusedExercise) return;
-    
-    // Get ordered list of exercise names
-    const exerciseNames = Object.keys(exercises);
-    const currentIndex = exerciseNames.indexOf(focusedExercise);
-    
-    // If we have a next exercise, focus on it
-    if (currentIndex >= 0 && currentIndex < exerciseNames.length - 1) {
-      const nextName = exerciseNames[currentIndex + 1];
-      setFocusedExercise(nextName);
-      
-      // Auto scroll to the focused exercise with smooth behavior
-      setTimeout(() => {
-        const element = document.querySelector(`[data-exercise="${nextName}"]`);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 100);
-
-      playBell();
-      // Show toast with next exercise
-      toast.info(`Switched to ${nextName}`);
-    }
-  }, [focusedExercise, exercises, setFocusedExercise, playBell]);
-
-  const handleCompleteExercise = useCallback(() => {
-    if (!focusedExercise) return;
-    
-    setCompletedExerciseName(focusedExercise);
-    
-    // Get the next exercise if available
-    const exerciseNames = Object.keys(exercises);
-    const currentIndex = exerciseNames.indexOf(focusedExercise);
-    
-    if (currentIndex >= 0 && currentIndex < exerciseNames.length - 1) {
-      setNextExerciseName(exerciseNames[currentIndex + 1]);
-    } else {
-      setNextExerciseName(null);
-    }
-    
-    playSuccess();
-    setShowCompletionConfirmation(true);
-    
-  }, [focusedExercise, exercises, playSuccess]);
-
-  // Update nextExerciseName when focused exercise changes
-  useEffect(() => {
-    if (focusedExercise) {
-      const exerciseNames = Object.keys(exercises);
-      const currentIndex = exerciseNames.indexOf(focusedExercise);
-      
-      if (currentIndex >= 0 && currentIndex < exerciseNames.length - 1) {
-        setNextExerciseName(exerciseNames[currentIndex + 1]);
-      } else {
-        setNextExerciseName(null);
-      }
-    }
-  }, [focusedExercise, exercises]);
 
   if (loadingExercises) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-black text-white">
-        <div className="flex flex-col items-center">
-          <div className="mb-4 relative">
-            <div className="w-16 h-16 rounded-full bg-purple-900/20 flex items-center justify-center">
-              <Dumbbell className="w-8 h-8 text-purple-400 animate-pulse" />
-            </div>
-            <div className="absolute -bottom-1 -right-1">
-              <Loader2 className="h-6 w-6 animate-spin text-purple-500" />
-            </div>
-          </div>
-          <p className="text-gray-400">Loading your workout...</p>
-        </div>
-      </div>
-    );
+    return <TrainingSessionLoading />;
   }
-
-  // Set up the adapter function to convert between the different exercise formats
-  const handleSetExercises = (updatedExercises) => {
-    if (typeof updatedExercises === 'function') {
-      setStoreExercises(prev => adaptToStoreFormat(updatedExercises(adaptExerciseSets(prev))));
-    } else {
-      setStoreExercises(adaptToStoreFormat(updatedExercises));
-    }
-  };
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-white pt-16 pb-6">
       <main className="flex-1 overflow-auto">
-        <div className="mx-auto py-6 pb-6"> {/* Reduced bottom padding since footer is now part of the content */}
+        <div className="mx-auto py-6 pb-6">
           <div className="relative">
             <WorkoutSessionHeader
               elapsedTime={elapsedTime}
@@ -419,7 +90,7 @@ const TrainingSessionPage = () => {
               isRecoveryMode={!!workoutId}
               saveProgress={0}
               onRetrySave={() => workoutId && attemptRecovery()}
-              onResetWorkout={resetSession}
+              onResetWorkout={() => {}}
               restTimerActive={restTimerActive}
               onRestTimerComplete={handleRestTimerComplete}
               onShowRestTimer={handleShowRestTimer}
@@ -429,38 +100,22 @@ const TrainingSessionPage = () => {
               focusedExercise={focusedExercise}
             />
             
-            {/* Standard rest timer (when manually triggered) */}
-            {showRestTimerModal && !showEnhancedRestTimer && (
-              <div className="fixed right-4 top-32 z-50 w-72">
-                <RestTimer
-                  isVisible={showRestTimerModal}
-                  onClose={() => { setShowRestTimerModal(false); setRestTimerActive(false); }}
-                  onComplete={handleRestTimerComplete}
-                  maxTime={currentRestTime || 60}
-                />
-              </div>
-            )}
-            
-            {/* Enhanced rest timer (shown after rating a set) */}
-            {showEnhancedRestTimer && (
-              <div className="fixed right-4 top-32 z-50 w-72">
-                <EnhancedRestTimer
-                  isVisible={showEnhancedRestTimer}
-                  onClose={() => { 
-                    setShowEnhancedRestTimer(false); 
-                    setRestTimerActive(false);
-                    setPostSetFlow('idle');
-                  }}
-                  onComplete={handleRestTimerComplete}
-                  maxTime={currentRestTime || 60}
-                  exerciseName={lastCompletedExercise || undefined}
-                  nextSet={getNextSetDetails()}
-                  recommendation={nextSetRecommendation}
-                  motivationalMessage={motivationalMessage}
-                  volumeStats={volumeStats}
-                />
-              </div>
-            )}
+            {/* Timer Components */}
+            <TrainingSessionTimers
+              showRestTimerModal={showRestTimerModal}
+              showEnhancedRestTimer={showEnhancedRestTimer}
+              currentRestTime={currentRestTime}
+              lastCompletedExercise={lastCompletedExercise}
+              nextSetDetails={getNextSetDetails()}
+              nextSetRecommendation={null}
+              motivationalMessage={""}
+              volumeStats={""}
+              onClose={() => setShowRestTimerModal(false)}
+              onRestTimerComplete={handleRestTimerComplete}
+              setRestTimerActive={setRestTimerActive}
+              setShowEnhancedRestTimer={setShowEnhancedRestTimer}
+              setPostSetFlow={setPostSetFlow}
+            />
           </div>
           
           <div className="mt-6">
@@ -472,39 +127,75 @@ const TrainingSessionPage = () => {
               onCompleteSet={handleCompleteSet}
               onDeleteExercise={deleteExercise}
               onRemoveSet={(name, i) => {
-                setStoreExercises(prev => ({ ...prev, [name]: prev[name].filter((_, idx) => idx !== i) }));
+                handleSetExercises(prev => {
+                  const updated = { ...prev };
+                  updated[name] = prev[name].filter((_, idx) => idx !== i);
+                  return updated;
+                });
               }}
               onEditSet={(name, i) => {
-                setStoreExercises(prev => ({ ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, isEditing: true } : s) }));
+                handleSetExercises(prev => {
+                  const updated = { ...prev };
+                  updated[name] = prev[name].map((s, idx) => idx === i ? { ...s, isEditing: true } : s);
+                  return updated;
+                });
               }}
               onSaveSet={(name, i) => {
-                setStoreExercises(prev => ({ ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, isEditing: false } : s) }));
+                handleSetExercises(prev => {
+                  const updated = { ...prev };
+                  updated[name] = prev[name].map((s, idx) => idx === i ? { ...s, isEditing: false } : s);
+                  return updated;
+                });
               }}
               onWeightChange={(name, i, v) => {
-                setStoreExercises(prev => ({ ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, weight: +v || 0 } : s) }));
+                handleSetExercises(prev => {
+                  const updated = { ...prev };
+                  updated[name] = prev[name].map((s, idx) => idx === i ? { ...s, weight: +v || 0 } : s);
+                  return updated;
+                });
               }}
               onRepsChange={(name, i, v) => {
-                setStoreExercises(prev => ({ ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, reps: parseInt(v) || 0 } : s) }));
+                handleSetExercises(prev => {
+                  const updated = { ...prev };
+                  updated[name] = prev[name].map((s, idx) => idx === i ? { ...s, reps: parseInt(v) || 0 } : s);
+                  return updated;
+                });
               }}
               onRestTimeChange={(name, i, v) => {
-                setStoreExercises(prev => ({ ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, restTime: parseInt(v) || 60 } : s) }));
+                handleSetExercises(prev => {
+                  const updated = { ...prev };
+                  updated[name] = prev[name].map((s, idx) => idx === i ? { ...s, restTime: parseInt(v) || 60 } : s);
+                  return updated;
+                });
               }}
               onWeightIncrement={(name, i, inc) => {
-                setStoreExercises(prev => {
+                handleSetExercises(prev => {
+                  const updated = { ...prev };
                   const set = prev[name][i];
-                  return { ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, weight: Math.max(0, (set.weight || 0) + inc) } : s) };
+                  updated[name] = prev[name].map((s, idx) => 
+                    idx === i ? { ...s, weight: Math.max(0, (set.weight || 0) + inc) } : s
+                  );
+                  return updated;
                 });
               }}
               onRepsIncrement={(name, i, inc) => {
-                setStoreExercises(prev => {
+                handleSetExercises(prev => {
+                  const updated = { ...prev };
                   const set = prev[name][i];
-                  return { ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, reps: Math.max(0, (set.reps || 0) + inc) } : s) };
+                  updated[name] = prev[name].map((s, idx) => 
+                    idx === i ? { ...s, reps: Math.max(0, (set.reps || 0) + inc) } : s
+                  );
+                  return updated;
                 });
               }}
               onRestTimeIncrement={(name, i, inc) => {
-                setStoreExercises(prev => {
+                handleSetExercises(prev => {
+                  const updated = { ...prev };
                   const set = prev[name][i];
-                  return { ...prev, [name]: prev[name].map((s, idx) => idx === i ? { ...s, restTime: Math.max(0, (set.restTime || 60) + inc) } : s) };
+                  updated[name] = prev[name].map((s, idx) => 
+                    idx === i ? { ...s, restTime: Math.max(0, (set.restTime || 60) + inc) } : s
+                  );
+                  return updated;
                 });
               }}
               onShowRestTimer={handleShowRestTimer}
@@ -551,8 +242,8 @@ const TrainingSessionPage = () => {
         }}
         onSubmitRating={handleSubmitRating}
         exerciseName={lastCompletedExercise || ''}
-        setDetails={lastCompletedExercise && lastCompletedSetIndex !== null && storeExercises[lastCompletedExercise]
-          ? storeExercises[lastCompletedExercise][lastCompletedSetIndex]
+        setDetails={lastCompletedExercise && lastCompletedSetIndex !== null && exercises[lastCompletedExercise]
+          ? exercises[lastCompletedExercise][lastCompletedSetIndex]
           : undefined}
       />
     </div>
