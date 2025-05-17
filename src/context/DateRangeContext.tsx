@@ -9,6 +9,10 @@ interface DateRangeContextType {
   comparisonEnabled: boolean;
   setComparisonEnabled: (enabled: boolean) => void;
   comparisonDateRange: DateRange | undefined;
+  customComparisonRange: DateRange | undefined;
+  setCustomComparisonRange: (range: DateRange | undefined) => void;
+  useCustomComparison: boolean;
+  setUseCustomComparison: (useCustom: boolean) => void;
 }
 
 const DateRangeContext = createContext<DateRangeContextType | undefined>(undefined);
@@ -23,11 +27,19 @@ export function DateRangeProvider({ children }: { children: ReactNode }) {
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>(defaultDateRange);
   const [comparisonEnabled, setComparisonEnabled] = useState<boolean>(false);
+  const [customComparisonRange, setCustomComparisonRange] = useState<DateRange | undefined>(undefined);
+  const [useCustomComparison, setUseCustomComparison] = useState<boolean>(false);
 
   // Calculate the comparison date range based on the current date range
   const comparisonDateRange = React.useMemo(() => {
     if (!dateRange?.from || !dateRange?.to || !comparisonEnabled) return undefined;
     
+    // If using custom date range, return that instead
+    if (useCustomComparison && customComparisonRange?.from && customComparisonRange?.to) {
+      return customComparisonRange;
+    }
+    
+    // Default: Calculate previous period with same duration
     const currentFrom = dateRange.from;
     const currentTo = dateRange.to;
     const rangeDays = Math.floor((currentTo.getTime() - currentFrom.getTime()) / (1000 * 60 * 60 * 24));
@@ -36,15 +48,16 @@ export function DateRangeProvider({ children }: { children: ReactNode }) {
       from: subDays(currentFrom, rangeDays + 1),
       to: subDays(currentTo, rangeDays + 1)
     };
-  }, [dateRange, comparisonEnabled]);
+  }, [dateRange, comparisonEnabled, useCustomComparison, customComparisonRange]);
 
   // Log the current and comparison date ranges
   React.useEffect(() => {
     console.log("DateRangeContext initialized with range:", dateRange);
     if (comparisonEnabled) {
       console.log("Comparison date range:", comparisonDateRange);
+      console.log("Using custom comparison:", useCustomComparison);
     }
-  }, [dateRange, comparisonDateRange, comparisonEnabled]);
+  }, [dateRange, comparisonDateRange, comparisonEnabled, useCustomComparison]);
 
   return (
     <DateRangeContext.Provider 
@@ -53,7 +66,11 @@ export function DateRangeProvider({ children }: { children: ReactNode }) {
         setDateRange, 
         comparisonEnabled, 
         setComparisonEnabled,
-        comparisonDateRange 
+        comparisonDateRange,
+        customComparisonRange,
+        setCustomComparisonRange,
+        useCustomComparison,
+        setUseCustomComparison
       }}
     >
       {children}

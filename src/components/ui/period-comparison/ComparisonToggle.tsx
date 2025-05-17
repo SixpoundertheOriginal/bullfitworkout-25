@@ -4,17 +4,28 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useDateRange } from '@/context/DateRangeContext';
 import { format } from 'date-fns';
-import { CalendarRange, ArrowLeftRight } from 'lucide-react';
+import { CalendarRange, ArrowLeftRight, Calendar, ChevronDown } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { ComparisonDateRangePicker } from './ComparisonDateRangePicker';
 
 interface ComparisonToggleProps {
   className?: string;
+  showDateSelector?: boolean;
 }
 
-export function ComparisonToggle({ className = "" }: ComparisonToggleProps) {
+export function ComparisonToggle({ className = "", showDateSelector = false }: ComparisonToggleProps) {
   const { 
     comparisonEnabled, 
     setComparisonEnabled, 
-    comparisonDateRange 
+    comparisonDateRange, 
+    useCustomComparison,
+    setUseCustomComparison
   } = useDateRange();
 
   // Format date ranges for display
@@ -37,11 +48,25 @@ export function ComparisonToggle({ className = "" }: ComparisonToggleProps) {
         checked={comparisonEnabled}
         onCheckedChange={setComparisonEnabled}
       />
+      
       {comparisonEnabled && comparisonPeriodText && (
-        <div className="ml-2 flex items-center text-xs text-gray-400 bg-gray-800/50 px-2 py-1 rounded-md">
-          <CalendarRange className="h-3 w-3 mr-1" />
-          {comparisonPeriodText}
-        </div>
+        <>
+          {showDateSelector ? (
+            <div className="ml-2 flex gap-2">
+              <ComparisonDateRangePicker />
+            </div>
+          ) : (
+            <div className="ml-2 flex items-center text-xs text-gray-400 bg-gray-800/50 px-2 py-1 rounded-md">
+              <CalendarRange className="h-3 w-3 mr-1" />
+              {comparisonPeriodText}
+              {useCustomComparison && (
+                <span className="ml-1 text-xs bg-purple-900/30 text-purple-300 px-1 rounded">
+                  Custom
+                </span>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

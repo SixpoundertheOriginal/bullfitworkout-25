@@ -10,8 +10,18 @@ import { useChartData } from '@/components/metrics/workout-density/useChartData'
 import { VolumeDataPoint, DensityDataPoint } from '@/hooks/useProcessWorkoutMetrics';
 import { WeightUnit } from '@/utils/unitConversion';
 import { MainVolumeChart } from './MainVolumeChart';
+import { useDateRange } from '@/context/DateRangeContext';
+import { useWorkoutComparisonStats } from '@/hooks/useWorkoutComparisonStats';
+import { ComparisonToggle } from '@/components/ui/period-comparison/ComparisonToggle';
 
 const OverviewPage: React.FC = () => {
+  // Access date range context to get current and comparison date ranges
+  const { 
+    dateRange, 
+    comparisonEnabled, 
+    comparisonDateRange 
+  } = useDateRange();
+
   // Keep using the existing hook for overall data
   const { 
     workouts, 
@@ -19,21 +29,50 @@ const OverviewPage: React.FC = () => {
     stats 
   } = useWorkoutStats();
 
+  // Get comparison data if enabled
+  const {
+    currentWorkouts,
+    previousWorkouts,
+    loading: comparisonLoading
+  } = useWorkoutComparisonStats(
+    dateRange,
+    comparisonEnabled ? comparisonDateRange : undefined,
+    "kg" as WeightUnit
+  );
+
   // Log the raw data for debugging
   console.log("[OverviewPage] Raw workouts:", workouts?.length);
   console.log("[OverviewPage] Stats:", stats);
+  console.log("[OverviewPage] Comparison enabled:", comparisonEnabled);
+  console.log("[OverviewPage] Comparison data:", previousWorkouts?.length);
 
+  // Process metrics for current period
   const processedMetrics = useProcessWorkoutMetrics(workouts || []);
+  
+  // Process metrics for comparison period if enabled
+  const comparisonMetrics = React.useMemo(() => {
+    if (!comparisonEnabled || !previousWorkouts) return undefined;
+    return useProcessWorkoutMetrics(previousWorkouts);
+  }, [comparisonEnabled, previousWorkouts]);
   
   // Log the processed metrics to debug density calculation
   console.log("[OverviewPage] Processed metrics:", processedMetrics);
+  console.log("[OverviewPage] Comparison metrics:", comparisonMetrics);
   
+  // Chart data for both current and comparison periods
   const volumeChartData = useVolumeChartData(processedMetrics as VolumeDataPoint[]);
   const densityChartData = useChartData(processedMetrics as unknown as DensityDataPoint[]);
+  
+  // Chart data for comparison period
+  const comparisonVolumeChartData = React.useMemo(() => {
+    if (!comparisonEnabled || !comparisonMetrics) return undefined;
+    return useVolumeChartData(comparisonMetrics as VolumeDataPoint[]);
+  }, [comparisonEnabled, comparisonMetrics]);
 
   // Log the chart data results
   console.log("[OverviewPage] Volume chart data:", volumeChartData);
   console.log("[OverviewPage] Density chart data:", densityChartData);
+  console.log("[OverviewPage] Comparison volume data:", comparisonVolumeChartData);
 
   if (loading) {
     return <LoadingSkeleton />;
@@ -56,9 +95,6 @@ const OverviewPage: React.FC = () => {
     average: densityChartData.averages?.overall || 0
   };
 
-  // Log the density value being used
-  console.log("[OverviewPage] Density value for KPI:", densityStats.average);
-
   // Prepare data for KPI section
   const kpiData = {
     totalWorkouts: stats?.totalWorkouts || 0,
@@ -69,19 +105,28 @@ const OverviewPage: React.FC = () => {
 
   return (
     <div className="container py-6">
-      <OverviewHeader title="Workout Overview" />
+      <OverviewHeader title="Workout Overview">
+        <ComparisonToggle showDateSelector={true} className="mt-2" />
+      </OverviewHeader>
+      
       {stats && <KPISection {...kpiData} />}
       
-      {/* Main Volume Chart - Restored */}
+      {/* Main Volume Chart - With Comparison Support */}
       <MainVolumeChart 
         data={processedMetrics as VolumeDataPoint[]} 
+        comparisonData={comparisonMetrics as VolumeDataPoint[]}
         height={350}
         className="mb-6"
       />
       
+      {/* Charts Grid - Pass both current and comparison data */}
       <ChartsGrid 
-        stats={stats || {}} 
+        stats={stats || {}}
         weightUnit={kpiData.weightUnit}
+        comparisonStats={comparisonEnabled ? {
+          volumeData: comparisonVolumeChartData,
+          workouts: previousWorkouts
+        } : undefined}
       />
     </div>
   );
