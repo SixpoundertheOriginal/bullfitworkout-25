@@ -85,10 +85,12 @@ export function ComparisonDateRangePicker({ className }: ComparisonDateRangePick
           </Button>
         </PopoverTrigger>
         <PopoverContent 
-          className="w-auto p-0 z-[100]" 
+          className="w-auto p-0" 
           align="start"
           side="bottom"
           sideOffset={8}
+          // Increase the z-index to ensure this appears above other elements
+          style={{ zIndex: 100 }}
         >
           <div className="bg-gray-900 border border-gray-700 rounded-md shadow-lg overflow-hidden">
             <Calendar

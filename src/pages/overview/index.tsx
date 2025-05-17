@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { OverviewHeader } from './OverviewHeader';
 import { ChartsGrid } from './ChartsGrid';
@@ -111,7 +112,7 @@ const OverviewPage: React.FC = () => {
         </div>
       </OverviewHeader>
       
-      {/* KPI Section - with unified comparison toggle */}
+      {/* KPI Section - No date filter here as it's now only in the header */}
       {stats && <KPISection {...kpiData} />}
       
       {/* Main Volume Chart - With Comparison Support */}
