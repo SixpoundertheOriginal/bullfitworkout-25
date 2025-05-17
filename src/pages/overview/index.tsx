@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { OverviewHeader } from './OverviewHeader';
 import { ChartsGrid } from './ChartsGrid';
@@ -51,17 +50,13 @@ const OverviewPage: React.FC = () => {
   console.log("[OverviewPage] Comparison enabled:", comparisonEnabled);
   console.log("[OverviewPage] Comparison data:", safePreviousWorkouts?.length || 0);
 
-  // Process metrics for current period - with additional safety check
+  // Process metrics for current period - directly using the hook
   const processedMetrics = useProcessWorkoutMetrics(safeWorkouts);
   
-  // Process metrics for comparison period if enabled - fixed to avoid hook rules violation
-  const comparisonMetrics = React.useMemo(() => {
-    if (!comparisonEnabled || safePreviousWorkouts.length === 0) {
-      return [];
-    }
-    // Call the hook directly to avoid React Hook rules violation
-    return useProcessWorkoutMetrics(safePreviousWorkouts);
-  }, [comparisonEnabled, safePreviousWorkouts]);
+  // Process metrics for comparison period - directly using the hook
+  const comparisonMetrics = useProcessWorkoutMetrics(
+    comparisonEnabled && safePreviousWorkouts.length > 0 ? safePreviousWorkouts : []
+  );
   
   // Log the processed metrics to debug density calculation
   console.log("[OverviewPage] Processed metrics:", processedMetrics?.length || 0);
@@ -71,12 +66,12 @@ const OverviewPage: React.FC = () => {
   const volumeChartData = useVolumeChartData(processedMetrics);
   const densityChartData = useChartData(processedMetrics as unknown as DensityDataPoint[]);
   
-  // Chart data for comparison period - ensure we return an empty array if we have no data
+  // Chart data for comparison period
   const comparisonVolumeChartData = React.useMemo(() => {
     if (!comparisonEnabled || !comparisonMetrics || comparisonMetrics.length === 0) {
       return undefined;
     }
-    return useVolumeChartData(comparisonMetrics as VolumeDataPoint[]);
+    return useVolumeChartData(comparisonMetrics);
   }, [comparisonEnabled, comparisonMetrics]);
 
   // Log the chart data results
