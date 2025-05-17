@@ -41,12 +41,17 @@ export const MuscleGroupChart: React.FC<MuscleGroupChartProps> = ({
       return [];
     }
     
+    // Safe check for comparisonData
+    const safeComparisonData = hasComparison && typeof comparisonData === 'object' && comparisonData !== null 
+      ? comparisonData 
+      : {};
+    
     return muscleGroups
       .map((muscleGroup) => ({
         name: capitalizeFirstLetter(muscleGroup),
         value: safeFocus[muscleGroup] || 0,
-        comparisonValue: hasComparison && comparisonData 
-          ? (comparisonData[muscleGroup] || 0) 
+        comparisonValue: hasComparison && safeComparisonData
+          ? (safeComparisonData[muscleGroup] || 0) 
           : undefined
       }))
       .sort((a, b) => b.value - a.value)

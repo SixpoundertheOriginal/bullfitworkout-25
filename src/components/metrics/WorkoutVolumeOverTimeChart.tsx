@@ -1,6 +1,4 @@
 
-// src/components/metrics/WorkoutVolumeOverTimeChart.tsx
-
 import React from 'react';
 import { 
   ResponsiveContainer, 
@@ -16,7 +14,7 @@ import {
 } from 'recharts';
 import { VolumeDataPoint } from '@/hooks/useProcessWorkoutMetrics';
 import { useWeightUnit } from '@/context/WeightUnitContext';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 
 interface WorkoutVolumeOverTimeChartProps {
   data: VolumeDataPoint[];
@@ -43,7 +41,7 @@ export const WorkoutVolumeOverTimeChart: React.FC<WorkoutVolumeOverTimeChartProp
            comparisonData.length > 0;
   }, [comparisonData]);
   
-  const safeComparisonData = hasComparisonData ? comparisonData : [];
+  const safeComparisonData = hasComparisonData && Array.isArray(comparisonData) ? comparisonData : [];
   
   console.log("[WorkoutVolumeOverTimeChart] Data:", safeData.length, "Comparison data:", safeComparisonData?.length || 0);
   

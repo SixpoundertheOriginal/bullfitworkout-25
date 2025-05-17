@@ -76,7 +76,7 @@ export const useProcessWorkoutMetrics = (workouts: any[] = []) => {
         density: density
       };
     }).filter(Boolean); // Filter out any null values
-  }, [workouts]); // Keep workouts as the only dependency
+  }, [workouts]); // Keep workouts as the only dependency, ensuring it's always defined
 
   return processedMetrics;
 };

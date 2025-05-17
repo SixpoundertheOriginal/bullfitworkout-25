@@ -54,11 +54,12 @@ const OverviewPage: React.FC = () => {
   // Process metrics for current period - with additional safety check
   const processedMetrics = useProcessWorkoutMetrics(safeWorkouts);
   
-  // Process metrics for comparison period if enabled
+  // Process metrics for comparison period if enabled - fixed to avoid hook rules violation
   const comparisonMetrics = React.useMemo(() => {
-    if (!comparisonEnabled || !safePreviousWorkouts.length) {
+    if (!comparisonEnabled || safePreviousWorkouts.length === 0) {
       return [];
     }
+    // Call the hook directly to avoid React Hook rules violation
     return useProcessWorkoutMetrics(safePreviousWorkouts);
   }, [comparisonEnabled, safePreviousWorkouts]);
   
@@ -67,7 +68,7 @@ const OverviewPage: React.FC = () => {
   console.log("[OverviewPage] Comparison metrics:", comparisonMetrics?.length || 0);
   
   // Chart data for both current and comparison periods
-  const volumeChartData = useVolumeChartData(processedMetrics as VolumeDataPoint[]);
+  const volumeChartData = useVolumeChartData(processedMetrics);
   const densityChartData = useChartData(processedMetrics as unknown as DensityDataPoint[]);
   
   // Chart data for comparison period - ensure we return an empty array if we have no data
@@ -131,8 +132,8 @@ const OverviewPage: React.FC = () => {
       
       {/* Main Volume Chart - With Comparison Support */}
       <MainVolumeChart 
-        data={processedMetrics as VolumeDataPoint[]} 
-        comparisonData={comparisonEnabled ? comparisonMetrics as VolumeDataPoint[] : undefined}
+        data={processedMetrics} 
+        comparisonData={comparisonEnabled ? comparisonMetrics : undefined}
         height={350}
         className="mb-6"
       />
