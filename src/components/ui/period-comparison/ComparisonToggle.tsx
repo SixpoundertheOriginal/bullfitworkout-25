@@ -4,13 +4,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useDateRange } from '@/context/DateRangeContext';
 import { format } from 'date-fns';
-import { CalendarRange, ArrowLeftRight, Calendar, ChevronDown } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
+import { CalendarRange, Calendar } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { ComparisonDateRangePicker } from './ComparisonDateRangePicker';
 
@@ -25,7 +19,6 @@ export function ComparisonToggle({ className = "", showDateSelector = false }: C
     setComparisonEnabled, 
     comparisonDateRange, 
     useCustomComparison,
-    setUseCustomComparison
   } = useDateRange();
 
   // Format date ranges for display
@@ -38,7 +31,7 @@ export function ComparisonToggle({ className = "", showDateSelector = false }: C
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
       <div className="flex items-center gap-2">
-        <ArrowLeftRight className="h-4 w-4 text-gray-400" />
+        <CalendarRange className="h-4 w-4 text-gray-400" />
         <Label htmlFor="comparison-toggle" className="text-sm cursor-pointer">
           Compare with previous period
         </Label>
@@ -52,12 +45,12 @@ export function ComparisonToggle({ className = "", showDateSelector = false }: C
       {comparisonEnabled && comparisonPeriodText && (
         <>
           {showDateSelector ? (
-            <div className="ml-2 flex gap-2">
+            <div className="ml-2">
               <ComparisonDateRangePicker />
             </div>
           ) : (
             <div className="ml-2 flex items-center text-xs text-gray-400 bg-gray-800/50 px-2 py-1 rounded-md">
-              <CalendarRange className="h-3 w-3 mr-1" />
+              <Calendar className="h-3 w-3 mr-1" />
               {comparisonPeriodText}
               {useCustomComparison && (
                 <span className="ml-1 text-xs bg-purple-900/30 text-purple-300 px-1 rounded">

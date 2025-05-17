@@ -15,7 +15,6 @@ type DateRangeOption = {
 };
 
 export function DateRangeFilter() {
-  console.log('DateRangeFilter rendering');
   const { dateRange, setDateRange } = useDateRange();
   const [isOpen, setIsOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -55,33 +54,46 @@ export function DateRangeFilter() {
 
   const [selectedPreset, setSelectedPreset] = useState<string>('This Week');
 
-  // Initialize with "This Week" on component mount
+  // Initialize with "This Week" on component mount if no date range is set
   useEffect(() => {
-    console.log('DateRangeFilter init effect running, dateRange:', dateRange, 'isInitialized:', isInitialized);
-    if (!isInitialized) {
+    if (!isInitialized && (!dateRange?.from || !dateRange?.to)) {
       const thisWeekRange = dateRangeOptions.find(option => option.label === 'This Week');
       if (thisWeekRange) {
         setDateRange(thisWeekRange.value());
         setSelectedPreset(thisWeekRange.label);
         setIsInitialized(true);
-        console.log('DateRangeFilter initialized with This Week');
+      }
+    } else if (!isInitialized && dateRange?.from && dateRange?.to) {
+      // If there's already a date range set, just mark as initialized
+      setIsInitialized(true);
+      
+      // Try to find matching preset
+      const matchingPreset = dateRangeOptions.find(option => {
+        const value = option.value();
+        return value.from?.toDateString() === dateRange.from?.toDateString() && 
+               value.to?.toDateString() === dateRange.to?.toDateString();
+      });
+      
+      if (matchingPreset) {
+        setSelectedPreset(matchingPreset.label);
+      } else {
+        setSelectedPreset('Custom Range');
       }
     }
-  }, [dateRange, isInitialized, setDateRange]);
+  }, [dateRange, isInitialized, setDateRange, dateRangeOptions]);
 
   const handleSelect = (preset: DateRangeOption) => {
     const range = preset.value();
     setDateRange(range);
     setSelectedPreset(preset.label);
     setIsOpen(false);
-    console.log('Date range preset selected:', preset.label);
   };
   
   const handleCalendarSelect = (range: DateRange | undefined) => {
     if (range?.from && range?.to) {
       setDateRange(range);
       setSelectedPreset('Custom Range');
-      console.log('Custom date range selected:', range);
+      setIsOpen(false);
     }
   };
   
@@ -114,47 +126,49 @@ export function DateRangeFilter() {
           </Button>
         </PopoverTrigger>
         <PopoverContent 
-          className="w-auto p-0 bg-gray-900 border-gray-700 shadow-lg z-50" 
+          className="w-auto p-0 z-50" 
           align="end" 
           sideOffset={5}
         >
-          <div className="grid gap-4 p-3">
-            <div className="flex flex-col space-y-2">
-              {dateRangeOptions.map((option) => (
-                <Button
-                  key={option.label}
-                  variant={selectedPreset === option.label ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => handleSelect(option)}
-                  className="justify-start font-normal hover:bg-gray-700"
-                >
-                  {option.label}
-                </Button>
-              ))}
-            </div>
-            <div className="border-t border-gray-700 pt-3">
-              <Calendar
-                initialFocus
-                mode="range"
-                defaultMonth={dateRange?.from}
-                selected={dateRange}
-                onSelect={handleCalendarSelect}
-                numberOfMonths={1}
-                className="bg-gray-900 border-0 rounded-md pointer-events-auto"
-                classNames={{
-                  day_selected: "bg-purple-600 text-white hover:bg-purple-700 focus:bg-purple-600",
-                  day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
-                  day_today: "bg-gray-800 text-white",
-                  nav_button: "border-gray-700 bg-gray-800 text-gray-400 hover:bg-gray-700",
-                  cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-purple-600/20",
-                  caption: "relative flex items-center justify-center p-2 text-white",
-                  caption_label: "text-sm font-medium text-gray-100",
-                  head_cell: "text-gray-400 font-normal text-[0.8rem] py-2",
-                  table: "w-full border-collapse space-y-1 bg-gray-900",
-                  months: "bg-gray-900",
-                  month: "space-y-2 bg-gray-900",
-                }}
-              />
+          <div className="bg-gray-900 border border-gray-700 rounded-md shadow-xl">
+            <div className="grid gap-4 p-3">
+              <div className="flex flex-col space-y-2">
+                {dateRangeOptions.map((option) => (
+                  <Button
+                    key={option.label}
+                    variant={selectedPreset === option.label ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => handleSelect(option)}
+                    className="justify-start font-normal hover:bg-gray-700"
+                  >
+                    {option.label}
+                  </Button>
+                ))}
+              </div>
+              <div className="border-t border-gray-700 pt-3">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange?.from}
+                  selected={dateRange}
+                  onSelect={handleCalendarSelect}
+                  numberOfMonths={1}
+                  className="bg-gray-900 border-0 rounded-md pointer-events-auto"
+                  classNames={{
+                    day_selected: "bg-purple-600 text-white hover:bg-purple-700 focus:bg-purple-600",
+                    day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
+                    day_today: "bg-gray-800 text-white",
+                    nav_button: "border-gray-700 bg-gray-800 text-gray-400 hover:bg-gray-700",
+                    cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-purple-600/20",
+                    caption: "relative flex items-center justify-center p-2 text-white",
+                    caption_label: "text-sm font-medium text-gray-100",
+                    head_cell: "text-gray-400 font-normal text-[0.8rem] py-2",
+                    table: "w-full border-collapse space-y-1",
+                    months: "bg-gray-900",
+                    month: "space-y-2",
+                  }}
+                />
+              </div>
             </div>
           </div>
         </PopoverContent>

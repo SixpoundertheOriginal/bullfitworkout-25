@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { OverviewHeader } from './OverviewHeader';
 import { ChartsGrid } from './ChartsGrid';
@@ -14,6 +13,7 @@ import { MainVolumeChart } from './MainVolumeChart';
 import { useDateRange } from '@/context/DateRangeContext';
 import { useWorkoutComparisonStats } from '@/hooks/useWorkoutComparisonStats';
 import { DateRangeFilter } from '@/components/date-filters/DateRangeFilter';
+import { ComparisonToggle } from '@/components/ui/period-comparison/ComparisonToggle';
 
 const OverviewPage: React.FC = () => {
   // Access date range context to get current and comparison date ranges
@@ -45,39 +45,24 @@ const OverviewPage: React.FC = () => {
   const safeWorkouts = Array.isArray(workouts) ? workouts : [];
   const safePreviousWorkouts = Array.isArray(previousWorkouts) ? previousWorkouts : [];
   
-  // Log the raw data for debugging
-  console.log("[OverviewPage] Raw workouts:", safeWorkouts?.length || 0);
-  console.log("[OverviewPage] Stats:", stats ? "available" : "unavailable");
-  console.log("[OverviewPage] Comparison enabled:", comparisonEnabled);
-  console.log("[OverviewPage] Comparison data:", safePreviousWorkouts?.length || 0);
-
-  // Process metrics for current period - directly using the hook
+  // Process metrics for current period
   const processedMetrics = useProcessWorkoutMetrics(safeWorkouts);
   
-  // Process metrics for comparison period - directly using the hook with additional safety check
+  // Process metrics for comparison period
   const comparisonMetrics = useProcessWorkoutMetrics(
     comparisonEnabled && safePreviousWorkouts.length > 0 ? safePreviousWorkouts : []
   );
   
-  // Log the processed metrics to debug density calculation
-  console.log("[OverviewPage] Processed metrics:", processedMetrics?.length || 0);
-  console.log("[OverviewPage] Comparison metrics:", comparisonMetrics?.length || 0);
-  
-  // Chart data for current period
-  const volumeChartData = useVolumeChartData(processedMetrics);
+  // Chart data for current period - always call hooks unconditionally
+  const volumeChartData = useVolumeChartData(processedMetrics || []);
   const densityChartData = useChartData(processedMetrics as unknown as DensityDataPoint[]);
   
-  // Chart data for comparison period - FIXED: Call hooks unconditionally
+  // Chart data for comparison period - always call hooks unconditionally
   const comparisonVolumeChartData = useVolumeChartData(
     comparisonEnabled && comparisonMetrics && comparisonMetrics.length > 0 
       ? comparisonMetrics 
       : []
   );
-
-  // Log the chart data results
-  console.log("[OverviewPage] Volume chart data:", volumeChartData ? "available" : "unavailable");
-  console.log("[OverviewPage] Density chart data:", densityChartData ? "available" : "unavailable");
-  console.log("[OverviewPage] Comparison volume data:", comparisonVolumeChartData ? "available" : "unavailable");
 
   if (loading) {
     return <LoadingSkeleton />;
@@ -120,12 +105,15 @@ const OverviewPage: React.FC = () => {
   return (
     <div className="container py-6">
       <OverviewHeader title="Workout Overview">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2 mt-2">
-          <DateRangeFilter />
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mt-2">
+          <ComparisonToggle showDateSelector={false} className="md:order-2" />
+          <div className="md:order-1">
+            <DateRangeFilter />
+          </div>
         </div>
       </OverviewHeader>
       
-      {/* Only render the ComparisonToggle in KPISection */}
+      {/* KPI Section - Already contains ComparisonToggle with showDateSelector=true */}
       {stats && <KPISection {...kpiData} />}
       
       {/* Main Volume Chart - With Comparison Support */}

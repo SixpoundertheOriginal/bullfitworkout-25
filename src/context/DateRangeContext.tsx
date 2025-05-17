@@ -1,7 +1,7 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { DateRange } from 'react-day-picker';
-import { addDays, subDays, startOfWeek, endOfWeek, subWeeks } from 'date-fns';
+import { addDays, subDays, startOfWeek, endOfWeek } from 'date-fns';
 
 interface DateRangeContextType {
   dateRange: DateRange | undefined;
@@ -50,14 +50,22 @@ export function DateRangeProvider({ children }: { children: ReactNode }) {
     };
   }, [dateRange, comparisonEnabled, useCustomComparison, customComparisonRange]);
 
-  // Log the current and comparison date ranges
-  React.useEffect(() => {
-    console.log("DateRangeContext initialized with range:", dateRange);
-    if (comparisonEnabled) {
-      console.log("Comparison date range:", comparisonDateRange);
-      console.log("Using custom comparison:", useCustomComparison);
+  // Reset custom comparison when date range changes significantly
+  useEffect(() => {
+    // Only reset if we're not using custom comparison or if dateRange drastically changes
+    if (!useCustomComparison || !customComparisonRange || !dateRange?.from || !dateRange?.to) return;
+    
+    // Check if the date range has changed by more than 30 days
+    const customStart = customComparisonRange.from?.getTime() || 0;
+    const currentStart = dateRange.from.getTime();
+    const diffDays = Math.abs(customStart - currentStart) / (1000 * 60 * 60 * 24);
+    
+    // If date range changed drastically, reset custom comparison
+    if (diffDays > 30) {
+      setUseCustomComparison(false);
+      setCustomComparisonRange(undefined);
     }
-  }, [dateRange, comparisonDateRange, comparisonEnabled, useCustomComparison]);
+  }, [dateRange, customComparisonRange, useCustomComparison]);
 
   return (
     <DateRangeContext.Provider 
