@@ -54,12 +54,9 @@ const OverviewPage: React.FC = () => {
   const processedMetrics = useProcessWorkoutMetrics(safeWorkouts);
   
   // Process metrics for comparison period if enabled
-  const comparisonMetrics = React.useMemo(() => {
-    if (!comparisonEnabled || !safePreviousWorkouts || safePreviousWorkouts.length === 0) {
-      return undefined;
-    }
-    return useProcessWorkoutMetrics(safePreviousWorkouts);
-  }, [comparisonEnabled, safePreviousWorkouts]);
+  const comparisonMetrics = comparisonEnabled && safePreviousWorkouts && safePreviousWorkouts.length > 0
+    ? useProcessWorkoutMetrics(safePreviousWorkouts)
+    : [];
   
   // Log the processed metrics to debug density calculation
   console.log("[OverviewPage] Processed metrics:", processedMetrics?.length);
@@ -70,12 +67,9 @@ const OverviewPage: React.FC = () => {
   const densityChartData = useChartData(processedMetrics as unknown as DensityDataPoint[]);
   
   // Chart data for comparison period
-  const comparisonVolumeChartData = React.useMemo(() => {
-    if (!comparisonEnabled || !comparisonMetrics || comparisonMetrics.length === 0) {
-      return undefined;
-    }
-    return useVolumeChartData(comparisonMetrics as VolumeDataPoint[]);
-  }, [comparisonEnabled, comparisonMetrics]);
+  const comparisonVolumeChartData = comparisonEnabled && comparisonMetrics && comparisonMetrics.length > 0
+    ? useVolumeChartData(comparisonMetrics as VolumeDataPoint[])
+    : undefined;
 
   // Log the chart data results
   console.log("[OverviewPage] Volume chart data:", volumeChartData);
@@ -100,13 +94,13 @@ const OverviewPage: React.FC = () => {
 
   // Get density stats from the averages property
   const densityStats = {
-    average: densityChartData.averages?.overall || 0
+    average: densityChartData?.averages?.overall || 0
   };
 
   // Prepare data for KPI section
   const kpiData = {
     totalWorkouts: stats?.totalWorkouts || 0,
-    volumeTotal: volumeChartData.volumeStats?.total || 0,
+    volumeTotal: volumeChartData?.volumeStats?.total || 0,
     avgDensity: densityStats.average,
     weightUnit: "kg" as WeightUnit
   };
@@ -131,7 +125,7 @@ const OverviewPage: React.FC = () => {
       {/* Main Volume Chart - With Comparison Support */}
       <MainVolumeChart 
         data={processedMetrics as VolumeDataPoint[]} 
-        comparisonData={comparisonEnabled && comparisonMetrics ? comparisonMetrics as VolumeDataPoint[] : undefined}
+        comparisonData={comparisonEnabled ? comparisonMetrics as VolumeDataPoint[] : undefined}
         height={350}
         className="mb-6"
       />

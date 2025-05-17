@@ -21,17 +21,28 @@ export interface DensityDataPoint {
   activeOnlyDensity?: number;
 }
 
-export const useProcessWorkoutMetrics = (workouts: any[]) => {
+export const useProcessWorkoutMetrics = (workouts: any[] = []) => {
   const processedMetrics = useMemo(() => {
-    if (!workouts || workouts.length === 0) {
+    // Ensure workouts is always an array to prevent "length" property errors
+    const safeWorkouts = Array.isArray(workouts) ? workouts : [];
+    
+    if (safeWorkouts.length === 0) {
       console.log("[useProcessWorkoutMetrics] No workouts data");
       return [];
     }
 
-    console.log("[useProcessWorkoutMetrics] Processing workouts:", workouts.length);
+    console.log("[useProcessWorkoutMetrics] Processing workouts:", safeWorkouts.length);
 
-    return workouts.map(workout => {
-      const workoutDate = new Date(workout.start_time).toISOString().split('T')[0];
+    return safeWorkouts.map(workout => {
+      if (!workout) {
+        console.log("[useProcessWorkoutMetrics] Found null/undefined workout");
+        return null;
+      }
+      
+      const workoutDate = workout.start_time ? 
+        new Date(workout.start_time).toISOString().split('T')[0] : 
+        new Date().toISOString().split('T')[0];
+        
       let totalVolume = 0;
       let totalSets = 0;
       
@@ -64,8 +75,8 @@ export const useProcessWorkoutMetrics = (workouts: any[]) => {
         duration: duration,
         density: density
       };
-    });
-  }, [workouts]);
+    }).filter(Boolean); // Filter out any null values
+  }, [workouts]); // Keep workouts as the only dependency
 
   return processedMetrics;
 };

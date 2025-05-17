@@ -22,13 +22,18 @@ export const MuscleGroupChart: React.FC<MuscleGroupChartProps> = ({
   comparisonData
 }) => {
   // Add safety check for comparison data
-  const hasComparison = !!comparisonData && typeof comparisonData === 'object' && Object.keys(comparisonData).length > 0;
+  const hasComparison = !!comparisonData && typeof comparisonData === 'object' && comparisonData !== null;
   
   // Transform data for chart display with safety checks
   const chartData = useMemo(() => {
     // Ensure muscleFocus is an object
     const safeFocus = typeof muscleFocus === 'object' && muscleFocus !== null ? muscleFocus : {};
     const muscleGroups = Object.keys(safeFocus);
+    
+    // Only proceed if we have muscle groups
+    if (muscleGroups.length === 0) {
+      return [];
+    }
     
     return muscleGroups
       .map((muscleGroup) => ({
@@ -52,6 +57,7 @@ export const MuscleGroupChart: React.FC<MuscleGroupChartProps> = ({
 
   // Helper function for capitalization
   function capitalizeFirstLetter(string: string) {
+    if (!string) return '';
     return string.charAt(0).toUpperCase() + string.slice(1);
   }
 

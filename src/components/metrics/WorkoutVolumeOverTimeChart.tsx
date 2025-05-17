@@ -1,4 +1,6 @@
 
+// src/components/metrics/WorkoutVolumeOverTimeChart.tsx
+
 import React from 'react';
 import { 
   ResponsiveContainer, 
@@ -30,10 +32,10 @@ export const WorkoutVolumeOverTimeChart: React.FC<WorkoutVolumeOverTimeChartProp
   comparisonData
 }) => {
   const { weightUnit } = useWeightUnit();
-  const hasComparisonData = comparisonData && Array.isArray(comparisonData) && comparisonData.length > 0;
   
   // Add a safety check to ensure data is an array
   const safeData = Array.isArray(data) ? data : [];
+  const hasComparisonData = comparisonData && Array.isArray(comparisonData) && comparisonData.length > 0;
   const safeComparisonData = hasComparisonData ? comparisonData : [];
   
   console.log("[WorkoutVolumeOverTimeChart] Data:", safeData.length, "Comparison data:", safeComparisonData?.length);
@@ -49,13 +51,15 @@ export const WorkoutVolumeOverTimeChart: React.FC<WorkoutVolumeOverTimeChartProp
     
     // Create a map of dates to volumes for the current period
     const currentMap = safeData.reduce((acc, item) => {
-      const dateStr = item.date ? format(new Date(item.date), 'MMM dd') : '';
+      if (!item || !item.date) return acc;
+      const dateStr = format(new Date(item.date), 'MMM dd');
       acc[dateStr] = item.volume || 0;
       return acc;
     }, {} as Record<string, number>);
     
     // Create a map of dates to volumes for the comparison period
     const comparisonMap = safeComparisonData.reduce((acc, item, index) => {
+      if (!item) return acc;
       // For comparison data, we use the same date labels as the current period
       const currentPeriodDate = safeData[index]?.date ? 
         format(new Date(safeData[index].date), 'MMM dd') : 
@@ -87,6 +91,15 @@ export const WorkoutVolumeOverTimeChart: React.FC<WorkoutVolumeOverTimeChartProp
 
   // Choose the appropriate chart type based on whether we have comparison data
   const ChartComponent = hasComparisonData ? ComposedChart : BarChart;
+  
+  // If no data, show a fallback message
+  if (!safeData.length) {
+    return (
+      <div className={`w-full ${className} flex items-center justify-center`} style={{ height }}>
+        <p className="text-gray-400">No workout volume data available</p>
+      </div>
+    );
+  }
   
   return (
     <div className={`w-full ${className}`} style={{ height }}>
