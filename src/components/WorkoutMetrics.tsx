@@ -81,15 +81,22 @@ export const WorkoutMetrics = ({
   const completionPercentage = totalSets > 0 ? (completedSets / totalSets) * 100 : 0;
   const efficiency = totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0;
 
+  // Responsive grid layout based on device and focus state
+  const gridLayout = isMobile 
+    ? focusedExercise 
+      ? "grid-cols-2" 
+      : "grid-cols-2"
+    : "grid-cols-4";
+
   return (
     <div className={cn("relative w-full", className)}>
-      {/* Background glow effects - matching home page aesthetics */}
-      <div className="absolute -top-10 -left-20 w-60 h-60 bg-purple-600/10 rounded-full blur-3xl" />
-      <div className="absolute -top-10 -right-20 w-60 h-60 bg-pink-600/10 rounded-full blur-3xl" />
+      {/* Background glow effects - subtler for mobile */}
+      <div className="absolute -top-10 -left-20 w-60 h-60 bg-purple-600/10 rounded-full blur-3xl opacity-50 sm:opacity-80" />
+      <div className="absolute -top-10 -right-20 w-60 h-60 bg-pink-600/10 rounded-full blur-3xl opacity-50 sm:opacity-80" />
       
       <div className={cn(
-        "grid gap-2 p-3 sm:p-4 rounded-xl",
-        isMobile ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4",
+        "grid gap-2 p-2 sm:p-3 rounded-xl",
+        gridLayout, 
         "bg-gradient-to-br from-gray-900/90 to-gray-800/60 backdrop-blur-md",
         "border border-white/5 shadow-lg",
         "transition-all duration-300",
@@ -102,9 +109,9 @@ export const WorkoutMetrics = ({
           label="Time"
           tooltip={`Tracked since ${formattedStartTime}`}
           gradientClass="from-blue-600/20 via-black/5 to-blue-900/20 hover:from-blue-600/30 hover:to-blue-900/30"
-          valueClass="text-blue-300 font-semibold bg-gradient-to-br from-blue-200 to-blue-400 bg-clip-text text-transparent text-base sm:text-xl"
-          labelClass={typography.sections.label}
-          className="p-2 sm:p-3 hover:scale-105 transition-transform duration-200 active:scale-95 touch-feedback"
+          valueClass="text-blue-300 font-semibold bg-gradient-to-br from-blue-200 to-blue-400 bg-clip-text text-transparent text-sm sm:text-base"
+          labelClass={cn(typography.sections.label, "text-xs")}
+          className="p-2 hover:scale-105 transition-transform duration-200 active:scale-95 touch-feedback"
         />
 
         {/* Exercise Count Card */}
@@ -114,9 +121,9 @@ export const WorkoutMetrics = ({
           label="Exercises"
           tooltip="Active exercises in your workout"
           gradientClass="from-emerald-600/20 via-black/5 to-emerald-900/20 hover:from-emerald-600/30 hover:to-emerald-900/30"
-          valueClass="text-emerald-300 font-semibold bg-gradient-to-br from-emerald-200 to-emerald-400 bg-clip-text text-transparent text-base sm:text-xl"
-          labelClass={typography.sections.label}
-          className="p-2 sm:p-3 hover:scale-105 transition-transform duration-200 active:scale-95 touch-feedback"
+          valueClass="text-emerald-300 font-semibold bg-gradient-to-br from-emerald-200 to-emerald-400 bg-clip-text text-transparent text-sm sm:text-base"
+          labelClass={cn(typography.sections.label, "text-xs")}
+          className="p-2 hover:scale-105 transition-transform duration-200 active:scale-95 touch-feedback"
         />
 
         {/* Sets Card */}
@@ -131,12 +138,12 @@ export const WorkoutMetrics = ({
             animateProgress && "from-purple-600/40 to-purple-900/40"
           )}
           valueClass={cn(
-            "text-purple-300 font-semibold bg-gradient-to-br from-purple-200 to-purple-400 bg-clip-text text-transparent text-base sm:text-xl",
+            "text-purple-300 font-semibold bg-gradient-to-br from-purple-200 to-purple-400 bg-clip-text text-transparent text-sm sm:text-base",
             animateProgress && "scale-110 transition-transform"
           )}
-          labelClass={typography.sections.label}
+          labelClass={cn(typography.sections.label, "text-xs")}
           className={cn(
-            "p-2 sm:p-3 transition-all duration-300",
+            "p-2 transition-all duration-300",
             animateProgress && "shadow-md shadow-purple-500/20",
             "hover:scale-105 active:scale-95 touch-feedback"
           )}
@@ -144,28 +151,26 @@ export const WorkoutMetrics = ({
 
         {/* Rest Timer Card */}
         <div className={cn(
-          "relative flex flex-col items-center justify-center p-2 sm:p-3 rounded-xl border backdrop-blur-xl transition-all duration-300",
+          "relative flex flex-col items-center justify-center p-2 rounded-xl border backdrop-blur-xl transition-all duration-300",
           "bg-gradient-to-br from-gray-900/90 via-gray-800/50 to-gray-900/90",
           showRestTimer 
             ? "border-orange-500/30 from-orange-600/30 to-orange-900/30 shadow-lg shadow-orange-500/20 scale-[1.02]" 
             : "border-white/10 hover:from-orange-600/20 hover:to-orange-900/20 hover:scale-[1.02] hover:shadow-lg hover:shadow-orange-500/10",
-          "w-full",
-          "relative overflow-hidden touch-feedback",
-          isMobile && "col-span-2"
+          "relative overflow-hidden touch-feedback"
         )}>
           {showRestTimer && (
             <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 to-transparent animate-pulse"></div>
           )}
           
           <div className="relative z-10 flex flex-col items-center">
-            <div className="relative mb-1 sm:mb-2 rounded-full bg-white/8 shadow-inner flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center">
+            <div className="relative mb-1 rounded-full bg-white/8 shadow-inner flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center">
               <CircularProgress
                 value={showRestTimer ? 100 : 0}
-                size={32}
+                size={28}
                 className="text-orange-500/30"
               >
                 <Timer
-                  size={16}
+                  size={14}
                   className={cn(
                     "text-orange-300 absolute inset-0 m-auto",
                     showRestTimer && "animate-pulse"
@@ -180,22 +185,22 @@ export const WorkoutMetrics = ({
               onTimeUpdate={onRestTimeUpdate}
               onManualStart={onManualRestStart}
               currentRestTime={currentRestTime}
-              className="scale-90 sm:scale-100"
+              className="scale-90"
             />
 
-            {!showRestTimer && (
+            {!showRestTimer && onManualRestStart && (
               <Button
                 variant="outline"
-                size={isMobile ? "default" : "sm"}
+                size="sm"
                 onClick={onManualRestStart}
                 className={cn(
-                  "mt-1 sm:mt-2 bg-gradient-to-r from-orange-500/20 to-orange-600/20 border-orange-500/30",
+                  "mt-1 bg-gradient-to-r from-orange-500/20 to-orange-600/20 border-orange-500/30",
                   "hover:bg-orange-500/30 text-orange-300 transition-all duration-300 shadow-sm",
                   "hover:shadow-md hover:shadow-orange-500/10 active:scale-95",
-                  isMobile ? "w-full h-9 text-sm font-medium" : "text-xs font-medium scale-90 sm:scale-100"
+                  "h-7 px-2 py-0 text-xs font-medium"
                 )}
               >
-                <Play size={12} className="mr-1" /> Start Timer
+                <Play size={10} className="mr-1" /> Start
               </Button>
             )}
           </div>

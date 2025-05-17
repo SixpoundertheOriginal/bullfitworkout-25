@@ -7,6 +7,7 @@ import { WorkoutStatus } from "@/types/workout";
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dumbbell, Target, Award } from 'lucide-react';
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface WorkoutSessionHeaderProps {
   elapsedTime: number;
@@ -45,6 +46,8 @@ export const WorkoutSessionHeader: React.FC<WorkoutSessionHeaderProps> = ({
   currentRestTime,
   focusedExercise
 }) => {
+  const isMobile = useIsMobile();
+  
   useEffect(() => {
     // Ensure timer continuity by setting document title when component mounts
     const formatTime = (seconds: number) => {
@@ -69,11 +72,8 @@ export const WorkoutSessionHeader: React.FC<WorkoutSessionHeaderProps> = ({
     ? `${Math.floor(elapsedTime / 3600)}h ${Math.floor((elapsedTime % 3600) / 60)}m`
     : `${Math.floor(elapsedTime / 60)}m ${elapsedTime % 60}s`;
 
-  // Calculate overall workout progress percentage
-  const workoutProgress = totalSets > 0 ? (completedSets / totalSets) * 100 : 0;
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {/* Session header with title and workout metrics */}
       <div className={cn(
         // Base positioning
@@ -81,26 +81,28 @@ export const WorkoutSessionHeader: React.FC<WorkoutSessionHeaderProps> = ({
         // Visual styling with glass effect
         "bg-gradient-to-br from-gray-900/90 to-black/90 backdrop-blur-lg",
         // Shadow for depth
-        "shadow-lg shadow-purple-500/5 border-b border-white/5",
+        "shadow-sm shadow-purple-500/5 border-b border-white/5",
         // Transitions
         "transition-all duration-300",
         // Focused state styling
-        focusedExercise ? "pb-1" : ""
+        focusedExercise ? "pb-1" : "",
+        // Reduce padding on mobile
+        isMobile ? "pt-2 pb-1" : "pt-3 pb-2"
       )}>
-        <div className="container max-w-5xl mx-auto px-4 py-4">
+        <div className="container max-w-5xl mx-auto px-3 sm:px-4">
           {/* Workout type header with progress indicator */}
-          <div className="flex items-center mb-3">
+          <div className="flex items-center mb-2">
             {focusedExercise ? (
               <>
                 <Target className="h-5 w-5 text-purple-400 mr-2" />
-                <h1 className="text-xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-purple-200 to-purple-400">
+                <h1 className="text-lg sm:text-xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-purple-200 to-purple-400">
                   {focusedExercise}
                 </h1>
               </>
             ) : (
               <>
                 <Dumbbell className="h-5 w-5 text-purple-400 mr-2" />
-                <h1 className="text-xl font-bold text-white">Active Workout</h1>
+                <h1 className="text-lg sm:text-xl font-bold text-white">Active Workout</h1>
               </>
             )}
             
@@ -111,7 +113,7 @@ export const WorkoutSessionHeader: React.FC<WorkoutSessionHeaderProps> = ({
                   <span className="text-purple-200">{completedSets}/{totalSets} sets</span>
                 </div>
               )}
-              <div className="text-sm text-gray-400">
+              <div className="hidden sm:block text-sm text-gray-400">
                 Session time: <span className="text-white">{formattedElapsedTime}</span>
               </div>
             </div>
@@ -135,38 +137,40 @@ export const WorkoutSessionHeader: React.FC<WorkoutSessionHeaderProps> = ({
       </div>
       
       {/* Status notifications */}
-      <div className="container max-w-5xl mx-auto px-4">
-        {workoutStatus !== 'idle' && workoutStatus !== 'active' && (
-          <div className="animate-fade-in">
-            <WorkoutSaveStatus 
-              status={workoutStatus}
-              saveProgress={saveProgress}
-              onRetry={onRetrySave}
-            />
-          </div>
-        )}
-        
-        {isRecoveryMode && (
-          <div className="animate-fade-in">
-            <Card className="overflow-hidden border-amber-800/30 bg-amber-950/20">
-              <CardContent className="p-4">
-                <h3 className="text-sm font-medium mb-1 text-amber-300">Workout recovery available</h3>
-                <p className="text-amber-200/70 text-xs mb-2">
-                  We found an unsaved workout. Continue your session or reset to start fresh.
-                </p>
-                <Button 
-                  variant="destructive" 
-                  size="sm"
-                  onClick={onResetWorkout}
-                  className="w-full bg-amber-700 hover:bg-amber-600"
-                >
-                  Reset & Start Fresh
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </div>
+      {(workoutStatus !== 'idle' && workoutStatus !== 'active') || isRecoveryMode ? (
+        <div className="container max-w-5xl mx-auto px-3 sm:px-4">
+          {workoutStatus !== 'idle' && workoutStatus !== 'active' && (
+            <div className="animate-fade-in">
+              <WorkoutSaveStatus 
+                status={workoutStatus}
+                saveProgress={saveProgress}
+                onRetry={onRetrySave}
+              />
+            </div>
+          )}
+          
+          {isRecoveryMode && (
+            <div className="animate-fade-in">
+              <Card className="overflow-hidden border-amber-800/30 bg-amber-950/20">
+                <CardContent className="p-4">
+                  <h3 className="text-sm font-medium mb-1 text-amber-300">Workout recovery available</h3>
+                  <p className="text-amber-200/70 text-xs mb-2">
+                    We found an unsaved workout. Continue your session or reset to start fresh.
+                  </p>
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={onResetWorkout}
+                    className="w-full bg-amber-700 hover:bg-amber-600"
+                  >
+                    Reset & Start Fresh
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 };

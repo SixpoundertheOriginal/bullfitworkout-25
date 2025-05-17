@@ -2,6 +2,8 @@
 import React from 'react';
 import { RestTimer } from "@/components/RestTimer";
 import { EnhancedRestTimer } from "@/components/training/EnhancedRestTimer";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 interface TrainingSessionTimersProps {
   showRestTimerModal: boolean;
@@ -16,7 +18,7 @@ interface TrainingSessionTimersProps {
   onRestTimerComplete: () => void;
   setRestTimerActive: (active: boolean) => void;
   setShowEnhancedRestTimer: (show: boolean) => void;
-  setShowRestTimerModal: (show: boolean) => void; // Added this missing prop
+  setShowRestTimerModal: (show: boolean) => void;
   setPostSetFlow: (flow: string) => void;
 }
 
@@ -33,19 +35,24 @@ export const TrainingSessionTimers: React.FC<TrainingSessionTimersProps> = ({
   onRestTimerComplete,
   setRestTimerActive,
   setShowEnhancedRestTimer,
-  setShowRestTimerModal, // Added this missing prop
+  setShowRestTimerModal,
   setPostSetFlow,
 }) => {
+  const isMobile = useIsMobile();
+  
   return (
     <>
       {/* Standard rest timer (when manually triggered) */}
       {showRestTimerModal && !showEnhancedRestTimer && (
-        <div className="fixed right-4 top-32 z-50 w-72">
+        <div className={cn(
+          "fixed z-50",
+          isMobile ? "right-3 top-24 w-[calc(100%-24px)]" : "right-4 top-32 w-72"
+        )}>
           <RestTimer
             isVisible={showRestTimerModal}
             onClose={() => { 
               onClose(); 
-              setShowRestTimerModal(false); // Use setShowRestTimerModal instead of onClose
+              setShowRestTimerModal(false);
               setRestTimerActive(false); 
             }}
             onComplete={onRestTimerComplete}
@@ -56,7 +63,10 @@ export const TrainingSessionTimers: React.FC<TrainingSessionTimersProps> = ({
       
       {/* Enhanced rest timer (shown after rating a set) */}
       {showEnhancedRestTimer && (
-        <div className="fixed right-4 top-32 z-50 w-72">
+        <div className={cn(
+          "fixed z-50",
+          isMobile ? "right-3 top-24 left-3" : "right-4 top-32 w-72"
+        )}>
           <EnhancedRestTimer
             isVisible={showEnhancedRestTimer}
             onClose={() => { 

@@ -51,11 +51,11 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
       className={cn(
-        "w-full rounded-xl my-4",
+        "w-full rounded-xl my-3",
         focusedExercise 
           ? "bg-gradient-to-br from-purple-900/30 via-black/80 to-black/90 border border-purple-500/20" 
           : "bg-gradient-to-br from-gray-900/80 via-black/80 to-black/90 border border-gray-800/30",
-        "shadow-lg p-4"
+        "shadow-lg p-3 sm:p-4"
       )}
     >
       <div className="container max-w-5xl mx-auto">
@@ -69,21 +69,21 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
                 <Button
                   variant="ghost" 
                   size="sm"
-                  className="text-white/70 hover:text-white transition-colors"
+                  className="text-white/70 hover:text-white transition-colors p-1 sm:p-2"
                   onClick={onExitFocus}
                 >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Workout
+                  <ArrowLeft className="mr-1 h-4 w-4" />
+                  <span className="text-xs sm:text-sm">Back</span>
                 </Button>
                 
                 {hasMoreExercises && onNextExercise && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-white/70 hover:text-white transition-colors"
+                    className="text-white/70 hover:text-white transition-colors p-1 sm:p-2"
                     onClick={onNextExercise}
                   >
-                    Next Exercise
+                    <span className="text-xs sm:text-sm">Next</span>
                     <ChevronRight className="ml-1 h-4 w-4" />
                   </Button>
                 )}
@@ -91,7 +91,7 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
               
               <motion.div
                 initial={{ scale: 1 }}
-                animate={{ scale: [1, 1.03, 1] }}
+                animate={{ scale: [1, 1.02, 1] }}
                 transition={{ 
                   repeat: Infinity, 
                   repeatType: "reverse", 
@@ -105,7 +105,7 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
                     "bg-gradient-to-r from-green-600 to-emerald-800",
                     "hover:from-green-700 hover:to-emerald-900 text-white shadow-lg shadow-green-900/30",
                     "border border-green-500/30 transition-all duration-300",
-                    "w-full py-4 text-lg font-semibold"
+                    "w-full py-3 text-base sm:text-lg font-medium sm:font-semibold"
                   )}
                   onClick={() => {
                     if (onExitFocus) onExitFocus();
@@ -114,15 +114,15 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
                 >
                   {isSaving ? (
                     <>
-                      <span className="mr-2 h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                       Saving...
                     </>
                   ) : (
                     <>
-                      <CheckCircle className="mr-3 h-5 w-5" />
+                      <CheckCircle className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                       <span className="flex flex-col items-start">
-                        <span className="text-sm font-normal text-white/80">Complete Exercise</span>
-                        <span className="font-semibold">{truncatedExerciseName}</span>
+                        <span className="text-xs font-normal text-white/80">Complete Exercise</span>
+                        <span className="font-medium text-sm sm:text-base">{truncatedExerciseName}</span>
                       </span>
                     </>
                   )}
@@ -131,31 +131,31 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
             </>
           ) : (
             <div className={cn(
-              "flex justify-between items-center gap-3",
-              isMobile && "flex-col"
+              "flex justify-between items-center gap-2",
+              isMobile ? "flex-col" : "flex-row"
             )}>
               <Button
                 className={cn(
                   "bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-700 hover:to-indigo-900 text-white shadow-lg",
                   "border border-indigo-500/20 transition-all duration-300",
-                  "h-12 py-2", // Increased height for better touchability
-                  isMobile && "w-full"
+                  "h-10 sm:h-11 py-2", // Adjusted height for better touchability
+                  isMobile && "w-full text-sm"
                 )}
                 onClick={onAddExercise}
               >
-                <Plus className="mr-2 h-4 w-4" /> Add Exercise
+                <Plus className="mr-1 h-4 w-4" /> Add Exercise
               </Button>
               
               <Button
                 disabled={!hasExercises || isSaving}
                 className={cn(
                   "bg-gradient-to-r",
-                  "h-12 py-2", // Increased height for better touchability
+                  "h-10 sm:h-11 py-2", // Adjusted height for better touchability
                   hasExercises 
                     ? "from-green-600 to-emerald-800 hover:from-green-700 hover:to-emerald-900 text-white shadow-lg border border-green-500/20" 
                     : "from-gray-700 to-gray-800 text-gray-300 cursor-not-allowed opacity-70",
                   "transition-all duration-300",
-                  isMobile ? "w-full" : ""
+                  isMobile ? "w-full text-sm" : ""
                 )}
                 onClick={onFinishWorkout}
               >
@@ -166,7 +166,7 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
                   </>
                 ) : (
                   <>
-                    <CheckCircle className="mr-2 h-4 w-4" />
+                    <CheckCircle className="mr-1 h-4 w-4" />
                     Finish Workout
                   </>
                 )}

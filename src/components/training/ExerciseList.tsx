@@ -7,6 +7,7 @@ import { PlusCircle, Dumbbell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { WorkoutSessionFooter } from "./WorkoutSessionFooter";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ExerciseListProps {
   exercises: Record<string, ExerciseSet[]>;
@@ -62,6 +63,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
   setExercises
 }) => {
   const exerciseList = Object.keys(exercises);
+  const isMobile = useIsMobile();
   
   // Function to handle adding a set that copies the previous set values
   const handleAddSet = (exerciseName: string) => {
@@ -102,33 +104,33 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
+        staggerChildren: 0.08
       }
     }
   };
 
   const item = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 16 },
     show: { opacity: 1, y: 0 }
   };
 
   if (exerciseList.length === 0) {
     return (
-      <div className="container max-w-5xl mx-auto pb-16">
+      <div className="container max-w-5xl mx-auto pb-10">
         <Card className="bg-gradient-to-br from-gray-900/90 to-gray-800/70 border-white/5 overflow-hidden">
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center px-4">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center px-4">
             <div className="w-16 h-16 rounded-full bg-purple-900/20 flex items-center justify-center mb-4">
               <Dumbbell className="w-8 h-8 text-purple-400" />
             </div>
             <h3 className="text-xl font-semibold mb-2 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">No exercises added yet</h3>
-            <p className="text-gray-400 max-w-md mb-6">Start building your workout by adding exercises to track your sets, weights, and reps.</p>
+            <p className="text-gray-400 max-w-md mb-5">Start building your workout by adding exercises to track your sets, weights, and reps.</p>
             <motion.div
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
             >
               <Button 
                 onClick={onOpenAddExercise}
-                className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 shadow-lg shadow-purple-900/20 h-12 px-6"
+                className="bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 shadow-lg shadow-purple-900/20 h-11 px-6"
                 size="lg"
               >
                 <PlusCircle className="mr-2 h-5 w-5" /> Add Your First Exercise
@@ -143,7 +145,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
   return (
     <div className="container max-w-5xl mx-auto">
       <motion.div 
-        className="space-y-4 pb-16"
+        className="space-y-3 pb-10"
         variants={container}
         initial="hidden"
         animate="show"

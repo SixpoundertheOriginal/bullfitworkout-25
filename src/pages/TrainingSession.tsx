@@ -78,9 +78,9 @@ const TrainingSessionPage = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-black text-white pt-16 pb-6">
+    <div className="flex flex-col min-h-screen bg-black text-white pt-16 pb-4">
       <main className="flex-1 overflow-auto">
-        <div className="mx-auto py-6 pb-6">
+        <div className="mx-auto pb-4">
           <div className="relative">
             <WorkoutSessionHeader
               elapsedTime={elapsedTime}
@@ -120,7 +120,7 @@ const TrainingSessionPage = () => {
             />
           </div>
           
-          <div className="mt-6">
+          <div className="mt-3 px-3 sm:px-4">
             <ExerciseList
               exercises={exercises}
               activeExercise={activeExercise}
