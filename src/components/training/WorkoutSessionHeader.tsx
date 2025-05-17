@@ -79,30 +79,30 @@ export const WorkoutSessionHeader: React.FC<WorkoutSessionHeaderProps> = ({
         // Base positioning
         "sticky top-16 z-10",
         // Visual styling with glass effect
-        "bg-gradient-to-br from-gray-900/90 to-black/90 backdrop-blur-lg",
+        "bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-lg",
         // Shadow for depth
-        "shadow-sm shadow-purple-500/5 border-b border-white/5",
+        "shadow-sm shadow-purple-500/10 border-b border-white/5",
         // Transitions
         "transition-all duration-300",
         // Focused state styling
         focusedExercise ? "pb-1" : "",
         // Reduce padding on mobile
-        isMobile ? "pt-2 pb-1" : "pt-3 pb-2"
+        isMobile ? "pt-1.5 pb-1" : "pt-2.5 pb-1.5"
       )}>
         <div className="container max-w-5xl mx-auto px-3 sm:px-4">
           {/* Workout type header with progress indicator */}
-          <div className="flex items-center mb-2">
+          <div className="flex items-center mb-1.5">
             {focusedExercise ? (
               <>
                 <Target className="h-5 w-5 text-purple-400 mr-2" />
-                <h1 className="text-lg sm:text-xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-purple-200 to-purple-400">
+                <h1 className="text-lg font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-purple-200 to-purple-400">
                   {focusedExercise}
                 </h1>
               </>
             ) : (
               <>
                 <Dumbbell className="h-5 w-5 text-purple-400 mr-2" />
-                <h1 className="text-lg sm:text-xl font-bold text-white">Active Workout</h1>
+                <h1 className="text-lg font-bold text-white">Active Workout</h1>
               </>
             )}
             

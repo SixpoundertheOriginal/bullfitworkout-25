@@ -45,8 +45,8 @@ export const TrainingSessionTimers: React.FC<TrainingSessionTimersProps> = ({
       {/* Standard rest timer (when manually triggered) */}
       {showRestTimerModal && !showEnhancedRestTimer && (
         <div className={cn(
-          "fixed z-50",
-          isMobile ? "right-3 top-24 w-[calc(100%-24px)]" : "right-4 top-32 w-72"
+          "fixed z-50 shadow-xl",
+          isMobile ? "right-3 top-20 w-[calc(100%-24px)]" : "right-4 top-28 w-72"
         )}>
           <RestTimer
             isVisible={showRestTimerModal}
@@ -64,8 +64,8 @@ export const TrainingSessionTimers: React.FC<TrainingSessionTimersProps> = ({
       {/* Enhanced rest timer (shown after rating a set) */}
       {showEnhancedRestTimer && (
         <div className={cn(
-          "fixed z-50",
-          isMobile ? "right-3 top-24 left-3" : "right-4 top-32 w-72"
+          "fixed z-50 shadow-xl",
+          isMobile ? "right-3 top-20 left-3" : "right-4 top-28 w-72"
         )}>
           <EnhancedRestTimer
             isVisible={showEnhancedRestTimer}

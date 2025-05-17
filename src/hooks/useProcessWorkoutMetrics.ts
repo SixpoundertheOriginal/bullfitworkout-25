@@ -1,6 +1,6 @@
-
 import { useMemo } from 'react';
 import { ExerciseSet } from '@/types/exercise';
+import { calculateSetVolume } from '@/utils/exerciseUtils';
 
 // Ensure VolumeDataPoint includes sets property
 export interface VolumeDataPoint {
@@ -20,6 +20,41 @@ export interface DensityDataPoint {
   overallDensity?: number;
   activeOnlyDensity?: number;
 }
+
+// Helper function to calculate volume for a set of exercises
+export const calculateVolumeForExerciseSets = (
+  exerciseName: string, 
+  sets: ExerciseSet[]
+): number => {
+  return sets.reduce((total, set) => {
+    if (set.completed) {
+      return total + calculateSetVolume(set, exerciseName);
+    }
+    return total;
+  }, 0);
+};
+
+// Helper function to calculate density for a set of exercises
+export const calculateDensityForExerciseSets = (
+  exerciseName: string, 
+  sets: ExerciseSet[],
+  duration?: number // if we know the actual duration
+): number => {
+  const volume = calculateVolumeForExerciseSets(exerciseName, sets);
+  
+  // If actual duration is provided, use it
+  if (duration && duration > 0) {
+    return volume / (duration / 60); // duration in seconds, convert to minutes
+  }
+  
+  // Otherwise estimate based on completed sets
+  const completedSets = sets.filter(set => set.completed).length;
+  const avgTimePerSet = 45; // Average 45 seconds per set (estimate)
+  const totalWorkTime = completedSets * avgTimePerSet;
+  const workTimeInMinutes = totalWorkTime / 60;
+  
+  return workTimeInMinutes > 0 ? volume / workTimeInMinutes : 0;
+};
 
 export const useProcessWorkoutMetrics = (workouts: any[] = []) => {
   const processedMetrics = useMemo(() => {
@@ -49,12 +84,17 @@ export const useProcessWorkoutMetrics = (workouts: any[] = []) => {
       // Safely access exercises and handle different data structures
       const exercises = Array.isArray(workout.exercises) 
         ? workout.exercises 
-        : [];
+        : Object.entries(workout.exercises || {}).flatMap(([name, sets]) => 
+            Array.isArray(sets) ? sets.map(set => ({...set, exercise_name: name})) : []
+          );
 
       if (exercises && exercises.length > 0) {
         exercises.forEach(exercise => {
           if (exercise && exercise.weight && exercise.reps && exercise.completed) {
-            totalVolume += exercise.weight * exercise.reps;
+            totalVolume += calculateSetVolume(
+              exercise, 
+              exercise.exercise_name || ''
+            );
             totalSets++;
           }
         });

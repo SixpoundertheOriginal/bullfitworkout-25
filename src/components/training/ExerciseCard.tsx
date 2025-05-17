@@ -5,6 +5,7 @@ import { CommonExerciseCard } from '../exercises/CommonExerciseCard';
 import { ExerciseThumbnail } from '../exercises/cards/ExerciseThumbnail';
 import { cn } from '@/lib/utils';
 import { SetsTable } from '../workouts/SetsTable';
+import { ExerciseMetricsDisplay } from './ExerciseMetricsDisplay';
 import { motion } from 'framer-motion';
 import { Dumbbell, Target } from 'lucide-react';
 
@@ -137,6 +138,15 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
         onFocusSet={(setIndex) => onFocus && onFocus()}
         highlightActive={!!isFocused}
       />
+      
+      {/* Add exercise metrics display */}
+      {sets.some(set => set.completed) && (
+        <ExerciseMetricsDisplay
+          sets={sets}
+          exerciseName={typeof exercise === 'string' ? exercise : exercise.name}
+          className="mt-2"
+        />
+      )}
     </div>
   ) : null;
 
