@@ -51,7 +51,11 @@ export function useWorkoutStats(
       setDateRange: () => {},
       comparisonEnabled: false,
       setComparisonEnabled: () => {},
-      comparisonDateRange: undefined
+      comparisonDateRange: undefined,
+      customComparisonRange: undefined,
+      setCustomComparisonRange: () => {},
+      useCustomComparison: false,
+      setUseCustomComparison: () => {}
     }
   );
   

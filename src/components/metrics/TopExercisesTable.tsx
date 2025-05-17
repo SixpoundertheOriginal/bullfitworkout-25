@@ -21,13 +21,16 @@ interface ExerciseVolumeHistory {
 
 interface TopExercisesTableProps {
   exerciseVolumeHistory?: ExerciseVolumeHistory[];
+  comparisonData?: ExerciseVolumeHistory[];
 }
 
 // Define as a named function component
 const TopExercisesTableComponent: React.FC<TopExercisesTableProps> = ({
-  exerciseVolumeHistory = []
+  exerciseVolumeHistory = [],
+  comparisonData
 }) => {
   const { weightUnit } = useWeightUnit();
+  const hasComparison = !!comparisonData && comparisonData.length > 0;
 
   // Memoize check for data existence
   const hasData = useMemo(
@@ -60,6 +63,11 @@ const TopExercisesTableComponent: React.FC<TopExercisesTableProps> = ({
           >
             <TableCell className="font-medium">
               {exercise.exercise_name}
+              {hasComparison && comparisonData.find(e => e.exercise_name === exercise.exercise_name) && (
+                <span className="ml-1 text-xs bg-purple-900/30 text-purple-300 px-1 rounded">
+                  *
+                </span>
+              )}
             </TableCell>
             <TableCell className="text-right">
               {exercise.trend === 'increasing' ? (

@@ -1,3 +1,4 @@
+
 // src/components/metrics/TimeOfDayChart.tsx
 
 import React, { useMemo } from 'react';
@@ -21,12 +22,16 @@ interface TimeOfDay {
 interface TimeOfDayChartProps {
   durationByTimeOfDay?: TimeOfDay;
   height?: number;
+  comparisonData?: TimeOfDay;
 }
 
 const TimeOfDayChartComponent: React.FC<TimeOfDayChartProps> = ({
   durationByTimeOfDay = {},
-  height = 250
+  height = 250,
+  comparisonData
 }) => {
+  const hasComparison = !!comparisonData;
+
   // Safe defaults for each time bucket
   const safeDuration = useMemo(() => ({
     morning: durationByTimeOfDay.morning || 0,
@@ -35,13 +40,20 @@ const TimeOfDayChartComponent: React.FC<TimeOfDayChartProps> = ({
     night: durationByTimeOfDay.night || 0
   }), [durationByTimeOfDay]);
 
+  const safeComparisonDuration = useMemo(() => hasComparison ? {
+    morning: comparisonData?.morning || 0,
+    afternoon: comparisonData?.afternoon || 0,
+    evening: comparisonData?.evening || 0,
+    night: comparisonData?.night || 0
+  } : undefined, [comparisonData, hasComparison]);
+
   // Prepare chart data
   const chartData = useMemo(() => [
-    { name: 'Morning', value: safeDuration.morning, color: '#84cc16' },
-    { name: 'Afternoon', value: safeDuration.afternoon, color: '#f59e0b' },
-    { name: 'Evening', value: safeDuration.evening, color: '#8b5cf6' },
-    { name: 'Night', value: safeDuration.night, color: '#0ea5e9' }
-  ], [safeDuration]);
+    { name: 'Morning', value: safeDuration.morning, comparisonValue: safeComparisonDuration?.morning, color: '#84cc16' },
+    { name: 'Afternoon', value: safeDuration.afternoon, comparisonValue: safeComparisonDuration?.afternoon, color: '#f59e0b' },
+    { name: 'Evening', value: safeDuration.evening, comparisonValue: safeComparisonDuration?.evening, color: '#8b5cf6' },
+    { name: 'Night', value: safeDuration.night, comparisonValue: safeComparisonDuration?.night, color: '#0ea5e9' }
+  ], [safeDuration, safeComparisonDuration]);
 
   // Check for any non-zero values
   const hasData = useMemo(() => chartData.some(d => d.value > 0), [chartData]);
@@ -81,8 +93,20 @@ const TimeOfDayChartComponent: React.FC<TimeOfDayChartProps> = ({
             }}
             cursor={{ fill: 'rgba(99, 102, 241, 0.1)' }}
           />
+          {hasComparison && (
+            <Bar 
+              dataKey="comparisonValue" 
+              name="Previous Period"
+              fill="#6d28d9"
+              opacity={0.4}
+              radius={[4, 4, 0, 0]} 
+              maxBarSize={40}
+              strokeDasharray="3 3"
+            />
+          )}
           <Bar
             dataKey="value"
+            name="Current Period"
             radius={[4, 4, 0, 0]}
             maxBarSize={50}
           >

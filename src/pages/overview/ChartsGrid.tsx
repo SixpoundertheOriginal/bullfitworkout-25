@@ -14,6 +14,17 @@ export interface ChartsGridProps {
   comparisonStats?: {
     volumeData?: any;
     workouts?: any[];
+    timePatterns?: {
+      daysFrequency?: Record<string, number>;
+      durationByTimeOfDay?: {
+        morning: number;
+        afternoon: number;
+        evening: number;
+        night: number;
+      };
+    };
+    muscleFocus?: Record<string, number>;
+    exerciseVolumeHistory?: any[];
   };
 }
 
@@ -70,7 +81,7 @@ export const ChartsGrid: React.FC<ChartsGridProps> = ({
         <MuscleGroupChart 
           muscleFocus={data} 
           height={250}
-          comparisonData={hasComparisonData && stats.muscleFocus ? undefined : undefined}
+          comparisonData={hasComparisonData && comparisonStats?.muscleFocus ? comparisonStats.muscleFocus : undefined}
         />
       ),
       data: stats.muscleFocus || {}
@@ -81,7 +92,9 @@ export const ChartsGrid: React.FC<ChartsGridProps> = ({
         <WorkoutDaysChart 
           daysFrequency={data} 
           height={250}
-          comparisonData={hasComparisonData ? undefined : undefined}
+          comparisonData={hasComparisonData && comparisonStats?.timePatterns?.daysFrequency 
+            ? comparisonStats.timePatterns.daysFrequency 
+            : undefined}
         />
       ),
       data: stats.timePatterns?.daysFrequency || {}
@@ -92,7 +105,9 @@ export const ChartsGrid: React.FC<ChartsGridProps> = ({
         <TimeOfDayChart 
           durationByTimeOfDay={data} 
           height={250}
-          comparisonData={hasComparisonData ? undefined : undefined}
+          comparisonData={hasComparisonData && comparisonStats?.timePatterns?.durationByTimeOfDay 
+            ? comparisonStats.timePatterns.durationByTimeOfDay 
+            : undefined}
         />
       ),
       data: stats.timePatterns?.durationByTimeOfDay || {}
@@ -102,7 +117,9 @@ export const ChartsGrid: React.FC<ChartsGridProps> = ({
       renderComponent: (data: any) => (
         <TopExercisesTable 
           exerciseVolumeHistory={data}
-          comparisonData={hasComparisonData ? undefined : undefined}
+          comparisonData={hasComparisonData && comparisonStats?.exerciseVolumeHistory 
+            ? comparisonStats.exerciseVolumeHistory 
+            : undefined}
         />
       ),
       data: stats.exerciseVolumeHistory || []
