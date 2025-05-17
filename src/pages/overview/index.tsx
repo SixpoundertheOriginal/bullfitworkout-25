@@ -12,7 +12,7 @@ import { WeightUnit } from '@/utils/unitConversion';
 import { MainVolumeChart } from './MainVolumeChart';
 import { useDateRange } from '@/context/DateRangeContext';
 import { useWorkoutComparisonStats } from '@/hooks/useWorkoutComparisonStats';
-import { ComparisonToggle } from '@/components/ui/period-comparison/ComparisonToggle';
+import { DateRangeFilter } from '@/components/date-filters/DateRangeFilter';
 
 const OverviewPage: React.FC = () => {
   // Access date range context to get current and comparison date ranges
@@ -53,7 +53,7 @@ const OverviewPage: React.FC = () => {
   // Process metrics for current period - directly using the hook
   const processedMetrics = useProcessWorkoutMetrics(safeWorkouts);
   
-  // Process metrics for comparison period - directly using the hook
+  // Process metrics for comparison period - directly using the hook with additional safety check
   const comparisonMetrics = useProcessWorkoutMetrics(
     comparisonEnabled && safePreviousWorkouts.length > 0 ? safePreviousWorkouts : []
   );
@@ -66,7 +66,7 @@ const OverviewPage: React.FC = () => {
   const volumeChartData = useVolumeChartData(processedMetrics);
   const densityChartData = useChartData(processedMetrics as unknown as DensityDataPoint[]);
   
-  // Chart data for comparison period
+  // Chart data for comparison period with additional safety check
   const comparisonVolumeChartData = React.useMemo(() => {
     if (!comparisonEnabled || !comparisonMetrics || comparisonMetrics.length === 0) {
       return undefined;
@@ -120,9 +120,12 @@ const OverviewPage: React.FC = () => {
   return (
     <div className="container py-6">
       <OverviewHeader title="Workout Overview">
-        <ComparisonToggle showDateSelector={true} className="mt-2" />
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2 mt-2">
+          <DateRangeFilter />
+        </div>
       </OverviewHeader>
       
+      {/* Only render the ComparisonToggle in KPISection */}
       {stats && <KPISection {...kpiData} />}
       
       {/* Main Volume Chart - With Comparison Support */}

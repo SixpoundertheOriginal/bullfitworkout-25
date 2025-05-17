@@ -64,7 +64,7 @@ export const useProcessWorkoutMetrics = (workouts: any[] = []) => {
       const duration = workout.duration || 0;
       const density = duration > 0 ? totalVolume / duration : 0;
       
-      // Log the calculations
+      // Log the calculations for debugging
       console.log(`[useProcessWorkoutMetrics] Workout ${workout.id}: volume=${totalVolume}, duration=${duration}, density=${density}`);
 
       return {
@@ -76,7 +76,7 @@ export const useProcessWorkoutMetrics = (workouts: any[] = []) => {
         density: density
       };
     }).filter(Boolean); // Filter out any null values
-  }, [workouts]); // Keep workouts as the only dependency, ensuring it's always defined
+  }, [workouts]); // Keep workouts as the only dependency
 
   return processedMetrics;
 };
