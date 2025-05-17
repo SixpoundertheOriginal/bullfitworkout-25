@@ -76,7 +76,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
       isFocused ? "ring-2 ring-purple-500/60 shadow-lg shadow-purple-500/30 scale-110" : ""
     )}>
       {isFocused ? 
-        <Target className="w-6 h-6 text-purple-400" /> : 
+        <Target className="w-6 h-6 text-green-400 animate-pulse" /> : 
         <Dumbbell className="w-6 h-6 text-purple-400" />
       }
     </div>;
@@ -167,7 +167,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
           "bg-gradient-to-br from-gray-900/90 to-gray-800/70",
           "border border-white/5",
           isActive ? "border-purple-500/40 shadow-lg shadow-purple-500/10" : "",
-          isFocused ? "border-purple-500/60 shadow-xl shadow-purple-500/20 scale-[1.02]" : "",
+          isFocused ? "border-green-500/60 shadow-xl shadow-green-500/20 scale-[1.02]" : "",
           "tap-highlight-transparent",
           className
         )}

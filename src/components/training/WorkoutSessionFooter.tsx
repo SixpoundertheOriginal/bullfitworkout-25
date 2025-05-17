@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus, CheckCircle, Target, ArrowLeft } from "lucide-react";
+import { Plus, CheckCircle, Target, ArrowLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -15,6 +15,8 @@ interface WorkoutSessionFooterProps {
   focusedExercise?: string | null;
   onExitFocus?: () => void;
   visible?: boolean;
+  onNextExercise?: () => void;
+  hasMoreExercises?: boolean;
 }
 
 export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
@@ -24,7 +26,9 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
   isSaving,
   focusedExercise,
   onExitFocus,
-  visible = true
+  visible = true,
+  onNextExercise,
+  hasMoreExercises = false
 }) => {
   const isMobile = useIsMobile();
   
@@ -32,6 +36,14 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
   if (!visible && !hasExercises) {
     return null;
   }
+
+  // Truncate exercise name if too long
+  const truncateExerciseName = (name: string | null | undefined, maxLength: number = 20) => {
+    if (!name) return "";
+    return name.length > maxLength ? `${name.substring(0, maxLength)}...` : name;
+  };
+  
+  const truncatedExerciseName = truncateExerciseName(focusedExercise);
   
   return (
     <motion.div
@@ -40,7 +52,7 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className={cn(
         "fixed bottom-0 left-0 right-0 z-[100]", 
-        "bg-gradient-to-t from-black/95 via-black/90 to-black/70 pt-6 pb-6 px-4", 
+        "bg-gradient-to-t from-black/95 via-black/90 to-black/70 pt-6 pb-8 px-4", 
         "border-t border-gray-800/50 shadow-lg", 
         focusedExercise ? "from-purple-900/40 via-black/90 to-black/70" : ""
       )}
@@ -54,54 +66,85 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
     >
       <div className="container max-w-5xl mx-auto">
         <div className={cn(
-          "flex justify-between items-center gap-3",
-          isMobile && focusedExercise && "flex-col gap-2"
+          "flex flex-col gap-3",
+          isMobile && focusedExercise ? "space-y-3" : ""
         )}>
           {focusedExercise ? (
             <>
-              <Button
-                variant="ghost" 
-                size="sm"
-                className="text-white/70 hover:text-white transition-colors"
-                onClick={onExitFocus}
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Workout
-              </Button>
-              
-              <Button
-                disabled={isSaving}
-                className={cn(
-                  "bg-gradient-to-r from-purple-600 to-purple-800",
-                  "hover:from-purple-700 hover:to-purple-900 text-white shadow-lg shadow-purple-900/30",
-                  "border border-purple-500/30 transition-all duration-300",
-                  isMobile ? "w-full" : "flex-1"
+              <div className="flex justify-between items-center">
+                <Button
+                  variant="ghost" 
+                  size="sm"
+                  className="text-white/70 hover:text-white transition-colors"
+                  onClick={onExitFocus}
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Workout
+                </Button>
+                
+                {hasMoreExercises && onNextExercise && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-white/70 hover:text-white transition-colors"
+                    onClick={onNextExercise}
+                  >
+                    Next Exercise
+                    <ChevronRight className="ml-1 h-4 w-4" />
+                  </Button>
                 )}
-                onClick={() => {
-                  if (onExitFocus) onExitFocus();
-                  toast.success(`${focusedExercise} completed!`);
+              </div>
+              
+              <motion.div
+                initial={{ scale: 1 }}
+                animate={{ scale: [1, 1.03, 1] }}
+                transition={{ 
+                  repeat: Infinity, 
+                  repeatType: "reverse", 
+                  duration: 2,
+                  ease: "easeInOut" 
                 }}
               >
-                {isSaving ? (
-                  <>
-                    <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Target className="mr-2 h-4 w-4" />
-                    Complete "{focusedExercise}"
-                  </>
-                )}
-              </Button>
+                <Button
+                  disabled={isSaving}
+                  className={cn(
+                    "bg-gradient-to-r from-green-600 to-emerald-800",
+                    "hover:from-green-700 hover:to-emerald-900 text-white shadow-lg shadow-green-900/30",
+                    "border border-green-500/30 transition-all duration-300",
+                    "w-full py-6 text-lg font-semibold"
+                  )}
+                  onClick={() => {
+                    if (onExitFocus) onExitFocus();
+                    toast.success(`${focusedExercise} completed!`);
+                  }}
+                >
+                  {isSaving ? (
+                    <>
+                      <span className="mr-2 h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="mr-3 h-5 w-5" />
+                      <span className="flex flex-col items-start">
+                        <span className="text-sm font-normal text-white/80">Complete Exercise</span>
+                        <span className="font-semibold">{truncatedExerciseName}</span>
+                      </span>
+                    </>
+                  )}
+                </Button>
+              </motion.div>
             </>
           ) : (
-            <>
+            <div className={cn(
+              "flex justify-between items-center gap-3",
+              isMobile && "flex-col"
+            )}>
               <Button
                 className={cn(
                   "bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-700 hover:to-indigo-900 text-white shadow-lg",
                   "border border-indigo-500/20 transition-all duration-300",
-                  isMobile && "flex-1"
+                  isMobile && "w-full"
                 )}
                 onClick={onAddExercise}
               >
@@ -116,7 +159,7 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
                     ? "from-green-600 to-emerald-800 hover:from-green-700 hover:to-emerald-900 text-white shadow-lg border border-green-500/20" 
                     : "from-gray-700 to-gray-800 text-gray-300 cursor-not-allowed opacity-70",
                   "transition-all duration-300",
-                  isMobile ? "flex-1" : "ml-0"
+                  isMobile ? "w-full" : ""
                 )}
                 onClick={onFinishWorkout}
               >
@@ -132,7 +175,7 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
                   </>
                 )}
               </Button>
-            </>
+            </div>
           )}
         </div>
       </div>

@@ -15,6 +15,7 @@ import { RestTimer } from "@/components/RestTimer";
 import { EnhancedRestTimer } from "@/components/training/EnhancedRestTimer";
 import { PostSetRatingSheet } from "@/components/training/PostSetRatingSheet";
 import { WorkoutSessionFooter } from "@/components/training/WorkoutSessionFooter";
+import { ExerciseCompletionConfirmation } from "@/components/training/ExerciseCompletionConfirmation";
 import { adaptExerciseSets, adaptToStoreFormat } from "@/utils/exerciseAdapter";
 import { useWorkoutSave } from "@/hooks/useWorkoutSave";
 import { calculateVolumeStats, generateMotivationalContent, getNextSetRecommendation } from "@/utils/setRecommendations";
@@ -94,6 +95,9 @@ const TrainingSessionPage = () => {
   const [nextSetRecommendation, setNextSetRecommendation] = useState(null);
   const [motivationalMessage, setMotivationalMessage] = useState('');
   const [volumeStats, setVolumeStats] = useState('');
+  const [showCompletionConfirmation, setShowCompletionConfirmation] = useState(false);
+  const [completedExerciseName, setCompletedExerciseName] = useState<string | null>(null);
+  const [nextExerciseName, setNextExerciseName] = useState<string | null>(null);
 
   const exerciseCount = Object.keys(exercises).length;
   const hasExercises = exerciseCount > 0;
@@ -315,6 +319,66 @@ const TrainingSessionPage = () => {
     toast.info("Attempting to recover workout data...");
   };
 
+  const handleNextExercise = useCallback(() => {
+    if (!focusedExercise) return;
+    
+    // Get ordered list of exercise names
+    const exerciseNames = Object.keys(exercises);
+    const currentIndex = exerciseNames.indexOf(focusedExercise);
+    
+    // If we have a next exercise, focus on it
+    if (currentIndex >= 0 && currentIndex < exerciseNames.length - 1) {
+      const nextName = exerciseNames[currentIndex + 1];
+      setFocusedExercise(nextName);
+      
+      // Auto scroll to the focused exercise with smooth behavior
+      setTimeout(() => {
+        const element = document.querySelector(`[data-exercise="${nextName}"]`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+
+      playBell();
+      // Show toast with next exercise
+      toast.info(`Switched to ${nextName}`);
+    }
+  }, [focusedExercise, exercises, setFocusedExercise, playBell]);
+
+  const handleCompleteExercise = useCallback(() => {
+    if (!focusedExercise) return;
+    
+    setCompletedExerciseName(focusedExercise);
+    
+    // Get the next exercise if available
+    const exerciseNames = Object.keys(exercises);
+    const currentIndex = exerciseNames.indexOf(focusedExercise);
+    
+    if (currentIndex >= 0 && currentIndex < exerciseNames.length - 1) {
+      setNextExerciseName(exerciseNames[currentIndex + 1]);
+    } else {
+      setNextExerciseName(null);
+    }
+    
+    playSuccess();
+    setShowCompletionConfirmation(true);
+    
+  }, [focusedExercise, exercises, playSuccess]);
+
+  // Update nextExerciseName when focused exercise changes
+  useEffect(() => {
+    if (focusedExercise) {
+      const exerciseNames = Object.keys(exercises);
+      const currentIndex = exerciseNames.indexOf(focusedExercise);
+      
+      if (currentIndex >= 0 && currentIndex < exerciseNames.length - 1) {
+        setNextExerciseName(exerciseNames[currentIndex + 1]);
+      } else {
+        setNextExerciseName(null);
+      }
+    }
+  }, [focusedExercise, exercises]);
+
   if (loadingExercises) {
     return (
       <div className="flex items-center justify-center h-screen bg-black text-white">
@@ -463,6 +527,22 @@ const TrainingSessionPage = () => {
         focusedExercise={focusedExercise}
         onExitFocus={() => setFocusedExercise(null)}
         visible={hasExercises} // Only show the footer when there are exercises
+        onNextExercise={handleNextExercise}
+        hasMoreExercises={!!nextExerciseName}
+      />
+
+      {/* Exercise Completion Confirmation */}
+      <ExerciseCompletionConfirmation
+        isOpen={showCompletionConfirmation}
+        exerciseName={completedExerciseName || ''}
+        onClose={() => {
+          setShowCompletionConfirmation(false);
+          if (focusedExercise === completedExerciseName) {
+            setFocusedExercise(null);
+          }
+        }}
+        onNextExercise={handleNextExercise}
+        hasNext={!!nextExerciseName}
       />
 
       {/* Sheets */}
