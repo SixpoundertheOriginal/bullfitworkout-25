@@ -47,27 +47,21 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
   
   return (
     <motion.div
-      initial={{ y: 100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
       className={cn(
-        "fixed bottom-0 left-0 right-0 z-[50]", // Reduced z-index from 100 to 50
-        "bg-gradient-to-t from-black/95 via-black/90 to-black/70 pt-3 pb-4 px-4", // Reduced padding from pt-6 pb-8
-        "border-t border-gray-800/50 shadow-lg", 
-        focusedExercise ? "from-purple-900/40 via-black/90 to-black/70" : ""
+        "w-full rounded-xl my-4",
+        focusedExercise 
+          ? "bg-gradient-to-br from-purple-900/30 via-black/80 to-black/90 border border-purple-500/20" 
+          : "bg-gradient-to-br from-gray-900/80 via-black/80 to-black/90 border border-gray-800/30",
+        "shadow-lg p-4"
       )}
-      style={{ 
-        position: "fixed",
-        bottom: 0,
-        width: "100%",
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)"
-      }}
     >
       <div className="container max-w-5xl mx-auto">
         <div className={cn(
-          "flex flex-col gap-2", // Reduced gap from 3 to 2
-          isMobile && focusedExercise ? "space-y-2" : "" // Reduced space-y from 3 to 2
+          "flex flex-col gap-2",
+          isMobile && focusedExercise ? "space-y-2" : ""
         )}>
           {focusedExercise ? (
             <>
@@ -111,7 +105,7 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
                     "bg-gradient-to-r from-green-600 to-emerald-800",
                     "hover:from-green-700 hover:to-emerald-900 text-white shadow-lg shadow-green-900/30",
                     "border border-green-500/30 transition-all duration-300",
-                    "w-full py-4 text-lg font-semibold" // Reduced padding from py-6
+                    "w-full py-4 text-lg font-semibold"
                   )}
                   onClick={() => {
                     if (onExitFocus) onExitFocus();
@@ -137,14 +131,14 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
             </>
           ) : (
             <div className={cn(
-              "flex justify-between items-center gap-2", // Reduced gap from 3 to 2
+              "flex justify-between items-center gap-3",
               isMobile && "flex-col"
             )}>
               <Button
                 className={cn(
                   "bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-700 hover:to-indigo-900 text-white shadow-lg",
                   "border border-indigo-500/20 transition-all duration-300",
-                  "h-10", // Set explicit height
+                  "h-12 py-2", // Increased height for better touchability
                   isMobile && "w-full"
                 )}
                 onClick={onAddExercise}
@@ -156,7 +150,7 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
                 disabled={!hasExercises || isSaving}
                 className={cn(
                   "bg-gradient-to-r",
-                  "h-10", // Set explicit height
+                  "h-12 py-2", // Increased height for better touchability
                   hasExercises 
                     ? "from-green-600 to-emerald-800 hover:from-green-700 hover:to-emerald-900 text-white shadow-lg border border-green-500/20" 
                     : "from-gray-700 to-gray-800 text-gray-300 cursor-not-allowed opacity-70",

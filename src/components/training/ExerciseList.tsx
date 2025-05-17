@@ -6,6 +6,7 @@ import ExerciseCard from './ExerciseCard';
 import { PlusCircle, Dumbbell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { WorkoutSessionFooter } from "./WorkoutSessionFooter";
 
 interface ExerciseListProps {
   exercises: Record<string, ExerciseSet[]>;
@@ -27,6 +28,10 @@ interface ExerciseListProps {
   onResetRestTimer: () => void;
   onFocusExercise?: (exerciseName: string | null) => void;
   onOpenAddExercise: () => void;
+  onFinishWorkout: () => void;
+  isSaving: boolean;
+  onNextExercise?: () => void;
+  hasMoreExercises?: boolean;
   setExercises: (exercises: Record<string, ExerciseSet[]> | ((prev: Record<string, ExerciseSet[]>) => Record<string, ExerciseSet[]>)) => void;
 }
 
@@ -50,6 +55,10 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
   onResetRestTimer,
   onFocusExercise,
   onOpenAddExercise,
+  onFinishWorkout,
+  isSaving,
+  onNextExercise,
+  hasMoreExercises = false,
   setExercises
 }) => {
   const exerciseList = Object.keys(exercises);
@@ -105,7 +114,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
 
   if (exerciseList.length === 0) {
     return (
-      <div className="container max-w-5xl mx-auto pb-28"> {/* Reduced bottom padding */}
+      <div className="container max-w-5xl mx-auto pb-16">
         <Card className="bg-gradient-to-br from-gray-900/90 to-gray-800/70 border-white/5 overflow-hidden">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center px-4">
             <div className="w-16 h-16 rounded-full bg-purple-900/20 flex items-center justify-center mb-4">
@@ -134,7 +143,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
   return (
     <div className="container max-w-5xl mx-auto">
       <motion.div 
-        className="space-y-4 mb-40 pb-10" // Keep the increased padding for when exercises exist
+        className="space-y-4 pb-16"
         variants={container}
         initial="hidden"
         animate="show"
@@ -164,6 +173,19 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
             />
           </motion.div>
         ))}
+        
+        {/* Integrated footer buttons */}
+        <WorkoutSessionFooter
+          onAddExercise={onOpenAddExercise}
+          onFinishWorkout={onFinishWorkout}
+          hasExercises={exerciseList.length > 0}
+          isSaving={isSaving}
+          focusedExercise={focusedExercise}
+          onExitFocus={() => onFocusExercise && onFocusExercise(null)}
+          visible={true}
+          onNextExercise={onNextExercise}
+          hasMoreExercises={hasMoreExercises}
+        />
       </motion.div>
     </div>
   );

@@ -14,7 +14,6 @@ import { useSound } from "@/hooks/useSound";
 import { RestTimer } from "@/components/RestTimer";
 import { EnhancedRestTimer } from "@/components/training/EnhancedRestTimer";
 import { PostSetRatingSheet } from "@/components/training/PostSetRatingSheet";
-import { WorkoutSessionFooter } from "@/components/training/WorkoutSessionFooter";
 import { ExerciseCompletionConfirmation } from "@/components/training/ExerciseCompletionConfirmation";
 import { adaptExerciseSets, adaptToStoreFormat } from "@/utils/exerciseAdapter";
 import { useWorkoutSave } from "@/hooks/useWorkoutSave";
@@ -407,9 +406,9 @@ const TrainingSessionPage = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-black text-white pt-16 pb-24"> {/* Increased bottom padding from pb-16 to pb-24 */}
+    <div className="flex flex-col min-h-screen bg-black text-white pt-16 pb-6">
       <main className="flex-1 overflow-auto">
-        <div className="mx-auto py-6 pb-24"> {/* Increased bottom padding from pb-20 to pb-24 */}
+        <div className="mx-auto py-6 pb-6"> {/* Reduced bottom padding since footer is now part of the content */}
           <div className="relative">
             <WorkoutSessionHeader
               elapsedTime={elapsedTime}
@@ -512,24 +511,15 @@ const TrainingSessionPage = () => {
               onResetRestTimer={triggerRestTimerReset}
               onFocusExercise={handleFocusExercise}
               onOpenAddExercise={() => setIsAddExerciseSheetOpen(true)}
+              onFinishWorkout={handleFinishWorkout}
+              isSaving={isSaving || saveStatus === 'saving'}
+              onNextExercise={handleNextExercise}
+              hasMoreExercises={!!nextExerciseName}
               setExercises={handleSetExercises}
             />
           </div>
         </div>
       </main>
-
-      {/* Show WorkoutSessionFooter only when there are exercises */}
-      <WorkoutSessionFooter
-        onAddExercise={() => setIsAddExerciseSheetOpen(true)}
-        onFinishWorkout={handleFinishWorkout}
-        hasExercises={hasExercises}
-        isSaving={isSaving || saveStatus === 'saving'}
-        focusedExercise={focusedExercise}
-        onExitFocus={() => setFocusedExercise(null)}
-        visible={hasExercises} // Only show the footer when there are exercises
-        onNextExercise={handleNextExercise}
-        hasMoreExercises={!!nextExerciseName}
-      />
 
       {/* Exercise Completion Confirmation */}
       <ExerciseCompletionConfirmation
