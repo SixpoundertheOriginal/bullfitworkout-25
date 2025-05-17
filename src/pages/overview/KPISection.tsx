@@ -75,7 +75,7 @@ export const KPISection: React.FC<KPISectionProps> = ({
   return (
     <div className="space-y-4">
       {/* Comparison Toggle without date selector since it's already in the header */}
-      <ComparisonToggle className="mb-2" showDateSelector={true} />
+      <ComparisonToggle className="mb-2" showDateSelector={false} />
       
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <ComparisonKPI
