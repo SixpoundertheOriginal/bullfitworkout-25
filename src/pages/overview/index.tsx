@@ -14,6 +14,7 @@ import { MainVolumeChart } from './MainVolumeChart';
 import { useDateRange } from '@/context/DateRangeContext';
 import { useWorkoutComparisonStats } from '@/hooks/useWorkoutComparisonStats';
 import { DateRangeFilter } from '@/components/date-filters/DateRangeFilter';
+import { ComparisonToggle } from '@/components/ui/period-comparison/ComparisonToggle';
 
 const OverviewPage: React.FC = () => {
   // Access date range context to get current and comparison date ranges
@@ -109,10 +110,13 @@ const OverviewPage: React.FC = () => {
           <div className="md:order-1">
             <DateRangeFilter />
           </div>
+          <div className="md:order-2">
+            <ComparisonToggle showDateSelector={true} />
+          </div>
         </div>
       </OverviewHeader>
       
-      {/* KPI Section - No date filter here as it's now only in the header */}
+      {/* KPI Section - No date filter or comparison toggle here anymore */}
       {stats && <KPISection {...kpiData} />}
       
       {/* Main Volume Chart - With Comparison Support */}

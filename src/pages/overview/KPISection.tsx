@@ -3,7 +3,6 @@ import React from 'react';
 import { useDateRange } from '@/context/DateRangeContext';
 import { useWorkoutComparisonStats } from '@/hooks/useWorkoutComparisonStats';
 import { ComparisonKPI } from '@/components/ui/period-comparison/ComparisonKPI';
-import { ComparisonToggle } from '@/components/ui/period-comparison/ComparisonToggle';
 import { WeightUnit } from '@/utils/unitConversion';
 
 export interface KPISectionProps {
@@ -74,8 +73,7 @@ export const KPISection: React.FC<KPISectionProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Comparison Toggle without date selector since it's already in the header */}
-      <ComparisonToggle className="mb-2" showDateSelector={false} />
+      {/* Remove the ComparisonToggle component entirely from here */}
       
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <ComparisonKPI
