@@ -381,6 +381,7 @@ export function useTrainingSession() {
   };
 
   return {
+    // Core state
     exercises,
     storeExercises,
     activeExercise,
@@ -429,8 +430,11 @@ export function useTrainingSession() {
     triggerRestTimerReset,
     getNextSetDetails,
     
-    // UI state setters
+    // UI state setters - make sure to include these!
     setShowCompletionConfirmation,
-    setPostSetFlow
+    setPostSetFlow,
+    setRestTimerActive,
+    setShowEnhancedRestTimer,
+    setShowRestTimerModal
   };
 }
