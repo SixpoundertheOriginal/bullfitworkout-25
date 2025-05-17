@@ -30,14 +30,17 @@ const TimeOfDayChartComponent: React.FC<TimeOfDayChartProps> = ({
   height = 250,
   comparisonData
 }) => {
-  const hasComparison = !!comparisonData;
+  // Add safety check for comparison data
+  const hasComparison = !!comparisonData && 
+                        typeof comparisonData === 'object' && 
+                        comparisonData !== null;
 
   // Safe defaults for each time bucket
   const safeDuration = useMemo(() => ({
-    morning: durationByTimeOfDay.morning || 0,
-    afternoon: durationByTimeOfDay.afternoon || 0,
-    evening: durationByTimeOfDay.evening || 0,
-    night: durationByTimeOfDay.night || 0
+    morning: durationByTimeOfDay?.morning || 0,
+    afternoon: durationByTimeOfDay?.afternoon || 0,
+    evening: durationByTimeOfDay?.evening || 0,
+    night: durationByTimeOfDay?.night || 0
   }), [durationByTimeOfDay]);
 
   const safeComparisonDuration = useMemo(() => hasComparison ? {

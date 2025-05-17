@@ -24,7 +24,8 @@ const WorkoutDaysChartComponent: React.FC<WorkoutDaysChartProps> = ({
   height = 250,
   comparisonData
 }) => {
-  const hasComparison = !!comparisonData && Object.keys(comparisonData).length > 0;
+  // Add safety check for comparison data
+  const hasComparison = !!comparisonData && typeof comparisonData === 'object' && Object.keys(comparisonData).length > 0;
 
   // Define days in order
   const days = useMemo(
@@ -32,15 +33,22 @@ const WorkoutDaysChartComponent: React.FC<WorkoutDaysChartProps> = ({
     []
   );
 
-  // Build chart data and capitalize names
+  // Build chart data and capitalize names with safety checks
   const chartData = useMemo(
-    () =>
-      days.map(day => ({
+    () => {
+      // Ensure daysFrequency is an object
+      const safeDays = typeof daysFrequency === 'object' && daysFrequency !== null ? daysFrequency : {};
+      const safeComparisonData = hasComparison && comparisonData 
+        ? comparisonData 
+        : {};
+      
+      return days.map(day => ({
         name: day.charAt(0).toUpperCase() + day.slice(1, 3),
-        value: daysFrequency[day] || 0,
-        comparisonValue: hasComparison ? (comparisonData?.[day] || 0) : undefined,
+        value: safeDays[day] || 0,
+        comparisonValue: hasComparison ? (safeComparisonData[day] || 0) : undefined,
         fullName: day.charAt(0).toUpperCase() + day.slice(1)
-      })),
+      }));
+    },
     [days, daysFrequency, comparisonData, hasComparison]
   );
 

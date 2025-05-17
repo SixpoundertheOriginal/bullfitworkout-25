@@ -30,9 +30,16 @@ const TopExercisesTableComponent: React.FC<TopExercisesTableProps> = ({
   comparisonData
 }) => {
   const { weightUnit } = useWeightUnit();
-  const hasComparison = !!comparisonData && comparisonData.length > 0;
+  
+  // Add safety check for comparison data
+  const hasComparison = useMemo(() => 
+    !!comparisonData && 
+    Array.isArray(comparisonData) && 
+    comparisonData.length > 0, 
+    [comparisonData]
+  );
 
-  // Memoize check for data existence
+  // Memoize check for data existence with safety check
   const hasData = useMemo(
     () => Array.isArray(exerciseVolumeHistory) && exerciseVolumeHistory.length > 0,
     [exerciseVolumeHistory]
@@ -46,6 +53,10 @@ const TopExercisesTableComponent: React.FC<TopExercisesTableProps> = ({
     );
   }
 
+  // Safe array for exercise history
+  const safeExerciseHistory = Array.isArray(exerciseVolumeHistory) ? exerciseVolumeHistory : [];
+  const safeComparisonData = hasComparison ? comparisonData : [];
+
   return (
     <Table>
       <TableHeader>
@@ -56,14 +67,14 @@ const TopExercisesTableComponent: React.FC<TopExercisesTableProps> = ({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {exerciseVolumeHistory.map((exercise) => (
+        {safeExerciseHistory.map((exercise) => (
           <TableRow
             key={exercise.exercise_name}
             className="border-gray-800 hover:bg-gray-800/50"
           >
             <TableCell className="font-medium">
               {exercise.exercise_name}
-              {hasComparison && comparisonData.find(e => e.exercise_name === exercise.exercise_name) && (
+              {hasComparison && safeComparisonData?.find(e => e.exercise_name === exercise.exercise_name) && (
                 <span className="ml-1 text-xs bg-purple-900/30 text-purple-300 px-1 rounded">
                   *
                 </span>

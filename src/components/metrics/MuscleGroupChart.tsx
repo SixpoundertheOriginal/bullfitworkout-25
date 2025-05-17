@@ -21,17 +21,22 @@ export const MuscleGroupChart: React.FC<MuscleGroupChartProps> = ({
   height = 250,
   comparisonData
 }) => {
-  const hasComparison = !!comparisonData && Object.keys(comparisonData).length > 0;
+  // Add safety check for comparison data
+  const hasComparison = !!comparisonData && typeof comparisonData === 'object' && Object.keys(comparisonData).length > 0;
   
-  // Transform data for chart display
+  // Transform data for chart display with safety checks
   const chartData = useMemo(() => {
-    const muscleGroups = Object.keys(muscleFocus || {});
+    // Ensure muscleFocus is an object
+    const safeFocus = typeof muscleFocus === 'object' && muscleFocus !== null ? muscleFocus : {};
+    const muscleGroups = Object.keys(safeFocus);
     
     return muscleGroups
       .map((muscleGroup) => ({
         name: capitalizeFirstLetter(muscleGroup),
-        value: muscleFocus[muscleGroup] || 0,
-        comparisonValue: hasComparison ? (comparisonData?.[muscleGroup] || 0) : undefined
+        value: safeFocus[muscleGroup] || 0,
+        comparisonValue: hasComparison && comparisonData 
+          ? (comparisonData[muscleGroup] || 0) 
+          : undefined
       }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 10); // Show top 10
@@ -39,7 +44,9 @@ export const MuscleGroupChart: React.FC<MuscleGroupChartProps> = ({
 
   // Check for data existence
   const hasData = useMemo(() => 
-    Object.values(muscleFocus || {}).some(value => value > 0),
+    typeof muscleFocus === 'object' &&
+    muscleFocus !== null &&
+    Object.values(muscleFocus).some(value => value > 0),
     [muscleFocus]
   );
 

@@ -35,34 +35,49 @@ export const ChartsGrid: React.FC<ChartsGridProps> = ({
 }) => {
   const { comparisonEnabled } = useDateRange();
   
-  // Extract comparison data
-  const hasComparisonData = comparisonEnabled && comparisonStats;
+  // Extract comparison data with safety checks
+  const hasComparisonData = comparisonEnabled && !!comparisonStats;
+  
+  console.log("[ChartsGrid] Comparison enabled:", comparisonEnabled);
+  console.log("[ChartsGrid] Comparison stats:", comparisonStats);
   
   // Prepare comparison workout types data if available
   const comparisonWorkoutTypes = React.useMemo(() => {
-    if (!hasComparisonData || !comparisonStats?.workouts) return undefined;
+    if (!hasComparisonData || !comparisonStats?.workouts || !Array.isArray(comparisonStats.workouts)) {
+      console.log("[ChartsGrid] No valid comparison workout data");
+      return undefined;
+    }
     
-    // Group workouts by training type
-    const typeCount: Record<string, { count: number, totalDuration: number }> = {};
-    comparisonStats.workouts.forEach(workout => {
-      const type = workout.training_type || 'Other';
-      if (!typeCount[type]) {
-        typeCount[type] = { count: 0, totalDuration: 0 };
-      }
-      typeCount[type].count += 1;
-      typeCount[type].totalDuration += workout.duration || 0;
-    });
-    
-    // Format for the chart
-    return Object.entries(typeCount).map(([type, data]) => ({
-      type,
-      count: data.count,
-      totalDuration: data.totalDuration,
-      averageDuration: data.count > 0 ? data.totalDuration / data.count : 0
-    }));
-  }, [hasComparisonData, comparisonStats]);
+    try {
+      // Group workouts by training type
+      const typeCount: Record<string, { count: number, totalDuration: number }> = {};
+      comparisonStats.workouts.forEach(workout => {
+        if (!workout) return;
+        
+        const type = workout.training_type || 'Other';
+        if (!typeCount[type]) {
+          typeCount[type] = { count: 0, totalDuration: 0 };
+        }
+        typeCount[type].count += 1;
+        typeCount[type].totalDuration += workout.duration || 0;
+      });
+      
+      // Format for the chart
+      return Object.entries(typeCount).map(([type, data]) => ({
+        type,
+        count: data.count,
+        totalDuration: data.totalDuration,
+        averageDuration: data.count > 0 ? data.totalDuration / data.count : 0
+      }));
+    } catch (error) {
+      console.error("[ChartsGrid] Error processing comparison workouts:", error);
+      return undefined;
+    }
+  }, [hasComparisonData, comparisonStats?.workouts]);
+  
+  console.log("[ChartsGrid] Processed comparison workout types:", comparisonWorkoutTypes);
 
-  // Chart configurations
+  // Chart configurations with explicit safety checks
   const chartConfigs = [
     {
       title: "Workout Types",
@@ -73,7 +88,7 @@ export const ChartsGrid: React.FC<ChartsGridProps> = ({
           comparisonData={hasComparisonData ? comparisonWorkoutTypes : undefined}
         />
       ),
-      data: stats.workoutTypes || []
+      data: stats?.workoutTypes || []
     },
     {
       title: "Muscle Focus",
@@ -84,7 +99,7 @@ export const ChartsGrid: React.FC<ChartsGridProps> = ({
           comparisonData={hasComparisonData && comparisonStats?.muscleFocus ? comparisonStats.muscleFocus : undefined}
         />
       ),
-      data: stats.muscleFocus || {}
+      data: stats?.muscleFocus || {}
     },
     {
       title: "Workout Days",
@@ -97,7 +112,7 @@ export const ChartsGrid: React.FC<ChartsGridProps> = ({
             : undefined}
         />
       ),
-      data: stats.timePatterns?.daysFrequency || {}
+      data: stats?.timePatterns?.daysFrequency || {}
     },
     {
       title: "Time of Day",
@@ -110,7 +125,7 @@ export const ChartsGrid: React.FC<ChartsGridProps> = ({
             : undefined}
         />
       ),
-      data: stats.timePatterns?.durationByTimeOfDay || {}
+      data: stats?.timePatterns?.durationByTimeOfDay || {}
     },
     {
       title: "Top Exercises",
@@ -122,7 +137,7 @@ export const ChartsGrid: React.FC<ChartsGridProps> = ({
             : undefined}
         />
       ),
-      data: stats.exerciseVolumeHistory || []
+      data: stats?.exerciseVolumeHistory || []
     }
   ];
 

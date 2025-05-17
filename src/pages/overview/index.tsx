@@ -40,24 +40,30 @@ const OverviewPage: React.FC = () => {
     "kg" as WeightUnit
   );
 
+  // Ensure we have arrays to work with
+  const safeWorkouts = Array.isArray(workouts) ? workouts : [];
+  const safePreviousWorkouts = Array.isArray(previousWorkouts) ? previousWorkouts : [];
+  
   // Log the raw data for debugging
-  console.log("[OverviewPage] Raw workouts:", workouts?.length);
+  console.log("[OverviewPage] Raw workouts:", safeWorkouts?.length);
   console.log("[OverviewPage] Stats:", stats);
   console.log("[OverviewPage] Comparison enabled:", comparisonEnabled);
-  console.log("[OverviewPage] Comparison data:", previousWorkouts?.length);
+  console.log("[OverviewPage] Comparison data:", safePreviousWorkouts?.length);
 
   // Process metrics for current period
-  const processedMetrics = useProcessWorkoutMetrics(workouts || []);
+  const processedMetrics = useProcessWorkoutMetrics(safeWorkouts);
   
   // Process metrics for comparison period if enabled
   const comparisonMetrics = React.useMemo(() => {
-    if (!comparisonEnabled || !previousWorkouts) return undefined;
-    return useProcessWorkoutMetrics(previousWorkouts);
-  }, [comparisonEnabled, previousWorkouts]);
+    if (!comparisonEnabled || !safePreviousWorkouts || safePreviousWorkouts.length === 0) {
+      return undefined;
+    }
+    return useProcessWorkoutMetrics(safePreviousWorkouts);
+  }, [comparisonEnabled, safePreviousWorkouts]);
   
   // Log the processed metrics to debug density calculation
-  console.log("[OverviewPage] Processed metrics:", processedMetrics);
-  console.log("[OverviewPage] Comparison metrics:", comparisonMetrics);
+  console.log("[OverviewPage] Processed metrics:", processedMetrics?.length);
+  console.log("[OverviewPage] Comparison metrics:", comparisonMetrics?.length);
   
   // Chart data for both current and comparison periods
   const volumeChartData = useVolumeChartData(processedMetrics as VolumeDataPoint[]);
@@ -65,7 +71,9 @@ const OverviewPage: React.FC = () => {
   
   // Chart data for comparison period
   const comparisonVolumeChartData = React.useMemo(() => {
-    if (!comparisonEnabled || !comparisonMetrics) return undefined;
+    if (!comparisonEnabled || !comparisonMetrics || comparisonMetrics.length === 0) {
+      return undefined;
+    }
     return useVolumeChartData(comparisonMetrics as VolumeDataPoint[]);
   }, [comparisonEnabled, comparisonMetrics]);
 
@@ -79,7 +87,7 @@ const OverviewPage: React.FC = () => {
   }
 
   // Check if we have valid stats and data - if not, show error state
-  if (!stats || !workouts || workouts.length === 0) {
+  if (!stats) {
     return (
       <div className="container py-6">
         <div className="text-center p-8">
@@ -103,6 +111,15 @@ const OverviewPage: React.FC = () => {
     weightUnit: "kg" as WeightUnit
   };
 
+  // Prepare safe comparison stats object
+  const safeComparisonStats = comparisonEnabled ? {
+    volumeData: comparisonVolumeChartData,
+    workouts: safePreviousWorkouts,
+    timePatterns: stats?.timePatterns,
+    muscleFocus: stats?.muscleFocus,
+    exerciseVolumeHistory: stats?.exerciseVolumeHistory
+  } : undefined;
+
   return (
     <div className="container py-6">
       <OverviewHeader title="Workout Overview">
@@ -114,7 +131,7 @@ const OverviewPage: React.FC = () => {
       {/* Main Volume Chart - With Comparison Support */}
       <MainVolumeChart 
         data={processedMetrics as VolumeDataPoint[]} 
-        comparisonData={comparisonMetrics as VolumeDataPoint[]}
+        comparisonData={comparisonEnabled && comparisonMetrics ? comparisonMetrics as VolumeDataPoint[] : undefined}
         height={350}
         className="mb-6"
       />
@@ -123,10 +140,7 @@ const OverviewPage: React.FC = () => {
       <ChartsGrid 
         stats={stats || {}}
         weightUnit={kpiData.weightUnit}
-        comparisonStats={comparisonEnabled ? {
-          volumeData: comparisonVolumeChartData,
-          workouts: previousWorkouts
-        } : undefined}
+        comparisonStats={safeComparisonStats}
       />
     </div>
   );
