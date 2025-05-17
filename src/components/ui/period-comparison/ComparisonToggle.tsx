@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import { useDateRange } from '@/context/DateRangeContext';
 import { format } from 'date-fns';
 import { CalendarRange, Calendar } from 'lucide-react';
-import { Button } from "@/components/ui/button";
 import { ComparisonDateRangePicker } from './ComparisonDateRangePicker';
 
 interface ComparisonToggleProps {
@@ -31,7 +30,7 @@ export function ComparisonToggle({ className = "", showDateSelector = false }: C
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
       <div className="flex items-center gap-2">
-        <CalendarRange className="h-4 w-4 text-gray-400" />
+        <CalendarRange className="h-4 w-4 text-purple-400" />
         <Label htmlFor="comparison-toggle" className="text-sm cursor-pointer">
           Compare with previous period
         </Label>
@@ -40,6 +39,7 @@ export function ComparisonToggle({ className = "", showDateSelector = false }: C
         id="comparison-toggle"
         checked={comparisonEnabled}
         onCheckedChange={setComparisonEnabled}
+        className="data-[state=checked]:bg-purple-600"
       />
       
       {comparisonEnabled && comparisonPeriodText && (
@@ -49,11 +49,11 @@ export function ComparisonToggle({ className = "", showDateSelector = false }: C
               <ComparisonDateRangePicker />
             </div>
           ) : (
-            <div className="ml-2 flex items-center text-xs text-gray-400 bg-gray-800/50 px-2 py-1 rounded-md">
-              <Calendar className="h-3 w-3 mr-1" />
+            <div className="ml-2 flex items-center text-xs text-gray-300 bg-gray-800/80 px-2 py-1 rounded-md">
+              <Calendar className="h-3 w-3 mr-1 text-purple-400" />
               {comparisonPeriodText}
               {useCustomComparison && (
-                <span className="ml-1 text-xs bg-purple-900/30 text-purple-300 px-1 rounded">
+                <span className="ml-1 text-xs bg-purple-900/70 text-purple-300 px-1 rounded">
                   Custom
                 </span>
               )}

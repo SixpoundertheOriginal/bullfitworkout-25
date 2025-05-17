@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -28,12 +28,17 @@ export function ComparisonDateRangePicker({ className }: ComparisonDateRangePick
   
   const [open, setOpen] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(
-    customComparisonRange || automaticComparisonRange
+    useCustomComparison ? customComparisonRange : automaticComparisonRange
   );
+
+  // Update local state when context changes
+  useEffect(() => {
+    setDateRange(useCustomComparison ? customComparisonRange : automaticComparisonRange);
+  }, [useCustomComparison, customComparisonRange, automaticComparisonRange]);
 
   // Format the display date
   const formatDisplayDate = (range: DateRange | undefined) => {
-    if (!range?.from) return 'Select date range';
+    if (!range?.from) return 'Select comparison period';
     if (!range.to) return format(range.from, 'MMM d, yyyy');
     return `${format(range.from, 'MMM d')} - ${format(range.to, 'MMM d, yyyy')}`;
   };
@@ -64,25 +69,28 @@ export function ComparisonDateRangePicker({ className }: ComparisonDateRangePick
             variant={useCustomComparison ? "outline" : "ghost"}
             className={cn(
               "w-full justify-start text-left font-normal",
-              !dateRange && "text-muted-foreground"
+              !dateRange && "text-muted-foreground",
+              useCustomComparison ? "bg-purple-900/20 hover:bg-purple-900/30 border-purple-700/30" : ""
             )}
           >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {formatDisplayDate(useCustomComparison ? customComparisonRange : automaticComparisonRange)}
+            <CalendarIcon className="mr-2 h-4 w-4 text-purple-400" />
+            <span className="truncate">
+              {formatDisplayDate(useCustomComparison ? customComparisonRange : automaticComparisonRange)}
+            </span>
             {useCustomComparison && (
-              <span className="ml-auto rounded-full bg-purple-100 px-2 py-0.5 text-xs text-purple-800">
+              <span className="ml-auto rounded bg-purple-700/50 px-2 py-0.5 text-xs text-purple-200">
                 Custom
               </span>
             )}
           </Button>
         </PopoverTrigger>
         <PopoverContent 
-          className="w-auto p-0" 
+          className="w-auto p-0 z-[100]" 
           align="start"
           side="bottom"
           sideOffset={8}
         >
-          <div className="bg-gray-900 border border-gray-700 rounded-md shadow-lg">
+          <div className="bg-gray-900 border border-gray-700 rounded-md shadow-lg overflow-hidden">
             <Calendar
               initialFocus
               mode="range"
@@ -90,7 +98,7 @@ export function ComparisonDateRangePicker({ className }: ComparisonDateRangePick
               selected={dateRange}
               onSelect={setDateRange}
               numberOfMonths={2}
-              className="bg-gray-900 rounded-md border-0"
+              className="bg-gray-900 rounded-md border-0 pointer-events-auto"
               classNames={{
                 day_selected: "bg-purple-600 text-white hover:bg-purple-700 focus:bg-purple-600",
                 day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
@@ -100,6 +108,9 @@ export function ComparisonDateRangePicker({ className }: ComparisonDateRangePick
                 caption: "relative flex items-center justify-center p-2 text-white",
                 caption_label: "text-sm font-medium text-gray-100",
                 head_cell: "text-gray-400 font-normal text-[0.8rem] py-2",
+                months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+                month: "space-y-4 bg-gray-900",
+                table: "w-full border-collapse space-y-1",
               }}
             />
             <div className="flex items-center justify-between p-3 border-t border-gray-700 bg-gray-900">

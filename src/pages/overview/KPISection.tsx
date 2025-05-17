@@ -74,7 +74,7 @@ export const KPISection: React.FC<KPISectionProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Only place the ComparisonToggle here, and pass showDateSelector prop */}
+      {/* Single ComparisonToggle with date selector enabled */}
       <ComparisonToggle className="mb-2" showDateSelector={true} />
       
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
