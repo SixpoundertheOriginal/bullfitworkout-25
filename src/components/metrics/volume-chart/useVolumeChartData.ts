@@ -64,8 +64,8 @@ export function useVolumeChartData(data: VolumeDataPoint[] = []) {
 
   return {
     hasData,
-    formattedData,
-    volumeStats,
+    formattedData: formattedData || [],
+    volumeStats: volumeStats || { total: 0, average: 0 },
     handleBarClick
   };
 }

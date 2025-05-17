@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { OverviewHeader } from './OverviewHeader';
 import { ChartsGrid } from './ChartsGrid';
@@ -62,17 +63,16 @@ const OverviewPage: React.FC = () => {
   console.log("[OverviewPage] Processed metrics:", processedMetrics?.length || 0);
   console.log("[OverviewPage] Comparison metrics:", comparisonMetrics?.length || 0);
   
-  // Chart data for both current and comparison periods
+  // Chart data for current period
   const volumeChartData = useVolumeChartData(processedMetrics);
   const densityChartData = useChartData(processedMetrics as unknown as DensityDataPoint[]);
   
-  // Chart data for comparison period with additional safety check
-  const comparisonVolumeChartData = React.useMemo(() => {
-    if (!comparisonEnabled || !comparisonMetrics || comparisonMetrics.length === 0) {
-      return undefined;
-    }
-    return useVolumeChartData(comparisonMetrics);
-  }, [comparisonEnabled, comparisonMetrics]);
+  // Chart data for comparison period - FIXED: Call hooks unconditionally
+  const comparisonVolumeChartData = useVolumeChartData(
+    comparisonEnabled && comparisonMetrics && comparisonMetrics.length > 0 
+      ? comparisonMetrics 
+      : []
+  );
 
   // Log the chart data results
   console.log("[OverviewPage] Volume chart data:", volumeChartData ? "available" : "unavailable");
