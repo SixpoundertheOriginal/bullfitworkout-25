@@ -66,7 +66,8 @@ const TrainingSessionPage = () => {
     setShowCompletionConfirmation,
     setPostSetFlow,
     setRestTimerActive,
-    setShowEnhancedRestTimer
+    setShowEnhancedRestTimer,
+    setShowRestTimerModal
   } = useTrainingSession();
 
   // Initialize the workout timer
@@ -114,6 +115,7 @@ const TrainingSessionPage = () => {
               onRestTimerComplete={handleRestTimerComplete}
               setRestTimerActive={setRestTimerActive}
               setShowEnhancedRestTimer={setShowEnhancedRestTimer}
+              setShowRestTimerModal={setShowRestTimerModal}
               setPostSetFlow={setPostSetFlow}
             />
           </div>

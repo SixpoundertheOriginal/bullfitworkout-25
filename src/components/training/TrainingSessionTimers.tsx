@@ -16,6 +16,7 @@ interface TrainingSessionTimersProps {
   onRestTimerComplete: () => void;
   setRestTimerActive: (active: boolean) => void;
   setShowEnhancedRestTimer: (show: boolean) => void;
+  setShowRestTimerModal: (show: boolean) => void; // Added this missing prop
   setPostSetFlow: (flow: string) => void;
 }
 
@@ -32,6 +33,7 @@ export const TrainingSessionTimers: React.FC<TrainingSessionTimersProps> = ({
   onRestTimerComplete,
   setRestTimerActive,
   setShowEnhancedRestTimer,
+  setShowRestTimerModal, // Added this missing prop
   setPostSetFlow,
 }) => {
   return (
@@ -41,7 +43,11 @@ export const TrainingSessionTimers: React.FC<TrainingSessionTimersProps> = ({
         <div className="fixed right-4 top-32 z-50 w-72">
           <RestTimer
             isVisible={showRestTimerModal}
-            onClose={() => { onClose(); setRestTimerActive(false); }}
+            onClose={() => { 
+              onClose(); 
+              setShowRestTimerModal(false); // Use setShowRestTimerModal instead of onClose
+              setRestTimerActive(false); 
+            }}
             onComplete={onRestTimerComplete}
             maxTime={currentRestTime || 60}
           />
