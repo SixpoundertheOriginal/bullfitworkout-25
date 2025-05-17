@@ -22,7 +22,13 @@ export const MuscleGroupChart: React.FC<MuscleGroupChartProps> = ({
   comparisonData
 }) => {
   // Add safety check for comparison data
-  const hasComparison = !!comparisonData && typeof comparisonData === 'object' && comparisonData !== null;
+  const hasComparison = useMemo(() => 
+    !!comparisonData && 
+    typeof comparisonData === 'object' && 
+    comparisonData !== null && 
+    Object.keys(comparisonData).length > 0,
+    [comparisonData]
+  );
   
   // Transform data for chart display with safety checks
   const chartData = useMemo(() => {

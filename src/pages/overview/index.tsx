@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { OverviewHeader } from './OverviewHeader';
 import { ChartsGrid } from './ChartsGrid';
@@ -45,36 +46,42 @@ const OverviewPage: React.FC = () => {
   const safePreviousWorkouts = Array.isArray(previousWorkouts) ? previousWorkouts : [];
   
   // Log the raw data for debugging
-  console.log("[OverviewPage] Raw workouts:", safeWorkouts?.length);
-  console.log("[OverviewPage] Stats:", stats);
+  console.log("[OverviewPage] Raw workouts:", safeWorkouts?.length || 0);
+  console.log("[OverviewPage] Stats:", stats ? "available" : "unavailable");
   console.log("[OverviewPage] Comparison enabled:", comparisonEnabled);
-  console.log("[OverviewPage] Comparison data:", safePreviousWorkouts?.length);
+  console.log("[OverviewPage] Comparison data:", safePreviousWorkouts?.length || 0);
 
-  // Process metrics for current period
+  // Process metrics for current period - with additional safety check
   const processedMetrics = useProcessWorkoutMetrics(safeWorkouts);
   
   // Process metrics for comparison period if enabled
-  const comparisonMetrics = comparisonEnabled && safePreviousWorkouts && safePreviousWorkouts.length > 0
-    ? useProcessWorkoutMetrics(safePreviousWorkouts)
-    : [];
+  const comparisonMetrics = React.useMemo(() => {
+    if (!comparisonEnabled || !safePreviousWorkouts.length) {
+      return [];
+    }
+    return useProcessWorkoutMetrics(safePreviousWorkouts);
+  }, [comparisonEnabled, safePreviousWorkouts]);
   
   // Log the processed metrics to debug density calculation
-  console.log("[OverviewPage] Processed metrics:", processedMetrics?.length);
-  console.log("[OverviewPage] Comparison metrics:", comparisonMetrics?.length);
+  console.log("[OverviewPage] Processed metrics:", processedMetrics?.length || 0);
+  console.log("[OverviewPage] Comparison metrics:", comparisonMetrics?.length || 0);
   
   // Chart data for both current and comparison periods
   const volumeChartData = useVolumeChartData(processedMetrics as VolumeDataPoint[]);
   const densityChartData = useChartData(processedMetrics as unknown as DensityDataPoint[]);
   
   // Chart data for comparison period
-  const comparisonVolumeChartData = comparisonEnabled && comparisonMetrics && comparisonMetrics.length > 0
-    ? useVolumeChartData(comparisonMetrics as VolumeDataPoint[])
-    : undefined;
+  const comparisonVolumeChartData = React.useMemo(() => {
+    if (!comparisonEnabled || !comparisonMetrics || !comparisonMetrics.length) {
+      return undefined;
+    }
+    return useVolumeChartData(comparisonMetrics as VolumeDataPoint[]);
+  }, [comparisonEnabled, comparisonMetrics]);
 
   // Log the chart data results
-  console.log("[OverviewPage] Volume chart data:", volumeChartData);
-  console.log("[OverviewPage] Density chart data:", densityChartData);
-  console.log("[OverviewPage] Comparison volume data:", comparisonVolumeChartData);
+  console.log("[OverviewPage] Volume chart data:", volumeChartData ? "available" : "unavailable");
+  console.log("[OverviewPage] Density chart data:", densityChartData ? "available" : "unavailable");
+  console.log("[OverviewPage] Comparison volume data:", comparisonVolumeChartData ? "available" : "unavailable");
 
   if (loading) {
     return <LoadingSkeleton />;
