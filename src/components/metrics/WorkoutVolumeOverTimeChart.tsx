@@ -35,7 +35,14 @@ export const WorkoutVolumeOverTimeChart: React.FC<WorkoutVolumeOverTimeChartProp
   
   // Add a safety check to ensure data is an array
   const safeData = Array.isArray(data) ? data : [];
-  const hasComparisonData = comparisonData && Array.isArray(comparisonData) && comparisonData.length > 0;
+  
+  // Add safety checks for comparison data
+  const hasComparisonData = React.useMemo(() => {
+    return comparisonData && 
+           Array.isArray(comparisonData) && 
+           comparisonData.length > 0;
+  }, [comparisonData]);
+  
   const safeComparisonData = hasComparisonData ? comparisonData : [];
   
   console.log("[WorkoutVolumeOverTimeChart] Data:", safeData.length, "Comparison data:", safeComparisonData?.length || 0);

@@ -70,9 +70,9 @@ const OverviewPage: React.FC = () => {
   const volumeChartData = useVolumeChartData(processedMetrics as VolumeDataPoint[]);
   const densityChartData = useChartData(processedMetrics as unknown as DensityDataPoint[]);
   
-  // Chart data for comparison period
+  // Chart data for comparison period - ensure we return an empty array if we have no data
   const comparisonVolumeChartData = React.useMemo(() => {
-    if (!comparisonEnabled || !comparisonMetrics || !comparisonMetrics.length) {
+    if (!comparisonEnabled || !comparisonMetrics || comparisonMetrics.length === 0) {
       return undefined;
     }
     return useVolumeChartData(comparisonMetrics as VolumeDataPoint[]);
