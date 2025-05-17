@@ -128,12 +128,19 @@ export const WorkoutCalendar = ({ className = "", onDatePreview }: WorkoutCalend
           <>
             <Calendar
               mode="single"
-              className="rounded-md border-0"
+              className="rounded-md border-0 bg-gray-900"
               classNames={{
                 day_selected: 'bg-purple-600 text-white hover:bg-purple-700 focus:bg-purple-600',
                 day: 'h-9 w-9 p-0 font-normal aria-selected:opacity-100',
                 day_today: 'bg-gray-800 text-white',
-                nav_button: 'border-gray-700 bg-gray-800 text-gray-400 hover:bg-gray-700'
+                nav_button: 'border-gray-700 bg-gray-800 text-gray-400 hover:bg-gray-700',
+                cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-purple-600/20",
+                caption: "relative flex items-center justify-center p-2 text-white",
+                caption_label: "text-sm font-medium text-gray-100",
+                head_cell: "text-gray-400 font-normal text-[0.8rem] py-2",
+                table: "w-full border-collapse space-y-1 bg-gray-900",
+                months: "bg-gray-900",
+                month: "space-y-2 bg-gray-900"
               }}
               selected={undefined}
               onSelect={handleSelectDate}

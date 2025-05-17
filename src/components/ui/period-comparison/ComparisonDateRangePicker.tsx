@@ -76,7 +76,10 @@ export function ComparisonDateRangePicker({ className }: ComparisonDateRangePick
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent 
+          className="w-auto p-0 bg-gray-900 border-gray-700 shadow-lg" 
+          align="start"
+        >
           <Calendar
             initialFocus
             mode="range"
@@ -84,9 +87,20 @@ export function ComparisonDateRangePicker({ className }: ComparisonDateRangePick
             selected={dateRange}
             onSelect={setDateRange}
             numberOfMonths={2}
+            className="bg-gray-900 rounded-md border-0"
+            classNames={{
+              day_selected: "bg-purple-600 text-white hover:bg-purple-700 focus:bg-purple-600",
+              day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
+              day_today: "bg-gray-800 text-white",
+              nav_button: "border-gray-700 bg-gray-800 text-gray-400 hover:bg-gray-700",
+              cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-purple-600/20",
+              caption: "relative flex items-center justify-center p-2 text-white",
+              caption_label: "text-sm font-medium text-gray-100",
+              head_cell: "text-gray-400 font-normal text-[0.8rem] py-2",
+            }}
           />
-          <div className="flex items-center justify-between p-3 border-t border-border">
-            <Button variant="ghost" size="sm" onClick={handleReset}>
+          <div className="flex items-center justify-between p-3 border-t border-gray-700 bg-gray-900">
+            <Button variant="ghost" size="sm" onClick={handleReset} className="text-gray-300 hover:text-white hover:bg-gray-800">
               Reset to Previous Period
             </Button>
             <Button size="sm" onClick={handleSave} className="bg-purple-600 hover:bg-purple-700">

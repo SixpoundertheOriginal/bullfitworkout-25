@@ -113,7 +113,11 @@ export function DateRangeFilter() {
             <ChevronDown className="ml-2 h-4 w-4 text-gray-400" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 bg-gray-800 border-gray-700 shadow-lg z-50" align="end" sideOffset={5}>
+        <PopoverContent 
+          className="w-auto p-0 bg-gray-900 border-gray-700 shadow-lg z-50" 
+          align="end" 
+          sideOffset={5}
+        >
           <div className="grid gap-4 p-3">
             <div className="flex flex-col space-y-2">
               {dateRangeOptions.map((option) => (
@@ -136,7 +140,20 @@ export function DateRangeFilter() {
                 selected={dateRange}
                 onSelect={handleCalendarSelect}
                 numberOfMonths={1}
-                className={cn("bg-gray-800", "pointer-events-auto")}
+                className="bg-gray-900 border-0 rounded-md pointer-events-auto"
+                classNames={{
+                  day_selected: "bg-purple-600 text-white hover:bg-purple-700 focus:bg-purple-600",
+                  day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
+                  day_today: "bg-gray-800 text-white",
+                  nav_button: "border-gray-700 bg-gray-800 text-gray-400 hover:bg-gray-700",
+                  cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected])]:bg-purple-600/20",
+                  caption: "relative flex items-center justify-center p-2 text-white",
+                  caption_label: "text-sm font-medium text-gray-100",
+                  head_cell: "text-gray-400 font-normal text-[0.8rem] py-2",
+                  table: "w-full border-collapse space-y-1 bg-gray-900",
+                  months: "bg-gray-900",
+                  month: "space-y-2 bg-gray-900",
+                }}
               />
             </div>
           </div>
