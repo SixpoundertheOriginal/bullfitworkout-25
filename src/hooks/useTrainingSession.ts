@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useWorkoutStore } from '@/store/workout';
 import { useWorkoutSave } from '@/hooks/useWorkoutSave';
@@ -84,12 +85,12 @@ export const useTrainingSession = () => {
   } = useWorkoutSave();
   
   // Fix for error #2: Create a wrapper for attemptRecovery with the proper signature
-  // Based on reviewing raw function, it expects different arguments than we're providing
   const attemptRecovery = useCallback(() => {
-    // Instead of using a direct call with arguments, call the function with the correct signature
+    // The raw function expects 3 arguments but we're only providing workoutId
     if (workoutId) {
-      // Call rawAttemptRecovery with workoutId
-      return rawAttemptRecovery(workoutId);
+      // Call rawAttemptRecovery with all required arguments
+      // Based on the error message, it expects 3 arguments
+      return rawAttemptRecovery(workoutId, null, null);
     }
     return Promise.resolve(false);
   }, [rawAttemptRecovery, workoutId]);
