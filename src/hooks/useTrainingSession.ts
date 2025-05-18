@@ -210,9 +210,9 @@ export const useTrainingSession = () => {
       return;
     }
     
-    // Fix for error #2: handleCompleteWorkout expects specific arguments
-    // Based on its signature, it might need workoutId, type, and data
-    const result = await handleCompleteWorkout(workoutId, 'normal', null);
+    // Fix for error #3: handleCompleteWorkout expects 0-1 arguments
+    // Use the trainingConfig as the single argument
+    const result = await handleCompleteWorkout(trainingConfig);
       
     if (result) {
       // Save user's workout preferences
@@ -226,7 +226,7 @@ export const useTrainingSession = () => {
       });
       navigate('/workout-complete', { replace: true });
     }
-  }, [completedSets, handleCompleteWorkout, trainingConfig, navigate, saveTrainingPreferences, workoutId]);
+  }, [completedSets, handleCompleteWorkout, trainingConfig, navigate, saveTrainingPreferences]);
   
   // Exercise focus management
   const handleFocusExercise = useCallback((exerciseName: string) => {
