@@ -48,21 +48,14 @@ export const SetsDebugger: React.FC = () => {
             <div key={name} className="mb-3">
               <div className="font-semibold text-purple-400">{name}</div>
               <div className="pl-2 space-y-1">
-                {exercises[name].map((set, index) => {
-                  // Safe access to metadata for set number or default to index+1
-                  const setNumber = set.metadata?.set_number !== undefined 
-                    ? set.metadata.set_number 
-                    : (index + 1);
-                  
-                  return (
-                    <div key={index} className="grid grid-cols-4 gap-2">
-                      <div>Set {setNumber}</div>
-                      <div>Weight: {set.weight}</div>
-                      <div>Reps: {set.reps}</div>
-                      <div>{set.completed ? '✅' : '⌛'}</div>
-                    </div>
-                  );
-                })}
+                {exercises[name].map((set, index) => (
+                  <div key={index} className="grid grid-cols-4 gap-2">
+                    <div>Set {index + 1}</div>
+                    <div>Weight: {set.weight}</div>
+                    <div>Reps: {set.reps}</div>
+                    <div>{set.completed ? '✅' : '⌛'}</div>
+                  </div>
+                ))}
               </div>
             </div>
           ))}

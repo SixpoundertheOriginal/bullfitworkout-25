@@ -80,7 +80,7 @@ export const useTrainingSession = () => {
     handleCompleteWorkout,
     attemptRecovery,
     workoutId: savedWorkoutId
-  } = useWorkoutSave(exercises, elapsedTime, resetSession);
+  } = useWorkoutSave();
   
   // UI State
   const [showRestTimerModal, setShowRestTimerModal] = useState(false);
