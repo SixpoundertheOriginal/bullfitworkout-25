@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useWorkoutStore } from '@/store/workout';
 import { useWorkoutSave } from '@/hooks/useWorkoutSave';
@@ -66,7 +65,7 @@ export const useTrainingSession = () => {
   // Training setup persistence
   const { storedConfig, saveConfig } = useTrainingSetupPersistence();
   
-  // Adapt to our interface - Fix for error #1: No arguments expected
+  // Fix for error #1: The loadTrainingConfig function doesn't expect arguments
   const loadTrainingConfig = useCallback(() => {
     return storedConfig;
   }, [storedConfig]);
@@ -83,9 +82,9 @@ export const useTrainingSession = () => {
     workoutId: savedWorkoutId
   } = useWorkoutSave();
   
-  // Fix for error #2: Create a wrapper for attemptRecovery that doesn't expect arguments
+  // Fix for error #2: Create a wrapper for attemptRecovery with the proper signature
   const attemptRecovery = useCallback(() => {
-    // Fix for error #3: Pass 1 argument as expected
+    // Pass workoutId as expected by the function
     return rawAttemptRecovery(workoutId || '');
   }, [rawAttemptRecovery, workoutId]);
   
@@ -206,7 +205,7 @@ export const useTrainingSession = () => {
       return;
     }
     
-    // Call handleCompleteWorkout without parameters as the function signature has changed
+    // Call handleCompleteWorkout without parameters
     const result = await handleCompleteWorkout();
     if (result) {
       // Save user's workout preferences
