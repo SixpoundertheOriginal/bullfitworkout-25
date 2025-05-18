@@ -23,7 +23,7 @@ export const SetsDebugger: React.FC = () => {
   };
 
   // Only render in development environment
-  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === 'production') {
     return null;
   }
 
@@ -49,8 +49,8 @@ export const SetsDebugger: React.FC = () => {
               <div className="font-semibold text-purple-400">{name}</div>
               <div className="pl-2 space-y-1">
                 {exercises[name].map((set, index) => {
-                  // Safe access to set_number property
-                  const setNumber = 'set_number' in set ? set.set_number : (index + 1);
+                  // Safe access to set_number property with type check
+                  const setNumber = typeof set.set_number === 'number' ? set.set_number : (index + 1);
                   return (
                     <div key={index} className="grid grid-cols-4 gap-2">
                       <div>Set {setNumber}</div>

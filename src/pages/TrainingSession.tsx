@@ -12,6 +12,7 @@ import { TrainingSessionTimers } from "@/components/training/TrainingSessionTime
 import { useTrainingSession } from "@/hooks/useTrainingSession";
 import { SetsDebugger } from "@/components/training/SetsDebugger";
 import { ExerciseFAB } from "@/components/training/ExerciseFAB";
+import { adaptExerciseSets } from "@/utils/exerciseAdapter";
 
 const TrainingSessionPage = () => {
   const { isLoading: loadingExercises } = useExercises();
@@ -92,7 +93,10 @@ const TrainingSessionPage = () => {
   };
 
   // Determine if we should show the development debugger
-  const showDebugger = typeof window !== 'undefined' && process.env.NODE_ENV !== 'production';
+  const showDebugger = process.env.NODE_ENV !== 'production';
+
+  // Adapt exercises to the component-friendly format
+  const adaptedExercises = adaptExerciseSets(exercises);
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-white pt-16 pb-4">
@@ -107,7 +111,7 @@ const TrainingSessionPage = () => {
               workoutStatus={workoutStatus}
               isRecoveryMode={!!workoutId}
               saveProgress={0}
-              onRetrySave={() => workoutId && attemptRecovery()}
+              onRetrySave={attemptRecovery}
               onResetWorkout={() => {}}
               restTimerActive={restTimerActive}
               onRestTimerComplete={handleRestTimerComplete}
@@ -139,7 +143,7 @@ const TrainingSessionPage = () => {
           
           <div className="mt-3 px-3 sm:px-4">
             <ExerciseList
-              exercises={exercises}
+              exercises={adaptedExercises}
               activeExercise={activeExercise}
               focusedExercise={focusedExercise}
               onAddSet={handleAddSet}

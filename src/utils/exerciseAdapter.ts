@@ -1,6 +1,6 @@
 
 import { ExerciseSet as TypesExerciseSet } from '@/types/exercise';
-import { ExerciseSet as StoreExerciseSet } from '@/store/workoutStore';
+import { ExerciseSet as StoreExerciseSet } from '@/store/workout/types';
 
 /**
  * Adapts workout store exercise sets to the format expected by components
@@ -21,10 +21,7 @@ export function adaptExerciseSets(
       restTime: set.restTime,
       completed: set.completed,
       isEditing: set.isEditing,
-      metadata: {
-        ...set.metadata,
-        rpe: set.rpe
-      }
+      metadata: set.metadata
     }));
   });
   
@@ -43,10 +40,9 @@ export function adaptToStoreFormat(
     storeExercises[exerciseName] = sets.map(set => ({
       weight: set.weight,
       reps: set.reps,
-      restTime: set.restTime || 60,
+      restTime: set.restTime || 60, // Ensure restTime is always provided
       completed: set.completed,
       isEditing: set.isEditing || false,
-      rpe: set.metadata?.rpe,
       metadata: set.metadata
     }));
   });

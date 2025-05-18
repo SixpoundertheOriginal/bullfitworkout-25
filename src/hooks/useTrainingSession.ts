@@ -6,7 +6,8 @@ import { useTrainingSetupPersistence } from '@/hooks/useTrainingSetupPersistence
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { shallow } from 'zustand/shallow';
-import { ExerciseSet } from '@/types/exercise';
+import { ExerciseSet } from '@/store/workout/types'; // Ensure we're using the store type
+import { adaptExerciseSets, adaptToStoreFormat } from '@/utils/exerciseAdapter';
 
 export const useTrainingSession = () => {
   const navigate = useNavigate();
@@ -230,15 +231,14 @@ export const useTrainingSession = () => {
     }
     
     // Add new exercise with default 3 sets
-    const newSets = Array.from({ length: 3 }, (_, i) => ({
-      id: `temp-${Date.now()}-${i}`,
+    const newSets: ExerciseSet[] = Array.from({ length: 3 }, (_, i) => ({
       weight: 0,
       reps: 0,
-      set_number: i + 1,
-      completed: false,
       restTime: 60,
-      isEditing: false
-    } as ExerciseSet));
+      completed: false,
+      isEditing: false,
+      metadata: { set_number: i + 1 }
+    }));
     
     setExercises(prev => ({
       ...prev,
@@ -257,10 +257,6 @@ export const useTrainingSession = () => {
   const handleAddSet = useCallback((exerciseName: string) => {
     setExercises(prev => {
       const currentSets = prev[exerciseName] || [];
-      // Safely access set_number with type checking
-      const nextSetNumber = currentSets.length > 0 
-        ? Math.max(...currentSets.map(s => 'set_number' in s && typeof s.set_number === 'number' ? s.set_number : 0)) + 1 
-        : 1;
       
       // Get weight and reps from last set as a starting point
       let weight = 0;
@@ -272,15 +268,14 @@ export const useTrainingSession = () => {
         reps = lastSet.reps || 0;
       }
       
-      const newSet = {
-        id: `temp-${Date.now()}`,
+      const newSet: ExerciseSet = {
         weight,
         reps,
-        set_number: nextSetNumber,
-        completed: false,
         restTime: 60,
-        isEditing: false
-      } as ExerciseSet;
+        completed: false,
+        isEditing: false,
+        metadata: { set_number: currentSets.length + 1 }
+      };
       
       return {
         ...prev,
@@ -340,8 +335,7 @@ export const useTrainingSession = () => {
     const nextSetIndex = lastCompletedSetIndex + 1;
     if (nextSetIndex < exerciseSets.length) {
       const nextSet = exerciseSets[nextSetIndex];
-      // Safely access set_number with type checking
-      const setNumber = 'set_number' in nextSet ? nextSet.set_number : (nextSetIndex + 1);
+      const setNumber = nextSet.metadata?.set_number || nextSetIndex + 1;
       
       return {
         exerciseName: lastCompletedExercise,
@@ -363,8 +357,7 @@ export const useTrainingSession = () => {
       
       if (nextExerciseSets && nextExerciseSets.length > 0) {
         const nextSet = nextExerciseSets[0];
-        // Safely access set_number with type checking
-        const setNumber = 'set_number' in nextSet ? nextSet.set_number : 1;
+        const setNumber = nextSet.metadata?.set_number || 1;
         
         return {
           exerciseName: nextExercise,
