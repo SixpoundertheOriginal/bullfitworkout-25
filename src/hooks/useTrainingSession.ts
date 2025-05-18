@@ -9,7 +9,7 @@ import { ExerciseSet } from '@/store/workout/types'; // Ensure we're using the s
 import { adaptExerciseSets, adaptToStoreFormat } from '@/utils/exerciseAdapter';
 
 // Types for the recovery function
-type AttemptRecoveryFn = (workoutId: string, source: 'manual' | 'auto', meta?: object) => Promise<boolean>;
+type AttemptRecoveryFn = (workoutId: string, source?: 'manual' | 'auto', meta?: object) => Promise<boolean>;
 type HandleCompleteWorkoutFn = (trainingConfig?: any) => Promise<string | null>;
 
 export const useTrainingSession = () => {
