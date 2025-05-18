@@ -66,7 +66,7 @@ export const useTrainingSession = () => {
   // Training setup persistence
   const { storedConfig, saveConfig } = useTrainingSetupPersistence();
   
-  // Adapt to our interface
+  // Adapt to our interface - Fix for error #1: No arguments expected
   const loadTrainingConfig = useCallback(() => {
     return storedConfig;
   }, [storedConfig]);
@@ -83,10 +83,11 @@ export const useTrainingSession = () => {
     workoutId: savedWorkoutId
   } = useWorkoutSave();
   
-  // Create a wrapper for attemptRecovery that doesn't expect arguments
+  // Fix for error #2: Create a wrapper for attemptRecovery that doesn't expect arguments
   const attemptRecovery = useCallback(() => {
-    return rawAttemptRecovery();
-  }, [rawAttemptRecovery]);
+    // Fix for error #3: Pass 1 argument as expected
+    return rawAttemptRecovery(workoutId || '');
+  }, [rawAttemptRecovery, workoutId]);
   
   // UI State
   const [showRestTimerModal, setShowRestTimerModal] = useState(false);
