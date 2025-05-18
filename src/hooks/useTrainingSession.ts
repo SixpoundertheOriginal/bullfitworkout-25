@@ -200,7 +200,7 @@ export const useTrainingSession = () => {
       return;
     }
     
-    // Fix: Call handleCompleteWorkout without passing trainingConfig as parameter
+    // Call handleCompleteWorkout without parameters as the function signature has changed
     const result = await handleCompleteWorkout();
     if (result) {
       // Save user's workout preferences
@@ -385,17 +385,6 @@ export const useTrainingSession = () => {
   const setRestTimerActiveState = useCallback((active: boolean) => {
     storeSetRestTimerActive(active);
   }, [storeSetRestTimerActive]);
-
-  // Calculate totalSets and completedSets
-  const totalSets = useMemo(() => {
-    return Object.values(exercises).reduce((total, sets) => total + sets.length, 0);
-  }, [exercises]);
-  
-  const completedSets = useMemo(() => {
-    return Object.values(exercises).reduce((total, sets) => {
-      return total + sets.filter(set => set.completed).length;
-    }, 0);
-  }, [exercises]);
 
   return {
     // State
