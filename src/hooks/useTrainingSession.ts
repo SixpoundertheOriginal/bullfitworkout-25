@@ -67,6 +67,7 @@ export const useTrainingSession = () => {
   
   // Fix for error #1: The loadTrainingConfig function doesn't expect arguments
   const loadTrainingConfig = useCallback(() => {
+    // Simply return the stored config without any arguments
     return storedConfig;
   }, [storedConfig]);
   
@@ -82,12 +83,15 @@ export const useTrainingSession = () => {
     workoutId: savedWorkoutId
   } = useWorkoutSave();
   
-  // Fix for error #2: Create a wrapper for attemptRecovery with the proper signature
+  // Fix for error #2 and #3: Create a wrapper for attemptRecovery with the proper signature
+  // The raw function expects 3 arguments but we want to call it with just the workout ID
   const attemptRecovery = useCallback(() => {
-    // Instead of using a direct call with (workoutId || ''), which expects 3 args total
-    // We need to adapt to the right function signature
+    // Instead of using a direct call with arguments, call the function with the correct signature
     if (workoutId) {
-      return rawAttemptRecovery(workoutId, null, null);
+      // Call rawAttemptRecovery with the correct number of arguments (3 total)
+      // Based on error #3, it seems this function expects just 1 argument instead of 3
+      // Let's return the call with just the workoutId
+      return rawAttemptRecovery(workoutId);
     }
     return Promise.resolve(false);
   }, [rawAttemptRecovery, workoutId]);
