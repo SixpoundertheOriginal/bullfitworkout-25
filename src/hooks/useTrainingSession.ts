@@ -83,12 +83,12 @@ export const useTrainingSession = () => {
     workoutId: savedWorkoutId
   } = useWorkoutSave();
   
-  // Fix for error #2 and #3: Create a wrapper for attemptRecovery with the proper signature
+  // Fix for error #2: Create a wrapper for attemptRecovery with the proper signature
   const attemptRecovery = useCallback(async () => {
-    // The raw function expects 1 argument based on corrected understanding
+    // The raw function expects 3 arguments based on the error message
     if (workoutId) {
-      // Pass just the workoutId as the single required argument
-      return rawAttemptRecovery(workoutId);
+      // Pass the required arguments in the expected order
+      return rawAttemptRecovery(workoutId, 'manual', {});
     }
     return Promise.resolve(false);
   }, [rawAttemptRecovery, workoutId]);
