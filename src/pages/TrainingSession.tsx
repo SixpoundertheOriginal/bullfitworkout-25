@@ -11,6 +11,7 @@ import { TrainingSessionLoading } from "@/components/training/TrainingSessionLoa
 import { TrainingSessionTimers } from "@/components/training/TrainingSessionTimers";
 import { useTrainingSession } from "@/hooks/useTrainingSession";
 import { SetsDebugger } from "@/components/training/SetsDebugger";
+import { ExerciseFAB } from "@/components/training/ExerciseFAB";
 
 const TrainingSessionPage = () => {
   const { isLoading: loadingExercises } = useExercises();
@@ -82,6 +83,13 @@ const TrainingSessionPage = () => {
   if (loadingExercises) {
     return <TrainingSessionLoading />;
   }
+  
+  // Function to handle adding a set to the focused exercise
+  const handleAddSetToFocused = () => {
+    if (focusedExercise) {
+      handleAddSet(focusedExercise);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-white pt-16 pb-4">
@@ -162,9 +170,9 @@ const TrainingSessionPage = () => {
                 console.log(`Changing weight for set ${i} of ${name} to ${v}`);
                 handleSetExercises(prev => {
                   const updated = { ...prev };
-                  updated[name] = prev[name].map((s, idx) => 
-                    idx === i ? { ...s, weight: +v || 0 } : s
-                  );
+                  const currentSets = [...prev[name]];
+                  currentSets[i] = { ...currentSets[i], weight: parseFloat(v) || 0 };
+                  updated[name] = currentSets;
                   return updated;
                 });
               }}
@@ -172,9 +180,9 @@ const TrainingSessionPage = () => {
                 console.log(`Changing reps for set ${i} of ${name} to ${v}`);
                 handleSetExercises(prev => {
                   const updated = { ...prev };
-                  updated[name] = prev[name].map((s, idx) => 
-                    idx === i ? { ...s, reps: parseInt(v) || 0 } : s
-                  );
+                  const currentSets = [...prev[name]];
+                  currentSets[i] = { ...currentSets[i], reps: parseInt(v) || 0 };
+                  updated[name] = currentSets;
                   return updated;
                 });
               }}
@@ -182,39 +190,39 @@ const TrainingSessionPage = () => {
                 console.log(`Changing rest time for set ${i} of ${name} to ${v}`);
                 handleSetExercises(prev => {
                   const updated = { ...prev };
-                  updated[name] = prev[name].map((s, idx) => 
-                    idx === i ? { ...s, restTime: parseInt(v) || 60 } : s
-                  );
+                  const currentSets = [...prev[name]];
+                  currentSets[i] = { ...currentSets[i], restTime: parseInt(v) || 60 };
+                  updated[name] = currentSets;
                   return updated;
                 });
               }}
               onWeightIncrement={(name, i, inc) => {
                 handleSetExercises(prev => {
                   const updated = { ...prev };
-                  const set = prev[name][i];
-                  updated[name] = prev[name].map((s, idx) => 
-                    idx === i ? { ...s, weight: Math.max(0, (set.weight || 0) + inc) } : s
-                  );
+                  const currentSets = [...prev[name]];
+                  const currentWeight = currentSets[i].weight || 0;
+                  currentSets[i] = { ...currentSets[i], weight: Math.max(0, currentWeight + inc) };
+                  updated[name] = currentSets;
                   return updated;
                 });
               }}
               onRepsIncrement={(name, i, inc) => {
                 handleSetExercises(prev => {
                   const updated = { ...prev };
-                  const set = prev[name][i];
-                  updated[name] = prev[name].map((s, idx) => 
-                    idx === i ? { ...s, reps: Math.max(0, (set.reps || 0) + inc) } : s
-                  );
+                  const currentSets = [...prev[name]];
+                  const currentReps = currentSets[i].reps || 0;
+                  currentSets[i] = { ...currentSets[i], reps: Math.max(0, currentReps + inc) };
+                  updated[name] = currentSets;
                   return updated;
                 });
               }}
               onRestTimeIncrement={(name, i, inc) => {
                 handleSetExercises(prev => {
                   const updated = { ...prev };
-                  const set = prev[name][i];
-                  updated[name] = prev[name].map((s, idx) => 
-                    idx === i ? { ...s, restTime: Math.max(0, (set.restTime || 60) + inc) } : s
-                  );
+                  const currentSets = [...prev[name]];
+                  const currentRest = currentSets[i].restTime || 60;
+                  currentSets[i] = { ...currentSets[i], restTime: Math.max(0, currentRest + inc) };
+                  updated[name] = currentSets;
                   return updated;
                 });
               }}
@@ -229,8 +237,8 @@ const TrainingSessionPage = () => {
               setExercises={handleSetExercises}
             />
             
-            {/* Add debug component when in development mode */}
-            {process.env.NODE_ENV !== 'production' && <SetsDebugger />}
+            {/* Only show debugger in development */}
+            {typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && <SetsDebugger />}
           </div>
         </div>
       </main>
@@ -247,6 +255,12 @@ const TrainingSessionPage = () => {
         }}
         onNextExercise={handleNextExercise}
         hasNext={!!nextExerciseName}
+      />
+
+      {/* Floating Action Button for Adding Sets */}
+      <ExerciseFAB 
+        visible={!!focusedExercise && !showRestTimerModal && !showEnhancedRestTimer}
+        onAddSet={handleAddSetToFocused}
       />
 
       {/* Sheets */}

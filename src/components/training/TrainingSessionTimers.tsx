@@ -40,50 +40,49 @@ export const TrainingSessionTimers: React.FC<TrainingSessionTimersProps> = ({
 }) => {
   const isMobile = useIsMobile();
   
+  // Only show one timer at a time - prioritize enhanced timer over standard timer
+  const showStandardTimer = showRestTimerModal && !showEnhancedRestTimer;
+  
+  if (!showStandardTimer && !showEnhancedRestTimer) {
+    return null;
+  }
+  
   return (
-    <>
-      {/* Standard rest timer (when manually triggered) */}
-      {showRestTimerModal && !showEnhancedRestTimer && (
-        <div className={cn(
-          "fixed z-50 shadow-xl",
-          isMobile ? "right-3 top-20 w-[calc(100%-24px)]" : "right-4 top-28 w-72"
-        )}>
-          <RestTimer
-            isVisible={showRestTimerModal}
-            onClose={() => { 
-              onClose(); 
-              setShowRestTimerModal(false);
-              setRestTimerActive(false); 
-            }}
-            onComplete={onRestTimerComplete}
-            maxTime={currentRestTime || 60}
-          />
-        </div>
+    <div className={cn(
+      "fixed z-50 shadow-xl transition-all duration-300",
+      isMobile ? "right-3 top-20" : "right-4 top-28",
+      showEnhancedRestTimer ? (isMobile ? "left-3 w-auto" : "w-72") : "w-72"
+    )}>
+      {showStandardTimer && (
+        <RestTimer
+          isVisible={true}
+          onClose={() => { 
+            onClose(); 
+            setShowRestTimerModal(false);
+            setRestTimerActive(false); 
+          }}
+          onComplete={onRestTimerComplete}
+          maxTime={currentRestTime || 60}
+        />
       )}
       
-      {/* Enhanced rest timer (shown after rating a set) */}
       {showEnhancedRestTimer && (
-        <div className={cn(
-          "fixed z-50 shadow-xl",
-          isMobile ? "right-3 top-20 left-3" : "right-4 top-28 w-72"
-        )}>
-          <EnhancedRestTimer
-            isVisible={showEnhancedRestTimer}
-            onClose={() => { 
-              setShowEnhancedRestTimer(false); 
-              setRestTimerActive(false);
-              setPostSetFlow('idle');
-            }}
-            onComplete={onRestTimerComplete}
-            maxTime={currentRestTime || 60}
-            exerciseName={lastCompletedExercise || undefined}
-            nextSet={nextSetDetails}
-            recommendation={nextSetRecommendation}
-            motivationalMessage={motivationalMessage}
-            volumeStats={volumeStats}
-          />
-        </div>
+        <EnhancedRestTimer
+          isVisible={true}
+          onClose={() => { 
+            setShowEnhancedRestTimer(false); 
+            setRestTimerActive(false);
+            setPostSetFlow('idle');
+          }}
+          onComplete={onRestTimerComplete}
+          maxTime={currentRestTime || 60}
+          exerciseName={lastCompletedExercise || undefined}
+          nextSet={nextSetDetails}
+          recommendation={nextSetRecommendation}
+          motivationalMessage={motivationalMessage}
+          volumeStats={volumeStats}
+        />
       )}
-    </>
+    </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ChevronDown, ChevronUp, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -32,7 +31,10 @@ export function SetsTable({
   activeSets = []
 }: SetsTableProps) {
   const sortedSets = [...sets].sort((a, b) => {
-    return (a.set_number || 0) - (b.set_number || 0);
+    // Handle missing set_number by using index order
+    const aNum = a.set_number !== undefined ? a.set_number : 0;
+    const bNum = b.set_number !== undefined ? b.set_number : 0;
+    return aNum - bNum;
   });
 
   // Count completed sets for summary
@@ -64,9 +66,9 @@ export function SetsTable({
         </div>
         {onAddSet && (
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            className="h-7 text-xs text-purple-400 hover:text-purple-300"
+            className="h-7 text-xs bg-purple-600/30 border-purple-500/30 text-purple-300 hover:text-purple-200 hover:bg-purple-600/40"
             onClick={onAddSet}
           >
             <Plus className="h-3.5 w-3.5 mr-1" />
@@ -75,6 +77,7 @@ export function SetsTable({
         )}
       </div>
       
+      {/* Table content - keep existing code except the expanded section and compact view */}
       {expanded && (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -90,7 +93,7 @@ export function SetsTable({
             <tbody>
               {sortedSets.map((exerciseSet, index) => (
                 <SetRow
-                  key={exerciseSet.id || `set-${exerciseSet.set_number}-${index}`}
+                  key={exerciseSet.id || `set-${exerciseSet.set_number || index}-${index}`}
                   exerciseSet={exerciseSet}
                   onUpdate={handleUpdateSet}
                   onDelete={(setToDelete) => {
@@ -103,14 +106,30 @@ export function SetsTable({
               ))}
             </tbody>
           </table>
+          
+          {/* Add Set button at the bottom of the expanded table for better visibility */}
+          {onAddSet && (
+            <div className="flex justify-center py-2 bg-gray-800/30">
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-purple-600/20 border-purple-500/20 hover:bg-purple-600/30 text-purple-300"
+                onClick={onAddSet}
+              >
+                <Plus className="h-3.5 w-3.5 mr-1" />
+                Add Set
+              </Button>
+            </div>
+          )}
         </div>
       )}
       
+      {/* Compact set view when collapsed */}
       {!expanded && sets.length > 0 && (
         <div className="px-3 py-2 flex flex-wrap gap-2">
           {sortedSets.map((set, index) => (
             <div
-              key={set.id || `set-mini-${set.set_number}-${index}`}
+              key={set.id || `set-mini-${set.set_number || index}-${index}`}
               className={cn(
                 "w-7 h-7 rounded-full flex items-center justify-center text-xs",
                 set.completed 
@@ -119,9 +138,21 @@ export function SetsTable({
               )}
               onClick={() => onFocusSet && onFocusSet(index)}
             >
-              {set.set_number}
+              {set.set_number || index + 1}
             </div>
           ))}
+          
+          {/* Add Set button in compact view */}
+          {onAddSet && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 w-7 rounded-full p-0 bg-purple-600/20 border-purple-500/20 hover:bg-purple-600/30 text-purple-300"
+              onClick={onAddSet}
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </Button>
+          )}
         </div>
       )}
     </div>

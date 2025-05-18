@@ -35,36 +35,42 @@ export const useTrainingSession = () => {
     setFocusedExercise,
     submitSetRating,
     currentRestTime,
-  } = useWorkoutStore(
-    state => ({
-      exercises: state.exercises,
-      activeExercise: state.activeExercise,
-      elapsedTime: state.elapsedTime,
-      isActive: state.isActive,
-      workoutStatus: state.workoutStatus,
-      workoutId: state.workoutId,
-      restTimerActive: state.restTimerActive,
-      setExercises: state.setExercises,
-      handleCompleteSet: state.handleCompleteSet,
-      deleteExercise: state.deleteExercise,
-      trainingConfig: state.trainingConfig,
-      resetSession: state.resetSession,
-      startWorkout: state.startWorkout,
-      endWorkout: state.endWorkout,
-      postSetFlow: state.postSetFlow,
-      setPostSetFlow: state.setPostSetFlow,
-      lastCompletedExercise: state.lastCompletedExercise,
-      lastCompletedSetIndex: state.lastCompletedSetIndex,
-      focusedExercise: state.focusedExercise,
-      setFocusedExercise: state.setFocusedExercise,
-      submitSetRating: state.submitSetRating,
-      currentRestTime: state.currentRestTime,
-    }),
-    shallow
-  );
+  } = useWorkoutStore(state => ({
+    exercises: state.exercises,
+    activeExercise: state.activeExercise,
+    elapsedTime: state.elapsedTime,
+    isActive: state.isActive,
+    workoutStatus: state.workoutStatus,
+    workoutId: state.workoutId,
+    restTimerActive: state.restTimerActive,
+    setExercises: state.setExercises,
+    handleCompleteSet: state.handleCompleteSet,
+    deleteExercise: state.deleteExercise,
+    trainingConfig: state.trainingConfig,
+    resetSession: state.resetSession,
+    startWorkout: state.startWorkout,
+    endWorkout: state.endWorkout,
+    postSetFlow: state.postSetFlow,
+    setPostSetFlow: state.setPostSetFlow,
+    lastCompletedExercise: state.lastCompletedExercise,
+    lastCompletedSetIndex: state.lastCompletedSetIndex,
+    focusedExercise: state.focusedExercise,
+    setFocusedExercise: state.setFocusedExercise,
+    submitSetRating: state.submitSetRating,
+    currentRestTime: state.currentRestTime,
+  }), shallow);
 
   // Training setup persistence
-  const { loadTrainingConfig, saveTrainingPreferences } = useTrainingSetupPersistence();
+  const { storedConfig, saveConfig } = useTrainingSetupPersistence();
+  
+  // Adapt to our interface
+  const loadTrainingConfig = useCallback(() => {
+    return storedConfig;
+  }, [storedConfig]);
+  
+  const saveTrainingPreferences = useCallback((config: any) => {
+    return saveConfig(config);
+  }, [saveConfig]);
   
   // Workout save logic
   const {
@@ -125,7 +131,7 @@ export const useTrainingSession = () => {
         console.log('Found saved training config:', config);
       }
     }
-  }, [isActive, hasExercises, startWorkout]);
+  }, [isActive, hasExercises, startWorkout, loadTrainingConfig]);
   
   // Update UI state when post-set flow changes
   useEffect(() => {
@@ -136,22 +142,27 @@ export const useTrainingSession = () => {
     }
   }, [postSetFlow]);
   
-  // Specialized sets update handling
+  // Specialized sets update handling that ensures proper types
   const handleSetExercises = useCallback((updater: any) => {
     if (typeof updater === 'function') {
       // Call function updater with current exercises state
-      setExercises(currentExercises => {
-        // Log current state
-        console.log('Current exercises state:', currentExercises);
-        
-        // Call updater to get new state
-        const newExercises = updater(currentExercises);
-        
-        // Log the result
-        console.log('New exercises state:', newExercises);
-        
-        // Return new state
-        return newExercises;
+      setExercises((currentExercises) => {
+        try {
+          // Log current state
+          console.log('Current exercises state:', currentExercises);
+          
+          // Call updater to get new state
+          const newExercises = updater(currentExercises);
+          
+          // Log the result
+          console.log('New exercises state:', newExercises);
+          
+          // Return new state
+          return newExercises;
+        } catch (error) {
+          console.error('Error updating exercises:', error);
+          return currentExercises;
+        }
       });
     } else {
       // Direct object update
@@ -178,8 +189,10 @@ export const useTrainingSession = () => {
   // Workout completion
   const handleFinishWorkout = useCallback(async () => {
     if (completedSets === 0) {
-      toast.error("No sets completed", { 
-        description: "Please complete at least one set before finishing your workout."
+      toast({
+        title: "No sets completed", 
+        description: "Please complete at least one set before finishing your workout.",
+        variant: "destructive"
       });
       return;
     }
@@ -191,7 +204,10 @@ export const useTrainingSession = () => {
         saveTrainingPreferences(trainingConfig);
       }
       
-      toast.success("Workout saved successfully!");
+      toast({
+        title: "Workout saved successfully!",
+        variant: "success"
+      });
       navigate('/workout-complete', { replace: true });
     }
   }, [completedSets, handleCompleteWorkout, trainingConfig, navigate, saveTrainingPreferences]);
@@ -240,7 +256,7 @@ export const useTrainingSession = () => {
     setExercises(prev => {
       const currentSets = prev[exerciseName] || [];
       const nextSetNumber = currentSets.length > 0 
-        ? Math.max(...currentSets.map(s => s.set_number)) + 1 
+        ? Math.max(...currentSets.map(s => s.set_number !== undefined ? s.set_number : 0)) + 1 
         : 1;
       
       // Get weight and reps from last set as a starting point
@@ -253,7 +269,7 @@ export const useTrainingSession = () => {
         reps = lastSet.reps || 0;
       }
       
-      const newSet: ExerciseSet = {
+      const newSet = {
         id: `temp-${Date.now()}`,
         weight,
         reps,
@@ -322,7 +338,7 @@ export const useTrainingSession = () => {
     if (nextSetIndex < exerciseSets.length) {
       return {
         exerciseName: lastCompletedExercise,
-        setNumber: exerciseSets[nextSetIndex].set_number,
+        setNumber: exerciseSets[nextSetIndex].set_number !== undefined ? exerciseSets[nextSetIndex].set_number : nextSetIndex + 1,
         weight: exerciseSets[nextSetIndex].weight,
         reps: exerciseSets[nextSetIndex].reps,
         isLastSet: nextSetIndex === exerciseSets.length - 1
@@ -341,7 +357,7 @@ export const useTrainingSession = () => {
       if (nextExerciseSets && nextExerciseSets.length > 0) {
         return {
           exerciseName: nextExercise,
-          setNumber: nextExerciseSets[0].set_number,
+          setNumber: nextExerciseSets[0].set_number !== undefined ? nextExerciseSets[0].set_number : 1,
           weight: nextExerciseSets[0].weight,
           reps: nextExerciseSets[0].reps,
           isNewExercise: true

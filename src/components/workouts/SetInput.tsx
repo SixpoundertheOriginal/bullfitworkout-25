@@ -1,10 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Check, ChevronUp, ChevronDown } from 'lucide-react';
-import { ExerciseSet } from '@/hooks/useWorkoutState';
 import { useWeightUnit } from '@/context/WeightUnitContext';
+import { useHaptics } from '@/hooks/use-haptics';
+import { ExerciseSet } from '@/types/exercise';
 
 interface SetInputProps {
   set: ExerciseSet;
@@ -24,22 +25,31 @@ export const SetInput: React.FC<SetInputProps> = ({
   onRepsChange
 }) => {
   const { weightUnit } = useWeightUnit();
+  const { triggerHaptic } = useHaptics();
   const [weight, setWeight] = useState(set.weight ? set.weight.toString() : "0");
   const [reps, setReps] = useState(set.reps ? set.reps.toString() : "0");
-
+  
+  // Use refs for previous values to detect changes
+  const prevWeightRef = useRef(weight);
+  const prevRepsRef = useRef(reps);
+  
   // Sync with incoming props when they change
   useEffect(() => {
     if (set.weight !== undefined) {
       setWeight(set.weight.toString());
+      prevWeightRef.current = set.weight.toString();
     }
     if (set.reps !== undefined) {
       setReps(set.reps.toString());
+      prevRepsRef.current = set.reps.toString();
     }
   }, [set.weight, set.reps]);
 
   const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setWeight(newValue);
+    
+    // Update parent immediately to prevent data loss
     if (onWeightChange) {
       onWeightChange(newValue);
     }
@@ -48,6 +58,8 @@ export const SetInput: React.FC<SetInputProps> = ({
   const handleRepsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setReps(newValue);
+    
+    // Update parent immediately to prevent data loss
     if (onRepsChange) {
       onRepsChange(newValue);
     }
@@ -57,6 +69,10 @@ export const SetInput: React.FC<SetInputProps> = ({
     const currentWeight = parseFloat(weight) || 0;
     const newValue = (currentWeight + inc).toString();
     setWeight(newValue);
+    
+    triggerHaptic('light');
+    
+    // Update parent
     if (onWeightChange) {
       onWeightChange(newValue);
     }
@@ -66,13 +82,34 @@ export const SetInput: React.FC<SetInputProps> = ({
     const currentReps = parseInt(reps) || 0;
     const newValue = Math.max(1, currentReps + inc).toString();
     setReps(newValue);
+    
+    triggerHaptic('light');
+    
+    // Update parent
     if (onRepsChange) {
       onRepsChange(newValue);
     }
   };
 
   const handleComplete = () => {
+    triggerHaptic('success');
     onComplete();
+  };
+
+  // Check for focus/blur to ensure values are saved
+  const handleInputBlur = () => {
+    // Compare with previous values
+    if (weight !== prevWeightRef.current && onWeightChange) {
+      console.log(`Saving weight change on blur: ${prevWeightRef.current} -> ${weight}`);
+      onWeightChange(weight);
+      prevWeightRef.current = weight;
+    }
+    
+    if (reps !== prevRepsRef.current && onRepsChange) {
+      console.log(`Saving reps change on blur: ${prevRepsRef.current} -> ${reps}`);
+      onRepsChange(reps);
+      prevRepsRef.current = reps;
+    }
   };
 
   return (
@@ -85,6 +122,7 @@ export const SetInput: React.FC<SetInputProps> = ({
               type="number"
               value={weight}
               onChange={handleWeightChange}
+              onBlur={handleInputBlur}
               className="bg-gray-800 border-gray-700"
             />
             <div className="flex flex-col ml-2">
@@ -115,6 +153,7 @@ export const SetInput: React.FC<SetInputProps> = ({
               type="number"
               value={reps}
               onChange={handleRepsChange}
+              onBlur={handleInputBlur}
               className="bg-gray-800 border-gray-700"
             />
             <div className="flex flex-col ml-2">

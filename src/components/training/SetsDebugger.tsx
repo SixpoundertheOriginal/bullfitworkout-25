@@ -8,10 +8,7 @@ import { Button } from '@/components/ui/button';
  * This is a development-only component to help debug workout state issues
  */
 export const SetsDebugger: React.FC = () => {
-  const { exercises, setExercises } = useWorkoutStore(state => ({
-    exercises: state.exercises,
-    setExercises: state.setExercises
-  }));
+  const { exercises, setExercises } = useWorkoutStore();
 
   const exerciseNames = Object.keys(exercises);
 
@@ -25,7 +22,8 @@ export const SetsDebugger: React.FC = () => {
     console.log("Forced state persistence");
   };
 
-  if (process.env.NODE_ENV === 'production') {
+  // Only render in development environment
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
     return null;
   }
 
@@ -52,7 +50,7 @@ export const SetsDebugger: React.FC = () => {
               <div className="pl-2 space-y-1">
                 {exercises[name].map((set, index) => (
                   <div key={index} className="grid grid-cols-4 gap-2">
-                    <div>Set {set.set_number}</div>
+                    <div>Set {set.set_number || index + 1}</div>
                     <div>Weight: {set.weight}</div>
                     <div>Reps: {set.reps}</div>
                     <div>{set.completed ? '✅' : '⌛'}</div>

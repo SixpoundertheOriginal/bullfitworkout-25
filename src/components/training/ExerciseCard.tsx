@@ -7,7 +7,8 @@ import { cn } from '@/lib/utils';
 import { SetsTable } from '../workouts/SetsTable';
 import { ExerciseMetricsDisplay } from './ExerciseMetricsDisplay';
 import { motion } from 'framer-motion';
-import { Dumbbell, Target } from 'lucide-react';
+import { Dumbbell, Target, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ExerciseCardProps {
   exercise: Exercise | string;
@@ -89,7 +90,8 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
     console.log("ExerciseCard - handling set update:", updatedSet);
     
     const setIndex = sets.findIndex(s => 
-      s.set_number === updatedSet.set_number || s.id === updatedSet.id
+      (s.set_number !== undefined && updatedSet.set_number !== undefined && s.set_number === updatedSet.set_number) || 
+      (s.id !== undefined && updatedSet.id !== undefined && s.id === updatedSet.id)
     );
     
     if (setIndex === -1) return;
@@ -116,7 +118,8 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
     if (!sets) return;
     
     const setIndex = sets.findIndex(s => 
-      s.set_number === setToDelete.set_number || s.id === setToDelete.id
+      (s.set_number !== undefined && setToDelete.set_number !== undefined && s.set_number === setToDelete.set_number) || 
+      (s.id !== undefined && setToDelete.id !== undefined && s.id === setToDelete.id)
     );
     
     if (setIndex === -1) return;
@@ -131,10 +134,10 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
     <div className="mt-4">
       <SetsTable
         sets={sets}
-        onAddSet={onAddSet || (() => {})}
+        onAddSet={onAddSet}
         onUpdateSet={handleSetUpdate}
         onDeleteSet={handleSetDelete}
-        onShowRestTimer={onShowRestTimer || (() => {})}
+        onShowRestTimer={onShowRestTimer}
         expanded={expanded}
         onToggleExpanded={() => setExpanded(!expanded)}
         onFocusSet={(setIndex) => onFocus && onFocus()}
@@ -148,6 +151,19 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
           exerciseName={typeof exercise === 'string' ? exercise : exercise.name}
           className="mt-2"
         />
+      )}
+      
+      {/* Floating Add Set button for better visibility */}
+      {onAddSet && sets.length > 0 && isFocused && (
+        <div className="flex justify-center mt-4">
+          <Button
+            onClick={onAddSet}
+            className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Add Set
+          </Button>
+        </div>
       )}
     </div>
   ) : null;
