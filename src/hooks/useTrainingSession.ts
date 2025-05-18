@@ -79,9 +79,14 @@ export const useTrainingSession = () => {
   const {
     saveStatus,
     handleCompleteWorkout,
-    attemptRecovery,
+    attemptRecovery: rawAttemptRecovery,
     workoutId: savedWorkoutId
   } = useWorkoutSave();
+  
+  // Create a wrapper for attemptRecovery that doesn't expect arguments
+  const attemptRecovery = useCallback(() => {
+    return rawAttemptRecovery();
+  }, [rawAttemptRecovery]);
   
   // UI State
   const [showRestTimerModal, setShowRestTimerModal] = useState(false);
