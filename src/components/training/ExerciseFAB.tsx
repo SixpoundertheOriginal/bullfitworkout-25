@@ -1,66 +1,63 @@
 
-import React from 'react';
-import { Plus } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { useHaptics } from '@/hooks/use-haptics';
+import React from "react";
+import { Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useWorkoutStore } from "@/store/workout"; // Updated import path
+import { CircularGradientButton } from "@/components/CircularGradientButton";
 
 interface ExerciseFABProps {
-  visible: boolean;
+  onClick?: () => void;
   onAddSet?: () => void;
-  position?: 'bottom-right' | 'bottom-center';
   className?: string;
+  visible?: boolean;
+  showOnlyIfActive?: boolean;
+  hideOnMobile?: boolean;
+  floatingPosition?: boolean;
+  position?: "bottom-right" | "bottom-center" | "top-right";
 }
 
-export const ExerciseFAB: React.FC<ExerciseFABProps> = ({
-  visible,
+export const ExerciseFAB = ({ 
+  onClick, 
   onAddSet,
-  position = 'bottom-center',  // Changed default to bottom-center
-  className
-}) => {
-  const { triggerHaptic } = useHaptics();
+  className, 
+  visible = true,
+  showOnlyIfActive = false,
+  hideOnMobile = true,
+  floatingPosition = true,
+  position = "bottom-right"
+}: ExerciseFABProps) => {
+  const { isActive } = useWorkoutStore();
+  
+  // Option to only show when workout is active
+  if (showOnlyIfActive && !isActive) {
+    return null;
+  }
+
+  // Use onAddSet if provided, otherwise fall back to onClick
+  const handleClick = onAddSet || onClick || (() => {});
   
   const positionClasses = {
-    'bottom-right': 'bottom-24 right-4',
-    'bottom-center': 'bottom-24 left-1/2 -translate-x-1/2'
-  };
-  
-  const handleClick = () => {
-    triggerHaptic('medium');
-    if (onAddSet) onAddSet();
+    "bottom-right": "bottom-24 right-6",
+    "bottom-center": "bottom-24 left-1/2 transform -translate-x-1/2",
+    "top-right": "top-24 right-6"
   };
   
   return (
-    <AnimatePresence>
-      {visible && onAddSet && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.8, y: 20 }}
-          transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-          className={cn(
-            'fixed z-50',
-            positionClasses[position],
-            className
-          )}
-        >
-          <Button
-            size="lg"
-            onClick={handleClick}
-            className={cn(
-              'h-14 px-6 rounded-full shadow-lg',
-              'bg-gradient-to-r from-purple-600 to-indigo-600',
-              'border border-purple-500/20',
-              'hover:from-purple-500 hover:to-indigo-500',
-              'active:scale-95 transition-all duration-200'
-            )}
-          >
-            <Plus className="h-5 w-5 mr-2" />
-            <span className="font-medium">Add Set</span>
-          </Button>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <div className={cn(
+      floatingPosition ? `fixed ${positionClasses[position]} z-50` : "relative", 
+      "transform transition-all duration-300 ease-in-out",
+      visible ? "translate-y-0 opacity-100" : "translate-y-16 opacity-0 pointer-events-none",
+      hideOnMobile ? "hidden md:block" : "",
+      className
+    )}>
+      <CircularGradientButton
+        onClick={handleClick}
+        icon={<Plus size={24} className="text-white" />}
+        size={56}
+        ariaLabel="Add exercise"
+      >
+        Add Exercise
+      </CircularGradientButton>
+    </div>
   );
 };

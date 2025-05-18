@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useWorkoutStore } from '@/store/workout';
 import { useWorkoutSave } from '@/hooks/useWorkoutSave';
@@ -384,6 +385,17 @@ export const useTrainingSession = () => {
   const setRestTimerActiveState = useCallback((active: boolean) => {
     storeSetRestTimerActive(active);
   }, [storeSetRestTimerActive]);
+
+  // Calculate totalSets and completedSets
+  const totalSets = useMemo(() => {
+    return Object.values(exercises).reduce((total, sets) => total + sets.length, 0);
+  }, [exercises]);
+  
+  const completedSets = useMemo(() => {
+    return Object.values(exercises).reduce((total, sets) => {
+      return total + sets.filter(set => set.completed).length;
+    }, 0);
+  }, [exercises]);
 
   return {
     // State

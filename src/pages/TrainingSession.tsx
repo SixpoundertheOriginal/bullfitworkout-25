@@ -98,6 +98,11 @@ const TrainingSessionPage = () => {
   // Adapt exercises to the component-friendly format
   const adaptedExercises = adaptExerciseSets(exercises);
 
+  // Define a wrapper function for attemptRecovery that doesn't expect arguments
+  const handleRecovery = () => {
+    attemptRecovery();
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-black text-white pt-16 pb-4">
       <main className="flex-1 overflow-auto">
@@ -111,7 +116,7 @@ const TrainingSessionPage = () => {
               workoutStatus={workoutStatus}
               isRecoveryMode={!!workoutId}
               saveProgress={0}
-              onRetrySave={attemptRecovery} // Fixed: Pass the function directly
+              onRetrySave={handleRecovery} 
               onResetWorkout={() => {}}
               restTimerActive={restTimerActive}
               onRestTimerComplete={handleRestTimerComplete}
