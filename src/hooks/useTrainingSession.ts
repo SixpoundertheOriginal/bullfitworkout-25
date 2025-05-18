@@ -83,14 +83,12 @@ export const useTrainingSession = () => {
     workoutId: savedWorkoutId
   } = useWorkoutSave();
   
-  // Fix for error #2 and #3: Create a wrapper for attemptRecovery with the proper signature
-  // The raw function expects 3 arguments but we want to call it with just the workout ID
+  // Fix for error #2: Create a wrapper for attemptRecovery with the proper signature
+  // Based on reviewing raw function, it expects different arguments than we're providing
   const attemptRecovery = useCallback(() => {
     // Instead of using a direct call with arguments, call the function with the correct signature
     if (workoutId) {
-      // Call rawAttemptRecovery with the correct number of arguments (3 total)
-      // Based on error #3, it seems this function expects just 1 argument instead of 3
-      // Let's return the call with just the workoutId
+      // Call rawAttemptRecovery with workoutId
       return rawAttemptRecovery(workoutId);
     }
     return Promise.resolve(false);
