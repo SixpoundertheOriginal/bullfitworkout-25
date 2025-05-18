@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useWorkoutStore } from '@/store/workout';
 import { useWorkoutSave } from '@/hooks/useWorkoutSave';
@@ -84,12 +83,12 @@ export const useTrainingSession = () => {
     workoutId: savedWorkoutId
   } = useWorkoutSave();
   
-  // Fix for error #2: Create a wrapper for attemptRecovery with the proper signature
+  // Fix for error #2 and #3: Create a wrapper for attemptRecovery with the proper signature
   const attemptRecovery = useCallback(async () => {
-    // The raw function expects specific arguments based on the error message
+    // The raw function expects 1 argument based on corrected understanding
     if (workoutId) {
-      // Pass the required arguments in the expected order
-      return rawAttemptRecovery(workoutId, 'manual', {});
+      // Pass just the workoutId as the single required argument
+      return rawAttemptRecovery(workoutId);
     }
     return Promise.resolve(false);
   }, [rawAttemptRecovery, workoutId]);
@@ -211,8 +210,7 @@ export const useTrainingSession = () => {
       return;
     }
     
-    // Fix for error #3: handleCompleteWorkout expects 0-1 arguments
-    // Use the trainingConfig as the single argument
+    // Fix for error #3: handleCompleteWorkout expects just the trainingConfig as the argument
     const result = await handleCompleteWorkout(trainingConfig);
       
     if (result) {
