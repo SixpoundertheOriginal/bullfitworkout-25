@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from 'react';
 import { useWorkoutTimer } from '@/hooks/useWorkoutTimer';
 import { useExercises } from "@/hooks/useExercises";
 import { WorkoutSessionHeader } from "@/components/training/WorkoutSessionHeader";
@@ -111,7 +111,7 @@ const TrainingSessionPage = () => {
               workoutStatus={workoutStatus}
               isRecoveryMode={!!workoutId}
               saveProgress={0}
-              onRetrySave={() => attemptRecovery()}
+              onRetrySave={attemptRecovery} // FIXED: No argument needed here
               onResetWorkout={() => {}}
               restTimerActive={restTimerActive}
               onRestTimerComplete={handleRestTimerComplete}
