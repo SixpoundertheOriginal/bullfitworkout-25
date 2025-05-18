@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Exercise, ExerciseSet } from '@/types/exercise';
 import { CommonExerciseCard } from '../exercises/CommonExerciseCard';

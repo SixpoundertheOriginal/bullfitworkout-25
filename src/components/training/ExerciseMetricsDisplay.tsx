@@ -2,7 +2,7 @@
 import React from 'react';
 import { ExerciseSet } from '@/types/exercise';
 import { calculateSetVolume } from '@/utils/exerciseUtils';
-import { Clock, Weight, Dumbbell, BarChart } from 'lucide-react';
+import { Weight, BarChart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -41,6 +41,7 @@ export const ExerciseMetricsDisplay: React.FC<ExerciseMetricsDisplayProps> = ({
   const formattedTonnage = totalTonnage.toFixed(1);
   const formattedDensity = density.toFixed(1);
   
+  // If no sets or no completed sets, don't render anything
   if (sets.length === 0 || !sets.some(set => set.completed)) {
     return null;
   }
