@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useWorkoutTimer } from '@/hooks/useWorkoutTimer';
 import { useExercises } from "@/hooks/useExercises";
 import { WorkoutSessionHeader } from "@/components/training/WorkoutSessionHeader";
@@ -10,6 +10,7 @@ import { ExerciseCompletionConfirmation } from "@/components/training/ExerciseCo
 import { TrainingSessionLoading } from "@/components/training/TrainingSessionLoading";
 import { TrainingSessionTimers } from "@/components/training/TrainingSessionTimers";
 import { useTrainingSession } from "@/hooks/useTrainingSession";
+import { SetsDebugger } from "@/components/training/SetsDebugger";
 
 const TrainingSessionPage = () => {
   const { isLoading: loadingExercises } = useExercises();
@@ -72,6 +73,11 @@ const TrainingSessionPage = () => {
 
   // Initialize the workout timer
   useWorkoutTimer();
+  
+  // Debug logging
+  useEffect(() => {
+    console.log("Training session exercises state:", exercises);
+  }, [exercises]);
 
   if (loadingExercises) {
     return <TrainingSessionLoading />;
@@ -129,6 +135,7 @@ const TrainingSessionPage = () => {
               onCompleteSet={handleCompleteSet}
               onDeleteExercise={deleteExercise}
               onRemoveSet={(name, i) => {
+                console.log(`Removing set ${i} from ${name}`);
                 handleSetExercises(prev => {
                   const updated = { ...prev };
                   updated[name] = prev[name].filter((_, idx) => idx !== i);
@@ -136,6 +143,7 @@ const TrainingSessionPage = () => {
                 });
               }}
               onEditSet={(name, i) => {
+                console.log(`Setting edit mode for set ${i} of ${name}`);
                 handleSetExercises(prev => {
                   const updated = { ...prev };
                   updated[name] = prev[name].map((s, idx) => idx === i ? { ...s, isEditing: true } : s);
@@ -143,6 +151,7 @@ const TrainingSessionPage = () => {
                 });
               }}
               onSaveSet={(name, i) => {
+                console.log(`Saving set ${i} of ${name}`);
                 handleSetExercises(prev => {
                   const updated = { ...prev };
                   updated[name] = prev[name].map((s, idx) => idx === i ? { ...s, isEditing: false } : s);
@@ -150,23 +159,32 @@ const TrainingSessionPage = () => {
                 });
               }}
               onWeightChange={(name, i, v) => {
+                console.log(`Changing weight for set ${i} of ${name} to ${v}`);
                 handleSetExercises(prev => {
                   const updated = { ...prev };
-                  updated[name] = prev[name].map((s, idx) => idx === i ? { ...s, weight: +v || 0 } : s);
+                  updated[name] = prev[name].map((s, idx) => 
+                    idx === i ? { ...s, weight: +v || 0 } : s
+                  );
                   return updated;
                 });
               }}
               onRepsChange={(name, i, v) => {
+                console.log(`Changing reps for set ${i} of ${name} to ${v}`);
                 handleSetExercises(prev => {
                   const updated = { ...prev };
-                  updated[name] = prev[name].map((s, idx) => idx === i ? { ...s, reps: parseInt(v) || 0 } : s);
+                  updated[name] = prev[name].map((s, idx) => 
+                    idx === i ? { ...s, reps: parseInt(v) || 0 } : s
+                  );
                   return updated;
                 });
               }}
               onRestTimeChange={(name, i, v) => {
+                console.log(`Changing rest time for set ${i} of ${name} to ${v}`);
                 handleSetExercises(prev => {
                   const updated = { ...prev };
-                  updated[name] = prev[name].map((s, idx) => idx === i ? { ...s, restTime: parseInt(v) || 60 } : s);
+                  updated[name] = prev[name].map((s, idx) => 
+                    idx === i ? { ...s, restTime: parseInt(v) || 60 } : s
+                  );
                   return updated;
                 });
               }}
@@ -210,6 +228,9 @@ const TrainingSessionPage = () => {
               hasMoreExercises={!!nextExerciseName}
               setExercises={handleSetExercises}
             />
+            
+            {/* Add debug component when in development mode */}
+            {process.env.NODE_ENV !== 'production' && <SetsDebugger />}
           </div>
         </div>
       </main>

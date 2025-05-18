@@ -51,11 +51,13 @@ export function SetRow({
 
   // Handlers for input changes
   const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setWeight(e.target.value);
+    const newValue = e.target.value;
+    setWeight(newValue);
   };
 
   const handleRepsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setReps(e.target.value);
+    const newValue = e.target.value;
+    setReps(newValue);
   };
 
   const handleCompletedChange = (checked: boolean) => {
@@ -74,7 +76,10 @@ export function SetRow({
     setRestTime(isNaN(value) ? 0 : value);
   };
 
+  // Important: Ensure we update the parent component with our changes when input loses focus
   const handleUpdate = () => {
+    console.log('Updating set with weight:', weight, 'reps:', reps);
+    
     // Create updated set object with parsed values
     const updatedSet: ExerciseSet = {
       ...exerciseSet,

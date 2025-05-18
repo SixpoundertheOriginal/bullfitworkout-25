@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Check, ChevronUp, ChevronDown } from 'lucide-react';
@@ -11,34 +11,64 @@ interface SetInputProps {
   exerciseName: string;
   index: number;
   onComplete: () => void;
+  onWeightChange?: (value: string) => void;
+  onRepsChange?: (value: string) => void;
 }
 
 export const SetInput: React.FC<SetInputProps> = ({
   set,
   exerciseName,
   index,
-  onComplete
+  onComplete,
+  onWeightChange,
+  onRepsChange
 }) => {
   const { weightUnit } = useWeightUnit();
-  const [weight, setWeight] = useState(set.weight.toString());
-  const [reps, setReps] = useState(set.reps.toString());
+  const [weight, setWeight] = useState(set.weight ? set.weight.toString() : "0");
+  const [reps, setReps] = useState(set.reps ? set.reps.toString() : "0");
+
+  // Sync with incoming props when they change
+  useEffect(() => {
+    if (set.weight !== undefined) {
+      setWeight(set.weight.toString());
+    }
+    if (set.reps !== undefined) {
+      setReps(set.reps.toString());
+    }
+  }, [set.weight, set.reps]);
 
   const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setWeight(e.target.value);
+    const newValue = e.target.value;
+    setWeight(newValue);
+    if (onWeightChange) {
+      onWeightChange(newValue);
+    }
   };
 
   const handleRepsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setReps(e.target.value);
+    const newValue = e.target.value;
+    setReps(newValue);
+    if (onRepsChange) {
+      onRepsChange(newValue);
+    }
   };
 
   const handleWeightIncrement = (inc: number) => {
     const currentWeight = parseFloat(weight) || 0;
-    setWeight((currentWeight + inc).toString());
+    const newValue = (currentWeight + inc).toString();
+    setWeight(newValue);
+    if (onWeightChange) {
+      onWeightChange(newValue);
+    }
   };
 
   const handleRepsIncrement = (inc: number) => {
     const currentReps = parseInt(reps) || 0;
-    setReps(Math.max(1, currentReps + inc).toString());
+    const newValue = Math.max(1, currentReps + inc).toString();
+    setReps(newValue);
+    if (onRepsChange) {
+      onRepsChange(newValue);
+    }
   };
 
   const handleComplete = () => {

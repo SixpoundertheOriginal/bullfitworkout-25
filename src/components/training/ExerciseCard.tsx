@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Exercise, ExerciseSet } from '@/types/exercise';
 import { CommonExerciseCard } from '../exercises/CommonExerciseCard';
@@ -85,6 +86,8 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
   const handleSetUpdate = (updatedSet: ExerciseSet) => {
     if (!sets) return;
     
+    console.log("ExerciseCard - handling set update:", updatedSet);
+    
     const setIndex = sets.findIndex(s => 
       s.set_number === updatedSet.set_number || s.id === updatedSet.id
     );
@@ -95,15 +98,15 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
       onCompleteSet(setIndex);
     }
     
-    if (onWeightChange && updatedSet.weight !== sets[setIndex].weight) {
+    if (onWeightChange && updatedSet.weight !== undefined && updatedSet.weight !== sets[setIndex].weight) {
       onWeightChange(setIndex, updatedSet.weight.toString());
     }
     
-    if (onRepsChange && updatedSet.reps !== sets[setIndex].reps) {
+    if (onRepsChange && updatedSet.reps !== undefined && updatedSet.reps !== sets[setIndex].reps) {
       onRepsChange(setIndex, updatedSet.reps.toString());
     }
     
-    if (onRestTimeChange && updatedSet.restTime !== sets[setIndex].restTime) {
+    if (onRestTimeChange && updatedSet.restTime !== undefined && updatedSet.restTime !== sets[setIndex].restTime) {
       onRestTimeChange(setIndex, updatedSet.restTime.toString());
     }
   };

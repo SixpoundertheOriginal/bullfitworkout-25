@@ -1,389 +1,360 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { toast } from "@/hooks/use-toast";
-import { useWorkoutStore } from '@/store/workoutStore';
-import { useSound } from '@/hooks/useSound';
-import { TrainingConfig } from '@/hooks/useTrainingSetupPersistence';
-import { useWorkoutSave } from "@/hooks/useWorkoutSave";
-import { adaptExerciseSets, adaptToStoreFormat } from "@/utils/exerciseAdapter";
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useWorkoutStore } from '@/store/workout';
+import { useWorkoutSave } from '@/hooks/useWorkoutSave';
+import { useTrainingSetupPersistence } from '@/hooks/useTrainingSetupPersistence';
+import { useNavigate } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
+import { shallow } from 'zustand/shallow';
+import { ExerciseSet } from '@/types/exercise';
 
-export function useTrainingSession() {
+export const useTrainingSession = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { play: playBell } = useSound('/sounds/bell.mp3');
-  const { play: playTick } = useSound('/sounds/tick.mp3');
-  const { play: playSuccess } = useSound('/sounds/success.mp3');
   
+  // Extract workout state from the store
   const {
-    exercises: storeExercises,
-    setExercises: setStoreExercises,
+    exercises,
     activeExercise,
-    setActiveExercise,
     elapsedTime,
-    resetSession,
-    restTimerActive,
-    setRestTimerActive,
-    currentRestTime,
-    setCurrentRestTime,
-    handleCompleteSet,
-    workoutStatus,
-    markAsSaving,
-    markAsFailed,
-    workoutId,
-    deleteExercise,
-    startWorkout,
-    updateLastActiveRoute,
-    trainingConfig,
     isActive,
-    setTrainingConfig,
-    setWorkoutStatus,
-    focusedExercise,
-    focusedSetIndex,
-    setFocusedExercise,
-    setFocusedSetIndex,
+    workoutStatus,
+    workoutId,
+    restTimerActive,
+    setExercises,
+    handleCompleteSet,
+    deleteExercise,
+    trainingConfig,
+    resetSession,
+    startWorkout,
+    endWorkout,
     postSetFlow,
     setPostSetFlow,
     lastCompletedExercise,
     lastCompletedSetIndex,
-    submitSetRating
-  } = useWorkoutStore();
-  
-  // Initialize the useWorkoutSave hook
-  const { 
-    handleCompleteWorkout,
-    saveStatus,
-    savingErrors,
-    workoutId: savedWorkoutId 
-  } = useWorkoutSave(storeExercises, elapsedTime, resetSession);
-
-  // Convert store exercises to the format expected by components
-  const exercises = adaptExerciseSets(storeExercises);
-  
-  const [completedSets, totalSets] = Object.entries(exercises).reduce(
-    ([completed, total], [_, sets]) => [
-      completed + sets.filter(s => s.completed).length,
-      total + sets.length
-    ],
-    [0, 0]
+    focusedExercise,
+    setFocusedExercise,
+    submitSetRating,
+    currentRestTime,
+  } = useWorkoutStore(
+    state => ({
+      exercises: state.exercises,
+      activeExercise: state.activeExercise,
+      elapsedTime: state.elapsedTime,
+      isActive: state.isActive,
+      workoutStatus: state.workoutStatus,
+      workoutId: state.workoutId,
+      restTimerActive: state.restTimerActive,
+      setExercises: state.setExercises,
+      handleCompleteSet: state.handleCompleteSet,
+      deleteExercise: state.deleteExercise,
+      trainingConfig: state.trainingConfig,
+      resetSession: state.resetSession,
+      startWorkout: state.startWorkout,
+      endWorkout: state.endWorkout,
+      postSetFlow: state.postSetFlow,
+      setPostSetFlow: state.setPostSetFlow,
+      lastCompletedExercise: state.lastCompletedExercise,
+      lastCompletedSetIndex: state.lastCompletedSetIndex,
+      focusedExercise: state.focusedExercise,
+      setFocusedExercise: state.setFocusedExercise,
+      submitSetRating: state.submitSetRating,
+      currentRestTime: state.currentRestTime,
+    }),
+    shallow
   );
+
+  // Training setup persistence
+  const { loadTrainingConfig, saveTrainingPreferences } = useTrainingSetupPersistence();
   
-  const [isAddExerciseSheetOpen, setIsAddExerciseSheetOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  // Workout save logic
+  const {
+    saveStatus,
+    handleCompleteWorkout,
+    attemptRecovery,
+    workoutId: savedWorkoutId
+  } = useWorkoutSave(exercises, elapsedTime, resetSession);
+  
+  // UI State
   const [showRestTimerModal, setShowRestTimerModal] = useState(false);
   const [showEnhancedRestTimer, setShowEnhancedRestTimer] = useState(false);
   const [restTimerResetSignal, setRestTimerResetSignal] = useState(0);
-  const [pageLoaded, setPageLoaded] = useState(false);
-  const [nextSetRecommendation, setNextSetRecommendation] = useState(null);
-  const [motivationalMessage, setMotivationalMessage] = useState('');
-  const [volumeStats, setVolumeStats] = useState('');
+  const [isAddExerciseSheetOpen, setIsAddExerciseSheetOpen] = useState(false);
   const [showCompletionConfirmation, setShowCompletionConfirmation] = useState(false);
   const [completedExerciseName, setCompletedExerciseName] = useState<string | null>(null);
-  const [nextExerciseName, setNextExerciseName] = useState<string | null>(null);
   const [isRatingSheetOpen, setIsRatingSheetOpen] = useState(false);
-
-  const exerciseCount = Object.keys(exercises).length;
-  const hasExercises = exerciseCount > 0;
-
-  useEffect(() => { setPageLoaded(true); }, []);
-
-  useEffect(() => {
-    if (Object.keys(exercises).length > 0 && workoutStatus === 'saving') {
-      setIsSaving(false);
-      if (isActive) setWorkoutStatus('active');
-    }
-  }, [exercises, workoutStatus, isActive, setWorkoutStatus]);
-
-  useEffect(() => {
-    if (location.pathname === '/training-session') {
-      updateLastActiveRoute('/training-session');
-    }
-  }, [location.pathname, updateLastActiveRoute]);
-
-  useEffect(() => {
-    if (pageLoaded && workoutStatus === 'idle' && hasExercises) {
-      startWorkout();
-    }
-  }, [pageLoaded, workoutStatus, hasExercises, startWorkout]);
-
-  useEffect(() => {
-    if (location.state?.trainingConfig && !isActive) {
-      setTrainingConfig(location.state.trainingConfig);
-    }
-    if (location.state?.fromDiscard) {
-      setIsSaving(false);
-    }
-  }, [location.state, isActive, setTrainingConfig]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get('reset') === 'true') {
-      resetSession();
-      toast.info("Workout session reset");
-      navigate('/training-session', { replace: true });
-    }
-  }, [location.search, resetSession, navigate]);
-
-  // Track saved workout ID and navigate when save is successful
-  useEffect(() => {
-    if (saveStatus === 'saved' && savedWorkoutId) {
-      console.log('Workout saved successfully, navigating to complete page with ID:', savedWorkoutId);
-      navigate(`/workout-complete/${savedWorkoutId}`);
-    }
-  }, [saveStatus, savedWorkoutId, navigate]);
-
-  // Handle save errors
-  useEffect(() => {
-    if (saveStatus === 'failed' && savingErrors.length > 0) {
-      setIsSaving(false);
-      const errorMessage = savingErrors[0]?.message || 'Failed to save workout';
-      toast.error("Save Error", { description: errorMessage });
-    }
-  }, [saveStatus, savingErrors]);
-
-  // Exit focus mode when exercise is deleted
-  useEffect(() => {
-    if (focusedExercise && !exercises[focusedExercise]) {
-      setFocusedExercise(null);
-    }
-  }, [exercises, focusedExercise, setFocusedExercise]);
-
-  // Handle post-set flow state changes
-  useEffect(() => {
-    if (postSetFlow === 'rating' && lastCompletedExercise && lastCompletedSetIndex !== null) {
-      setIsRatingSheetOpen(true);
-      
-      // Generate next set recommendation
-      if (lastCompletedExercise && 
-          lastCompletedSetIndex !== null && 
-          storeExercises[lastCompletedExercise]?.length > lastCompletedSetIndex + 1) {
-        
-        const currentSet = storeExercises[lastCompletedExercise][lastCompletedSetIndex];
-        const nextSetIndex = lastCompletedSetIndex + 1;
-        const nextSet = storeExercises[lastCompletedExercise][nextSetIndex];
-        
-        // Generate motivational content
-        const motivational = generateMotivationalContent(
-          lastCompletedExercise, 
-          currentSet,
-          []
-        );
-        setMotivationalMessage(motivational);
-        
-        // Calculate volume stats
-        const stats = calculateVolumeStats(
-          lastCompletedExercise,
-          storeExercises[lastCompletedExercise]
-        );
-        setVolumeStats(stats.message);
-      }
-    } else if (postSetFlow === 'resting') {
-      setIsRatingSheetOpen(false);
-      setShowEnhancedRestTimer(true);
-      triggerRestTimerReset();
-    } else if (postSetFlow === 'idle') {
-      setIsRatingSheetOpen(false);
-      setShowEnhancedRestTimer(false);
-    }
-  }, [postSetFlow, lastCompletedExercise, lastCompletedSetIndex, storeExercises]);
-
-  const triggerRestTimerReset = () => setRestTimerResetSignal(x => x + 1);
-
-  // Define the onAddSet function to add a basic set to an exercise
-  const handleAddSet = (exerciseName: string) => {
-    setStoreExercises(prev => ({
-      ...prev,
-      [exerciseName]: [...prev[exerciseName], { weight: 0, reps: 0, restTime: 60, completed: false, isEditing: false }]
-    }));
-  };
-
-  const handleAddExercise = (exercise: any) => {
-    const name = typeof exercise === 'string' ? exercise : exercise.name;
-    if (storeExercises[name]) {
-      toast({ title: "Exercise already added", description: `${name} is already in your workout` });
-      return;
-    }
-    setStoreExercises(prev => ({ ...prev, [name]: [{ weight: 0, reps: 0, restTime: 60, completed: false, isEditing: false }] }));
-    setActiveExercise(name);
-    setFocusedExercise(name); // Auto-focus the newly added exercise
-    if (workoutStatus === 'idle') startWorkout();
-    setIsAddExerciseSheetOpen(false);
-    playBell(); // Provide audio feedback for added exercise
-  };
-
-  // Enhanced rest timer helpers
-  const getNextSetDetails = () => {
-    if (!lastCompletedExercise || lastCompletedSetIndex === null) return null;
-    
-    const sets = storeExercises[lastCompletedExercise];
-    if (!sets || lastCompletedSetIndex + 1 >= sets.length) return null;
-    
-    return sets[lastCompletedSetIndex + 1];
-  };
-
-  const handleShowRestTimer = () => { 
-    setRestTimerActive(true); 
-    setShowRestTimerModal(true); 
-    playBell(); 
-  };
   
-  const handleRestTimerComplete = () => { 
-    setRestTimerActive(false);
+  // Derived state
+  const hasExercises = useMemo(() => Object.keys(exercises).length > 0, [exercises]);
+  const exerciseCount = useMemo(() => Object.keys(exercises).length, [exercises]);
+  
+  const totalSets = useMemo(() => {
+    return Object.values(exercises).reduce((total, sets) => total + sets.length, 0);
+  }, [exercises]);
+  
+  const completedSets = useMemo(() => {
+    return Object.values(exercises).reduce((total, sets) => {
+      return total + sets.filter(set => set.completed).length;
+    }, 0);
+  }, [exercises]);
+  
+  const nextExerciseName = useMemo(() => {
+    if (!focusedExercise) return null;
+    
+    const exerciseKeys = Object.keys(exercises);
+    const currentIndex = exerciseKeys.indexOf(focusedExercise);
+    
+    if (currentIndex >= 0 && currentIndex < exerciseKeys.length - 1) {
+      return exerciseKeys[currentIndex + 1];
+    }
+    
+    return null;
+  }, [exercises, focusedExercise]);
+  
+  const isSaving = workoutStatus === 'saving';
+  
+  // Initialize workout if coming from a setup flow
+  useEffect(() => {
+    // Only start if not already active and has exercises
+    if (!isActive && hasExercises) {
+      console.log('Starting new workout from existing exercises');
+      startWorkout();
+    } else if (!isActive && !hasExercises) {
+      // Try to load saved config
+      const config = loadTrainingConfig();
+      if (config) {
+        console.log('Found saved training config:', config);
+      }
+    }
+  }, [isActive, hasExercises, startWorkout]);
+  
+  // Update UI state when post-set flow changes
+  useEffect(() => {
+    if (postSetFlow === 'rating') {
+      setIsRatingSheetOpen(true);
+    } else if (postSetFlow === 'resting') {
+      setShowEnhancedRestTimer(true);
+    }
+  }, [postSetFlow]);
+  
+  // Specialized sets update handling
+  const handleSetExercises = useCallback((updater: any) => {
+    if (typeof updater === 'function') {
+      // Call function updater with current exercises state
+      setExercises(currentExercises => {
+        // Log current state
+        console.log('Current exercises state:', currentExercises);
+        
+        // Call updater to get new state
+        const newExercises = updater(currentExercises);
+        
+        // Log the result
+        console.log('New exercises state:', newExercises);
+        
+        // Return new state
+        return newExercises;
+      });
+    } else {
+      // Direct object update
+      console.log('Directly setting exercises state:', updater);
+      setExercises(updater);
+    }
+  }, [setExercises]);
+  
+  // Rest timer management
+  const handleShowRestTimer = useCallback(() => {
+    setShowRestTimerModal(true);
+  }, []);
+  
+  const handleRestTimerComplete = useCallback(() => {
     setShowRestTimerModal(false);
     setShowEnhancedRestTimer(false);
     setPostSetFlow('idle');
-    playBell(); 
-  };
-
-  const handleSubmitRating = (rating: number) => {
-    submitSetRating(rating);
-    playSuccess();
-  };
-
-  const handleFocusExercise = (exerciseName: string | null) => {
-    if (focusedExercise === exerciseName) {
-      // Toggle off if clicking the same exercise
-      setFocusedExercise(null);
-      playTick();
-    } else {
-      setFocusedExercise(exerciseName);
-      setFocusedSetIndex(0); // Focus on the first set by default
-      playBell();
-      // Auto scroll to the focused exercise with smooth behavior
-      if (exerciseName) {
-        setTimeout(() => {
-          const element = document.querySelector(`[data-exercise="${exerciseName}"]`);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 100);
-      }
-    }
-  };
-
-  const handleFinishWorkout = async () => {
-    if (!hasExercises) {
-      toast.error("Add at least one exercise before finishing your workout");
+  }, [setPostSetFlow]);
+  
+  const triggerRestTimerReset = useCallback(() => {
+    setRestTimerResetSignal(prev => prev + 1);
+  }, []);
+  
+  // Workout completion
+  const handleFinishWorkout = useCallback(async () => {
+    if (completedSets === 0) {
+      toast.error("No sets completed", { 
+        description: "Please complete at least one set before finishing your workout."
+      });
       return;
     }
     
-    try {
-      setIsSaving(true);
-      markAsSaving();
-      
-      // Save the workout using the useWorkoutSave hook
-      const savedId = await handleCompleteWorkout(trainingConfig);
-      
-      // If save failed or returned null, handle the error
-      if (!savedId) {
-        setIsSaving(false);
-        toast.error("Failed to save workout");
-        return;
+    const result = await handleCompleteWorkout(trainingConfig);
+    if (result) {
+      // Save user's workout preferences
+      if (trainingConfig) {
+        saveTrainingPreferences(trainingConfig);
       }
       
-    } catch (err) {
-      console.error("Error saving workout data:", err);
-      setIsSaving(false);
-      markAsFailed({ 
-        type: 'unknown', 
-        message: err instanceof Error ? err.message : 'Save failed', 
-        timestamp: new Date().toISOString(), 
-        recoverable: true 
+      toast.success("Workout saved successfully!");
+      navigate('/workout-complete', { replace: true });
+    }
+  }, [completedSets, handleCompleteWorkout, trainingConfig, navigate, saveTrainingPreferences]);
+  
+  // Exercise focus management
+  const handleFocusExercise = useCallback((exerciseName: string) => {
+    setFocusedExercise(exerciseName);
+  }, [setFocusedExercise]);
+  
+  // Exercise management
+  const handleAddExercise = useCallback((exerciseName: string) => {
+    if (exercises[exerciseName]) {
+      toast({
+        title: `${exerciseName} is already in your workout`,
+        description: "You can add additional sets to the existing exercise."
       });
-      toast.error("Failed to complete workout");
+      return;
     }
-  };
-
-  const attemptRecovery = () => {
-    console.log("Recovery attempt for workout:", workoutId);
-    toast.info("Attempting to recover workout data...");
-  };
-
-  const handleNextExercise = useCallback(() => {
-    if (!focusedExercise) return;
     
-    // Get ordered list of exercise names
-    const exerciseNames = Object.keys(exercises);
-    const currentIndex = exerciseNames.indexOf(focusedExercise);
+    // Add new exercise with default 3 sets
+    const newSets = Array.from({ length: 3 }, (_, i) => ({
+      id: `temp-${Date.now()}-${i}`,
+      weight: 0,
+      reps: 0,
+      set_number: i + 1,
+      completed: false,
+      restTime: 60,
+      isEditing: false
+    }));
     
-    // If we have a next exercise, focus on it
-    if (currentIndex >= 0 && currentIndex < exerciseNames.length - 1) {
-      const nextName = exerciseNames[currentIndex + 1];
-      setFocusedExercise(nextName);
+    setExercises(prev => ({
+      ...prev,
+      [exerciseName]: newSets
+    }));
+    
+    // Auto-focus the new exercise
+    setFocusedExercise(exerciseName);
+    
+    toast({
+      title: `${exerciseName} added to workout`,
+      variant: "default"
+    });
+  }, [exercises, setExercises, setFocusedExercise]);
+  
+  const handleAddSet = useCallback((exerciseName: string) => {
+    setExercises(prev => {
+      const currentSets = prev[exerciseName] || [];
+      const nextSetNumber = currentSets.length > 0 
+        ? Math.max(...currentSets.map(s => s.set_number)) + 1 
+        : 1;
       
-      // Auto scroll to the focused exercise with smooth behavior
-      setTimeout(() => {
-        const element = document.querySelector(`[data-exercise="${nextName}"]`);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 100);
-
-      playBell();
-      // Show toast with next exercise
-      toast.info(`Switched to ${nextName}`);
-    }
-  }, [focusedExercise, exercises, setFocusedExercise, playBell]);
-
-  const handleCompleteExercise = useCallback(() => {
-    if (!focusedExercise) return;
+      // Get weight and reps from last set as a starting point
+      let weight = 0;
+      let reps = 0;
+      
+      if (currentSets.length > 0) {
+        const lastSet = currentSets[currentSets.length - 1];
+        weight = lastSet.weight || 0;
+        reps = lastSet.reps || 0;
+      }
+      
+      const newSet: ExerciseSet = {
+        id: `temp-${Date.now()}`,
+        weight,
+        reps,
+        set_number: nextSetNumber,
+        completed: false,
+        restTime: 60,
+        isEditing: false
+      };
+      
+      return {
+        ...prev,
+        [exerciseName]: [...currentSets, newSet]
+      };
+    });
+  }, [setExercises]);
+  
+  const handleCompleteExercise = useCallback((exerciseName: string) => {
+    // Mark all sets as completed
+    setExercises(prev => {
+      const currentSets = prev[exerciseName] || [];
+      return {
+        ...prev,
+        [exerciseName]: currentSets.map(set => ({ ...set, completed: true }))
+      };
+    });
     
-    setCompletedExerciseName(focusedExercise);
-    
-    // Get the next exercise if available
-    const exerciseNames = Object.keys(exercises);
-    const currentIndex = exerciseNames.indexOf(focusedExercise);
-    
-    if (currentIndex >= 0 && currentIndex < exerciseNames.length - 1) {
-      setNextExerciseName(exerciseNames[currentIndex + 1]);
-    } else {
-      setNextExerciseName(null);
-    }
-    
-    playSuccess();
+    setCompletedExerciseName(exerciseName);
     setShowCompletionConfirmation(true);
+  }, [setExercises]);
+  
+  const handleNextExercise = useCallback(() => {
+    setShowCompletionConfirmation(false);
     
-  }, [focusedExercise, exercises, playSuccess]);
+    if (nextExerciseName) {
+      setFocusedExercise(nextExerciseName);
+    } else {
+      // No more exercises, prompt to finish workout
+      toast({
+        title: "All exercises completed!",
+        description: "You've completed all exercises in this workout.",
+        action: {
+          label: "Finish Workout",
+          onClick: handleFinishWorkout
+        }
+      });
+    }
+  }, [nextExerciseName, setFocusedExercise, handleFinishWorkout]);
+  
+  // Rating submission
+  const handleSubmitRating = useCallback((rpe: number) => {
+    submitSetRating(rpe);
+    setIsRatingSheetOpen(false);
+  }, [submitSetRating]);
 
-  // Update nextExerciseName when focused exercise changes
-  useEffect(() => {
-    if (focusedExercise) {
-      const exerciseNames = Object.keys(exercises);
-      const currentIndex = exerciseNames.indexOf(focusedExercise);
+  // Get next set details for display in rest timer
+  const getNextSetDetails = useCallback(() => {
+    if (!lastCompletedExercise || lastCompletedSetIndex === null) {
+      return null;
+    }
+    
+    const exerciseSets = exercises[lastCompletedExercise];
+    if (!exerciseSets) return null;
+    
+    // Check if there is a next set for this exercise
+    const nextSetIndex = lastCompletedSetIndex + 1;
+    if (nextSetIndex < exerciseSets.length) {
+      return {
+        exerciseName: lastCompletedExercise,
+        setNumber: exerciseSets[nextSetIndex].set_number,
+        weight: exerciseSets[nextSetIndex].weight,
+        reps: exerciseSets[nextSetIndex].reps,
+        isLastSet: nextSetIndex === exerciseSets.length - 1
+      };
+    }
+    
+    // If no next set in current exercise, find the next exercise
+    const exerciseNames = Object.keys(exercises);
+    const currentExerciseIndex = exerciseNames.indexOf(lastCompletedExercise);
+    const nextExerciseIndex = currentExerciseIndex + 1;
+    
+    if (nextExerciseIndex < exerciseNames.length) {
+      const nextExercise = exerciseNames[nextExerciseIndex];
+      const nextExerciseSets = exercises[nextExercise];
       
-      if (currentIndex >= 0 && currentIndex < exerciseNames.length - 1) {
-        setNextExerciseName(exerciseNames[currentIndex + 1]);
-      } else {
-        setNextExerciseName(null);
+      if (nextExerciseSets && nextExerciseSets.length > 0) {
+        return {
+          exerciseName: nextExercise,
+          setNumber: nextExerciseSets[0].set_number,
+          weight: nextExerciseSets[0].weight,
+          reps: nextExerciseSets[0].reps,
+          isNewExercise: true
+        };
       }
     }
-  }, [focusedExercise, exercises]);
-
-  // Set up the adapter function to convert between the different exercise formats
-  const handleSetExercises = (updatedExercises: any) => {
-    if (typeof updatedExercises === 'function') {
-      setStoreExercises(prev => adaptToStoreFormat(updatedExercises(adaptExerciseSets(prev))));
-    } else {
-      setStoreExercises(adaptToStoreFormat(updatedExercises));
-    }
-  };
-
-  // Import these from setRecommendations.ts
-  const generateMotivationalContent = (exerciseName: string, currentSet: any, previousSets: any[]) => {
-    return `Great job on that set!`;
-  };
-
-  const calculateVolumeStats = (exerciseName: string, sets: any[]) => {
-    return {
-      message: `You've lifted ${sets.reduce((total, set) => 
-        total + (set.completed ? (set.weight * set.reps) : 0), 0)} total kg with this exercise.`
-    };
-  };
+    
+    return null;
+  }, [lastCompletedExercise, lastCompletedSetIndex, exercises]);
 
   return {
-    // Core state
+    // State
     exercises,
-    storeExercises,
     activeExercise,
     elapsedTime,
     hasExercises,
@@ -430,11 +401,13 @@ export function useTrainingSession() {
     triggerRestTimerReset,
     getNextSetDetails,
     
-    // UI state setters - make sure to include these!
+    // UI state setters
     setShowCompletionConfirmation,
     setPostSetFlow,
-    setRestTimerActive,
+    setRestTimerActive: (active: boolean) => {
+      useWorkoutStore.getState().setRestTimerActive(active);
+    },
     setShowEnhancedRestTimer,
     setShowRestTimerModal
   };
-}
+};
