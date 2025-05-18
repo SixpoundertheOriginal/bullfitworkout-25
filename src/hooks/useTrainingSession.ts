@@ -70,6 +70,7 @@ export const useTrainingSession = () => {
   const { storedConfig, saveConfig } = useTrainingSetupPersistence();
   
   // Fix for error #1: The loadTrainingConfig function doesn't expect arguments
+  // Modify to simply return the stored config without any arguments
   const loadTrainingConfig = useCallback(() => {
     // Simply return the stored config without any arguments
     return storedConfig;
@@ -88,10 +89,12 @@ export const useTrainingSession = () => {
   } = useWorkoutSave(exercises, elapsedTime, resetSession);
   
   // Fix for error #2: Create a wrapper for attemptRecovery with the proper signature
+  // Check the type of rawAttemptRecovery and ensure our wrapper matches
   const attemptRecovery = useCallback(async () => {
     if (workoutId) {
-      // Pass the workoutId and required arguments in the expected order
-      return rawAttemptRecovery(workoutId, 'manual', {});
+      // Fix: This needs to align with what rawAttemptRecovery expects
+      // Based on error TS2554, it seems rawAttemptRecovery expects 1 argument
+      return rawAttemptRecovery(workoutId);
     }
     return Promise.resolve(false);
   }, [rawAttemptRecovery, workoutId]);
