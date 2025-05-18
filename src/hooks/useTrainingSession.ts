@@ -199,7 +199,8 @@ export const useTrainingSession = () => {
       return;
     }
     
-    const result = await handleCompleteWorkout(trainingConfig);
+    // Fix: Call handleCompleteWorkout without passing trainingConfig as parameter
+    const result = await handleCompleteWorkout();
     if (result) {
       // Save user's workout preferences
       if (trainingConfig) {
@@ -340,7 +341,7 @@ export const useTrainingSession = () => {
     const nextSetIndex = lastCompletedSetIndex + 1;
     if (nextSetIndex < exerciseSets.length) {
       const nextSet = exerciseSets[nextSetIndex];
-      // Access set number safely through index
+      // Access set number through index instead of metadata
       const setNumber = nextSetIndex + 1;
       
       return {
@@ -363,7 +364,7 @@ export const useTrainingSession = () => {
       
       if (nextExerciseSets && nextExerciseSets.length > 0) {
         const nextSet = nextExerciseSets[0];
-        // Access set number safely through index 
+        // Use index + 1 for set number
         const setNumber = 1;
         
         return {

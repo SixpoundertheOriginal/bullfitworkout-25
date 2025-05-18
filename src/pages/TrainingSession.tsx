@@ -111,7 +111,7 @@ const TrainingSessionPage = () => {
               workoutStatus={workoutStatus}
               isRecoveryMode={!!workoutId}
               saveProgress={0}
-              onRetrySave={attemptRecovery} // FIXED: No argument needed here
+              onRetrySave={attemptRecovery} // Fixed: Pass the function directly
               onResetWorkout={() => {}}
               restTimerActive={restTimerActive}
               onRestTimerComplete={handleRestTimerComplete}
