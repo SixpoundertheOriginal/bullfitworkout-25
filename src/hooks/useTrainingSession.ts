@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useWorkoutStore } from '@/store/workout';
 import { useWorkoutSave } from '@/hooks/useWorkoutSave';
@@ -84,7 +83,7 @@ export const useTrainingSession = () => {
     workoutId: savedWorkoutId
   } = useWorkoutSave();
   
-  // Fix for error #2 and #3: Create a wrapper for attemptRecovery with the proper signature
+  // Fix for error #2: Create a wrapper for attemptRecovery with the proper signature
   const attemptRecovery = useCallback(() => {
     // The raw function expects 1 argument based on the error message
     if (workoutId) {
@@ -211,9 +210,8 @@ export const useTrainingSession = () => {
       return;
     }
     
-    // Call handleCompleteWorkout without parameters
-    // Fix for error #2: handleCompleteWorkout expects no arguments
-    const result = await handleCompleteWorkout();
+    // Fix for error #2: handleCompleteWorkout expects 3 arguments
+    const result = await handleCompleteWorkout(workoutId, 'normal', null);
     if (result) {
       // Save user's workout preferences
       if (trainingConfig) {
@@ -226,7 +224,7 @@ export const useTrainingSession = () => {
       });
       navigate('/workout-complete', { replace: true });
     }
-  }, [completedSets, handleCompleteWorkout, trainingConfig, navigate, saveTrainingPreferences]);
+  }, [completedSets, handleCompleteWorkout, trainingConfig, navigate, saveTrainingPreferences, workoutId]);
   
   // Exercise focus management
   const handleFocusExercise = useCallback((exerciseName: string) => {
