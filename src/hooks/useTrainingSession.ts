@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useWorkoutStore } from '@/store/workout';
 import { useWorkoutSave } from '@/hooks/useWorkoutSave';
@@ -230,14 +229,17 @@ export const useTrainingSession = () => {
       return;
     }
     
-    // Add new exercise with default 3 sets
+    // Add new exercise with default 3 sets - with type-safe metadata
     const newSets: ExerciseSet[] = Array.from({ length: 3 }, (_, i) => ({
       weight: 0,
       reps: 0,
       restTime: 60,
       completed: false,
       isEditing: false,
-      metadata: { set_number: i + 1 }
+      metadata: { 
+        autoAdjusted: false,
+        previousValues: { weight: 0, reps: 0, restTime: 60 }
+      }
     }));
     
     setExercises(prev => ({
@@ -274,7 +276,10 @@ export const useTrainingSession = () => {
         restTime: 60,
         completed: false,
         isEditing: false,
-        metadata: { set_number: currentSets.length + 1 }
+        metadata: { 
+          autoAdjusted: false,
+          previousValues: { weight, reps, restTime: 60 }
+        }
       };
       
       return {
@@ -335,7 +340,8 @@ export const useTrainingSession = () => {
     const nextSetIndex = lastCompletedSetIndex + 1;
     if (nextSetIndex < exerciseSets.length) {
       const nextSet = exerciseSets[nextSetIndex];
-      const setNumber = nextSet.metadata?.set_number || nextSetIndex + 1;
+      // Access set number safely through index
+      const setNumber = nextSetIndex + 1;
       
       return {
         exerciseName: lastCompletedExercise,
@@ -357,7 +363,8 @@ export const useTrainingSession = () => {
       
       if (nextExerciseSets && nextExerciseSets.length > 0) {
         const nextSet = nextExerciseSets[0];
-        const setNumber = nextSet.metadata?.set_number || 1;
+        // Access set number safely through index 
+        const setNumber = 1;
         
         return {
           exerciseName: nextExercise,
