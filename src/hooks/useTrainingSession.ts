@@ -84,8 +84,12 @@ export const useTrainingSession = () => {
   
   // Fix for error #2: Create a wrapper for attemptRecovery with the proper signature
   const attemptRecovery = useCallback(() => {
-    // Pass workoutId as expected by the function
-    return rawAttemptRecovery(workoutId || '');
+    // Instead of using a direct call with (workoutId || ''), which expects 3 args total
+    // We need to adapt to the right function signature
+    if (workoutId) {
+      return rawAttemptRecovery(workoutId, null, null);
+    }
+    return Promise.resolve(false);
   }, [rawAttemptRecovery, workoutId]);
   
   // UI State
