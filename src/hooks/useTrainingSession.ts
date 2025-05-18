@@ -210,8 +210,12 @@ export const useTrainingSession = () => {
       return;
     }
     
-    // Fix for error #2: handleCompleteWorkout expects 3 arguments
-    const result = await handleCompleteWorkout(workoutId, 'normal', null);
+    // Fix for error #3: handleCompleteWorkout expects 0-1 arguments
+    // Use the workoutId as the single argument or call without arguments if no ID
+    const result = await (workoutId 
+      ? handleCompleteWorkout(workoutId)
+      : handleCompleteWorkout());
+      
     if (result) {
       // Save user's workout preferences
       if (trainingConfig) {
