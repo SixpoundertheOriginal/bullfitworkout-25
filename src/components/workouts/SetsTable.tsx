@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SetRow } from '@/components/SetRow';
 import { ExerciseSet } from '@/types/exercise';
@@ -64,20 +65,9 @@ export function SetsTable({
             Sets ({completedSetsCount}/{sets.length} completed)
           </span>
         </div>
-        {onAddSet && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 text-xs bg-purple-600/30 border-purple-500/30 text-purple-300 hover:text-purple-200 hover:bg-purple-600/40"
-            onClick={onAddSet}
-          >
-            <Plus className="h-3.5 w-3.5 mr-1" />
-            Add Set
-          </Button>
-        )}
+        {/* Removed the "Add Set" button from the header */}
       </div>
       
-      {/* Table content - keep existing code except the expanded section and compact view */}
       {expanded && (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -107,20 +97,7 @@ export function SetsTable({
             </tbody>
           </table>
           
-          {/* Add Set button at the bottom of the expanded table for better visibility */}
-          {onAddSet && (
-            <div className="flex justify-center py-2 bg-gray-800/30">
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-purple-600/20 border-purple-500/20 hover:bg-purple-600/30 text-purple-300"
-                onClick={onAddSet}
-              >
-                <Plus className="h-3.5 w-3.5 mr-1" />
-                Add Set
-              </Button>
-            </div>
-          )}
+          {/* Removed the "Add Set" button at the bottom of the expanded table */}
         </div>
       )}
       
@@ -142,17 +119,7 @@ export function SetsTable({
             </div>
           ))}
           
-          {/* Add Set button in compact view */}
-          {onAddSet && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 w-7 rounded-full p-0 bg-purple-600/20 border-purple-500/20 hover:bg-purple-600/30 text-purple-300"
-              onClick={onAddSet}
-            >
-              <Plus className="h-3.5 w-3.5" />
-            </Button>
-          )}
+          {/* Removed the "Add Set" button in compact view */}
         </div>
       )}
     </div>

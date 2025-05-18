@@ -35,6 +35,7 @@ export const useTrainingSession = () => {
     setFocusedExercise,
     submitSetRating,
     currentRestTime,
+    setRestTimerActive: storeSetRestTimerActive
   } = useWorkoutStore(state => ({
     exercises: state.exercises,
     activeExercise: state.activeExercise,
@@ -58,6 +59,7 @@ export const useTrainingSession = () => {
     setFocusedExercise: state.setFocusedExercise,
     submitSetRating: state.submitSetRating,
     currentRestTime: state.currentRestTime,
+    setRestTimerActive: state.setRestTimerActive
   }), shallow);
 
   // Training setup persistence
@@ -206,7 +208,7 @@ export const useTrainingSession = () => {
       
       toast({
         title: "Workout saved successfully!",
-        variant: "success"
+        variant: "default"
       });
       navigate('/workout-complete', { replace: true });
     }
@@ -236,7 +238,7 @@ export const useTrainingSession = () => {
       completed: false,
       restTime: 60,
       isEditing: false
-    }));
+    } as ExerciseSet));
     
     setExercises(prev => ({
       ...prev,
@@ -255,8 +257,9 @@ export const useTrainingSession = () => {
   const handleAddSet = useCallback((exerciseName: string) => {
     setExercises(prev => {
       const currentSets = prev[exerciseName] || [];
+      // Safely access set_number with type checking
       const nextSetNumber = currentSets.length > 0 
-        ? Math.max(...currentSets.map(s => s.set_number !== undefined ? s.set_number : 0)) + 1 
+        ? Math.max(...currentSets.map(s => 'set_number' in s && typeof s.set_number === 'number' ? s.set_number : 0)) + 1 
         : 1;
       
       // Get weight and reps from last set as a starting point
@@ -277,7 +280,7 @@ export const useTrainingSession = () => {
         completed: false,
         restTime: 60,
         isEditing: false
-      };
+      } as ExerciseSet;
       
       return {
         ...prev,
@@ -336,11 +339,15 @@ export const useTrainingSession = () => {
     // Check if there is a next set for this exercise
     const nextSetIndex = lastCompletedSetIndex + 1;
     if (nextSetIndex < exerciseSets.length) {
+      const nextSet = exerciseSets[nextSetIndex];
+      // Safely access set_number with type checking
+      const setNumber = 'set_number' in nextSet ? nextSet.set_number : (nextSetIndex + 1);
+      
       return {
         exerciseName: lastCompletedExercise,
-        setNumber: exerciseSets[nextSetIndex].set_number !== undefined ? exerciseSets[nextSetIndex].set_number : nextSetIndex + 1,
-        weight: exerciseSets[nextSetIndex].weight,
-        reps: exerciseSets[nextSetIndex].reps,
+        setNumber: setNumber,
+        weight: nextSet.weight,
+        reps: nextSet.reps,
         isLastSet: nextSetIndex === exerciseSets.length - 1
       };
     }
@@ -355,11 +362,15 @@ export const useTrainingSession = () => {
       const nextExerciseSets = exercises[nextExercise];
       
       if (nextExerciseSets && nextExerciseSets.length > 0) {
+        const nextSet = nextExerciseSets[0];
+        // Safely access set_number with type checking
+        const setNumber = 'set_number' in nextSet ? nextSet.set_number : 1;
+        
         return {
           exerciseName: nextExercise,
-          setNumber: nextExerciseSets[0].set_number !== undefined ? nextExerciseSets[0].set_number : 1,
-          weight: nextExerciseSets[0].weight,
-          reps: nextExerciseSets[0].reps,
+          setNumber: setNumber,
+          weight: nextSet.weight,
+          reps: nextSet.reps,
           isNewExercise: true
         };
       }
@@ -367,6 +378,11 @@ export const useTrainingSession = () => {
     
     return null;
   }, [lastCompletedExercise, lastCompletedSetIndex, exercises]);
+  
+  // Handle setting rest timer active state
+  const setRestTimerActiveState = useCallback((active: boolean) => {
+    storeSetRestTimerActive(active);
+  }, [storeSetRestTimerActive]);
 
   return {
     // State
@@ -420,9 +436,7 @@ export const useTrainingSession = () => {
     // UI state setters
     setShowCompletionConfirmation,
     setPostSetFlow,
-    setRestTimerActive: (active: boolean) => {
-      useWorkoutStore.getState().setRestTimerActive(active);
-    },
+    setRestTimerActive: setRestTimerActiveState,
     setShowEnhancedRestTimer,
     setShowRestTimerModal
   };

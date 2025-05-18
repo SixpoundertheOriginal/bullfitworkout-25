@@ -16,7 +16,7 @@ interface ExerciseFABProps {
 export const ExerciseFAB: React.FC<ExerciseFABProps> = ({
   visible,
   onAddSet,
-  position = 'bottom-right',
+  position = 'bottom-center',  // Changed default to bottom-center
   className
 }) => {
   const { triggerHaptic } = useHaptics();

@@ -91,6 +91,9 @@ const TrainingSessionPage = () => {
     }
   };
 
+  // Determine if we should show the development debugger
+  const showDebugger = typeof window !== 'undefined' && process.env.NODE_ENV !== 'production';
+
   return (
     <div className="flex flex-col min-h-screen bg-black text-white pt-16 pb-4">
       <main className="flex-1 overflow-auto">
@@ -238,7 +241,7 @@ const TrainingSessionPage = () => {
             />
             
             {/* Only show debugger in development */}
-            {typeof window !== 'undefined' && process.env.NODE_ENV === 'development' && <SetsDebugger />}
+            {showDebugger && <SetsDebugger />}
           </div>
         </div>
       </main>
@@ -261,6 +264,7 @@ const TrainingSessionPage = () => {
       <ExerciseFAB 
         visible={!!focusedExercise && !showRestTimerModal && !showEnhancedRestTimer}
         onAddSet={handleAddSetToFocused}
+        position="bottom-center"
       />
 
       {/* Sheets */}
