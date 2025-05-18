@@ -8,6 +8,10 @@ import { shallow } from 'zustand/shallow';
 import { ExerciseSet } from '@/store/workout/types'; // Ensure we're using the store type
 import { adaptExerciseSets, adaptToStoreFormat } from '@/utils/exerciseAdapter';
 
+// Types for the recovery function
+type AttemptRecoveryFn = (workoutId: string, source: 'manual' | 'auto', meta?: object) => Promise<boolean>;
+type HandleCompleteWorkoutFn = (trainingConfig?: any) => Promise<string | null>;
+
 export const useTrainingSession = () => {
   const navigate = useNavigate();
   
@@ -75,19 +79,18 @@ export const useTrainingSession = () => {
     return saveConfig(config);
   }, [saveConfig]);
   
-  // Workout save logic
+  // Workout save logic - Fix by passing the required arguments from store
   const {
     saveStatus,
-    handleCompleteWorkout,
+    handleCompleteWorkout: rawHandleCompleteWorkout,
     attemptRecovery: rawAttemptRecovery,
     workoutId: savedWorkoutId
-  } = useWorkoutSave();
+  } = useWorkoutSave(exercises, elapsedTime, resetSession);
   
   // Fix for error #2: Create a wrapper for attemptRecovery with the proper signature
   const attemptRecovery = useCallback(async () => {
-    // The raw function expects 3 arguments based on the error message
     if (workoutId) {
-      // Pass the required arguments in the expected order
+      // Pass the workoutId and required arguments in the expected order
       return rawAttemptRecovery(workoutId, 'manual', {});
     }
     return Promise.resolve(false);
@@ -199,7 +202,7 @@ export const useTrainingSession = () => {
     setRestTimerResetSignal(prev => prev + 1);
   }, []);
   
-  // Workout completion
+  // Workout completion - Fix for error #3: handleCompleteWorkout expects just the trainingConfig
   const handleFinishWorkout = useCallback(async () => {
     if (completedSets === 0) {
       toast({
@@ -210,8 +213,8 @@ export const useTrainingSession = () => {
       return;
     }
     
-    // Fix for error #3: handleCompleteWorkout expects just the trainingConfig as the argument
-    const result = await handleCompleteWorkout(trainingConfig);
+    // Pass just the trainingConfig as the single required argument
+    const result = await rawHandleCompleteWorkout(trainingConfig);
       
     if (result) {
       // Save user's workout preferences
@@ -225,7 +228,7 @@ export const useTrainingSession = () => {
       });
       navigate('/workout-complete', { replace: true });
     }
-  }, [completedSets, handleCompleteWorkout, trainingConfig, navigate, saveTrainingPreferences]);
+  }, [completedSets, rawHandleCompleteWorkout, trainingConfig, navigate, saveTrainingPreferences]);
   
   // Exercise focus management
   const handleFocusExercise = useCallback((exerciseName: string) => {
