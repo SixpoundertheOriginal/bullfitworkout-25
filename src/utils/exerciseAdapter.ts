@@ -10,7 +10,19 @@ export function adaptExerciseSets(
 ): Record<string, TypesExerciseSet[]> {
   const adaptedExercises: Record<string, TypesExerciseSet[]> = {};
   
+  // Make sure we're working with valid input
+  if (!storeExercises || typeof storeExercises !== 'object') {
+    console.warn('Invalid storeExercises provided to adaptExerciseSets', storeExercises);
+    return {};
+  }
+  
   Object.entries(storeExercises).forEach(([exerciseName, sets], exerciseIndex) => {
+    // Skip entries with non-string keys (object keys)
+    if (typeof exerciseName !== 'string') {
+      console.warn('Invalid exercise key encountered', exerciseName);
+      return;
+    }
+    
     adaptedExercises[exerciseName] = sets.map((set, index) => ({
       id: `${exerciseName}-set-${index}`,
       set_number: index + 1,
@@ -36,7 +48,19 @@ export function adaptToStoreFormat(
 ): Record<string, StoreExerciseSet[]> {
   const storeExercises: Record<string, StoreExerciseSet[]> = {};
   
+  // Make sure we're working with valid input
+  if (!componentExercises || typeof componentExercises !== 'object') {
+    console.warn('Invalid componentExercises provided to adaptToStoreFormat', componentExercises);
+    return {};
+  }
+  
   Object.entries(componentExercises).forEach(([exerciseName, sets]) => {
+    // Skip entries with non-string keys (object keys)
+    if (typeof exerciseName !== 'string') {
+      console.warn('Invalid exercise key encountered', exerciseName);
+      return;
+    }
+    
     storeExercises[exerciseName] = sets.map(set => ({
       weight: set.weight,
       reps: set.reps,
@@ -55,4 +79,20 @@ export function adaptToStoreFormat(
   });
   
   return storeExercises;
+}
+
+/**
+ * Ensures that an exercise identifier is always a string (name)
+ */
+export function getExerciseName(exercise: string | any): string {
+  if (typeof exercise === 'string') {
+    return exercise;
+  }
+  
+  if (exercise && exercise.name) {
+    return exercise.name;
+  }
+  
+  console.warn('Invalid exercise identifier', exercise);
+  return 'Unknown Exercise';
 }

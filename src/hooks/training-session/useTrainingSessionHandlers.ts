@@ -28,8 +28,13 @@ export const useTrainingSessionHandlers = (
     return saveConfig(config);
   }, [saveConfig]);
 
-  // Exercise management
-  const handleAddExercise = useCallback((exerciseName: string) => {
+  // Exercise management - ensure we're always using exercise name (string)
+  const handleAddExercise = useCallback((exerciseNameOrObject: string | any) => {
+    // Make sure we always use the exercise name as string
+    const exerciseName = typeof exerciseNameOrObject === 'string' 
+      ? exerciseNameOrObject 
+      : (exerciseNameOrObject?.name || "Unknown exercise");
+    
     if (exercises[exerciseName]) {
       toast({
         title: `${exerciseName} is already in your workout`,

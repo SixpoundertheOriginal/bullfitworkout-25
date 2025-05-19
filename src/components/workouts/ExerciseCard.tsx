@@ -5,14 +5,23 @@ import { CommonExerciseCard } from '../exercises/CommonExerciseCard';
 import { ExerciseThumbnail } from '../exercises/cards/ExerciseThumbnail';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { getExerciseName } from '@/utils/exerciseAdapter';
 
 interface ExerciseCardProps {
   exercise: Exercise;
-  onAdd?: (exercise: Exercise) => void;
+  onAdd?: (exerciseName: string) => void;
   className?: string;
 }
 
 export const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onAdd, className }) => {
+  const handleAdd = () => {
+    if (onAdd) {
+      // Always pass the exercise name to avoid React errors with object children
+      const exerciseName = getExerciseName(exercise);
+      onAdd(exerciseName);
+    }
+  };
+
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
@@ -22,7 +31,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onAdd, cla
       <CommonExerciseCard
         exercise={exercise}
         variant="workout-add"
-        onAdd={onAdd ? () => onAdd(exercise) : undefined}
+        onAdd={onAdd ? handleAdd : undefined}
         thumbnail={typeof exercise !== 'string' ? 
           <ExerciseThumbnail 
             exercise={exercise} 

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dumbbell, Plus, Edit, Trash, ChevronRight, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getExerciseName } from '@/utils/exerciseAdapter';
 
 interface ExerciseCardProps {
   exercise: Exercise;
@@ -54,6 +55,9 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
     }
   };
 
+  // Safely get the exercise name for display
+  const exerciseName = getExerciseName(exercise);
+
   return (
     <Card 
       className={cn(
@@ -69,7 +73,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <Dumbbell className="h-4 w-4 text-gray-400" />
-              <h3 className="font-medium text-white">{exercise.name}</h3>
+              <h3 className="font-medium text-white">{exerciseName}</h3>
               {expanded !== undefined && (
                 <Button 
                   variant="ghost" 

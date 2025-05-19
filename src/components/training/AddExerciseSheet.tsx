@@ -11,12 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AllExercisesPage from "@/pages/AllExercisesPage";
-import { ExerciseDialogV2 } from '@/components/ExerciseDialogV2'; // Update import
+import { ExerciseDialogV2 } from '@/components/ExerciseDialogV2';
 
 interface AddExerciseSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelectExercise: (exercise: string | Exercise) => void;
+  onSelectExercise: (exerciseName: string) => void;
   trainingType?: string;
 }
 
@@ -93,9 +93,10 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
       : recentExercises;
   }, [recentExercises, searchQuery]);
 
+  // Modified to always pass exercise name string
   const handleAddExercise = (exercise: Exercise | string) => {
     const exerciseName = typeof exercise === 'string' ? exercise : (exercise?.name || "Unknown exercise");
-    onSelectExercise(exercise);
+    onSelectExercise(exerciseName);
     
     // Close the sheet immediately after selecting an exercise
     onOpenChange(false);
@@ -120,7 +121,7 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
           <span className="text-sm text-gray-400">{muscleGroups}</span>
         </div>
         <Button
-          onClick={() => handleAddExercise(exercise)}
+          onClick={() => handleAddExercise(exercise.name)}
           size="sm"
           variant="outline"
           className="h-9 px-3 rounded-full bg-purple-900/30 border-purple-500/30 hover:bg-purple-800/50"
@@ -140,7 +141,7 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
           className="h-[90vh] rounded-t-xl border-t border-gray-700 bg-gray-900 p-0"
         >
           <AllExercisesPage 
-            onSelectExercise={handleAddExercise}
+            onSelectExercise={(exercise) => handleAddExercise(typeof exercise === 'object' ? exercise.name : exercise)}
             standalone={false}
             onBack={() => setShowAllExercises(false)}
           />
@@ -217,7 +218,7 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
         onOpenChange={setExerciseDialogV2Open}
         mode="add"
         onSubmit={(exercise) => {
-          handleAddExercise(exercise);
+          handleAddExercise(typeof exercise === 'string' ? exercise : exercise.name);
           setExerciseDialogV2Open(false);
         }}
       />

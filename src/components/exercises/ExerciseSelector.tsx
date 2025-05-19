@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Exercise } from "@/types/exercise";
 import { useExerciseSuggestions } from "@/hooks/useExerciseSuggestions";
@@ -9,9 +8,10 @@ import { useExercises } from "@/hooks/useExercises";
 import { rankExercises, getCurrentTimeOfDay, RankingCriteria } from "@/utils/exerciseRankingUtils";
 import { useWorkoutState } from "@/hooks/useWorkoutState";
 import { TrainingStartButton } from "@/components/training/TrainingStartButton";
+import { getExerciseName } from "@/utils/exerciseAdapter";
 
 interface ExerciseSelectorProps {
-  onSelectExercise: (exercise: string | Exercise) => void;
+  onSelectExercise: (exerciseName: string) => void;
   trainingType?: string;
   useLegacyDesign?: boolean;
   className?: string;
@@ -89,6 +89,12 @@ export function ExerciseSelector({
     return rankExercises(combinedExercises, criteria);
   }, [suggestedExercises, recentExercises, trainingType, bodyFocus, movementPattern, timeOfDay, difficulty]);
 
+  // Wrapper to ensure we always pass a string exercise name
+  const handleSelectExercise = (exercise: Exercise | string) => {
+    const exerciseName = getExerciseName(exercise);
+    onSelectExercise(exerciseName);
+  };
+
   // Render start button if requested and no active workout
   if (showStartButton && !isActive) {
     return (
@@ -104,7 +110,7 @@ export function ExerciseSelector({
   if (useLegacyDesign) {
     return (
       <ExerciseQuickSelect
-        onSelectExercise={onSelectExercise}
+        onSelectExercise={handleSelectExercise}
         suggestedExercises={rankedExercises.recommended}
         recentExercises={recentExercises}
         otherExercises={rankedExercises.other}
@@ -116,7 +122,7 @@ export function ExerciseSelector({
 
   return (
     <MinimalisticExerciseSelect
-      onSelectExercise={onSelectExercise}
+      onSelectExercise={handleSelectExercise}
       suggestedExercises={rankedExercises.recommended}
       recentExercises={recentExercises}
       otherExercises={rankedExercises.other}
