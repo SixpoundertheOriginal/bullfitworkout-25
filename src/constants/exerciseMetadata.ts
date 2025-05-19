@@ -1,22 +1,5 @@
 
-import { MuscleGroup, MovementPattern, Difficulty } from '@/types/exercise';
-
-// Common muscle groups
-export const MUSCLE_GROUPS: MuscleGroup[] = [
-  'chest', 'back', 'shoulders', 'arms', 'legs', 'core', 'cardio', 'full body',
-  'biceps', 'triceps', 'forearms', 'traps', 'lats', 'glutes', 'hamstrings',
-  'quads', 'calves', 'abs', 'obliques', 'lower back'
-];
-
-// Movement patterns
-export const MOVEMENT_PATTERNS: MovementPattern[] = [
-  'push', 'pull', 'squat', 'hinge', 'lunge', 'rotation', 'carry', 'isometric', 'locomotion'
-];
-
-// Difficulty levels
-export const DIFFICULTY_LEVELS: Difficulty[] = [
-  'beginner', 'intermediate', 'advanced', 'expert'
-];
+import { MuscleGroup, MovementPattern, Difficulty, MUSCLE_GROUPS, MOVEMENT_PATTERNS, DIFFICULTY_LEVELS } from '@/types/exercise';
 
 // Muscle group categories for organization
 export interface MuscleGroupCategory {

@@ -86,7 +86,7 @@ export function WorkoutCalendarTab() {
         if (!setsByWorkout[set.workout_id]) {
           setsByWorkout[set.workout_id] = [];
         }
-        setsByWorkout[set.workout_id].push(set as ExerciseSet);
+        setsByWorkout[set.workout_id].push(mapToExerciseSet(set));
       });
       
       return setsByWorkout || {};
@@ -197,6 +197,20 @@ export function WorkoutCalendarTab() {
         </CardContent>
       </Card>
     );
+  };
+  
+  const mapToExerciseSet = (set: any): ExerciseSet => {
+    return {
+      id: set.id,
+      workout_id: set.workout_id,
+      exercise_name: set.exercise_name,
+      weight: set.weight,
+      reps: set.reps,
+      set_number: set.set_number,
+      completed: set.completed,
+      isEditing: false,
+      restTime: set.rest_time,
+    };
   };
   
   return (

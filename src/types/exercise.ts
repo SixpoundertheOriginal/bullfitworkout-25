@@ -1,4 +1,5 @@
 
+
 export interface Exercise {
   id?: string;
   name: string;
@@ -20,6 +21,12 @@ export interface Exercise {
   variation_value?: string;
   created_at?: string;
   updated_at?: string;
+  // Add the missing properties
+  movement_pattern?: string;
+  tips?: string[];
+  variations?: string[];
+  user_id?: string;
+  base_exercise_id?: string;
 }
 
 export interface ExerciseSet {
@@ -31,8 +38,8 @@ export interface ExerciseSet {
   set_number?: number;
   completed: boolean;
   isEditing: boolean;
-  // Make restTime required to match LocalExerciseSet
   restTime: number;
+  rpe?: number;
   metadata?: {
     autoAdjusted?: boolean;
     previousValues?: {
@@ -42,6 +49,46 @@ export interface ExerciseSet {
     };
   };
 }
+
+// Export type definitions needed by components
+export type MuscleGroup = 
+  | 'chest' | 'back' | 'shoulders' | 'arms' | 'legs' | 'core' 
+  | 'cardio' | 'full body' | 'biceps' | 'triceps' | 'forearms'
+  | 'traps' | 'lats' | 'glutes' | 'hamstrings' | 'quads'
+  | 'calves' | 'abs' | 'obliques' | 'lower back';
+
+export type EquipmentType = 
+  | 'barbell' | 'dumbbell' | 'kettlebell' | 'machine'
+  | 'cable' | 'bodyweight' | 'resistance band' | 'medicine ball'
+  | 'stability ball' | 'smith machine' | 'suspension trainer'
+  | 'foam roller' | 'bench' | 'other';
+
+export type MovementPattern = 
+  | 'push' | 'pull' | 'squat' | 'hinge' | 'lunge'
+  | 'rotation' | 'carry' | 'isometric' | 'locomotion';
+
+export type Difficulty = 'beginner' | 'intermediate' | 'advanced' | 'expert';
+
+// Export the constants that are used in components
+export const COMMON_MUSCLE_GROUPS: MuscleGroup[] = [
+  'chest', 'back', 'shoulders', 'arms', 'legs', 'core', 'cardio', 'full body',
+  'biceps', 'triceps', 'forearms', 'traps', 'lats', 'glutes', 'hamstrings',
+  'quads', 'calves', 'abs', 'obliques', 'lower back'
+];
+
+export const COMMON_EQUIPMENT: EquipmentType[] = [
+  'barbell', 'dumbbell', 'kettlebell', 'machine', 'cable', 'bodyweight',
+  'resistance band', 'medicine ball', 'stability ball', 'smith machine',
+  'suspension trainer', 'foam roller', 'bench', 'other'
+];
+
+export const MOVEMENT_PATTERNS: MovementPattern[] = [
+  'push', 'pull', 'squat', 'hinge', 'lunge', 'rotation', 'carry', 'isometric', 'locomotion'
+];
+
+export const DIFFICULTY_LEVELS: Difficulty[] = [
+  'beginner', 'intermediate', 'advanced', 'expert'
+];
 
 export interface ExercisePerformanceData {
   date: string;
@@ -63,3 +110,9 @@ export interface ExerciseListItem {
   is_custom?: boolean;
   difficulty?: string;
 }
+
+// Add any other types that are needed by the components
+export interface ExerciseWithVariations extends Exercise {
+  variations: Exercise[];
+}
+

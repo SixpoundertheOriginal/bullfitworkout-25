@@ -1,5 +1,5 @@
 
-import { Exercise, MuscleGroup, EquipmentType, MovementPattern, Difficulty } from '@/types/exercise';
+import { Exercise } from '@/types/exercise';
 
 export type ExerciseMetadata = {
   default_weight?: number;
@@ -17,11 +17,11 @@ export type ExerciseInput = {
   name: string;
   description: string;
   user_id: string;
-  primary_muscle_groups: MuscleGroup[] | string[];
-  secondary_muscle_groups: MuscleGroup[] | string[];
-  equipment_type: EquipmentType[] | string[];
-  movement_pattern: MovementPattern;
-  difficulty: Difficulty;
+  primary_muscle_groups: string[];
+  secondary_muscle_groups: string[];
+  equipment_type: string[];
+  movement_pattern: string;
+  difficulty: string;
   instructions?: Record<string, any>;
   is_compound?: boolean;
   tips?: string[];
