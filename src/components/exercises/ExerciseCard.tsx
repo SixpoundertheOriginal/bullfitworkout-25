@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { getExerciseName } from '@/utils/exerciseAdapter';
 
 interface ExerciseCardProps {
-  exercise: Exercise;
+  exercise: Exercise | string;
   className?: string;
   isVariation?: boolean;
   onSelect?: () => void;
@@ -33,7 +33,10 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
   expanded,
   toggleExpand
 }) => {
-  const renderMuscleGroups = (muscles: MuscleGroup[]) => {
+  // Safely determine if we have a full exercise object or just a name string
+  const isFullExerciseObject = typeof exercise === 'object' && exercise !== null;
+  
+  const renderMuscleGroups = (muscles?: MuscleGroup[]) => {
     if (!muscles || !muscles.length) return null;
     return muscles.slice(0, 3).map((muscle, i) => (
       <Badge key={i} variant="outline" className="text-xs bg-gray-800/50 border-gray-700">
@@ -57,6 +60,12 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
 
   // Safely get the exercise name for display
   const exerciseName = getExerciseName(exercise);
+  
+  // Get description only if we have a full exercise object
+  const description = isFullExerciseObject ? (exercise as Exercise).description : undefined;
+  
+  // Get muscle groups only if we have a full exercise object
+  const muscleGroups = isFullExerciseObject ? (exercise as Exercise).primary_muscle_groups : undefined;
 
   return (
     <Card 
@@ -89,15 +98,15 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
               )}
             </div>
             
-            {exercise.description && (
-              <p className="text-sm text-gray-400 mt-1 line-clamp-2">{exercise.description}</p>
+            {description && (
+              <p className="text-sm text-gray-400 mt-1 line-clamp-2">{description}</p>
             )}
             
-            {exercise.primary_muscle_groups && exercise.primary_muscle_groups.length > 0 && (
+            {muscleGroups && muscleGroups.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
-                {renderMuscleGroups(exercise.primary_muscle_groups)}
-                {exercise.primary_muscle_groups.length > 3 && (
-                  <span className="text-xs text-gray-500">+{exercise.primary_muscle_groups.length - 3} more</span>
+                {renderMuscleGroups(muscleGroups)}
+                {muscleGroups.length > 3 && (
+                  <span className="text-xs text-gray-500">+{muscleGroups.length - 3} more</span>
                 )}
               </div>
             )}

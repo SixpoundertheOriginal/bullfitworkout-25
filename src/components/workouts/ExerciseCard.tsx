@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { getExerciseName } from '@/utils/exerciseAdapter';
 
 interface ExerciseCardProps {
-  exercise: Exercise;
+  exercise: Exercise | string;
   onAdd?: (exerciseName: string) => void;
   className?: string;
 }
@@ -22,6 +22,16 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onAdd, cla
     }
   };
 
+  // Get exercise name for display
+  const exerciseName = getExerciseName(exercise);
+  
+  // Only try to render thumbnail if we have the full exercise object
+  const thumbnail = typeof exercise !== 'string' ? 
+    <ExerciseThumbnail 
+      exercise={exercise} 
+      className="transition-all duration-300 group-hover:scale-105" 
+    /> : undefined;
+
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
@@ -29,14 +39,10 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onAdd, cla
       transition={{ type: "spring", stiffness: 300, damping: 15 }}
     >
       <CommonExerciseCard
-        exercise={exercise}
+        exercise={exerciseName}
         variant="workout-add"
         onAdd={onAdd ? handleAdd : undefined}
-        thumbnail={typeof exercise !== 'string' ? 
-          <ExerciseThumbnail 
-            exercise={exercise} 
-            className="transition-all duration-300 group-hover:scale-105" 
-          /> : undefined}
+        thumbnail={thumbnail}
         className={cn(
           "hover:scale-[1.02] active:scale-[0.98] transition-all duration-200",
           "tap-highlight-transparent shadow-md hover:shadow-lg",

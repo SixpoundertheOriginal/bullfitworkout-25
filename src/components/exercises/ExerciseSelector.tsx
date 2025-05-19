@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Exercise } from "@/types/exercise";
 import { useExerciseSuggestions } from "@/hooks/useExerciseSuggestions";
@@ -89,7 +90,7 @@ export function ExerciseSelector({
     return rankExercises(combinedExercises, criteria);
   }, [suggestedExercises, recentExercises, trainingType, bodyFocus, movementPattern, timeOfDay, difficulty]);
 
-  // Wrapper to ensure we always pass a string exercise name
+  // Handle exercise selection, ensuring we always pass a string name
   const handleSelectExercise = (exercise: Exercise | string) => {
     const exerciseName = getExerciseName(exercise);
     onSelectExercise(exerciseName);

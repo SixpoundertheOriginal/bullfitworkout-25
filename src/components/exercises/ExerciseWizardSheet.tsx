@@ -3,11 +3,12 @@ import React, { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ExerciseWizard } from '@/components/exercises/ExerciseWizard';
 import { Exercise } from '@/types/exercise';
+import { getExerciseName } from '@/utils/exerciseAdapter';
 
 interface ExerciseWizardSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelectExercise: (exercise: Exercise) => void;
+  onSelectExercise: (exerciseName: string) => void;
   trainingType?: string;
 }
 
@@ -18,8 +19,9 @@ export function ExerciseWizardSheet({
   trainingType = ""
 }: ExerciseWizardSheetProps) {
   const handleExerciseCreated = (exercise: Exercise) => {
-    // Pass the created exercise back to the parent component
-    onSelectExercise(exercise);
+    // Extract the exercise name and pass it back to the parent component
+    const exerciseName = getExerciseName(exercise);
+    onSelectExercise(exerciseName);
     
     // We don't close the sheet immediately because we want to show the completion screen
     // The wizard's complete step has its own close button

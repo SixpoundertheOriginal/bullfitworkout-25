@@ -35,7 +35,7 @@ export const TrainingSession: React.FC<TrainingSessionProps> = ({
     console.log('TrainingSession rendered with:', { 
       trainingConfig, 
       isActive, 
-      exerciseCount: Object.keys(exercises).length,
+      exerciseCount: Object.keys(exercises || {}).length,
       elapsedTime,
       sessionId,
       isVisible 
@@ -74,7 +74,7 @@ export const TrainingSession: React.FC<TrainingSessionProps> = ({
       navigate('/training-session');
       
       // Only show toast if we have exercises (not just a new session)
-      if (Object.keys(exercises).length > 0) {
+      if (exercises && Object.keys(exercises).length > 0) {
         toast({
           title: "Resuming your active workout"
         });

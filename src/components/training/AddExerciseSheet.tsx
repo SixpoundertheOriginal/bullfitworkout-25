@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Search, Plus } from "lucide-react";
@@ -12,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AllExercisesPage from "@/pages/AllExercisesPage";
 import { ExerciseDialogV2 } from '@/components/ExerciseDialogV2';
+import { getExerciseName } from "@/utils/exerciseAdapter";
 
 interface AddExerciseSheetProps {
   open: boolean;
@@ -93,9 +95,9 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
       : recentExercises;
   }, [recentExercises, searchQuery]);
 
-  // Modified to always pass exercise name string
+  // Always pass exercise name string
   const handleAddExercise = (exercise: Exercise | string) => {
-    const exerciseName = typeof exercise === 'string' ? exercise : (exercise?.name || "Unknown exercise");
+    const exerciseName = getExerciseName(exercise);
     onSelectExercise(exerciseName);
     
     // Close the sheet immediately after selecting an exercise
@@ -141,7 +143,7 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
           className="h-[90vh] rounded-t-xl border-t border-gray-700 bg-gray-900 p-0"
         >
           <AllExercisesPage 
-            onSelectExercise={(exercise) => handleAddExercise(typeof exercise === 'object' ? exercise.name : exercise)}
+            onSelectExercise={(exercise) => handleAddExercise(getExerciseName(exercise))}
             standalone={false}
             onBack={() => setShowAllExercises(false)}
           />
@@ -218,7 +220,8 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
         onOpenChange={setExerciseDialogV2Open}
         mode="add"
         onSubmit={(exercise) => {
-          handleAddExercise(typeof exercise === 'string' ? exercise : exercise.name);
+          const exerciseName = getExerciseName(exercise);
+          handleAddExercise(exerciseName);
           setExerciseDialogV2Open(false);
         }}
       />

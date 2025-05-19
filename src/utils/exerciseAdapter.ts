@@ -83,16 +83,40 @@ export function adaptToStoreFormat(
 
 /**
  * Ensures that an exercise identifier is always a string (name)
+ * Enhanced to be more robust handling different input types
  */
-export function getExerciseName(exercise: string | any): string {
+export function getExerciseName(exercise: any): string {
+  // Case 1: String input
   if (typeof exercise === 'string') {
     return exercise;
   }
   
-  if (exercise && exercise.name) {
+  // Case 2: Object with name property
+  if (exercise && typeof exercise === 'object' && exercise.name) {
     return exercise.name;
   }
   
+  // Case 3: Object with exercise_name property (like ExerciseSet)
+  if (exercise && typeof exercise === 'object' && exercise.exercise_name) {
+    return exercise.exercise_name;
+  }
+  
+  // Case 4: Invalid input
   console.warn('Invalid exercise identifier', exercise);
   return 'Unknown Exercise';
+}
+
+/**
+ * Safely access an exercise property, ensuring we have a valid exercise object
+ */
+export function safeGetExerciseProperty<T>(
+  exercise: any, 
+  property: string, 
+  defaultValue: T
+): T {
+  if (!exercise || typeof exercise !== 'object') {
+    return defaultValue;
+  }
+  
+  return (exercise[property] as T) || defaultValue;
 }
