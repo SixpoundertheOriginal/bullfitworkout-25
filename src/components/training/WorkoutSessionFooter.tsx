@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from "@/hooks/use-toast";
+import { SafeExerciseName } from '@/components/exercises/SafeExerciseName';
 
 interface WorkoutSessionFooterProps {
   onAddExercise: () => void;
@@ -37,7 +38,7 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
     return null;
   }
 
-  // Truncate exercise name if too long
+  // Only truncate long exercise names
   const truncateExerciseName = (name: string | null | undefined, maxLength: number = 20) => {
     if (!name) return "";
     return name.length > maxLength ? `${name.substring(0, maxLength)}...` : name;
@@ -109,7 +110,10 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
                   )}
                   onClick={() => {
                     if (onExitFocus) onExitFocus();
-                    toast.success(`${focusedExercise} completed!`);
+                    toast({
+                      title: `${focusedExercise} completed!`,
+                      variant: "success"
+                    });
                   }}
                 >
                   {isSaving ? (
@@ -122,7 +126,11 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
                       <CheckCircle className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                       <span className="flex flex-col items-start">
                         <span className="text-xs font-normal text-white/80">Complete Exercise</span>
-                        <span className="font-medium text-sm sm:text-base">{truncatedExerciseName}</span>
+                        <SafeExerciseName 
+                          exercise={focusedExercise} 
+                          maxLength={20}
+                          className="font-medium text-sm sm:text-base"
+                        />
                       </span>
                     </>
                   )}
@@ -157,7 +165,12 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
                   "transition-all duration-300",
                   isMobile ? "w-full text-sm" : ""
                 )}
-                onClick={onFinishWorkout}
+                onClick={() => {
+                  console.log('Finish Workout button clicked!');
+                  if (hasExercises && !isSaving && onFinishWorkout) {
+                    onFinishWorkout();
+                  }
+                }}
               >
                 {isSaving ? (
                   <>

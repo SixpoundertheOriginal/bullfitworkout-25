@@ -1,77 +1,61 @@
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useWorkoutStore } from '@/store/workout';
+import { getExerciseName } from '@/utils/exerciseAdapter';
 
 /**
- * Hook for managing the UI state of a training session
+ * Hook that provides access to all workout state and actions
+ * Centralizes the state management for the training session
  */
 export const useTrainingSessionState = () => {
-  // UI State
+  // Local state for UI components
+  const [isAddExerciseSheetOpen, setIsAddExerciseSheetOpen] = useState(false);
+  const [isRatingSheetOpen, setIsRatingSheetOpen] = useState(false);
   const [showRestTimerModal, setShowRestTimerModal] = useState(false);
   const [showEnhancedRestTimer, setShowEnhancedRestTimer] = useState(false);
-  const [restTimerResetSignal, setRestTimerResetSignal] = useState(0);
-  const [isAddExerciseSheetOpen, setIsAddExerciseSheetOpen] = useState(false);
   const [showCompletionConfirmation, setShowCompletionConfirmation] = useState(false);
   const [completedExerciseName, setCompletedExerciseName] = useState<string | null>(null);
-  const [isRatingSheetOpen, setIsRatingSheetOpen] = useState(false);
+  const [restTimerResetSignal, setRestTimerResetSignal] = useState(0);
   
-  // Extract workout state from the store - using the hook directly
-  const workoutStore = useWorkoutStore();
+  // Get the workout store state and actions
+  const workoutState = useWorkoutStore();
   
-  // Extract the state properties we need
-  const workoutState = {
-    exercises: workoutStore.exercises,
-    activeExercise: workoutStore.activeExercise,
-    elapsedTime: workoutStore.elapsedTime,
-    isActive: workoutStore.isActive,
-    workoutStatus: workoutStore.workoutStatus,
-    workoutId: workoutStore.workoutId,
-    restTimerActive: workoutStore.restTimerActive,
-    trainingConfig: workoutStore.trainingConfig,
-    postSetFlow: workoutStore.postSetFlow,
-    lastCompletedExercise: workoutStore.lastCompletedExercise,
-    lastCompletedSetIndex: workoutStore.lastCompletedSetIndex,
-    focusedExercise: workoutStore.focusedExercise,
-    currentRestTime: workoutStore.currentRestTime,
-    setRestTimerActive: workoutStore.setRestTimerActive
-  };
-  
-  // Action functions from the store
-  const workoutActions = {
-    setExercises: workoutStore.setExercises,
-    handleCompleteSet: workoutStore.handleCompleteSet,
-    deleteExercise: workoutStore.deleteExercise,
-    resetSession: workoutStore.resetSession,
-    startWorkout: workoutStore.startWorkout,
-    endWorkout: workoutStore.endWorkout,
-    setPostSetFlow: workoutStore.setPostSetFlow,
-    setFocusedExercise: workoutStore.setFocusedExercise,
-    submitSetRating: workoutStore.submitSetRating
-  };
-
-  // Helper for timer reset
-  const triggerRestTimerReset = () => {
-    setRestTimerResetSignal(prev => prev + 1);
-  };
-
-  return {
-    ...workoutState,
-    ...workoutActions,
-    
-    // UI state
-    showRestTimerModal,
-    setShowRestTimerModal,
-    showEnhancedRestTimer,
-    setShowEnhancedRestTimer,
-    restTimerResetSignal,
-    triggerRestTimerReset,
+  // Use a memoized structure for improved performance
+  const state = useMemo(() => {
+    return {
+      // Expose all workout store state
+      ...workoutState,
+      
+      // Expose local UI state
+      isAddExerciseSheetOpen,
+      setIsAddExerciseSheetOpen,
+      isRatingSheetOpen,
+      setIsRatingSheetOpen,
+      showRestTimerModal,
+      setShowRestTimerModal,
+      showEnhancedRestTimer, 
+      setShowEnhancedRestTimer,
+      showCompletionConfirmation,
+      setShowCompletionConfirmation,
+      completedExerciseName,
+      setCompletedExerciseName,
+      
+      // Rest timer reset signal
+      restTimerResetSignal,
+      
+      // Helper function to trigger rest timer reset
+      triggerRestTimerReset: () => setRestTimerResetSignal(prev => prev + 1)
+    };
+  }, [
+    workoutState, 
     isAddExerciseSheetOpen,
-    setIsAddExerciseSheetOpen,
-    showCompletionConfirmation,
-    setShowCompletionConfirmation,
-    completedExerciseName,
-    setCompletedExerciseName,
     isRatingSheetOpen,
-    setIsRatingSheetOpen,
-  };
+    showRestTimerModal,
+    showEnhancedRestTimer,
+    showCompletionConfirmation,
+    completedExerciseName,
+    restTimerResetSignal
+  ]);
+  
+  return state;
 };

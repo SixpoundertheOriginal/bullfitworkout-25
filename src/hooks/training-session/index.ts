@@ -130,6 +130,7 @@ export const useTrainingSession = () => {
     setFocusedExercise: state.setFocusedExercise,
     triggerRestTimerReset: state.triggerRestTimerReset,
     getNextSetDetails: data.getNextSetDetails,
+    resetSession: state.resetSession,  // Expose resetSession
     
     // UI state setters
     setShowCompletionConfirmation: state.setShowCompletionConfirmation,

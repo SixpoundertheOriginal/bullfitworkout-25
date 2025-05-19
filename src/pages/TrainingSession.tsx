@@ -12,11 +12,15 @@ import { TrainingSessionTimers } from "@/components/training/TrainingSessionTime
 import { useTrainingSession } from "@/hooks/training-session";
 import { SetsDebugger } from "@/components/training/SetsDebugger";
 import { ExerciseFAB } from "@/components/training/ExerciseFAB";
-import { adaptExerciseSets } from "@/utils/exerciseAdapter";
+import { adaptExerciseSets, safeRenderableExercise } from "@/utils/exerciseAdapter";
 import { WorkoutExercises } from '@/store/workout/types';
+import { toast } from "@/hooks/use-toast";
+import { WorkoutCompletion } from "@/components/training/WorkoutCompletion";
 
 const TrainingSessionPage = () => {
   const { isLoading: loadingExercises } = useExercises();
+  const [showCompletion, setShowCompletion] = React.useState(false);
+  
   const {
     // State
     exercises,
@@ -65,6 +69,7 @@ const TrainingSessionPage = () => {
     setFocusedExercise,
     triggerRestTimerReset,
     getNextSetDetails,
+    resetSession,
     
     // UI state setters
     setShowCompletionConfirmation,
@@ -80,16 +85,71 @@ const TrainingSessionPage = () => {
   // Debug logging
   useEffect(() => {
     console.log("Training session exercises state:", exercises);
+    
+    // Check for potential object keys that could cause rendering issues
+    const objectKeys = Object.keys(exercises || {}).filter(key => typeof key !== 'string' || key.includes('[object Object]'));
+    if (objectKeys.length > 0) {
+      console.warn('Found problematic exercise keys that may cause rendering issues:', objectKeys);
+    }
   }, [exercises]);
 
   if (loadingExercises) {
     return <TrainingSessionLoading />;
   }
+
+  // Wrapper for finish workout
+  const handleFinishWorkoutClick = async () => {
+    try {
+      console.log("Finish workout clicked, exercises:", Object.keys(exercises));
+      
+      if (!hasExercises || Object.keys(exercises).length === 0) {
+        toast({
+          title: "No exercises added",
+          description: "Please add at least one exercise before finishing your workout.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Show completion screen
+      setShowCompletion(true);
+    } catch (error) {
+      console.error("Error while finishing workout:", error);
+      toast({
+        title: "Error",
+        description: "There was an error finishing your workout. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle completion screens
+  const handleWorkoutComplete = () => {
+    console.log("Saving workout data...");
+    handleFinishWorkout()
+      .then((result) => {
+        console.log("Workout saved with result:", result);
+        // Add a small delay to show success message before redirecting
+        setTimeout(() => {
+          resetSession();
+          setShowCompletion(false);
+        }, 1000);
+      })
+      .catch((error) => {
+        console.error("Error saving workout:", error);
+        toast({
+          title: "Error saving workout",
+          description: "Please try again",
+          variant: "destructive"
+        });
+      });
+  };
   
   // Function to handle adding a set to the focused exercise
   const handleAddSetToFocused = () => {
     if (focusedExercise) {
-      handleAddSet(focusedExercise);
+      const safeExerciseName = safeRenderableExercise(focusedExercise);
+      handleAddSet(safeExerciseName);
     }
   };
 
@@ -105,6 +165,7 @@ const TrainingSessionPage = () => {
   const showDebugger = process.env.NODE_ENV !== 'production';
 
   // Adapt exercises to the component-friendly format
+  // This is a critical step to ensure all exercise names are strings
   const adaptedExercises = adaptExerciseSets(exercises);
 
   // Create type-safe wrappers for passing to components
@@ -114,6 +175,33 @@ const TrainingSessionPage = () => {
     // Type assertion to match the expected signature
     handleSetExercises(exercisesUpdate as WorkoutExercises | ((prev: WorkoutExercises) => WorkoutExercises));
   };
+
+  // Make sure activeExercise is always a safe string
+  const safeActiveExercise = activeExercise ? safeRenderableExercise(activeExercise) : null;
+  
+  // Make sure focusedExercise is always a safe string
+  const safeFocusedExercise = focusedExercise ? safeRenderableExercise(focusedExercise) : null;
+
+  // If showing completion modal, render that instead
+  if (showCompletion) {
+    return (
+      <div className="flex flex-col min-h-screen bg-black text-white pt-16 pb-4">
+        <main className="flex-1 overflow-auto px-4">
+          <div className="container max-w-5xl mx-auto">
+            <h1 className="text-2xl font-bold my-6 text-center">Workout Complete</h1>
+            
+            <WorkoutCompletion
+              exercises={adaptedExercises}
+              duration={elapsedTime}
+              intensity={7}
+              efficiency={8}
+              onComplete={handleWorkoutComplete}
+            />
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-white pt-16 pb-4">
@@ -136,7 +224,7 @@ const TrainingSessionPage = () => {
               onRestTimerReset={triggerRestTimerReset}
               restTimerResetSignal={restTimerResetSignal}
               currentRestTime={currentRestTime}
-              focusedExercise={focusedExercise}
+              focusedExercise={safeFocusedExercise}
             />
             
             {/* Timer Components */}
@@ -144,7 +232,7 @@ const TrainingSessionPage = () => {
               showRestTimerModal={showRestTimerModal}
               showEnhancedRestTimer={showEnhancedRestTimer}
               currentRestTime={currentRestTime}
-              lastCompletedExercise={lastCompletedExercise}
+              lastCompletedExercise={lastCompletedExercise ? safeRenderableExercise(lastCompletedExercise) : null}
               nextSetDetails={getNextSetDetails()}
               nextSetRecommendation={null}
               motivationalMessage={""}
@@ -161,8 +249,8 @@ const TrainingSessionPage = () => {
           <div className="mt-3 px-3 sm:px-4">
             <ExerciseList
               exercises={adaptedExercises}
-              activeExercise={activeExercise}
-              focusedExercise={focusedExercise}
+              activeExercise={safeActiveExercise}
+              focusedExercise={safeFocusedExercise}
               onAddSet={handleAddSet}
               onCompleteSet={handleCompleteSet}
               onDeleteExercise={deleteExercise}
@@ -254,7 +342,7 @@ const TrainingSessionPage = () => {
               onResetRestTimer={triggerRestTimerReset}
               onFocusExercise={handleFocusExercise}
               onOpenAddExercise={() => setIsAddExerciseSheetOpen(true)}
-              onFinishWorkout={handleFinishWorkout}
+              onFinishWorkout={handleFinishWorkoutClick}  // Use our wrapped function here
               isSaving={isSaving || saveStatus === 'saving'}
               onNextExercise={handleNextExercise}
               hasMoreExercises={!!nextExerciseName}
@@ -270,7 +358,7 @@ const TrainingSessionPage = () => {
       {/* Exercise Completion Confirmation */}
       <ExerciseCompletionConfirmation
         isOpen={showCompletionConfirmation}
-        exerciseName={completedExerciseName || ''}
+        exerciseName={completedExerciseName ? safeRenderableExercise(completedExerciseName) : ''}
         onClose={() => {
           setShowCompletionConfirmation(false);
           if (focusedExercise === completedExerciseName) {
@@ -303,7 +391,7 @@ const TrainingSessionPage = () => {
           if (!open) setPostSetFlow('idle');
         }}
         onSubmitRating={handleSubmitRating}
-        exerciseName={lastCompletedExercise || ''}
+        exerciseName={lastCompletedExercise ? safeRenderableExercise(lastCompletedExercise) : ''}
         setDetails={lastCompletedExercise && lastCompletedSetIndex !== null && exercises[lastCompletedExercise]
           ? exercises[lastCompletedExercise][lastCompletedSetIndex]
           : undefined}

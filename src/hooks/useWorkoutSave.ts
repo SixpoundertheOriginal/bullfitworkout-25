@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -24,6 +25,7 @@ export const useWorkoutSave = (exercises: Record<string, ExerciseSet[]>, elapsed
   const { user } = useAuth();
 
   const markAsSaving = useCallback(() => {
+    console.log("Marking workout as saving");
     setSaveStatus(prev => ({
       ...prev,
       status: 'saving',
@@ -37,6 +39,7 @@ export const useWorkoutSave = (exercises: Record<string, ExerciseSet[]>, elapsed
   }, []);
 
   const markAsPartialSave = useCallback((errors: WorkoutError[]) => {
+    console.log("Marking workout as partially saved with errors:", errors);
     setSaveStatus(prev => ({
       ...prev,
       status: 'partial',
@@ -50,6 +53,7 @@ export const useWorkoutSave = (exercises: Record<string, ExerciseSet[]>, elapsed
   }, []);
 
   const markAsSaved = useCallback((workoutId: string) => {
+    console.log("Marking workout as saved with ID:", workoutId);
     setSaveStatus({
       status: 'saved',
       errors: [],
@@ -58,14 +62,17 @@ export const useWorkoutSave = (exercises: Record<string, ExerciseSet[]>, elapsed
   }, []);
 
   const markAsFailed = useCallback((error: WorkoutError) => {
+    console.error("Marking workout save as failed:", error);
     setSaveStatus(prev => ({
       ...prev,
       status: 'failed',
       errors: [...prev.errors, error]
     }));
 
-    toast.error("Workout save failed", {
+    toast({
+      title: "Workout save failed",
       description: error.message,
+      variant: "destructive",
       duration: 5000,
     });
   }, []);
@@ -86,14 +93,24 @@ export const useWorkoutSave = (exercises: Record<string, ExerciseSet[]>, elapsed
 
   // Implement with HandleCompleteWorkoutFn type signature
   const handleCompleteWorkout: HandleCompleteWorkoutFn = async (trainingConfig?: any) => {
+    console.log("handleCompleteWorkout called with exercises:", Object.keys(exercises).length);
+    
     if (!Object.keys(exercises).length) {
-      toast.error("No exercises added - Please add at least one exercise before completing your workout");
+      console.warn("No exercises found in workout");
+      toast({
+        title: "No exercises added", 
+        description: "Please add at least one exercise before completing your workout",
+        variant: "destructive"
+      });
       return null;
     }
     
     if (!user) {
-      toast.error("Authentication required", {
-        description: "You need to be logged in to save workouts"
+      console.error("No user found, cannot save workout");
+      toast({
+        title: "Authentication required",
+        description: "You need to be logged in to save workouts",
+        variant: "destructive"
       });
       return null;
     }
@@ -116,6 +133,11 @@ export const useWorkoutSave = (exercises: Record<string, ExerciseSet[]>, elapsed
       };
       
       console.log("Saving workout with data:", workoutData);
+      console.log("Exercise data for save:", Object.keys(exercises).map(name => ({
+        name,
+        sets: exercises[name].length,
+        completed: exercises[name].filter(s => s.completed).length
+      })));
       
       // Convert ExerciseSet to EnhancedExerciseSet by ensuring isEditing is always defined
       const enhancedExercises: Record<string, EnhancedExerciseSet[]> = {};
@@ -131,9 +153,12 @@ export const useWorkoutSave = (exercises: Record<string, ExerciseSet[]>, elapsed
         workoutData,
         exercises: enhancedExercises,
         onProgressUpdate: (progress) => {
+          console.log("Save progress update:", progress);
           updateSaveProgress(progress.step, progress.completed);
         }
       });
+      
+      console.log("Save result:", saveResult);
       
       if (saveResult.success) {
         if (saveResult.partialSave) {
@@ -154,6 +179,8 @@ export const useWorkoutSave = (exercises: Record<string, ExerciseSet[]>, elapsed
         return null;
       }
     } catch (error) {
+      console.error("Error in handleCompleteWorkout:", error);
+      
       markAsFailed({
         type: 'unknown',
         message: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -161,8 +188,10 @@ export const useWorkoutSave = (exercises: Record<string, ExerciseSet[]>, elapsed
         recoverable: true
       });
       
-      toast.error("Error", {
-        description: error instanceof Error ? error.message : 'Unknown error occurred'
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        variant: "destructive"
       });
       return null;
     }
@@ -192,8 +221,10 @@ export const useWorkoutSave = (exercises: Record<string, ExerciseSet[]>, elapsed
           }]
         }));
         
-        toast.error("Recovery failed", {
-          description: "We couldn't recover your workout data. Please try again."
+        toast({
+          title: "Recovery failed",
+          description: "We couldn't recover your workout data. Please try again.",
+          variant: "destructive"
         });
         
         return false;
@@ -228,8 +259,10 @@ export const useWorkoutSave = (exercises: Record<string, ExerciseSet[]>, elapsed
         }]
       }));
       
-      toast.error("Recovery failed", {
-        description: "We couldn't recover your workout data. Please try again."
+      toast({
+        title: "Recovery failed",
+        description: "We couldn't recover your workout data. Please try again.",
+        variant: "destructive"
       });
       
       return false;

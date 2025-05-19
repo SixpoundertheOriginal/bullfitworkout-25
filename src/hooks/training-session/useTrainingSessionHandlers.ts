@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -151,6 +152,19 @@ export const useTrainingSessionHandlers = (
   
   // Implement with proper signature following HandleCompleteWorkoutFn type
   const handleFinishWorkout: HandleCompleteWorkoutFn = useCallback(async (trainingConfigParam?: any) => {
+    console.log("handleFinishWorkout called with config:", trainingConfigParam || trainingConfig);
+    console.log("Current completedSets:", completedSets);
+    console.log("Current exercises:", Object.keys(exercises));
+    
+    if (completedSets === 0 && Object.keys(exercises).length === 0) {
+      toast({
+        title: "No exercises added", 
+        description: "Please add at least one exercise before finishing your workout.",
+        variant: "destructive"
+      });
+      return null;
+    }
+    
     if (completedSets === 0) {
       toast({
         title: "No sets completed", 
@@ -162,23 +176,42 @@ export const useTrainingSessionHandlers = (
     
     // Use the provided config or fall back to the injected one
     const configToUse = trainingConfigParam || trainingConfig;
-    const result = await rawHandleCompleteWorkout(configToUse);
+    try {
+      console.log("Calling rawHandleCompleteWorkout with config:", configToUse);
+      const result = await rawHandleCompleteWorkout(configToUse);
       
-    if (result) {
-      // Save user's workout preferences
-      if (configToUse) {
-        saveTrainingPreferences(configToUse);
+      console.log("rawHandleCompleteWorkout returned:", result);
+      
+      if (result) {
+        // Save user's workout preferences
+        if (configToUse) {
+          saveTrainingPreferences(configToUse);
+        }
+        
+        toast({
+          title: "Workout saved successfully!",
+          variant: "default"
+        });
+      } else {
+        console.error("Workout save returned null/undefined");
+        toast({
+          title: "Error saving workout",
+          description: "Please try again",
+          variant: "destructive" 
+        });
       }
       
+      return result;
+    } catch (error) {
+      console.error("Error in handleFinishWorkout:", error);
       toast({
-        title: "Workout saved successfully!",
-        variant: "default"
+        title: "Error saving workout",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive"
       });
-      navigate('/workout-complete', { replace: true });
+      return null;
     }
-    
-    return result;
-  }, [completedSets, rawHandleCompleteWorkout, trainingConfig, navigate, saveTrainingPreferences]);
+  }, [completedSets, rawHandleCompleteWorkout, trainingConfig, saveTrainingPreferences, exercises]);
 
   // Rating submission
   const handleSubmitRating = useCallback((submitSetRating: (rpe: number) => void, setIsRatingSheetOpen: (open: boolean) => void) => (rpe: number) => {
