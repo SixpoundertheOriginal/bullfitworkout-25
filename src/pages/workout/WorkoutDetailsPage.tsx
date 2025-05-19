@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useWorkoutDetails } from '@/hooks/useWorkoutDetails';
 import { WorkoutDetailsEnhanced } from '@/components/workouts/WorkoutDetailsEnhanced';
@@ -129,6 +128,39 @@ export default function WorkoutDetailsPage() {
       </div>
     );
   }
+
+  const handleSaveExerciseSets = async (updatedSets: ExerciseSet[]): Promise<void> => {
+    try {
+      // Convert ExerciseSet to the format expected by API
+      const setsForApi = updatedSets.map(set => ({
+        id: set.id || "",
+        exercise_name: set.exercise_name,
+        workout_id: set.workout_id || workoutId || "",
+        weight: set.weight,
+        reps: set.reps,
+        set_number: set.set_number || 0,
+        completed: set.completed,
+        rest_time: set.restTime
+      }));
+      
+      await handleSaveExerciseSets(setsForApi);
+      
+      // Force refetch to update calculations with new duration
+      refetch();
+      
+      // Also invalidate all related queries to ensure data refreshes everywhere
+      queryClient.invalidateQueries({ queryKey: ['workout-details', workoutId] });
+      queryClient.invalidateQueries({ queryKey: ['workout-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['workout-volume'] });
+      queryClient.invalidateQueries({ queryKey: ['workout-density'] });
+    } catch (error) {
+      console.error("Error in handleSaveWorkout:", error);
+      toast({ 
+        title: "Failed to update workout", 
+        variant: "destructive" 
+      });
+    }
+  };
 
   return (
     <div className="container py-6 max-w-5xl mx-auto">

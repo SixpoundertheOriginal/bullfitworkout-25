@@ -1,5 +1,5 @@
 
-import { MuscleGroup, MovementPattern, Difficulty, MUSCLE_GROUPS, MOVEMENT_PATTERNS, DIFFICULTY_LEVELS } from '@/types/exercise';
+import { MuscleGroup, MovementPattern, Difficulty, COMMON_MUSCLE_GROUPS, MOVEMENT_PATTERNS, DIFFICULTY_LEVELS } from '@/types/exercise';
 
 // Muscle group categories for organization
 export interface MuscleGroupCategory {

@@ -21,12 +21,13 @@ export interface Exercise {
   variation_value?: string;
   created_at?: string;
   updated_at?: string;
-  // Add the missing properties
   movement_pattern?: string;
   tips?: string[];
   variations?: string[];
   user_id?: string;
   base_exercise_id?: string;
+  is_bodyweight?: boolean;
+  load_factor?: number;
 }
 
 export interface ExerciseSet {
@@ -40,6 +41,8 @@ export interface ExerciseSet {
   isEditing: boolean;
   restTime: number;
   rpe?: number;
+  duration?: number;
+  weightCalculation?: WeightCalculation;
   metadata?: {
     autoAdjusted?: boolean;
     previousValues?: {
@@ -111,8 +114,35 @@ export interface ExerciseListItem {
   difficulty?: string;
 }
 
-// Add any other types that are needed by the components
 export interface ExerciseWithVariations extends Exercise {
-  variations: Exercise[];
+  variations: Exercise[]; // Changed from string[] to Exercise[]
 }
 
+// Define Weight Calculation for exercise weights
+export interface WeightCalculation {
+  value: number;
+  isAuto: boolean;
+  source: 'default' | 'user' | 'auto';
+}
+
+export const EXERCISE_LOAD_FACTORS: Record<string, { factor: number }> = {
+  "Push-up": { factor: 0.64 },
+  "Pull-up": { factor: 1.0 },
+  "Dips": { factor: 0.96 },
+  "Squat": { factor: 1.0 },
+  // Add more default exercise load factors as needed
+};
+
+export function calculateEffectiveWeight(exercise: Exercise, userWeight: number): number {
+  return (exercise.is_bodyweight && userWeight) ? userWeight * (exercise.load_factor || 1.0) : 0;
+}
+
+export function getExerciseLoadFactor(exercise: Exercise): number {
+  if (exercise.load_factor) return exercise.load_factor;
+  if (EXERCISE_LOAD_FACTORS[exercise.name]) return EXERCISE_LOAD_FACTORS[exercise.name].factor;
+  return 1.0;
+}
+
+export function isBodyweightExercise(exercise: Exercise): boolean {
+  return exercise.is_bodyweight === true || (exercise.equipment_type || []).includes('bodyweight');
+}

@@ -46,15 +46,40 @@ export function useExerciseManagement(workoutId: string | undefined, onUpdate: U
     if (!workoutId || !currentExercise) return;
     
     try {
-      const updated = await updateExerciseSets(workoutId, currentExercise, updatedSets);
+      // Convert ExerciseSet to the format expected by updateExerciseSets
+      const setsForApi = updatedSets.map(set => ({
+        id: set.id || "",
+        exercise_name: set.exercise_name,
+        workout_id: set.workout_id || workoutId,
+        weight: set.weight,
+        reps: set.reps,
+        set_number: set.set_number || 0,
+        completed: set.completed,
+        rest_time: set.restTime
+      }));
+      
+      const updated = await updateExerciseSets(workoutId, currentExercise, setsForApi);
       toast({
         title: "Exercise sets updated"
       });
       
+      // Convert the API response back to ExerciseSet format for the UI
+      const convertedSets: ExerciseSet[] = updated.map(set => ({
+        id: set.id,
+        workout_id: set.workout_id,
+        exercise_name: set.exercise_name,
+        weight: set.weight,
+        reps: set.reps,
+        set_number: set.set_number,
+        completed: set.completed,
+        isEditing: false,
+        restTime: set.rest_time || 60,
+      }));
+      
       // Create a new object first, then pass it to onUpdate
       onUpdate((prev: Record<string, ExerciseSet[]>) => {
         const newSets = { ...prev };
-        newSets[currentExercise] = updated;
+        newSets[currentExercise] = convertedSets;
         return newSets;
       });
       
@@ -74,10 +99,23 @@ export function useExerciseManagement(workoutId: string | undefined, onUpdate: U
     try {
       const newSets = await addExerciseToWorkout(workoutId, exerciseName, 3);
       
+      // Convert the API response to ExerciseSet format for the UI
+      const convertedSets: ExerciseSet[] = newSets.map(set => ({
+        id: set.id,
+        workout_id: set.workout_id,
+        exercise_name: set.exercise_name,
+        weight: set.weight,
+        reps: set.reps,
+        set_number: set.set_number,
+        completed: set.completed,
+        isEditing: false,
+        restTime: set.rest_time || 60,
+      }));
+      
       // Create a new object first, then pass it to onUpdate
       onUpdate((prev: Record<string, ExerciseSet[]>) => {
         const newSetsRecord = { ...prev };
-        newSetsRecord[exerciseName] = newSets;
+        newSetsRecord[exerciseName] = convertedSets;
         return newSetsRecord;
       });
       

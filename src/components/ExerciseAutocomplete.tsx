@@ -68,7 +68,9 @@ export function ExerciseAutocomplete({ onSelectExercise, className }: ExerciseAu
     equipment_type: [],
     movement_pattern: "push",
     difficulty: "beginner",
-    instructions: {},
+    instructions: {
+      steps: [] // Initialize with empty array to fix the error
+    },
     is_compound: false,
     tips: [],
     variations: [],
@@ -110,9 +112,13 @@ export function ExerciseAutocomplete({ onSelectExercise, className }: ExerciseAu
       return;
     }
     
-    const exerciseToCreate = {
+    // Convert Exercise to ExerciseInput for the API
+    const exerciseToCreate: ExerciseInput = {
       ...newExercise,
       user_id: user?.id || "",
+      equipment_type: newExercise.equipment_type || [],
+      secondary_muscle_groups: newExercise.secondary_muscle_groups || [],
+      movement_pattern: newExercise.movement_pattern || "push",
     };
     
     console.log("Creating exercise with data:", exerciseToCreate);
@@ -131,7 +137,9 @@ export function ExerciseAutocomplete({ onSelectExercise, className }: ExerciseAu
           equipment_type: [],
           movement_pattern: "push",
           difficulty: "beginner",
-          instructions: {},
+          instructions: {
+            steps: [] // Initialize with empty array
+          },
           is_compound: false,
           tips: [],
           variations: [],
@@ -448,8 +456,11 @@ export function ExerciseAutocomplete({ onSelectExercise, className }: ExerciseAu
             <div className="space-y-2">
               <Label htmlFor="movement">Movement Pattern</Label>
               <Select 
-                value={newExercise.movement_pattern}
-                onValueChange={(value: MovementPattern) => setNewExercise({ ...newExercise, movement_pattern: value })}
+                value={newExercise.movement_pattern || "push"}
+                onValueChange={(value: string) => setNewExercise({ 
+                  ...newExercise, 
+                  movement_pattern: value 
+                })}
               >
                 <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                   <SelectValue placeholder="Select movement pattern" />

@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Exercise, MuscleGroup } from '@/types/exercise';
+import { Exercise } from '@/types/exercise';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +34,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
   expanded,
   toggleExpand
 }) => {
-  const renderMuscleGroups = (muscles?: MuscleGroup[]) => {
+  const renderMuscleGroups = (muscles?: string[]) => {
     if (!muscles || !muscles.length) return null;
     return muscles.slice(0, 3).map((muscle, i) => (
       <Badge key={i} variant="outline" className="text-xs bg-gray-800/50 border-gray-700">

@@ -209,7 +209,7 @@ export function WorkoutCalendarTab() {
       set_number: set.set_number,
       completed: set.completed,
       isEditing: false,
-      restTime: set.rest_time,
+      restTime: set.rest_time || 60, // Provide a default value
     };
   };
   
