@@ -185,7 +185,8 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
       onClick={onFocus ? onFocus : undefined}
     >
       <CommonExerciseCard
-        exercise={exerciseName} // Now always a string
+        exerciseName={exerciseName}
+        exerciseData={exerciseData}
         variant={onAdd ? "workout-add" : "workout"}
         onAdd={onAdd ? () => onAdd(exerciseName) : undefined}
         sets={sets}

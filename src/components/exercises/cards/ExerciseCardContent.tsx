@@ -6,7 +6,8 @@ import { cn } from '@/lib/utils';
 import { isExerciseObject, safeRenderableExercise } from '@/utils/exerciseAdapter';
 
 interface ExerciseCardContentProps {
-  exercise: Exercise | string;
+  exerciseName: string;
+  exerciseData?: Exercise;
   variationBadge?: React.ReactNode;
   thumbnail?: React.ReactNode;
   rightContent?: React.ReactNode;
@@ -14,16 +15,16 @@ interface ExerciseCardContentProps {
 }
 
 export const ExerciseCardContent: React.FC<ExerciseCardContentProps> = ({
-  exercise,
+  exerciseName,
+  exerciseData,
   variationBadge,
   thumbnail,
   rightContent,
   className
 }) => {
-  // Get the exercise properties only if it's an Exercise object
-  const primaryMuscleGroups = typeof exercise !== 'string' ? exercise.primary_muscle_groups : [];
-  const equipmentType = typeof exercise !== 'string' ? exercise.equipment_type : [];
-  const exerciseName = safeRenderableExercise(exercise);
+  // Get the exercise properties only if exerciseData is provided
+  const primaryMuscleGroups = exerciseData ? exerciseData.primary_muscle_groups : [];
+  const equipmentType = exerciseData ? exerciseData.equipment_type : [];
 
   return (
     <div className={cn(
@@ -46,7 +47,7 @@ export const ExerciseCardContent: React.FC<ExerciseCardContentProps> = ({
             )}
           </div>
           
-          {typeof exercise !== 'string' && (
+          {exerciseData && (
             <div className="flex flex-wrap gap-1 mt-1">
               {primaryMuscleGroups.slice(0, 3).map((muscle, idx) => (
                 <Badge 

@@ -41,7 +41,8 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
       transition={{ type: "spring", stiffness: 300, damping: 15 }}
     >
       <CommonExerciseCard
-        exercise={exerciseName} // This is now always a string
+        exerciseName={exerciseName}
+        exerciseData={exerciseData}
         variant="workout-add"
         onAdd={onAdd ? handleAdd : undefined}
         thumbnail={thumbnail}

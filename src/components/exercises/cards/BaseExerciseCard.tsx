@@ -3,10 +3,10 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Exercise } from '@/types/exercise';
 import { cn } from '@/lib/utils';
-import { safeRenderableExercise } from '@/utils/exerciseAdapter';
 
 interface BaseExerciseCardProps {
-  exercise: Exercise | string;
+  exerciseName: string;
+  exerciseData?: Exercise;
   children: React.ReactNode;
   className?: string;
   onClick?: () => void;
@@ -15,16 +15,14 @@ interface BaseExerciseCardProps {
 }
 
 export const BaseExerciseCard: React.FC<BaseExerciseCardProps> = ({
-  exercise,
+  exerciseName,
+  exerciseData,
   children,
   className,
   onClick,
   isActive,
   isSelected
 }) => {
-  // Use the safe function to handle any type of exercise input
-  const exerciseName = safeRenderableExercise(exercise);
-  
   return (
     <Card
       data-exercise-name={exerciseName}

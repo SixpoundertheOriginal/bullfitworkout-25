@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BaseExerciseCard } from './cards/BaseExerciseCard';
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,8 @@ import { cn } from '@/lib/utils';
 import { safeRenderableExercise } from '@/utils/exerciseAdapter';
 
 interface CommonExerciseCardProps {
-  exercise: Exercise | string;
+  exerciseName: string;
+  exerciseData?: Exercise;
   variant?: 'default' | 'workout' | 'workout-add' | 'selection' | 'compact' | 'list';
   className?: string;
   onAdd?: () => void;
@@ -28,7 +30,8 @@ interface CommonExerciseCardProps {
 }
 
 export const CommonExerciseCard: React.FC<CommonExerciseCardProps> = ({
-  exercise,
+  exerciseName,
+  exerciseData,
   variant = 'default',
   className,
   onAdd,
@@ -47,15 +50,12 @@ export const CommonExerciseCard: React.FC<CommonExerciseCardProps> = ({
   rightContent,
   variationBadge
 }) => {
-  // Handle both string and Exercise object for the name - using safeRenderableExercise
-  // to ensure we always have a string, even if exercise is undefined
-  const exerciseName = safeRenderableExercise(exercise);
-  
   // For list variant (used in ExerciseVariationGroup)
   if (variant === 'list') {
     return (
       <BaseExerciseCard
-        exercise={exercise}
+        exerciseName={exerciseName}
+        exerciseData={exerciseData}
         onClick={onSelect}
         className={className}
       >
@@ -79,7 +79,8 @@ export const CommonExerciseCard: React.FC<CommonExerciseCardProps> = ({
   if (variant === 'selection') {
     return (
       <BaseExerciseCard
-        exercise={exercise}
+        exerciseName={exerciseName}
+        exerciseData={exerciseData}
         onClick={onSelect}
         isSelected={isSelected}
         className={className}
@@ -111,7 +112,8 @@ export const CommonExerciseCard: React.FC<CommonExerciseCardProps> = ({
   if (variant === 'workout-add') {
     return (
       <BaseExerciseCard
-        exercise={exercise}
+        exerciseName={exerciseName}
+        exerciseData={exerciseData}
         className={className}
       >
         <div className="flex items-center justify-between">
@@ -138,7 +140,8 @@ export const CommonExerciseCard: React.FC<CommonExerciseCardProps> = ({
   if (variant === 'workout') {
     return (
       <BaseExerciseCard
-        exercise={exercise}
+        exerciseName={exerciseName}
+        exerciseData={exerciseData}
         className={className}
         isActive={isActive}
       >
@@ -181,7 +184,8 @@ export const CommonExerciseCard: React.FC<CommonExerciseCardProps> = ({
   if (variant === 'compact') {
     return (
       <BaseExerciseCard
-        exercise={exercise}
+        exerciseName={exerciseName}
+        exerciseData={exerciseData}
         onClick={onSelect}
         className={cn("py-2 px-3", className)}
       >
@@ -208,7 +212,8 @@ export const CommonExerciseCard: React.FC<CommonExerciseCardProps> = ({
   // Default variant
   return (
     <BaseExerciseCard
-      exercise={exercise}
+      exerciseName={exerciseName}
+      exerciseData={exerciseData}
       onClick={onSelect}
       className={className}
     >
