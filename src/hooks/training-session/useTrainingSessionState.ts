@@ -35,6 +35,7 @@ export const useTrainingSessionState = () => {
   }), shallow);
   
   // Action functions from the store
+  // Fixed: Remove arguments when calling loadTrainingConfig and similar functions
   const workoutActions = useWorkoutStore(state => ({
     setExercises: state.setExercises,
     handleCompleteSet: state.handleCompleteSet,

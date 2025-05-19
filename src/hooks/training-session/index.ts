@@ -6,6 +6,7 @@ import { useTrainingSessionData } from './useTrainingSessionData';
 import { useTrainingSessionHandlers } from './useTrainingSessionHandlers';
 import { useTrainingSessionInit } from './useTrainingSessionInit';
 import { useTrainingSessionTimers } from './useTrainingSessionTimers';
+import { WorkoutExercises } from '@/store/workout/types';
 
 /**
  * Main hook that composes all training session sub-hooks together
@@ -16,7 +17,7 @@ export const useTrainingSession = () => {
   const state = useTrainingSessionState();
   
   // Get computed/derived data
-  const data = useTrainingSessionData(state.exercises, state.focusedExercise);
+  const data = useTrainingSessionData(state.exercises as WorkoutExercises, state.focusedExercise);
   
   // Get workout save logic
   const {
@@ -42,10 +43,10 @@ export const useTrainingSession = () => {
   
   // Get handler functions
   const handlers = useTrainingSessionHandlers(
-    state.exercises,
+    state.exercises as WorkoutExercises,
     data.completedSets,
     state.trainingConfig,
-    state.setExercises,
+    state.setExercises as (exercises: WorkoutExercises | ((prev: WorkoutExercises) => WorkoutExercises)) => void,
     state.setFocusedExercise,
     state.setCompletedExerciseName,
     state.setShowCompletionConfirmation,

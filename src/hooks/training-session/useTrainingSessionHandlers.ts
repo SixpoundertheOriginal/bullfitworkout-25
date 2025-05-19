@@ -18,7 +18,7 @@ export const useTrainingSessionHandlers = (
   setFocusedExercise: (exerciseName: string | null) => void,
   setCompletedExerciseName: (name: string | null) => void,
   setShowCompletionConfirmation: (show: boolean) => void,
-  rawHandleCompleteWorkout: (trainingConfig?: any) => Promise<string | null>,
+  rawHandleCompleteWorkout: HandleCompleteWorkoutFn,
   rawAttemptRecovery: (workoutId: string) => Promise<boolean>,
 ) => {
   const navigate = useNavigate();
@@ -138,20 +138,20 @@ export const useTrainingSessionHandlers = (
   // ❗ Avoid argument drift - implement wrapper with proper signature
   // Implementation of AttemptRecoveryFn
   const attemptRecovery: AttemptRecoveryFn = useCallback(async (
-    id: string, 
+    workoutId: string, 
     source: 'manual' | 'auto' = 'manual', 
     meta: object = {}
   ) => {
-    if (id) {
+    if (workoutId) {
       // Pass the expected workoutId
-      return rawAttemptRecovery(id);
+      return rawAttemptRecovery(workoutId);
     }
     return Promise.resolve(false);
   }, [rawAttemptRecovery]);
   
   // ❗ Avoid argument drift - implement wrapper with proper signature
   // Implementation of HandleCompleteWorkoutFn
-  const handleFinishWorkout: HandleCompleteWorkoutFn = useCallback(async () => {
+  const handleFinishWorkout: HandleCompleteWorkoutFn = useCallback(async (trainingConfigParam?: any) => {
     if (completedSets === 0) {
       toast({
         title: "No sets completed", 
@@ -162,12 +162,13 @@ export const useTrainingSessionHandlers = (
     }
     
     // Pass just the trainingConfig as the single required argument
-    const result = await rawHandleCompleteWorkout(trainingConfig);
+    const configToUse = trainingConfigParam || trainingConfig;
+    const result = await rawHandleCompleteWorkout(configToUse);
       
     if (result) {
       // Save user's workout preferences
-      if (trainingConfig) {
-        saveTrainingPreferences(trainingConfig);
+      if (configToUse) {
+        saveTrainingPreferences(configToUse);
       }
       
       toast({
