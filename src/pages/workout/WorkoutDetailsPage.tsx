@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useWorkoutDetails } from '@/hooks/useWorkoutDetails';
 import { WorkoutDetailsEnhanced } from '@/components/workouts/WorkoutDetailsEnhanced';
@@ -129,7 +130,8 @@ export default function WorkoutDetailsPage() {
     );
   }
 
-  const handleSaveExerciseSets = async (updatedSets: ExerciseSet[]): Promise<void> => {
+  // Renamed from handleSaveExerciseSets to processExerciseSetsUpdate to avoid name conflict
+  const processExerciseSetsUpdate = async (updatedSets: ExerciseSet[]): Promise<void> => {
     try {
       // Convert ExerciseSet to the format expected by API
       const setsForApi = updatedSets.map(set => ({
@@ -154,7 +156,7 @@ export default function WorkoutDetailsPage() {
       queryClient.invalidateQueries({ queryKey: ['workout-volume'] });
       queryClient.invalidateQueries({ queryKey: ['workout-density'] });
     } catch (error) {
-      console.error("Error in handleSaveWorkout:", error);
+      console.error("Error in processExerciseSetsUpdate:", error);
       toast({ 
         title: "Failed to update workout", 
         variant: "destructive" 
@@ -194,7 +196,7 @@ export default function WorkoutDetailsPage() {
             onOpenChange={setExerciseSetModalOpen}
             exerciseName={currentExercise}
             sets={exerciseSetsToEdit}
-            onSave={handleSaveExerciseSets}
+            onSave={processExerciseSetsUpdate}
           />
           
           {/* Delete Workout Confirmation */}
