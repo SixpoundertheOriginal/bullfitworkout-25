@@ -20,13 +20,33 @@ const transformExerciseFromDb = (dbExercise: any): Exercise => {
     }
   }
   
+  // Ensure we have a steps array
+  if (!instructions.steps || !Array.isArray(instructions.steps)) {
+    instructions.steps = [];
+  }
+  
+  // Ensure variations is a string array
+  let variations = dbExercise.variations || [];
+  if (!Array.isArray(variations)) {
+    variations = [];
+  }
+  
   return {
     ...dbExercise,
-    instructions: {
-      steps: Array.isArray(instructions.steps) ? instructions.steps : [],
-      video_url: instructions.video_url,
-      image_url: instructions.image_url
-    }
+    instructions,
+    variations,
+    is_compound: dbExercise.is_compound === undefined ? false : dbExercise.is_compound
+  };
+};
+
+// Helper function to prepare exercise for database insertion
+const prepareExerciseForDb = (exercise: ExerciseInput | ExerciseUpdateInput) => {
+  return {
+    ...exercise,
+    // Ensure is_compound is set (required by db schema)
+    is_compound: exercise.is_compound === undefined ? false : exercise.is_compound,
+    // Ensure instructions is properly formatted
+    instructions: exercise.instructions || { steps: [] }
   };
 };
 
@@ -53,11 +73,7 @@ export async function listExercises(): Promise<Exercise[]> {
  */
 export async function createExercise(exercise: ExerciseInput): Promise<Exercise> {
   // Prepare exercise for database insertion
-  const dbExercise = {
-    ...exercise,
-    // Ensure instructions is properly formatted for the database
-    instructions: exercise.instructions || { steps: [] }
-  };
+  const dbExercise = prepareExerciseForDb(exercise);
 
   const { data, error } = await supabase
     .from('exercises')
@@ -78,13 +94,7 @@ export async function createExercise(exercise: ExerciseInput): Promise<Exercise>
  */
 export async function updateExercise(exercise: ExerciseUpdateInput): Promise<Exercise> {
   // Prepare exercise for database update
-  const dbExercise = {
-    ...exercise,
-    // Ensure instructions is properly formatted for the database if it exists
-    ...(exercise.instructions && { 
-      instructions: exercise.instructions
-    })
-  };
+  const dbExercise = prepareExerciseForDb(exercise);
 
   const { data, error } = await supabase
     .from('exercises')

@@ -1,7 +1,5 @@
 
-export { useExercises } from './useExerciseQueries';
-export { useExercisesUtil } from './useExerciseUtils';
-export * from './useExerciseCreate';
-export * from './useExerciseUpdate';
-export * from './useExerciseDelete';
-export * from './types';
+// Re-export hooks from this module
+export { useExercisesUtil as useExercises } from './useExerciseUtils';
+export { useExercises as useExerciseQueries } from './useExerciseQueries';
+export type { ExerciseInput, ExerciseUpdateInput, ExerciseSortBy, SortOrder } from './types';

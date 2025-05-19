@@ -27,9 +27,9 @@ export type ExerciseInput = {
     video_url?: string;
     image_url?: string;
   };
-  is_compound?: boolean;
+  is_compound: boolean; // Made this required to match database expectations
   tips?: string[];
-  variations?: string[];
+  variations?: string[]; // Changed to only accept string[] to match database schema
   metadata?: Record<string, any>;
   base_exercise_id?: string;
   variation_type?: string;

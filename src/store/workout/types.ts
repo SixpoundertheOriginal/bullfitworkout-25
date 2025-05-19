@@ -1,18 +1,16 @@
-
 import { TrainingConfig } from '@/hooks/useTrainingSetupPersistence';
 
 export interface ExerciseSet {
   id: string;
-  workout_id: string; // Make this required to match type use in components
+  workout_id: string; 
   exercise_name: string;
   weight: number;
   reps: number;
-  // Ensure restTime is required here as well to match with Exercise types
-  restTime: number;
+  set_number: number; // Updated to required to match ExerciseSet from types.ts
   completed: boolean;
   isEditing: boolean;
-  rpe?: number; // Rate of Perceived Exertion (1-10 scale)
-  set_number?: number; // Added this to match component usage
+  restTime: number;
+  rpe?: number;
   metadata?: {
     autoAdjusted?: boolean;
     previousValues?: {

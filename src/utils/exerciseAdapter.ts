@@ -27,10 +27,10 @@ export function adaptExerciseSets(
     const safeExerciseName = safeRenderableExercise(exerciseName);
     
     adaptedExercises[safeExerciseName] = sets.map((set, index) => ({
-      id: `${safeExerciseName}-set-${index}`,
-      set_number: index + 1,
+      id: set.id || `${safeExerciseName}-set-${index}`,
+      set_number: set.set_number || index + 1,
       exercise_name: safeExerciseName,
-      workout_id: 'current-workout', // Placeholder until actual save
+      workout_id: set.workout_id || 'current-workout', // Ensure workout_id is always provided
       weight: set.weight,
       reps: set.reps,
       // Ensure restTime is always provided and not undefined
@@ -69,6 +69,10 @@ export function adaptToStoreFormat(
     const safeExerciseName = safeRenderableExercise(exerciseName);
     
     storeExercises[safeExerciseName] = sets.map(set => ({
+      id: set.id,
+      workout_id: set.workout_id,
+      exercise_name: set.exercise_name,
+      set_number: set.set_number,
       weight: set.weight,
       reps: set.reps,
       // Ensure restTime is always provided and not undefined

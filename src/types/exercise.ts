@@ -3,7 +3,7 @@ export interface Exercise {
   id?: string;
   name: string;
   description: string;
-  instructions?: {
+  instructions: {
     steps: string[];
     video_url?: string;
     image_url?: string;
@@ -22,7 +22,7 @@ export interface Exercise {
   updated_at?: string;
   movement_pattern?: string;
   tips?: string[];
-  variations?: string[] | Exercise[]; // Allow both string[] and Exercise[] for flexibility
+  variations?: string[]; // Changed to only string[] for consistency
   user_id?: string;
   base_exercise_id?: string;
   is_bodyweight?: boolean;
@@ -32,11 +32,11 @@ export interface Exercise {
 
 export interface ExerciseSet {
   id: string;
-  workout_id: string; // Make this required to match type expectations
+  workout_id: string; // Required in both types
   exercise_name: string;
   weight: number;
   reps: number;
-  set_number?: number;
+  set_number: number; // Made this required to match usage
   completed: boolean;
   isEditing: boolean;
   restTime: number;

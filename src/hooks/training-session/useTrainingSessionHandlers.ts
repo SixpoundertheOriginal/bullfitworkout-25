@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -46,6 +45,10 @@ export const useTrainingSessionHandlers = (
     
     // Add new exercise with default 3 sets - with type-safe metadata
     const newSets: ExerciseSet[] = Array.from({ length: 3 }, (_, i) => ({
+      id: `temp-${exerciseName}-${i}`, // Temporary ID until saved
+      workout_id: 'temp', // Temporary workout ID until saved
+      exercise_name: exerciseName,
+      set_number: i + 1,
       weight: 0,
       reps: 0,
       restTime: 60,
@@ -78,14 +81,20 @@ export const useTrainingSessionHandlers = (
       // Get weight and reps from last set as a starting point
       let weight = 0;
       let reps = 0;
+      let nextSetNumber = 1;
       
       if (currentSets.length > 0) {
         const lastSet = currentSets[currentSets.length - 1];
         weight = lastSet.weight || 0;
         reps = lastSet.reps || 0;
+        nextSetNumber = (lastSet.set_number || 0) + 1;
       }
       
       const newSet: ExerciseSet = {
+        id: `temp-${exerciseName}-${Date.now()}`,
+        workout_id: 'temp',
+        exercise_name: exerciseName,
+        set_number: nextSetNumber,
         weight,
         reps,
         restTime: 60,
@@ -104,129 +113,113 @@ export const useTrainingSessionHandlers = (
     });
   }, [setExercises]);
   
-  const handleFocusExercise = useCallback((exerciseName: string) => {
-    setFocusedExercise(exerciseName);
-  }, [setFocusedExercise]);
-  
-  const handleCompleteExercise = useCallback((exerciseName: string) => {
-    // Mark all sets as completed
-    setExercises(prev => {
-      const currentSets = prev[exerciseName] || [];
-      return {
-        ...prev,
-        [exerciseName]: currentSets.map(set => ({ ...set, completed: true }))
-      };
-    });
-    
-    setCompletedExerciseName(exerciseName);
-    setShowCompletionConfirmation(true);
-  }, [setExercises, setCompletedExerciseName, setShowCompletionConfirmation]);
-  
-  const handleNextExercise = useCallback((nextExerciseName: string | null, handleFinishWorkout: () => Promise<string | null>) => {
-    setShowCompletionConfirmation(false);
-    
-    if (nextExerciseName) {
-      setFocusedExercise(nextExerciseName);
-    } else {
-      // No more exercises, prompt to finish workout
-      toast({
-        title: "All exercises completed!",
-        description: "You've completed all exercises in this workout.",
-        action: {
-          label: "Finish Workout",
-          onClick: handleFinishWorkout
-        }
-      });
-    }
-  }, [setShowCompletionConfirmation, setFocusedExercise]);
-
-  // Implement with proper signature following AttemptRecoveryFn type
-  const attemptRecovery: AttemptRecoveryFn = useCallback(async (
-    workoutId: string, 
-    source: 'manual' | 'auto' = 'manual', 
-    meta: object = {}
-  ) => {
-    // Call the raw function with the correct signature
-    return rawAttemptRecovery(workoutId, source, meta);
-  }, [rawAttemptRecovery]);
-  
-  // Implement with proper signature following HandleCompleteWorkoutFn type
-  const handleFinishWorkout: HandleCompleteWorkoutFn = useCallback(async (trainingConfigParam?: any) => {
-    console.log("handleFinishWorkout called with config:", trainingConfigParam || trainingConfig);
-    console.log("Current completedSets:", completedSets);
-    console.log("Current exercises:", Object.keys(exercises));
-    
-    if (completedSets === 0 && Object.keys(exercises).length === 0) {
-      toast({
-        title: "No exercises added", 
-        description: "Please add at least one exercise before finishing your workout.",
-        variant: "destructive"
-      });
-      return null;
-    }
-    
-    if (completedSets === 0) {
-      toast({
-        title: "No sets completed", 
-        description: "Please complete at least one set before finishing your workout.",
-        variant: "destructive"
-      });
-      return null;
-    }
-    
-    // Use the provided config or fall back to the injected one
-    const configToUse = trainingConfigParam || trainingConfig;
-    try {
-      console.log("Calling rawHandleCompleteWorkout with config:", configToUse);
-      const result = await rawHandleCompleteWorkout(configToUse);
-      
-      console.log("rawHandleCompleteWorkout returned:", result);
-      
-      if (result) {
-        // Save user's workout preferences
-        if (configToUse) {
-          saveTrainingPreferences(configToUse);
-        }
-        
-        toast({
-          title: "Workout saved successfully!",
-          variant: "default"
-        });
-      } else {
-        console.error("Workout save returned null/undefined");
-        toast({
-          title: "Error saving workout",
-          description: "Please try again",
-          variant: "destructive" 
-        });
-      }
-      
-      return result;
-    } catch (error) {
-      console.error("Error in handleFinishWorkout:", error);
-      toast({
-        title: "Error saving workout",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
-        variant: "destructive"
-      });
-      return null;
-    }
-  }, [completedSets, rawHandleCompleteWorkout, trainingConfig, saveTrainingPreferences, exercises]);
-
-  // Rating submission
-  const handleSubmitRating = useCallback((submitSetRating: (rpe: number) => void, setIsRatingSheetOpen: (open: boolean) => void) => (rpe: number) => {
-    submitSetRating(rpe);
-    setIsRatingSheetOpen(false);
-  }, []);
+  // ... keep existing code (remain handlers and functions)
 
   return {
     handleAddExercise,
     handleAddSet,
-    handleFocusExercise,
-    handleCompleteExercise,
-    handleNextExercise,
-    handleFinishWorkout,
-    attemptRecovery,
-    handleSubmitRating
+    handleFocusExercise: setFocusedExercise,
+    handleCompleteExercise: (exerciseName: string) => {
+      // Mark all sets as completed
+      setExercises(prev => {
+        const currentSets = prev[exerciseName] || [];
+        return {
+          ...prev,
+          [exerciseName]: currentSets.map(set => ({ ...set, completed: true }))
+        };
+      });
+      
+      setCompletedExerciseName(exerciseName);
+      setShowCompletionConfirmation(true);
+    },
+    handleNextExercise: (nextExerciseName: string | null, handleFinishWorkout: () => Promise<string | null>) => {
+      setShowCompletionConfirmation(false);
+      
+      if (nextExerciseName) {
+        setFocusedExercise(nextExerciseName);
+      } else {
+        // No more exercises, prompt to finish workout
+        toast({
+          title: "All exercises completed!",
+          description: "You've completed all exercises in this workout.",
+          action: {
+            label: "Finish Workout",
+            onClick: handleFinishWorkout
+          }
+        });
+      }
+    },
+    handleFinishWorkout: async (trainingConfigParam?: any) => {
+      console.log("handleFinishWorkout called with config:", trainingConfigParam || trainingConfig);
+      console.log("Current completedSets:", completedSets);
+      console.log("Current exercises:", Object.keys(exercises));
+      
+      if (completedSets === 0 && Object.keys(exercises).length === 0) {
+        toast({
+          title: "No exercises added", 
+          description: "Please add at least one exercise before finishing your workout.",
+          variant: "destructive"
+        });
+        return null;
+      }
+      
+      if (completedSets === 0) {
+        toast({
+          title: "No sets completed", 
+          description: "Please complete at least one set before finishing your workout.",
+          variant: "destructive"
+        });
+        return null;
+      }
+      
+      // Use the provided config or fall back to the injected one
+      const configToUse = trainingConfigParam || trainingConfig;
+      try {
+        console.log("Calling rawHandleCompleteWorkout with config:", configToUse);
+        const result = await rawHandleCompleteWorkout(configToUse);
+        
+        console.log("rawHandleCompleteWorkout returned:", result);
+        
+        if (result) {
+          // Save user's workout preferences
+          if (configToUse) {
+            saveTrainingPreferences(configToUse);
+          }
+          
+          toast({
+            title: "Workout saved successfully!",
+            variant: "default"
+          });
+        } else {
+          console.error("Workout save returned null/undefined");
+          toast({
+            title: "Error saving workout",
+            description: "Please try again",
+            variant: "destructive" 
+          });
+        }
+        
+        return result;
+      } catch (error) {
+        console.error("Error in handleFinishWorkout:", error);
+        toast({
+          title: "Error saving workout",
+          description: error instanceof Error ? error.message : "An unknown error occurred",
+          variant: "destructive"
+        });
+        return null;
+      }
+    },
+    attemptRecovery: async (
+      workoutId: string, 
+      source: 'manual' | 'auto' = 'manual', 
+      meta: object = {}
+    ) => {
+      return rawAttemptRecovery(workoutId, source, meta);
+    },
+    handleSubmitRating: (submitSetRating: (rpe: number) => void, setIsRatingSheetOpen: (open: boolean) => void) => (rpe: number) => {
+      submitSetRating(rpe);
+      setIsRatingSheetOpen(false);
+    }
   };
 };
