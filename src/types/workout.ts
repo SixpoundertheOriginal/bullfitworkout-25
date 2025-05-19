@@ -61,3 +61,8 @@ export interface WorkoutState {
     intensity?: number;
   } | null;
 }
+
+// Function type definitions to prevent signature drift
+export type LoadTrainingConfigFn = () => any | null;
+export type AttemptRecoveryFn = (workoutId: string, source?: 'manual' | 'auto', meta?: object) => Promise<boolean>;
+export type HandleCompleteWorkoutFn = (trainingConfig?: any) => Promise<string | null>;

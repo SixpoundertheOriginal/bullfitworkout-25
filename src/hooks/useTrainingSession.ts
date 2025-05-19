@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useWorkoutStore } from '@/store/workout';
 import { useWorkoutSave } from '@/hooks/useWorkoutSave';
@@ -8,10 +7,7 @@ import { toast } from '@/hooks/use-toast';
 import { shallow } from 'zustand/shallow';
 import { ExerciseSet } from '@/store/workout/types'; // Ensure we're using the store type
 import { adaptExerciseSets, adaptToStoreFormat } from '@/utils/exerciseAdapter';
-
-// Types for the recovery function
-type AttemptRecoveryFn = (workoutId: string, source?: 'manual' | 'auto', meta?: object) => Promise<boolean>;
-type HandleCompleteWorkoutFn = (trainingConfig?: any) => Promise<string | null>;
+import { LoadTrainingConfigFn, AttemptRecoveryFn, HandleCompleteWorkoutFn } from '@/types/workout';
 
 export const useTrainingSession = () => {
   const navigate = useNavigate();
@@ -70,9 +66,9 @@ export const useTrainingSession = () => {
   // Training setup persistence
   const { storedConfig, saveConfig } = useTrainingSetupPersistence();
   
-  // Fix for error: loadTrainingConfig doesn't expect arguments
-  // Modify to simply return the stored config without any arguments
-  const loadTrainingConfig = useCallback(() => {
+  // ❗ Avoid argument drift - explicit type for no-arguments function
+  // Implementation of LoadTrainingConfigFn = () => TrainingConfig | null
+  const loadTrainingConfig: LoadTrainingConfigFn = useCallback(() => {
     // Simply return the stored config without any arguments
     return storedConfig;
   }, [storedConfig]);
@@ -89,16 +85,19 @@ export const useTrainingSession = () => {
     workoutId: savedWorkoutId
   } = useWorkoutSave(exercises, elapsedTime, resetSession);
   
-  // Fix for error #2: Create a wrapper for attemptRecovery with the proper signature
-  // Check the type of rawAttemptRecovery and ensure our wrapper matches
-  const attemptRecovery = useCallback(async () => {
-    if (workoutId) {
-      // Fix: This needs to align with what rawAttemptRecovery expects
-      // Based on error TS2554, it seems rawAttemptRecovery expects 1 argument
-      return rawAttemptRecovery(workoutId);
+  // ❗ Avoid argument drift - implement wrapper with proper signature
+  // Implementation of AttemptRecoveryFn
+  const attemptRecovery: AttemptRecoveryFn = useCallback(async (
+    id: string, 
+    source: 'manual' | 'auto' = 'manual', 
+    meta: object = {}
+  ) => {
+    if (id) {
+      // Pass the expected workoutId
+      return rawAttemptRecovery(id);
     }
     return Promise.resolve(false);
-  }, [rawAttemptRecovery, workoutId]);
+  }, [rawAttemptRecovery]);
   
   // UI State
   const [showRestTimerModal, setShowRestTimerModal] = useState(false);
@@ -145,7 +144,7 @@ export const useTrainingSession = () => {
       console.log('Starting new workout from existing exercises');
       startWorkout();
     } else if (!isActive && !hasExercises) {
-      // Try to load saved config - Fix: Call without arguments
+      // Try to load saved config - FIXED: Call with NO arguments
       const config = loadTrainingConfig();
       if (config) {
         console.log('Found saved training config:', config);
@@ -206,15 +205,16 @@ export const useTrainingSession = () => {
     setRestTimerResetSignal(prev => prev + 1);
   }, []);
   
-  // Workout completion - Fix for error #3: handleCompleteWorkout expects just the trainingConfig
-  const handleFinishWorkout = useCallback(async () => {
+  // ❗ Avoid argument drift - implement wrapper with proper signature
+  // Implementation of HandleCompleteWorkoutFn
+  const handleFinishWorkout: HandleCompleteWorkoutFn = useCallback(async () => {
     if (completedSets === 0) {
       toast({
         title: "No sets completed", 
         description: "Please complete at least one set before finishing your workout.",
         variant: "destructive"
       });
-      return;
+      return null;
     }
     
     // Pass just the trainingConfig as the single required argument
@@ -232,6 +232,8 @@ export const useTrainingSession = () => {
       });
       navigate('/workout-complete', { replace: true });
     }
+    
+    return result;
   }, [completedSets, rawHandleCompleteWorkout, trainingConfig, navigate, saveTrainingPreferences]);
   
   // Exercise focus management
@@ -461,4 +463,3 @@ export const useTrainingSession = () => {
     setShowRestTimerModal
   };
 };
-
