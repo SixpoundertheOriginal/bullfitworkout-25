@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useNavigate } from 'react';
 import { useWorkoutTimer } from '@/hooks/useWorkoutTimer';
 import { useExercises } from "@/hooks/useExercises";
 import { WorkoutSessionHeader } from "@/components/training/WorkoutSessionHeader";
@@ -19,6 +19,7 @@ import { WorkoutCompletion } from "@/components/training/WorkoutCompletion";
 const TrainingSessionPage = () => {
   const { isLoading: loadingExercises } = useExercises();
   const [showCompletion, setShowCompletion] = useState(false);
+  const navigate = useNavigate();
   
   const {
     // State
@@ -132,7 +133,14 @@ const TrainingSessionPage = () => {
         setTimeout(() => {
           resetSession();
           setShowCompletion(false);
-        }, 1000);
+          // Navigate to home page after successful completion
+          navigate('/');
+          toast({
+            title: "Workout completed",
+            description: "Your workout has been saved successfully",
+            variant: "default"
+          });
+        }, 500);
       })
       .catch((error) => {
         console.error("Error saving workout:", error);
@@ -141,6 +149,10 @@ const TrainingSessionPage = () => {
           description: "Please try again",
           variant: "destructive"
         });
+        // Even on error, navigate back to home page to prevent user getting stuck
+        setTimeout(() => {
+          navigate('/');
+        }, 2000);
       });
   };
   

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { IntelligentMetricsDisplay } from '@/components/metrics/IntelligentMetricsDisplay';
@@ -127,6 +126,7 @@ export const WorkoutCompletion = ({
   // Handle when XP animation completes
   const handleXpAnimationComplete = () => {
     setShowXpAnimation(false);
+    // Call the onComplete callback to properly finish the workout
     onComplete();
   };
 
