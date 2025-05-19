@@ -144,7 +144,7 @@ export const useTrainingSession = () => {
       console.log('Starting new workout from existing exercises');
       startWorkout();
     } else if (!isActive && !hasExercises) {
-      // Try to load saved config - FIX THE ERROR HERE: Call without arguments
+      // Try to load saved config - Fix: Call without arguments
       const config = loadTrainingConfig();
       if (config) {
         console.log('Found saved training config:', config);
