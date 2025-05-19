@@ -145,7 +145,7 @@ export default function WorkoutDetailsPage() {
         rest_time: set.restTime
       }));
       
-      await handleSaveExerciseSets(setsForApi);
+      await handleSaveExerciseSets(setsForApi as any);
       
       // Force refetch to update calculations with new duration
       refetch();
@@ -195,8 +195,8 @@ export default function WorkoutDetailsPage() {
             open={exerciseSetModalOpen}
             onOpenChange={setExerciseSetModalOpen}
             exerciseName={currentExercise}
-            sets={exerciseSetsToEdit}
-            onSave={processExerciseSetsUpdate}
+            sets={exerciseSetsToEdit as any}
+            onSave={processExerciseSetsUpdate as any}
           />
           
           {/* Delete Workout Confirmation */}

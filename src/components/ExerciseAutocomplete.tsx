@@ -26,6 +26,7 @@ import {
   Difficulty
 } from "@/types/exercise";
 import { useExercises } from "@/hooks/useExercises";
+import { ExerciseInput } from "@/hooks/exercise/types";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -119,6 +120,7 @@ export function ExerciseAutocomplete({ onSelectExercise, className }: ExerciseAu
       equipment_type: newExercise.equipment_type || [],
       secondary_muscle_groups: newExercise.secondary_muscle_groups || [],
       movement_pattern: newExercise.movement_pattern || "push",
+      instructions: { steps: [] } // Ensure steps exists as an array
     };
     
     console.log("Creating exercise with data:", exerciseToCreate);

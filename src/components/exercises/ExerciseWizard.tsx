@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
+import { ExerciseInput } from '@/hooks/exercise/types';
 
 // Define the steps of our wizard
 type WizardStep = 
@@ -178,13 +179,15 @@ export function ExerciseWizard({ onComplete, onCancel, className }: ExerciseWiza
       name: fullExerciseName,
       user_id: user.id,
       description: exerciseDescription || fullExerciseName,
-      primary_muscle_groups: selectedExercise?.primary_muscle_groups || [selectedMuscleGroup as MuscleGroup],
+      primary_muscle_groups: selectedExercise?.primary_muscle_groups || [selectedMuscleGroup as string],
       secondary_muscle_groups: selectedExercise?.secondary_muscle_groups || [],
       equipment_type: selectedEquipment ? [selectedEquipment] : ['bodyweight'],
       movement_pattern: movementPatternValue,
       difficulty: difficultyValue,
       is_compound: selectedExercise?.is_compound || false,
-      instructions: selectedExercise?.instructions || {},
+      instructions: {
+        steps: selectedExercise?.instructions?.steps || []
+      },
       tips: selectedExercise?.tips || [],
       variations: selectedExercise?.variations || [],
       

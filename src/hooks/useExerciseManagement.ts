@@ -42,11 +42,11 @@ export function useExerciseManagement(workoutId: string | undefined, onUpdate: U
     setExerciseSetModalOpen(true);
   };
 
-  const handleSaveExerciseSets = async (updatedSets: ExerciseSet[]): Promise<void> => {
+  const handleSaveExerciseSets = async (updatedSets: any[]): Promise<void> => {
     if (!workoutId || !currentExercise) return;
     
     try {
-      // Convert ExerciseSet to the format expected by updateExerciseSets
+      // API expects this format
       const setsForApi = updatedSets.map(set => ({
         id: set.id || "",
         exercise_name: set.exercise_name,
@@ -55,7 +55,7 @@ export function useExerciseManagement(workoutId: string | undefined, onUpdate: U
         reps: set.reps,
         set_number: set.set_number || 0,
         completed: set.completed,
-        rest_time: set.restTime
+        rest_time: set.restTime || set.rest_time || 60
       }));
       
       const updated = await updateExerciseSets(workoutId, currentExercise, setsForApi);

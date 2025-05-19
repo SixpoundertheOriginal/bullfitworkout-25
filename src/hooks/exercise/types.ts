@@ -39,6 +39,10 @@ export type ExerciseInput = {
   // New fields for media
   media_url?: string;
   variationList?: any[];
+  // Add any missing field that might be required
+  created_at?: string;
+  updated_at?: string;
+  is_custom?: boolean;
 };
 
 export type ExerciseUpdateInput = Partial<Omit<ExerciseInput, 'created_at'>> & { id: string };

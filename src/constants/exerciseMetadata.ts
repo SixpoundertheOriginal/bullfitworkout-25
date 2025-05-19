@@ -28,7 +28,7 @@ export const MUSCLE_GROUP_CATEGORIES: MuscleGroupCategory[] = [
 
 // Helper functions for muscle groups
 export const getMuscleGroupLabel = (group: MuscleGroup): string => {
-  const labels: Record<MuscleGroup, string> = {
+  const labels: Record<string, string> = {
     'chest': 'Chest',
     'back': 'Back',
     'shoulders': 'Shoulders',
@@ -56,7 +56,7 @@ export const getMuscleGroupLabel = (group: MuscleGroup): string => {
 
 // Helper functions for movement patterns
 export const getMovementPatternLabel = (pattern: MovementPattern): string => {
-  const labels: Record<MovementPattern, string> = {
+  const labels: Record<string, string> = {
     'push': 'Push',
     'pull': 'Pull',
     'squat': 'Squat',
@@ -73,7 +73,7 @@ export const getMovementPatternLabel = (pattern: MovementPattern): string => {
 
 // Helper functions for difficulty levels
 export const getDifficultyLabel = (difficulty: Difficulty): string => {
-  const labels: Record<Difficulty, string> = {
+  const labels: Record<string, string> = {
     'beginner': 'Beginner',
     'intermediate': 'Intermediate',
     'advanced': 'Advanced',

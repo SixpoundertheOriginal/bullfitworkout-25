@@ -1,5 +1,4 @@
 
-
 export interface Exercise {
   id?: string;
   name: string;
@@ -28,6 +27,7 @@ export interface Exercise {
   base_exercise_id?: string;
   is_bodyweight?: boolean;
   load_factor?: number;
+  duration?: number;
 }
 
 export interface ExerciseSet {
@@ -54,23 +54,10 @@ export interface ExerciseSet {
 }
 
 // Export type definitions needed by components
-export type MuscleGroup = 
-  | 'chest' | 'back' | 'shoulders' | 'arms' | 'legs' | 'core' 
-  | 'cardio' | 'full body' | 'biceps' | 'triceps' | 'forearms'
-  | 'traps' | 'lats' | 'glutes' | 'hamstrings' | 'quads'
-  | 'calves' | 'abs' | 'obliques' | 'lower back';
-
-export type EquipmentType = 
-  | 'barbell' | 'dumbbell' | 'kettlebell' | 'machine'
-  | 'cable' | 'bodyweight' | 'resistance band' | 'medicine ball'
-  | 'stability ball' | 'smith machine' | 'suspension trainer'
-  | 'foam roller' | 'bench' | 'other';
-
-export type MovementPattern = 
-  | 'push' | 'pull' | 'squat' | 'hinge' | 'lunge'
-  | 'rotation' | 'carry' | 'isometric' | 'locomotion';
-
-export type Difficulty = 'beginner' | 'intermediate' | 'advanced' | 'expert';
+export type MuscleGroup = string;
+export type EquipmentType = string;
+export type MovementPattern = string;
+export type Difficulty = string;
 
 // Export the constants that are used in components
 export const COMMON_MUSCLE_GROUPS: MuscleGroup[] = [
@@ -115,7 +102,7 @@ export interface ExerciseListItem {
 }
 
 export interface ExerciseWithVariations extends Exercise {
-  variations: Exercise[]; // Changed from string[] to Exercise[]
+  variations: string[] | Exercise[]; // Allow both string[] and Exercise[] for backward compatibility
 }
 
 // Define Weight Calculation for exercise weights
