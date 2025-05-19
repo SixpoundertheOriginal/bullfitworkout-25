@@ -1,16 +1,17 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useTrainingSession } from "@/hooks/training-session";
-import { WorkoutSessionHeader } from "@/components/training/WorkoutSessionHeader";
-import { ExerciseList } from "@/components/training/ExerciseList";
-import { TrainingSessionSheets } from "./TrainingSessionSheets";
-import { TrainingSessionTimers } from "@/components/training/TrainingSessionTimers";
 import { ExerciseCompletionConfirmation } from "@/components/training/ExerciseCompletionConfirmation";
 import { SetsDebugger } from "@/components/training/SetsDebugger";
 import { ExerciseFAB } from "@/components/training/ExerciseFAB";
 import { adaptExerciseSets, safeRenderableExercise } from "@/utils/exerciseAdapter";
 import { WorkoutExercises, PostSetFlowState } from '@/store/workout/types';
 import { ExerciseListWrapper } from "./ExerciseListWrapper";
+import { TrainingSessionSheets } from "./TrainingSessionSheets";
+import { TrainingSessionTimers } from "@/components/training/TrainingSessionTimers";
+import { WorkoutMetricsPanel } from "./metrics/WorkoutMetricsPanel";
+import { TrainingSessionLayout } from "./layout/TrainingSessionLayout";
+import { TrainingActionButtons } from "./actions/TrainingActionButtons";
 
 interface TrainingSessionContentProps {
   onFinishWorkoutClick: () => void;
@@ -57,18 +58,6 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     setFocusedExercise,
   } = useTrainingSession();
   
-  // Debug logging
-  useEffect(() => {
-    console.log("Training session exercises state:", exercises);
-    
-    // Check for potential object keys that could cause rendering issues
-    const objectKeys = Object.keys(exercises || {}).filter(key => 
-      typeof key !== 'string' || key.includes('[object Object]'));
-    if (objectKeys.length > 0) {
-      console.warn('Found problematic exercise keys that may cause rendering issues:', objectKeys);
-    }
-  }, [exercises]);
-
   // Make sure focusedExercise is always a safe string
   const safeFocusedExercise = focusedExercise 
     ? safeRenderableExercise(focusedExercise) 
@@ -102,80 +91,92 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
   // Adapt exercises to the component-friendly format
   const adaptedExercises = adaptExerciseSets(exercises);
 
+  // Check if there are exercises to show finish button
+  const hasExercises = Object.keys(adaptedExercises).length > 0;
+
   return (
-    <div className="flex flex-col min-h-screen bg-black text-white pt-16 pb-4">
-      <main className="flex-1 overflow-auto">
-        <div className="mx-auto pb-4">
-          <div className="relative">
-            <WorkoutSessionHeader
-              elapsedTime={elapsedTime}
-              exerciseCount={exerciseCount}
-              completedSets={completedSets}
-              totalSets={totalSets}
-              workoutStatus={workoutStatus}
-              isRecoveryMode={!!workoutId}
-              saveProgress={0}
-              onRetrySave={handleAttemptRecovery}
-              onResetWorkout={() => {}}
-              restTimerActive={restTimerActive}
-              onRestTimerComplete={handleRestTimerComplete}
-              onShowRestTimer={handleShowRestTimer}
-              onRestTimerReset={triggerRestTimerReset}
-              restTimerResetSignal={restTimerResetSignal}
-              currentRestTime={currentRestTime}
-              focusedExercise={safeFocusedExercise}
-            />
-            
-            {/* Timer Components */}
-            <TrainingSessionTimers
-              showRestTimerModal={showRestTimerModal}
-              showEnhancedRestTimer={showEnhancedRestTimer}
-              currentRestTime={currentRestTime}
-              lastCompletedExercise={lastCompletedExercise ? safeRenderableExercise(lastCompletedExercise) : null}
-              nextSetDetails={getNextSetDetails()}
-              nextSetRecommendation={null}
-              motivationalMessage={""}
-              volumeStats={""}
-              onClose={() => {
-                const { setShowRestTimerModal } = useTrainingSession();
-                setShowRestTimerModal(false);
-              }}
-              onRestTimerComplete={handleRestTimerComplete}
-              setRestTimerActive={(active) => {
-                const { setRestTimerActive } = useTrainingSession();
-                setRestTimerActive(active);
-              }}
-              setShowEnhancedRestTimer={(show) => {
-                const { setShowEnhancedRestTimer } = useTrainingSession();
-                setShowEnhancedRestTimer(show);
-              }}
-              setShowRestTimerModal={(show) => {
-                const { setShowRestTimerModal } = useTrainingSession();
-                setShowRestTimerModal(show);
-              }}
-              setPostSetFlow={(flow) => {
-                const { setPostSetFlow } = useTrainingSession();
-                // Fix type error by using the correct PostSetFlowState type
-                setPostSetFlow(flow as PostSetFlowState);
-              }}
-            />
-          </div>
-          
-          <div className="mt-3 px-3 sm:px-4">
-            <ExerciseListWrapper 
-              adaptedExercises={adaptedExercises}
-              safeActiveExercise={safeActiveExercise} 
-              safeFocusedExercise={safeFocusedExercise}
-              nextExerciseName={nextExerciseName}
-              onFinishWorkout={onFinishWorkoutClick}
-              isSaving={isSaving}
-            />
-            
-            {/* Only show debugger in development */}
-            {showDebugger && <SetsDebugger />}
-          </div>
-        </div>
-      </main>
+    <TrainingSessionLayout
+      focusedExercise={safeFocusedExercise}
+      elapsedTime={elapsedTime}
+      completedSets={completedSets}
+      totalSets={totalSets}
+      workoutStatus={workoutStatus}
+      isRecoveryMode={!!workoutId}
+      saveProgress={0}
+      onRetrySave={handleAttemptRecovery}
+      metricsPanel={
+        <WorkoutMetricsPanel
+          elapsedTime={elapsedTime}
+          exerciseCount={exerciseCount}
+          completedSets={completedSets}
+          totalSets={totalSets}
+          restTimerActive={restTimerActive}
+          currentRestTime={currentRestTime}
+          onManualRestStart={handleShowRestTimer}
+          onRestTimerComplete={handleRestTimerComplete}
+          onRestTimerReset={triggerRestTimerReset}
+          restTimerResetSignal={restTimerResetSignal}
+          focusedExercise={safeFocusedExercise}
+        />
+      }
+    >
+      {/* Timer Components */}
+      <TrainingSessionTimers
+        showRestTimerModal={showRestTimerModal}
+        showEnhancedRestTimer={showEnhancedRestTimer}
+        currentRestTime={currentRestTime}
+        lastCompletedExercise={lastCompletedExercise ? safeRenderableExercise(lastCompletedExercise) : null}
+        nextSetDetails={getNextSetDetails()}
+        nextSetRecommendation={null}
+        motivationalMessage={""}
+        volumeStats={""}
+        onClose={() => {
+          const { setShowRestTimerModal } = useTrainingSession();
+          setShowRestTimerModal(false);
+        }}
+        onRestTimerComplete={handleRestTimerComplete}
+        setRestTimerActive={(active) => {
+          const { setRestTimerActive } = useTrainingSession();
+          setRestTimerActive(active);
+        }}
+        setShowEnhancedRestTimer={(show) => {
+          const { setShowEnhancedRestTimer } = useTrainingSession();
+          setShowEnhancedRestTimer(show);
+        }}
+        setShowRestTimerModal={(show) => {
+          const { setShowRestTimerModal } = useTrainingSession();
+          setShowRestTimerModal(show);
+        }}
+        setPostSetFlow={(flow) => {
+          const { setPostSetFlow } = useTrainingSession();
+          // Fix type error by using the correct PostSetFlowState type
+          setPostSetFlow(flow as PostSetFlowState);
+        }}
+      />
+      
+      {/* Exercise List */}
+      <ExerciseListWrapper 
+        adaptedExercises={adaptedExercises}
+        safeActiveExercise={safeActiveExercise} 
+        safeFocusedExercise={safeFocusedExercise}
+        nextExerciseName={nextExerciseName}
+        onFinishWorkout={onFinishWorkoutClick}
+        isSaving={isSaving}
+      />
+      
+      {/* Action Buttons */}
+      <TrainingActionButtons
+        onFinishWorkout={onFinishWorkoutClick}
+        isSaving={isSaving}
+        onOpenAddExercise={() => {
+          const { setIsAddExerciseSheetOpen } = useTrainingSession();
+          setIsAddExerciseSheetOpen(true);
+        }}
+        hasExercises={hasExercises}
+      />
+      
+      {/* Only show debugger in development */}
+      {showDebugger && <SetsDebugger />}
 
       {/* Exercise Completion Confirmation */}
       <ExerciseCompletionConfirmation
@@ -200,6 +201,6 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
 
       {/* Sheets */}
       <TrainingSessionSheets />
-    </div>
+    </TrainingSessionLayout>
   );
 };
