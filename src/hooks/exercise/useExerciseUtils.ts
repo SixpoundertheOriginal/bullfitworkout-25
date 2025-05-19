@@ -5,7 +5,7 @@ import { useExercises } from './useExerciseQueries';
 /**
  * Combined hook that provides all exercise-related functionality
  */
-export const useExercises as useExercisesUtil = (initialSortBy: ExerciseSortBy = 'name', initialSortOrder: SortOrder = 'asc') => {
+export const useExercisesUtil = (initialSortBy: ExerciseSortBy = 'name', initialSortOrder: SortOrder = 'asc') => {
   const { 
     exercises, 
     getBaseExercises,
