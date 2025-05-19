@@ -9,10 +9,11 @@ import { PostSetRatingSheet } from "@/components/training/PostSetRatingSheet";
 import { ExerciseCompletionConfirmation } from "@/components/training/ExerciseCompletionConfirmation";
 import { TrainingSessionLoading } from "@/components/training/TrainingSessionLoading";
 import { TrainingSessionTimers } from "@/components/training/TrainingSessionTimers";
-import { useTrainingSession } from "@/hooks/useTrainingSession";
+import { useTrainingSession } from "@/hooks/training-session";
 import { SetsDebugger } from "@/components/training/SetsDebugger";
 import { ExerciseFAB } from "@/components/training/ExerciseFAB";
 import { adaptExerciseSets } from "@/utils/exerciseAdapter";
+import { WorkoutExercises } from '@/store/workout/types';
 
 const TrainingSessionPage = () => {
   const { isLoading: loadingExercises } = useExercises();
@@ -92,11 +93,23 @@ const TrainingSessionPage = () => {
     }
   };
 
+  // Create a wrapper for the attemptRecovery function that requires no arguments
+  const handleAttemptRecovery = () => {
+    if (workoutId) {
+      attemptRecovery(workoutId, 'manual', {});
+    }
+  };
+
   // Determine if we should show the development debugger
   const showDebugger = process.env.NODE_ENV !== 'production';
 
   // Adapt exercises to the component-friendly format
   const adaptedExercises = adaptExerciseSets(exercises);
+
+  // Create type-safe wrappers for passing to components
+  const typeSafeHandleSetExercises = handleSetExercises as (
+    exercises: Record<string, any> | ((prev: Record<string, any>) => Record<string, any>)
+  ) => void;
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-white pt-16 pb-4">
@@ -111,7 +124,7 @@ const TrainingSessionPage = () => {
               workoutStatus={workoutStatus}
               isRecoveryMode={!!workoutId}
               saveProgress={0}
-              onRetrySave={attemptRecovery}
+              onRetrySave={handleAttemptRecovery}
               onResetWorkout={() => {}}
               restTimerActive={restTimerActive}
               onRestTimerComplete={handleRestTimerComplete}
@@ -151,7 +164,7 @@ const TrainingSessionPage = () => {
               onDeleteExercise={deleteExercise}
               onRemoveSet={(name, i) => {
                 console.log(`Removing set ${i} from ${name}`);
-                handleSetExercises(prev => {
+                typeSafeHandleSetExercises(prev => {
                   const updated = { ...prev };
                   updated[name] = prev[name].filter((_, idx) => idx !== i);
                   return updated;
@@ -159,7 +172,7 @@ const TrainingSessionPage = () => {
               }}
               onEditSet={(name, i) => {
                 console.log(`Setting edit mode for set ${i} of ${name}`);
-                handleSetExercises(prev => {
+                typeSafeHandleSetExercises(prev => {
                   const updated = { ...prev };
                   updated[name] = prev[name].map((s, idx) => idx === i ? { ...s, isEditing: true } : s);
                   return updated;
@@ -167,7 +180,7 @@ const TrainingSessionPage = () => {
               }}
               onSaveSet={(name, i) => {
                 console.log(`Saving set ${i} of ${name}`);
-                handleSetExercises(prev => {
+                typeSafeHandleSetExercises(prev => {
                   const updated = { ...prev };
                   updated[name] = prev[name].map((s, idx) => idx === i ? { ...s, isEditing: false } : s);
                   return updated;
@@ -175,7 +188,7 @@ const TrainingSessionPage = () => {
               }}
               onWeightChange={(name, i, v) => {
                 console.log(`Changing weight for set ${i} of ${name} to ${v}`);
-                handleSetExercises(prev => {
+                typeSafeHandleSetExercises(prev => {
                   const updated = { ...prev };
                   const currentSets = [...prev[name]];
                   currentSets[i] = { ...currentSets[i], weight: parseFloat(v) || 0 };
@@ -185,7 +198,7 @@ const TrainingSessionPage = () => {
               }}
               onRepsChange={(name, i, v) => {
                 console.log(`Changing reps for set ${i} of ${name} to ${v}`);
-                handleSetExercises(prev => {
+                typeSafeHandleSetExercises(prev => {
                   const updated = { ...prev };
                   const currentSets = [...prev[name]];
                   currentSets[i] = { ...currentSets[i], reps: parseInt(v) || 0 };
@@ -195,7 +208,7 @@ const TrainingSessionPage = () => {
               }}
               onRestTimeChange={(name, i, v) => {
                 console.log(`Changing rest time for set ${i} of ${name} to ${v}`);
-                handleSetExercises(prev => {
+                typeSafeHandleSetExercises(prev => {
                   const updated = { ...prev };
                   const currentSets = [...prev[name]];
                   currentSets[i] = { ...currentSets[i], restTime: parseInt(v) || 60 };
@@ -204,7 +217,7 @@ const TrainingSessionPage = () => {
                 });
               }}
               onWeightIncrement={(name, i, inc) => {
-                handleSetExercises(prev => {
+                typeSafeHandleSetExercises(prev => {
                   const updated = { ...prev };
                   const currentSets = [...prev[name]];
                   const currentWeight = currentSets[i].weight || 0;
@@ -214,7 +227,7 @@ const TrainingSessionPage = () => {
                 });
               }}
               onRepsIncrement={(name, i, inc) => {
-                handleSetExercises(prev => {
+                typeSafeHandleSetExercises(prev => {
                   const updated = { ...prev };
                   const currentSets = [...prev[name]];
                   const currentReps = currentSets[i].reps || 0;
@@ -224,7 +237,7 @@ const TrainingSessionPage = () => {
                 });
               }}
               onRestTimeIncrement={(name, i, inc) => {
-                handleSetExercises(prev => {
+                typeSafeHandleSetExercises(prev => {
                   const updated = { ...prev };
                   const currentSets = [...prev[name]];
                   const currentRest = currentSets[i].restTime || 60;
@@ -241,7 +254,7 @@ const TrainingSessionPage = () => {
               isSaving={isSaving || saveStatus === 'saving'}
               onNextExercise={handleNextExercise}
               hasMoreExercises={!!nextExerciseName}
-              setExercises={handleSetExercises}
+              setExercises={typeSafeHandleSetExercises}
             />
             
             {/* Only show debugger in development */}

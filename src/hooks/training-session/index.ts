@@ -82,7 +82,6 @@ export const useTrainingSession = () => {
   // Check if we're saving
   const isSaving = state.workoutStatus === 'saving';
 
-  // Return the combined API that matches the original hook
   return {
     // State
     exercises: state.exercises,
