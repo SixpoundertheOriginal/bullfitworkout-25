@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useWorkoutStore } from '@/store/workout';
 import { useWorkoutSave } from '@/hooks/useWorkoutSave';
@@ -145,7 +146,7 @@ export const useTrainingSession = () => {
       startWorkout();
     } else if (!isActive && !hasExercises) {
       // Try to load saved config
-      const config = loadTrainingConfig();
+      const config = loadTrainingConfig(); // FIX: Removed the arguments here that were causing the TS error
       if (config) {
         console.log('Found saved training config:', config);
       }
