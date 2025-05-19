@@ -32,10 +32,9 @@ export const useTrainingSessionState = () => {
     focusedExercise: state.focusedExercise,
     currentRestTime: state.currentRestTime,
     setRestTimerActive: state.setRestTimerActive
-  }), shallow);
+  }));
   
   // Action functions from the store
-  // Fixed: Call functions with the correct number of arguments
   const workoutActions = useWorkoutStore(state => ({
     setExercises: state.setExercises,
     handleCompleteSet: state.handleCompleteSet,
@@ -46,7 +45,7 @@ export const useTrainingSessionState = () => {
     setPostSetFlow: state.setPostSetFlow,
     setFocusedExercise: state.setFocusedExercise,
     submitSetRating: state.submitSetRating
-  }), shallow);
+  }));
 
   // Helper for timer reset
   const triggerRestTimerReset = () => {
