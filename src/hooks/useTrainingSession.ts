@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useWorkoutStore } from '@/store/workout';
 import { useWorkoutSave } from '@/hooks/useWorkoutSave';
@@ -69,7 +70,7 @@ export const useTrainingSession = () => {
   // Training setup persistence
   const { storedConfig, saveConfig } = useTrainingSetupPersistence();
   
-  // Fix for error #1: The loadTrainingConfig function doesn't expect arguments
+  // Fix for error: loadTrainingConfig doesn't expect arguments
   // Modify to simply return the stored config without any arguments
   const loadTrainingConfig = useCallback(() => {
     // Simply return the stored config without any arguments
@@ -460,3 +461,4 @@ export const useTrainingSession = () => {
     setShowRestTimerModal
   };
 };
+
