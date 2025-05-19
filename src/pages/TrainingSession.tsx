@@ -1,4 +1,6 @@
-import React, { useEffect, useState, useNavigate } from 'react';
+
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useWorkoutTimer } from '@/hooks/useWorkoutTimer';
 import { useExercises } from "@/hooks/useExercises";
 import { WorkoutSessionHeader } from "@/components/training/WorkoutSessionHeader";
