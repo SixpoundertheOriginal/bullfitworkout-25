@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Exercise, MuscleGroup } from '@/types/exercise';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,10 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dumbbell, Plus, Edit, Trash, ChevronRight, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getExerciseName } from '@/utils/exerciseAdapter';
 
 interface ExerciseCardProps {
-  exercise: Exercise | string;
+  exerciseName: string;
+  exerciseData?: Exercise;
   className?: string;
   isVariation?: boolean;
   onSelect?: () => void;
@@ -22,7 +21,8 @@ interface ExerciseCardProps {
 }
 
 export const ExerciseCard: React.FC<ExerciseCardProps> = ({
-  exercise,
+  exerciseName,
+  exerciseData,
   className,
   isVariation = false,
   onSelect,
@@ -33,9 +33,6 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
   expanded,
   toggleExpand
 }) => {
-  // Safely determine if we have a full exercise object or just a name string
-  const isFullExerciseObject = typeof exercise === 'object' && exercise !== null;
-  
   const renderMuscleGroups = (muscles?: MuscleGroup[]) => {
     if (!muscles || !muscles.length) return null;
     return muscles.slice(0, 3).map((muscle, i) => (
@@ -57,15 +54,12 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
       toggleExpand();
     }
   };
-
-  // Safely get the exercise name for display
-  const exerciseName = getExerciseName(exercise);
   
   // Get description only if we have a full exercise object
-  const description = isFullExerciseObject ? (exercise as Exercise).description : undefined;
+  const description = exerciseData?.description;
   
   // Get muscle groups only if we have a full exercise object
-  const muscleGroups = isFullExerciseObject ? (exercise as Exercise).primary_muscle_groups : undefined;
+  const muscleGroups = exerciseData?.primary_muscle_groups;
 
   return (
     <Card 

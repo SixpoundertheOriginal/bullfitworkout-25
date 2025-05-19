@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Exercise } from "@/types/exercise";
 import { useExerciseSuggestions } from "@/hooks/useExerciseSuggestions";

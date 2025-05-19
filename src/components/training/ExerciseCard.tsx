@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Exercise, ExerciseSet } from '@/types/exercise';
 import { CommonExerciseCard } from '../exercises/CommonExerciseCard';
@@ -11,8 +10,9 @@ import { Dumbbell, Target, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ExerciseCardProps {
-  exercise: Exercise | string;
-  onAdd?: (exercise: Exercise | string) => void;
+  exerciseName: string;
+  exerciseData?: Exercise;
+  onAdd?: (exerciseName: string) => void;
   sets?: any[];
   isActive?: boolean;
   isFocused?: boolean;
@@ -35,7 +35,8 @@ interface ExerciseCardProps {
 }
 
 export const ExerciseCard: React.FC<ExerciseCardProps> = ({ 
-  exercise, 
+  exerciseName, 
+  exerciseData,
   onAdd,
   sets = [],
   isActive,
@@ -59,10 +60,10 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
 }) => {
   const [expanded, setExpanded] = useState(true);
   
-  // Create thumbnail if exercise is an object with a media_url
-  const thumbnail = typeof exercise !== 'string' ? 
+  // Create thumbnail if exerciseData is available
+  const thumbnail = exerciseData ? 
     <ExerciseThumbnail 
-      exercise={exercise} 
+      exercise={exerciseData} 
       className={cn(
         "transition-all duration-300",
         isActive ? "ring-2 ring-purple-500/40 shadow-lg shadow-purple-500/20" : "",
@@ -148,7 +149,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
       {sets.some(set => set.completed) && (
         <ExerciseMetricsDisplay
           sets={sets}
-          exerciseName={typeof exercise === 'string' ? exercise : exercise.name}
+          exerciseName={exerciseName}
           className="mt-2"
         />
       )}
@@ -182,9 +183,9 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
       onClick={onFocus ? onFocus : undefined}
     >
       <CommonExerciseCard
-        exercise={exercise}
+        exercise={exerciseName} // Now always a string
         variant={onAdd ? "workout-add" : "workout"}
-        onAdd={onAdd ? () => onAdd(exercise) : undefined}
+        onAdd={onAdd ? () => onAdd(exerciseName) : undefined}
         sets={sets}
         isActive={isActive}
         thumbnail={thumbnail}

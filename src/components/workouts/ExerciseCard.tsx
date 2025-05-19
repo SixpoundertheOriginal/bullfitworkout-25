@@ -5,30 +5,32 @@ import { CommonExerciseCard } from '../exercises/CommonExerciseCard';
 import { ExerciseThumbnail } from '../exercises/cards/ExerciseThumbnail';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { getExerciseName, isExerciseObject, safeRenderableExercise } from '@/utils/exerciseAdapter';
+import { isExerciseObject, safeRenderableExercise } from '@/utils/exerciseAdapter';
 
 interface ExerciseCardProps {
-  exercise: Exercise | string;
+  exerciseName: string;
+  exerciseData?: Exercise;
   onAdd?: (exerciseName: string) => void;
   className?: string;
 }
 
-export const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onAdd, className }) => {
+export const ExerciseCard: React.FC<ExerciseCardProps> = ({ 
+  exerciseName, 
+  exerciseData, 
+  onAdd, 
+  className 
+}) => {
   const handleAdd = () => {
     if (onAdd) {
-      // Always pass the exercise name to avoid React errors with object children
-      const exerciseName = getExerciseName(exercise);
+      // Pass the exercise name to avoid React errors with object children
       onAdd(exerciseName);
     }
   };
-
-  // Get exercise name for display - ensure it's ALWAYS a string
-  const exerciseName = getExerciseName(exercise);
   
   // Only try to render thumbnail if we have the full exercise object
-  const thumbnail = isExerciseObject(exercise) ? 
+  const thumbnail = exerciseData ? 
     <ExerciseThumbnail 
-      exercise={exercise} 
+      exercise={exerciseData} 
       className="transition-all duration-300 group-hover:scale-105" 
     /> : undefined;
 
@@ -39,7 +41,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onAdd, cla
       transition={{ type: "spring", stiffness: 300, damping: 15 }}
     >
       <CommonExerciseCard
-        exercise={exerciseName} // This must always be a string, never an object
+        exercise={exerciseName} // This is now always a string
         variant="workout-add"
         onAdd={onAdd ? handleAdd : undefined}
         thumbnail={thumbnail}
