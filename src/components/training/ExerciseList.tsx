@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ExerciseSet } from "@/types/exercise";
@@ -153,7 +152,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
         {exerciseList.map(exerciseName => (
           <motion.div key={exerciseName} variants={item} data-exercise={exerciseName}>
             <ExerciseCard
-              exercise={exerciseName}
+              exerciseName={exerciseName}
               sets={exercises[exerciseName]}
               isActive={activeExercise === exerciseName}
               isFocused={focusedExercise === exerciseName}

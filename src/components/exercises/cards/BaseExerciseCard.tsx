@@ -1,75 +1,45 @@
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { Card, CardContent } from '@/components/ui/card';
 import { Exercise } from '@/types/exercise';
+import { cn } from '@/lib/utils';
+import { safeRenderableExercise } from '@/utils/exerciseAdapter';
 
-export interface BaseExerciseCardProps {
+interface BaseExerciseCardProps {
   exercise: Exercise | string;
+  children: React.ReactNode;
   className?: string;
-  isSelected?: boolean;
-  isVariation?: boolean;
-  isActive?: boolean;
   onClick?: () => void;
-  children?: React.ReactNode;
+  isActive?: boolean;
+  isSelected?: boolean;
 }
 
 export const BaseExerciseCard: React.FC<BaseExerciseCardProps> = ({
   exercise,
+  children,
   className,
-  isSelected = false,
-  isVariation = false,
-  isActive = false,
   onClick,
-  children
+  isActive,
+  isSelected
 }) => {
-  // Handle both string and Exercise object
-  const exerciseName = typeof exercise === 'string' ? exercise : exercise.name;
+  // Use the safe function to handle any type of exercise input
+  const exerciseName = safeRenderableExercise(exercise);
   
   return (
-    <Card 
+    <Card
+      data-exercise-name={exerciseName}
       className={cn(
-        "relative overflow-hidden transition-all duration-200 group",
-        onClick ? "cursor-pointer active:scale-[0.98]" : "",
-        isSelected 
-          ? "border-purple-500 ring-1 ring-purple-500/30 shadow-md shadow-purple-500/10" 
-          : "border-gray-800/80 hover:border-gray-700/80",
-        isActive 
-          ? "border-purple-500/50 bg-gradient-to-br from-gray-900 to-gray-800/90 shadow-md shadow-purple-500/10" 
-          : isVariation 
-            ? "bg-gradient-to-br from-gray-900/80 to-gray-800/60" 
-            : "bg-gradient-to-br from-gray-900/90 to-gray-800/70",
-        "tap-highlight-transparent",
+        "overflow-hidden transition-all duration-200 border-gray-800",
+        isActive && "border-purple-500/30 shadow-lg shadow-purple-500/10",
+        isSelected && "border-green-500/30 shadow-md shadow-green-500/10",
+        onClick && "cursor-pointer hover:bg-gray-800/40",
         className
       )}
       onClick={onClick}
     >
-      {isActive && (
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent animate-pulse pointer-events-none" />
-      )}
-      
-      <CardContent className="p-3">
-        {children || (
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium text-gray-100">{exerciseName}</h3>
-          </div>
-        )}
+      <CardContent className="p-4">
+        {children}
       </CardContent>
-      
-      {/* Enhanced highlight effect on hover */}
-      <div className={cn(
-        "absolute inset-0 bg-gradient-to-br from-purple-500/0 via-transparent to-purple-500/0",
-        "opacity-0 pointer-events-none",
-        "transition-opacity duration-300 group-hover:opacity-15"
-      )} />
-      
-      {/* Subtle border glow effect */}
-      <div className={cn(
-        "absolute inset-0 rounded-[inherit] pointer-events-none",
-        "opacity-0 group-hover:opacity-100",
-        "transition-opacity duration-300",
-        "border border-purple-500/20"
-      )} />
     </Card>
   );
 };

@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { BaseExerciseCard } from './cards/BaseExerciseCard';
 import { Button } from "@/components/ui/button";
 import { Exercise } from '@/types/exercise';
 import { Plus, Trash2, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { safeRenderableExercise } from '@/utils/exerciseAdapter';
 
 interface CommonExerciseCardProps {
   exercise: Exercise | string;
@@ -47,8 +47,9 @@ export const CommonExerciseCard: React.FC<CommonExerciseCardProps> = ({
   rightContent,
   variationBadge
 }) => {
-  // Handle both string and Exercise object for the name
-  const exerciseName = typeof exercise === 'string' ? exercise : exercise.name;
+  // Handle both string and Exercise object for the name - using safeRenderableExercise
+  // to ensure we always have a string, even if exercise is undefined
+  const exerciseName = safeRenderableExercise(exercise);
   
   // For list variant (used in ExerciseVariationGroup)
   if (variant === 'list') {
@@ -224,4 +225,3 @@ export const CommonExerciseCard: React.FC<CommonExerciseCardProps> = ({
     </BaseExerciseCard>
   );
 };
-
