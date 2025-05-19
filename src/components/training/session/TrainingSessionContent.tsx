@@ -9,7 +9,8 @@ import { ExerciseCompletionConfirmation } from "@/components/training/ExerciseCo
 import { SetsDebugger } from "@/components/training/SetsDebugger";
 import { ExerciseFAB } from "@/components/training/ExerciseFAB";
 import { adaptExerciseSets, safeRenderableExercise } from "@/utils/exerciseAdapter";
-import { WorkoutExercises } from '@/store/workout/types';
+import { WorkoutExercises, PostSetFlowState } from '@/store/workout/types';
+import { ExerciseListWrapper } from "./ExerciseListWrapper";
 
 interface TrainingSessionContentProps {
   onFinishWorkoutClick: () => void;
@@ -154,7 +155,8 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
               }}
               setPostSetFlow={(flow) => {
                 const { setPostSetFlow } = useTrainingSession();
-                setPostSetFlow(flow);
+                // Fix type error by using the correct PostSetFlowState type
+                setPostSetFlow(flow as PostSetFlowState);
               }}
             />
           </div>
