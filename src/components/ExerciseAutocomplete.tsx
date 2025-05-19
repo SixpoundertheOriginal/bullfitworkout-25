@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Check, ChevronsUpDown, Plus, Loader2, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -120,7 +121,8 @@ export function ExerciseAutocomplete({ onSelectExercise, className }: ExerciseAu
       equipment_type: newExercise.equipment_type || [],
       secondary_muscle_groups: newExercise.secondary_muscle_groups || [],
       movement_pattern: newExercise.movement_pattern || "push",
-      instructions: { steps: [] } // Ensure steps exists as an array
+      difficulty: newExercise.difficulty || "beginner", // Ensure difficulty is provided
+      instructions: { steps: newExercise.instructions?.steps || [] } // Ensure steps exists as an array
     };
     
     console.log("Creating exercise with data:", exerciseToCreate);

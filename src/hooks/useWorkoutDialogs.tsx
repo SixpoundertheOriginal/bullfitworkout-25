@@ -61,7 +61,7 @@ export const useWorkoutDialogs = ({
     closeDeleteWorkoutDialog: () => setDeleteDialogOpen(false),
     deleteWorkout: () => deleteWorkoutOperation.execute(workoutId!),
     editExercise: handleEditExercise,
-    saveExerciseSets: handleSaveExerciseSets as any, // Type cast to avoid errors
+    saveExerciseSets: (sets: ExerciseSet[]) => handleSaveExerciseSets(sets),
     addExercise: handleAddExercise,
     deleteExercise: handleDeleteExercise,
     saveWorkoutEdit: async (updated: any) => {
@@ -81,11 +81,11 @@ export const useWorkoutDialogs = ({
       />
       
       <EditExerciseSetModal
-        sets={exerciseSetsToEdit as any} // Type cast to avoid errors
+        sets={exerciseSetsToEdit}
         exerciseName={currentExercise}
         open={exerciseSetModalOpen}
         onOpenChange={setExerciseSetModalOpen}
-        onSave={handleSaveExerciseSets as any} // Type cast to avoid errors
+        onSave={handlers.saveExerciseSets}
       />
       
       <ExerciseDialog

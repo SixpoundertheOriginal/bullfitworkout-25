@@ -31,7 +31,7 @@ export interface Exercise {
 }
 
 export interface ExerciseSet {
-  id?: string;
+  id: string;
   workout_id?: string;
   exercise_name: string;
   weight: number;
@@ -51,6 +51,13 @@ export interface ExerciseSet {
       restTime?: number;
     };
   };
+}
+
+// Define Weight Calculation for exercise weights
+export interface WeightCalculation {
+  value: number;
+  isAuto: boolean;
+  source: 'default' | 'user' | 'auto';
 }
 
 // Export type definitions needed by components
@@ -103,13 +110,6 @@ export interface ExerciseListItem {
 
 export interface ExerciseWithVariations extends Exercise {
   variations: string[] | Exercise[]; // Allow both string[] and Exercise[] for backward compatibility
-}
-
-// Define Weight Calculation for exercise weights
-export interface WeightCalculation {
-  value: number;
-  isAuto: boolean;
-  source: 'default' | 'user' | 'auto';
 }
 
 export const EXERCISE_LOAD_FACTORS: Record<string, { factor: number }> = {

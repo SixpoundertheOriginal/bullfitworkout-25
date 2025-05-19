@@ -43,6 +43,7 @@ export type ExerciseInput = {
   created_at?: string;
   updated_at?: string;
   is_custom?: boolean;
+  load_factor?: number;
 };
 
 export type ExerciseUpdateInput = Partial<Omit<ExerciseInput, 'created_at'>> & { id: string };

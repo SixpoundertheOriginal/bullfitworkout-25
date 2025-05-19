@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useExercises } from "@/hooks/useExercises";
 import { Exercise, MuscleGroup, MovementPattern, Difficulty, EquipmentType } from "@/types/exercise";
 import { useToast } from "@/hooks/use-toast";
+import { ExerciseInput, ExerciseUpdateInput } from "@/hooks/exercise/types";
 
 export function useExerciseDialog(user: any, standalone: boolean) {
   const { createExercise, updateExercise, deleteExercise, isPending } = useExercises();
@@ -115,7 +116,7 @@ export function useExerciseDialog(user: any, standalone: boolean) {
     equipment_type: string[];
     movement_pattern: MovementPattern;
     difficulty: Difficulty;
-    instructions?: { steps: string; form: string };
+    instructions?: { steps: string[]; form?: string };
     is_compound?: boolean;
     tips?: string[];
     variations?: string[];
@@ -141,20 +142,22 @@ export function useExerciseDialog(user: any, standalone: boolean) {
       if (dialogMode === "add") {
         await new Promise(resolve => setTimeout(resolve, 350));
         await new Promise<void>((resolve, reject) => {
-          createExercise(
-            {
-              ...exercise,
-              user_id: user.id, // Use the authenticated user ID
-              // Ensure these are properly cast to the expected types
-              primary_muscle_groups: (Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : []) as MuscleGroup[],
-              secondary_muscle_groups: (Array.isArray(exercise.secondary_muscle_groups) ? exercise.secondary_muscle_groups : []) as MuscleGroup[],
-              equipment_type: (Array.isArray(exercise.equipment_type) ? exercise.equipment_type : []) as EquipmentType[]
-            },
-            {
-              onSuccess: () => resolve(),
-              onError: err => reject(err),
+          const exerciseInput: ExerciseInput = {
+            ...exercise,
+            user_id: user.id,
+            primary_muscle_groups: Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : [],
+            secondary_muscle_groups: Array.isArray(exercise.secondary_muscle_groups) ? exercise.secondary_muscle_groups : [],
+            equipment_type: Array.isArray(exercise.equipment_type) ? exercise.equipment_type : [],
+            instructions: {
+              steps: Array.isArray(exercise.instructions?.steps) ? exercise.instructions.steps : [],
+              video_url: exercise.instructions?.form,
             }
-          );
+          };
+          
+          createExercise(exerciseInput, {
+            onSuccess: () => resolve(),
+            onError: err => reject(err),
+          });
         });
         
         toast({
@@ -166,15 +169,20 @@ export function useExerciseDialog(user: any, standalone: boolean) {
         
         setShowDialog(false);
       } else if (dialogMode === "edit" && exerciseToEdit) {
-        await updateExercise({
-          id: exerciseToEdit.id,
+        const updateInput: ExerciseUpdateInput = {
+          id: exerciseToEdit.id as string,
           ...exercise,
-          user_id: user.id, // Ensure user ID is included
-          // Ensure these are properly cast to the expected types
-          primary_muscle_groups: (Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : []) as MuscleGroup[],
-          secondary_muscle_groups: (Array.isArray(exercise.secondary_muscle_groups) ? exercise.secondary_muscle_groups : []) as MuscleGroup[],
-          equipment_type: (Array.isArray(exercise.equipment_type) ? exercise.equipment_type : []) as EquipmentType[]
-        });
+          user_id: user.id,
+          primary_muscle_groups: Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : [],
+          secondary_muscle_groups: Array.isArray(exercise.secondary_muscle_groups) ? exercise.secondary_muscle_groups : [],
+          equipment_type: Array.isArray(exercise.equipment_type) ? exercise.equipment_type : [],
+          instructions: {
+            steps: Array.isArray(exercise.instructions?.steps) ? exercise.instructions.steps : [],
+            video_url: exercise.instructions?.form,
+          }
+        };
+          
+        await updateExercise(updateInput);
         
         toast({
           title: "Exercise updated",

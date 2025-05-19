@@ -169,10 +169,10 @@ export function ExerciseWizard({ onComplete, onCancel, className }: ExerciseWiza
       : exerciseName;
 
     // Ensure that movement_pattern is cast to the proper type
-    const movementPatternValue = (selectedExercise?.movement_pattern || 'push') as MovementPattern;
+    const movementPatternValue = (selectedExercise?.movement_pattern || 'push');
     
     // Ensure that difficulty is cast to the proper type
-    const difficultyValue = (selectedExercise?.difficulty || 'intermediate') as Difficulty;
+    const difficultyValue = (selectedExercise?.difficulty || 'intermediate');
 
     // Prepare the exercise data that conforms to the ExerciseInput interface
     const exerciseData: ExerciseInput = {
