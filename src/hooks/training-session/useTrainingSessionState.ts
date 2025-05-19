@@ -1,7 +1,6 @@
 
 import { useState } from 'react';
 import { useWorkoutStore } from '@/store/workout';
-import { shallow } from 'zustand/shallow';
 
 /**
  * Hook for managing the UI state of a training session
@@ -16,36 +15,39 @@ export const useTrainingSessionState = () => {
   const [completedExerciseName, setCompletedExerciseName] = useState<string | null>(null);
   const [isRatingSheetOpen, setIsRatingSheetOpen] = useState(false);
   
-  // Extract workout state from the store
-  const workoutState = useWorkoutStore(state => ({
-    exercises: state.exercises,
-    activeExercise: state.activeExercise,
-    elapsedTime: state.elapsedTime,
-    isActive: state.isActive,
-    workoutStatus: state.workoutStatus,
-    workoutId: state.workoutId,
-    restTimerActive: state.restTimerActive,
-    trainingConfig: state.trainingConfig,
-    postSetFlow: state.postSetFlow,
-    lastCompletedExercise: state.lastCompletedExercise,
-    lastCompletedSetIndex: state.lastCompletedSetIndex,
-    focusedExercise: state.focusedExercise,
-    currentRestTime: state.currentRestTime,
-    setRestTimerActive: state.setRestTimerActive
-  }));
+  // Extract workout state from the store - using the hook directly
+  const workoutStore = useWorkoutStore();
+  
+  // Extract the state properties we need
+  const workoutState = {
+    exercises: workoutStore.exercises,
+    activeExercise: workoutStore.activeExercise,
+    elapsedTime: workoutStore.elapsedTime,
+    isActive: workoutStore.isActive,
+    workoutStatus: workoutStore.workoutStatus,
+    workoutId: workoutStore.workoutId,
+    restTimerActive: workoutStore.restTimerActive,
+    trainingConfig: workoutStore.trainingConfig,
+    postSetFlow: workoutStore.postSetFlow,
+    lastCompletedExercise: workoutStore.lastCompletedExercise,
+    lastCompletedSetIndex: workoutStore.lastCompletedSetIndex,
+    focusedExercise: workoutStore.focusedExercise,
+    currentRestTime: workoutStore.currentRestTime,
+    setRestTimerActive: workoutStore.setRestTimerActive
+  };
   
   // Action functions from the store
-  const workoutActions = useWorkoutStore(state => ({
-    setExercises: state.setExercises,
-    handleCompleteSet: state.handleCompleteSet,
-    deleteExercise: state.deleteExercise,
-    resetSession: state.resetSession,
-    startWorkout: state.startWorkout,
-    endWorkout: state.endWorkout,
-    setPostSetFlow: state.setPostSetFlow,
-    setFocusedExercise: state.setFocusedExercise,
-    submitSetRating: state.submitSetRating
-  }));
+  const workoutActions = {
+    setExercises: workoutStore.setExercises,
+    handleCompleteSet: workoutStore.handleCompleteSet,
+    deleteExercise: workoutStore.deleteExercise,
+    resetSession: workoutStore.resetSession,
+    startWorkout: workoutStore.startWorkout,
+    endWorkout: workoutStore.endWorkout,
+    setPostSetFlow: workoutStore.setPostSetFlow,
+    setFocusedExercise: workoutStore.setFocusedExercise,
+    submitSetRating: workoutStore.submitSetRating
+  };
 
   // Helper for timer reset
   const triggerRestTimerReset = () => {
