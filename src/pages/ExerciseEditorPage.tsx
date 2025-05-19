@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useExercises } from '@/hooks/useExercises';
 import { ExerciseDialogV2 } from '@/components/ExerciseDialogV2';
@@ -202,7 +203,8 @@ export default function ExerciseEditorPage() {
             {filteredExercises.length > 0 ? filteredExercises.map(exercise => (
               <ExerciseCard
                 key={exercise.id}
-                exercise={exercise}
+                exerciseName={exercise.name}
+                exerciseData={exercise}
                 onEdit={() => handleEditExercise(exercise)}
                 onDelete={() => handleDeleteExercise(exercise.id)}
                 onAddVariation={() => handleAddVariation(exercise)}
@@ -263,7 +265,8 @@ export default function ExerciseEditorPage() {
                       {getVariationsForExercise(exercise.id).map(variation => (
                         <ExerciseCard
                           key={variation.id}
-                          exercise={variation}
+                          exerciseName={variation.name}
+                          exerciseData={variation}
                           isVariation
                           onEdit={() => handleEditExercise(variation)}
                           onDelete={() => handleDeleteExercise(variation.id)}
