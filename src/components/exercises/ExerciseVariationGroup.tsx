@@ -70,7 +70,8 @@ export const ExerciseVariationGroup: React.FC<ExerciseVariationGroupProps> = Rea
     <div className="space-y-2 transition-all">
       {/* Base Exercise Card */}
       <CommonExerciseCard 
-        exercise={baseExercise}
+        exerciseName={baseExercise.name}
+        exerciseData={baseExercise}
         variant="list"
         onSelect={onSelect ? () => onSelect(baseExercise) : undefined}
         onEdit={onEdit ? () => onEdit(baseExercise) : undefined}
@@ -154,7 +155,8 @@ export const ExerciseVariationGroup: React.FC<ExerciseVariationGroupProps> = Rea
                       <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-800"></div>
                       
                       <CommonExerciseCard
-                        exercise={variation}
+                        exerciseName={variation.name}
+                        exerciseData={variation}
                         variant="list"
                         isVariation={true}
                         onSelect={onSelect ? () => onSelect(variation) : undefined}
