@@ -146,7 +146,7 @@ export const useTrainingSession = () => {
       startWorkout();
     } else if (!isActive && !hasExercises) {
       // Try to load saved config
-      const config = loadTrainingConfig(); // FIX: Removed the arguments here that were causing the TS error
+      const config = loadTrainingConfig(); // Fix: No arguments needed here
       if (config) {
         console.log('Found saved training config:', config);
       }
