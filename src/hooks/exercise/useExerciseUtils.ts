@@ -1,14 +1,11 @@
 
 import { ExerciseSortBy, SortOrder } from './types';
-import { useExerciseQueries } from './useExerciseQueries';
-import { useExerciseCreate } from './useExerciseCreate';
-import { useExerciseUpdate } from './useExerciseUpdate';
-import { useExerciseDelete } from './useExerciseDelete';
+import { useExercises } from './useExerciseQueries';
 
 /**
  * Combined hook that provides all exercise-related functionality
  */
-export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSortOrder: SortOrder = 'asc') => {
+export const useExercises as useExercisesUtil = (initialSortBy: ExerciseSortBy = 'name', initialSortOrder: SortOrder = 'asc') => {
   const { 
     exercises, 
     getBaseExercises,
@@ -16,12 +13,15 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
     getSortedExercises,
     isLoading, 
     error, 
-    isError 
-  } = useExerciseQueries(initialSortBy, initialSortOrder);
-  
-  const { createExercise, isCreating } = useExerciseCreate();
-  const { updateExercise, isUpdating } = useExerciseUpdate();
-  const { deleteExercise, isDeleting } = useExerciseDelete();
+    isError,
+    createExercise,
+    updateExercise,
+    deleteExercise,
+    isPending,
+    isCreating,
+    isUpdating,
+    isDeleting
+  } = useExercises();
 
   return {
     // Query results
@@ -39,7 +39,7 @@ export const useExercises = (initialSortBy: ExerciseSortBy = 'name', initialSort
     deleteExercise,
     
     // Loading states
-    isPending: isCreating,
+    isPending,
     isCreating,
     isUpdating,
     isDeleting

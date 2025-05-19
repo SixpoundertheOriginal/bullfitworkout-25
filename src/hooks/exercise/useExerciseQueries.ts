@@ -1,3 +1,4 @@
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { listExercises, createExercise as createExerciseAPI, updateExercise as updateExerciseAPI, deleteExercise as deleteExerciseAPI } from '@/services/exerciseService';
 import { ExerciseInput, ExerciseUpdateInput } from './types';
@@ -8,13 +9,10 @@ export function useExercises() {
   const queryClient = useQueryClient();
 
   // Fetch all exercises
-  const { data: exercises, isLoading, error } = useQuery(
-    [EXERCISES_QUERY_KEY],
-    () => listExercises(),
-    {
-      retry: false,
-    }
-  );
+  const { data: exercises, isLoading, error, isError } = useQuery({
+    queryKey: [EXERCISES_QUERY_KEY],
+    queryFn: () => listExercises()
+  });
 
   // Function to normalize exercise data before creating
   function normalizeExerciseForCreate(exercise: any): ExerciseInput {
@@ -31,52 +29,47 @@ export function useExercises() {
   }
 
   // Mutation to create a new exercise
-  const createExercise = useMutation(
-    (exercise: ExerciseInput) => createExerciseAPI(exercise),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries([EXERCISES_QUERY_KEY]);
-      },
-      onError: (error) => {
-        console.error("Error creating exercise:", error);
-      }
+  const createExerciseMutation = useMutation({
+    mutationFn: (exercise: ExerciseInput) => createExerciseAPI(exercise),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [EXERCISES_QUERY_KEY] });
+    },
+    onError: (error) => {
+      console.error("Error creating exercise:", error);
     }
-  );
+  });
 
   // Mutation to update an existing exercise
-  const updateExercise = useMutation(
-    (exercise: ExerciseUpdateInput) => updateExerciseAPI(exercise),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries([EXERCISES_QUERY_KEY]);
-      },
-      onError: (error) => {
-        console.error("Error updating exercise:", error);
-      }
+  const updateExerciseMutation = useMutation({
+    mutationFn: (exercise: ExerciseUpdateInput) => updateExerciseAPI(exercise),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [EXERCISES_QUERY_KEY] });
+    },
+    onError: (error) => {
+      console.error("Error updating exercise:", error);
     }
-  );
+  });
 
   // Mutation to delete an exercise
-  const deleteExercise = useMutation(
-    (id: string) => deleteExerciseAPI(id),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries([EXERCISES_QUERY_KEY]);
-      },
-      onError: (error) => {
-        console.error("Error deleting exercise:", error);
-      }
+  const deleteExerciseMutation = useMutation({
+    mutationFn: (id: string) => deleteExerciseAPI(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [EXERCISES_QUERY_KEY] });
+    },
+    onError: (error) => {
+      console.error("Error deleting exercise:", error);
     }
-  );
+  });
 
   return {
     exercises: exercises || [],
     isLoading,
     error,
+    isError,
     createExercise: (exercise: ExerciseInput, options?: { onSuccess?: () => void, onError?: (error: any) => void }) => {
-      createExercise.mutate(normalizeExerciseForCreate(exercise), {
+      createExerciseMutation.mutate(normalizeExerciseForCreate(exercise), {
         onSuccess: () => {
-          queryClient.invalidateQueries([EXERCISES_QUERY_KEY]);
+          queryClient.invalidateQueries({ queryKey: [EXERCISES_QUERY_KEY] });
           options?.onSuccess?.();
         },
         onError: (error) => {
@@ -86,9 +79,9 @@ export function useExercises() {
       });
     },
     updateExercise: (exercise: ExerciseUpdateInput, options?: { onSuccess?: () => void, onError?: (error: any) => void }) => {
-      updateExercise.mutate(exercise, {
+      updateExerciseMutation.mutate(exercise, {
         onSuccess: () => {
-          queryClient.invalidateQueries([EXERCISES_QUERY_KEY]);
+          queryClient.invalidateQueries({ queryKey: [EXERCISES_QUERY_KEY] });
           options?.onSuccess?.();
         },
         onError: (error) => {
@@ -98,9 +91,9 @@ export function useExercises() {
       });
     },
     deleteExercise: (id: string, options?: { onSuccess?: () => void, onError?: (error: any) => void }) => {
-      deleteExercise.mutate(id, {
+      deleteExerciseMutation.mutate(id, {
         onSuccess: () => {
-          queryClient.invalidateQueries([EXERCISES_QUERY_KEY]);
+          queryClient.invalidateQueries({ queryKey: [EXERCISES_QUERY_KEY] });
           options?.onSuccess?.();
         },
         onError: (error) => {
@@ -109,6 +102,27 @@ export function useExercises() {
         }
       });
     },
-    isPending: createExercise.isLoading || updateExercise.isLoading || deleteExercise.isLoading,
+    isPending: createExerciseMutation.isPending || updateExerciseMutation.isPending || deleteExerciseMutation.isPending,
+    isCreating: createExerciseMutation.isPending,
+    isUpdating: updateExerciseMutation.isPending,
+    isDeleting: deleteExerciseMutation.isPending,
+
+    // Additional functions for exercise management
+    getBaseExercises: () => (exercises || []).filter((ex: any) => !ex.base_exercise_id),
+    getVariationsForExercise: (baseExerciseId: string) => 
+      (exercises || []).filter((ex: any) => ex.base_exercise_id === baseExerciseId),
+    getSortedExercises: (sortBy: string = 'name', sortOrder: string = 'asc') => {
+      const sortedExercises = [...(exercises || [])];
+      return sortedExercises.sort((a: any, b: any) => {
+        const valueA = a[sortBy];
+        const valueB = b[sortBy];
+        
+        if (sortOrder === 'asc') {
+          return valueA > valueB ? 1 : -1;
+        } else {
+          return valueA < valueB ? 1 : -1;
+        }
+      });
+    }
   };
 }
