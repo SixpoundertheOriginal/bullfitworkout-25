@@ -1,5 +1,4 @@
-
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useWorkoutTimer } from '@/hooks/useWorkoutTimer';
 import { useExercises } from "@/hooks/useExercises";
 import { WorkoutSessionHeader } from "@/components/training/WorkoutSessionHeader";
@@ -19,7 +18,7 @@ import { WorkoutCompletion } from "@/components/training/WorkoutCompletion";
 
 const TrainingSessionPage = () => {
   const { isLoading: loadingExercises } = useExercises();
-  const [showCompletion, setShowCompletion] = React.useState(false);
+  const [showCompletion, setShowCompletion] = useState(false);
   
   const {
     // State

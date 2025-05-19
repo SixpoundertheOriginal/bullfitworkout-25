@@ -112,7 +112,8 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
                     if (onExitFocus) onExitFocus();
                     toast({
                       title: `${focusedExercise} completed!`,
-                      variant: "success"
+                      // Change from 'success' to 'default' to match allowed variants
+                      variant: "default"
                     });
                   }}
                 >

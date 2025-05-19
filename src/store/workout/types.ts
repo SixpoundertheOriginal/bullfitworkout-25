@@ -4,6 +4,7 @@ import { TrainingConfig } from '@/hooks/useTrainingSetupPersistence';
 export interface ExerciseSet {
   weight: number;
   reps: number;
+  // Ensure restTime is required here as well to match with LocalExerciseSet
   restTime: number;
   completed: boolean;
   isEditing: boolean;

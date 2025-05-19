@@ -19,18 +19,22 @@ export function adaptExerciseSets(
   Object.entries(storeExercises).forEach(([exerciseName, sets], exerciseIndex) => {
     // Skip entries with non-string keys (object keys)
     if (typeof exerciseName !== 'string') {
-      console.warn('Invalid exercise key encountered', exerciseName);
+      console.warn('Invalid exercise key encountered in adaptExerciseSets:', exerciseName);
       return;
     }
     
-    adaptedExercises[exerciseName] = sets.map((set, index) => ({
-      id: `${exerciseName}-set-${index}`,
+    // Ensure we have a safe string key
+    const safeExerciseName = safeRenderableExercise(exerciseName);
+    
+    adaptedExercises[safeExerciseName] = sets.map((set, index) => ({
+      id: `${safeExerciseName}-set-${index}`,
       set_number: index + 1,
-      exercise_name: exerciseName,
+      exercise_name: safeExerciseName,
       workout_id: 'current-workout', // Placeholder until actual save
       weight: set.weight,
       reps: set.reps,
-      restTime: set.restTime,
+      // Ensure restTime is always provided and not undefined
+      restTime: set.restTime || 60,
       completed: set.completed,
       isEditing: set.isEditing,
       metadata: set.metadata
@@ -57,14 +61,18 @@ export function adaptToStoreFormat(
   Object.entries(componentExercises).forEach(([exerciseName, sets]) => {
     // Skip entries with non-string keys (object keys)
     if (typeof exerciseName !== 'string') {
-      console.warn('Invalid exercise key encountered', exerciseName);
+      console.warn('Invalid exercise key encountered in adaptToStoreFormat:', exerciseName);
       return;
     }
     
-    storeExercises[exerciseName] = sets.map(set => ({
+    // Ensure we have a safe string key
+    const safeExerciseName = safeRenderableExercise(exerciseName);
+    
+    storeExercises[safeExerciseName] = sets.map(set => ({
       weight: set.weight,
       reps: set.reps,
-      restTime: set.restTime || 60, // Ensure restTime is always provided
+      // Ensure restTime is always provided and not undefined
+      restTime: set.restTime || 60, 
       completed: set.completed,
       isEditing: set.isEditing || false,
       metadata: { 
