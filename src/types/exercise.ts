@@ -88,8 +88,8 @@ export interface ExerciseWithVariations {
   is_bodyweight?: boolean;
   load_factor?: number;
   duration?: number;
-  // The difference is here - we allow either strings or Exercise objects
-  variations: string[] | Exercise[];
+  // Define variations as a union type but DON'T extend Exercise
+  variations?: string[] | Exercise[];
 }
 
 // Export type definitions needed by components

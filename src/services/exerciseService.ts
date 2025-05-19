@@ -60,13 +60,27 @@ const prepareExerciseForDb = (exercise: ExerciseInput | ExerciseUpdateInput) => 
     : [];
     
   // Ensure instructions is properly formatted with steps as array
-  const instructions = exercise.instructions || { steps: [] };
-  if (!Array.isArray(instructions.steps)) {
+  let instructions = exercise.instructions || { steps: [] };
+  if (typeof instructions === 'string') {
+    try {
+      instructions = JSON.parse(instructions);
+    } catch (e) {
+      instructions = { steps: [] };
+    }
+  }
+  
+  if (!instructions.steps || !Array.isArray(instructions.steps)) {
     instructions.steps = [];
   }
   
   // Ensure description is a string
   const description = exercise.description || '';
+  
+  // Ensure difficulty is defined
+  const difficulty = exercise.difficulty || 'intermediate';
+
+  // Ensure movement_pattern is defined
+  const movement_pattern = exercise.movement_pattern || 'push';
   
   // Create a properly formatted object for database
   return {
@@ -76,7 +90,9 @@ const prepareExerciseForDb = (exercise: ExerciseInput | ExerciseUpdateInput) => 
     secondary_muscle_groups,
     equipment_type,
     instructions,
-    description
+    description,
+    difficulty,
+    movement_pattern
   };
 };
 

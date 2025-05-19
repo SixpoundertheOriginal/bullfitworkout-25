@@ -121,8 +121,8 @@ export function ExerciseAutocomplete({ onSelectExercise, className }: ExerciseAu
     const exerciseToCreate: ExerciseInput = {
       ...newExercise,
       user_id: user?.id || "",
-      equipment_type: newExercise.equipment_type || [],
-      secondary_muscle_groups: newExercise.secondary_muscle_groups || [],
+      equipment_type: Array.isArray(newExercise.equipment_type) ? newExercise.equipment_type : [],
+      secondary_muscle_groups: Array.isArray(newExercise.secondary_muscle_groups) ? newExercise.secondary_muscle_groups : [],
       movement_pattern: newExercise.movement_pattern || "push",
       difficulty: newExercise.difficulty || "beginner",
       instructions: { 

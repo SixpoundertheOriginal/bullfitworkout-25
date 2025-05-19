@@ -297,7 +297,7 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
     equipment_type: string[];
     movement_pattern: MovementPattern;
     difficulty: Difficulty;
-    instructions?: { steps: string; form: string };
+    instructions?: { steps: string[] };
     is_compound?: boolean;
     tips?: string[];
     variations?: string[];
@@ -323,10 +323,20 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
       if (dialogMode === "add") {
         await new Promise(resolve => setTimeout(resolve, 350));
         await new Promise<void>((resolve, reject) => {
+          // Ensure instructions.steps is an array
+          const instructionsWithSteps = {
+            steps: Array.isArray(exercise.instructions?.steps) 
+              ? exercise.instructions.steps 
+              : (exercise.instructions?.steps ? [exercise.instructions.steps] : [])
+          };
+          
           createExercise(
             {
               ...exercise,
               user_id: user.id, // Use the authenticated user ID
+              is_compound: exercise.is_compound ?? false, // Ensure is_compound is defined
+              difficulty: exercise.difficulty || 'intermediate', // Ensure difficulty is defined
+              instructions: instructionsWithSteps,
               // Ensure these are properly cast to the expected types
               primary_muscle_groups: (Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : []) as MuscleGroup[],
               secondary_muscle_groups: (Array.isArray(exercise.secondary_muscle_groups) ? exercise.secondary_muscle_groups : []) as MuscleGroup[],
@@ -348,10 +358,20 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
         
         setShowDialog(false);
       } else if (dialogMode === "edit" && exerciseToEdit) {
+        // Ensure instructions.steps is an array
+        const instructionsWithSteps = {
+          steps: Array.isArray(exercise.instructions?.steps) 
+            ? exercise.instructions.steps 
+            : (exercise.instructions?.steps ? [exercise.instructions.steps] : [])
+        };
+        
         await updateExercise({
           id: exerciseToEdit.id,
           ...exercise,
           user_id: user.id, // Ensure user ID is included
+          is_compound: exercise.is_compound ?? false, // Ensure is_compound is defined
+          difficulty: exercise.difficulty || 'intermediate', // Ensure difficulty is defined
+          instructions: instructionsWithSteps,
           // Ensure these are properly cast to the expected types
           primary_muscle_groups: (Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : []) as MuscleGroup[],
           secondary_muscle_groups: (Array.isArray(exercise.secondary_muscle_groups) ? exercise.secondary_muscle_groups : []) as MuscleGroup[],
