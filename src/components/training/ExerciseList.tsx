@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { WorkoutSessionFooter } from "./WorkoutSessionFooter";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { safeRenderableExercise } from "@/utils/exerciseAdapter";
 
 interface ExerciseListProps {
   exercises: Record<string, ExerciseSet[]>;

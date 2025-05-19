@@ -5,7 +5,7 @@ import { CommonExerciseCard } from '../exercises/CommonExerciseCard';
 import { ExerciseThumbnail } from '../exercises/cards/ExerciseThumbnail';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { isExerciseObject, safeRenderableExercise } from '@/utils/exerciseAdapter';
+import { isExerciseObject, safeRenderableExercise, getExerciseName } from '@/utils/exerciseAdapter';
 
 interface ExerciseCardProps {
   exerciseName: string;

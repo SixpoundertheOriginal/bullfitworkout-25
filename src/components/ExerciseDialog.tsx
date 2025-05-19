@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ExerciseCard } from "@/components/exercises/ExerciseCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Exercise } from "@/types/exercise";
+import { getExerciseName } from "@/utils/exerciseAdapter";
 
 export interface ExerciseDialogProps {
   open: boolean;

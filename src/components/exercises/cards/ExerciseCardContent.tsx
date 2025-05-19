@@ -3,6 +3,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Exercise } from '@/types/exercise';
 import { cn } from '@/lib/utils';
+import { isExerciseObject, safeRenderableExercise } from '@/utils/exerciseAdapter';
 
 interface ExerciseCardContentProps {
   exercise: Exercise | string;
@@ -22,7 +23,7 @@ export const ExerciseCardContent: React.FC<ExerciseCardContentProps> = ({
   // Get the exercise properties only if it's an Exercise object
   const primaryMuscleGroups = typeof exercise !== 'string' ? exercise.primary_muscle_groups : [];
   const equipmentType = typeof exercise !== 'string' ? exercise.equipment_type : [];
-  const exerciseName = typeof exercise === 'string' ? exercise : exercise.name;
+  const exerciseName = safeRenderableExercise(exercise);
 
   return (
     <div className={cn(

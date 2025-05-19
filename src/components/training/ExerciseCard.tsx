@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Exercise, ExerciseSet } from '@/types/exercise';
 import { CommonExerciseCard } from '../exercises/CommonExerciseCard';
@@ -8,6 +9,7 @@ import { ExerciseMetricsDisplay } from './ExerciseMetricsDisplay';
 import { motion } from 'framer-motion';
 import { Dumbbell, Target, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { safeRenderableExercise } from '@/utils/exerciseAdapter';
 
 interface ExerciseCardProps {
   exerciseName: string;
