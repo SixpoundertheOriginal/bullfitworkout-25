@@ -36,12 +36,13 @@ export const useTrainingSessionData = (exercises: WorkoutExercises, focusedExerc
   // Get next set details for display in rest timer
   const getNextSetDetails = () => {
     const exerciseNames = Object.keys(exercises);
-    // Access lastCompletedExercise and lastCompletedSetIndex from the workout store state
-    // Fix: Don't try to access these as properties of exercises object
-    const lastCompletedExercise = exercises.lastCompletedExercise as unknown as string;
-    const lastCompletedSetIndex = exercises.lastCompletedSetIndex as unknown as number;
+    
+    // Safely access lastCompletedExercise and lastCompletedSetIndex
+    // Access as properties from metadata instead of directly from exercises
+    const lastCompletedExercise = (exercises as any).lastCompletedExercise as string | undefined;
+    const lastCompletedSetIndex = (exercises as any).lastCompletedSetIndex as number | undefined;
 
-    if (!lastCompletedExercise || lastCompletedSetIndex === null || lastCompletedSetIndex === undefined) {
+    if (!lastCompletedExercise || lastCompletedSetIndex === undefined) {
       return null;
     }
     

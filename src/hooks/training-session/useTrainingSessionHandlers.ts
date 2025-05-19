@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -19,7 +18,7 @@ export const useTrainingSessionHandlers = (
   setCompletedExerciseName: (name: string | null) => void,
   setShowCompletionConfirmation: (show: boolean) => void,
   rawHandleCompleteWorkout: HandleCompleteWorkoutFn,
-  rawAttemptRecovery: (workoutId: string) => Promise<boolean>,
+  rawAttemptRecovery: AttemptRecoveryFn,
 ) => {
   const navigate = useNavigate();
   const { saveConfig } = useTrainingSetupPersistence();
@@ -135,22 +134,17 @@ export const useTrainingSessionHandlers = (
     }
   }, [setShowCompletionConfirmation, setFocusedExercise]);
 
-  // ❗ Avoid argument drift - implement wrapper with proper signature
-  // Implementation of AttemptRecoveryFn
+  // Implement with proper signature following AttemptRecoveryFn type
   const attemptRecovery: AttemptRecoveryFn = useCallback(async (
     workoutId: string, 
     source: 'manual' | 'auto' = 'manual', 
     meta: object = {}
   ) => {
-    if (workoutId) {
-      // Pass the expected workoutId
-      return rawAttemptRecovery(workoutId);
-    }
-    return Promise.resolve(false);
+    // Call the raw function with the correct signature
+    return rawAttemptRecovery(workoutId, source, meta);
   }, [rawAttemptRecovery]);
   
-  // ❗ Avoid argument drift - implement wrapper with proper signature
-  // Implementation of HandleCompleteWorkoutFn
+  // Implement with proper signature following HandleCompleteWorkoutFn type
   const handleFinishWorkout: HandleCompleteWorkoutFn = useCallback(async (trainingConfigParam?: any) => {
     if (completedSets === 0) {
       toast({
@@ -161,7 +155,7 @@ export const useTrainingSessionHandlers = (
       return null;
     }
     
-    // Pass just the trainingConfig as the single required argument
+    // Use the provided config or fall back to the injected one
     const configToUse = trainingConfigParam || trainingConfig;
     const result = await rawHandleCompleteWorkout(configToUse);
       

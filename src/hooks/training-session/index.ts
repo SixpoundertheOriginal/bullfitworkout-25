@@ -41,7 +41,7 @@ export const useTrainingSession = () => {
     state.setPostSetFlow
   );
   
-  // Get handler functions
+  // Get handler functions that use the centralized types
   const handlers = useTrainingSessionHandlers(
     state.exercises as WorkoutExercises,
     data.completedSets,

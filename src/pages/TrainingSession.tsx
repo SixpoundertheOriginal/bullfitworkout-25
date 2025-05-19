@@ -93,9 +93,10 @@ const TrainingSessionPage = () => {
     }
   };
 
-  // Create a wrapper for the attemptRecovery function that requires no arguments
+  // Create a wrapper for the attemptRecovery function with the required signature
   const handleAttemptRecovery = () => {
     if (workoutId) {
+      // Pass all required arguments for the AttemptRecoveryFn signature
       attemptRecovery(workoutId, 'manual', {});
     }
   };
@@ -107,9 +108,12 @@ const TrainingSessionPage = () => {
   const adaptedExercises = adaptExerciseSets(exercises);
 
   // Create type-safe wrappers for passing to components
-  const typeSafeHandleSetExercises = handleSetExercises as (
-    exercises: Record<string, any> | ((prev: Record<string, any>) => Record<string, any>)
-  ) => void;
+  const typeSafeHandleSetExercises = (
+    exercisesUpdate: Record<string, any> | ((prev: Record<string, any>) => Record<string, any>)
+  ) => {
+    // Type assertion to match the expected signature
+    handleSetExercises(exercisesUpdate as WorkoutExercises | ((prev: WorkoutExercises) => WorkoutExercises));
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-white pt-16 pb-4">

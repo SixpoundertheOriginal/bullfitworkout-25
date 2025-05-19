@@ -9,10 +9,9 @@ import { LoadTrainingConfigFn } from '@/types/workout';
 export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean, startWorkout: () => void) => {
   const { storedConfig, saveConfig } = useTrainingSetupPersistence();
   
-  // ❗ Avoid argument drift - explicit type for no-arguments function
-  // Implementation of LoadTrainingConfigFn = () => TrainingConfig | null
+  // Explicitly implement with the centralized type
   const loadTrainingConfig: LoadTrainingConfigFn = useCallback(() => {
-    // Simply return the stored config without any arguments
+    // Return the stored config with no arguments
     return storedConfig;
   }, [storedConfig]);
   
@@ -28,7 +27,7 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
       console.log('Starting new workout from existing exercises');
       startWorkout();
     } else if (!isActive && !hasExercises) {
-      // Try to load saved config - FIXED: Call with NO arguments
+      // Call with NO arguments as per the type definition
       const config = loadTrainingConfig();
       if (config) {
         console.log('Found saved training config:', config);

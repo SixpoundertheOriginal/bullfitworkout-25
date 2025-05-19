@@ -1,9 +1,8 @@
-
 import { useState, useCallback } from 'react';
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { saveWorkout, processRetryQueue, recoverPartiallyCompletedWorkout } from "@/services/workoutSaveService";
-import { WorkoutError, EnhancedExerciseSet } from "@/types/workout";
+import { WorkoutError, EnhancedExerciseSet, AttemptRecoveryFn, HandleCompleteWorkoutFn } from "@/types/workout";
 import { ExerciseSet } from '@/hooks/useWorkoutState';
 
 export const useWorkoutSave = (exercises: Record<string, ExerciseSet[]>, elapsedTime: number, resetSession: () => void) => {
@@ -85,7 +84,8 @@ export const useWorkoutSave = (exercises: Record<string, ExerciseSet[]>, elapsed
     });
   }, []);
 
-  const handleCompleteWorkout = async (trainingConfig?: any) => {
+  // Implement with HandleCompleteWorkoutFn type signature
+  const handleCompleteWorkout: HandleCompleteWorkoutFn = async (trainingConfig?: any) => {
     if (!Object.keys(exercises).length) {
       toast.error("No exercises added - Please add at least one exercise before completing your workout");
       return null;
@@ -168,7 +168,12 @@ export const useWorkoutSave = (exercises: Record<string, ExerciseSet[]>, elapsed
     }
   };
 
-  const attemptRecovery = useCallback(async (workoutId: string) => {
+  // Implement with AttemptRecoveryFn type signature
+  const attemptRecovery: AttemptRecoveryFn = useCallback(async (
+    workoutId: string,
+    source: 'manual' | 'auto' = 'manual',
+    meta: object = {}
+  ) => {
     try {
       setSaveStatus(prev => ({ ...prev, status: 'recovering' }));
       
