@@ -22,7 +22,7 @@ export interface Exercise {
   updated_at?: string;
   movement_pattern?: string;
   tips?: string[];
-  variations?: string[];
+  variations?: string[] | Exercise[]; // Allow both string[] and Exercise[] for flexibility
   user_id?: string;
   base_exercise_id?: string;
   is_bodyweight?: boolean;
@@ -32,7 +32,7 @@ export interface Exercise {
 
 export interface ExerciseSet {
   id: string;
-  workout_id?: string;
+  workout_id: string; // Make this required to match type expectations
   exercise_name: string;
   weight: number;
   reps: number;

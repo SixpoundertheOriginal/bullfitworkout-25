@@ -22,7 +22,7 @@ export type ExerciseInput = {
   equipment_type: string[];
   movement_pattern: string;
   difficulty: string;
-  instructions?: {
+  instructions: {
     steps: string[];
     video_url?: string;
     image_url?: string;

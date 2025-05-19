@@ -8,6 +8,28 @@ import { Exercise } from '@/types/exercise';
 import { ExerciseInput, ExerciseUpdateInput } from '@/hooks/exercise/types';
 import { supabase } from '@/integrations/supabase/client';
 
+// Helper function to transform database exercise to Exercise interface
+const transformExerciseFromDb = (dbExercise: any): Exercise => {
+  // Ensure instructions.steps is always a string array
+  let instructions = dbExercise.instructions || {};
+  if (typeof instructions === 'string') {
+    try {
+      instructions = JSON.parse(instructions);
+    } catch (e) {
+      instructions = { steps: [] };
+    }
+  }
+  
+  return {
+    ...dbExercise,
+    instructions: {
+      steps: Array.isArray(instructions.steps) ? instructions.steps : [],
+      video_url: instructions.video_url,
+      image_url: instructions.image_url
+    }
+  };
+};
+
 /**
  * Fetch list of all exercises
  */
@@ -22,16 +44,24 @@ export async function listExercises(): Promise<Exercise[]> {
     throw error;
   }
 
-  return data || [];
+  // Transform each exercise to match the Exercise interface
+  return (data || []).map(transformExerciseFromDb);
 }
 
 /**
  * Create a new exercise
  */
 export async function createExercise(exercise: ExerciseInput): Promise<Exercise> {
+  // Prepare exercise for database insertion
+  const dbExercise = {
+    ...exercise,
+    // Ensure instructions is properly formatted for the database
+    instructions: exercise.instructions || { steps: [] }
+  };
+
   const { data, error } = await supabase
     .from('exercises')
-    .insert(exercise)
+    .insert(dbExercise)
     .select()
     .single();
 
@@ -40,16 +70,25 @@ export async function createExercise(exercise: ExerciseInput): Promise<Exercise>
     throw error;
   }
 
-  return data;
+  return transformExerciseFromDb(data);
 }
 
 /**
  * Update an existing exercise
  */
 export async function updateExercise(exercise: ExerciseUpdateInput): Promise<Exercise> {
+  // Prepare exercise for database update
+  const dbExercise = {
+    ...exercise,
+    // Ensure instructions is properly formatted for the database if it exists
+    ...(exercise.instructions && { 
+      instructions: exercise.instructions
+    })
+  };
+
   const { data, error } = await supabase
     .from('exercises')
-    .update(exercise)
+    .update(dbExercise)
     .eq('id', exercise.id)
     .select()
     .single();
@@ -59,7 +98,7 @@ export async function updateExercise(exercise: ExerciseUpdateInput): Promise<Exe
     throw error;
   }
 
-  return data;
+  return transformExerciseFromDb(data);
 }
 
 /**

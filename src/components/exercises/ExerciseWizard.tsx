@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { ExerciseInput } from '@/hooks/exercise/types';
+import { ExerciseInput as ImportedExerciseInput } from '@/hooks/exercise/types';
 
 // Define the steps of our wizard
 type WizardStep = 
@@ -19,23 +19,6 @@ type WizardStep =
   | 'variation-selection'
   | 'details'
   | 'complete';
-
-// Define a type for exercise input that matches what the hook expects
-interface ExerciseInput {
-  name: string;
-  user_id: string;
-  description: string; // Making this required to match the expected type
-  primary_muscle_groups: MuscleGroup[];
-  secondary_muscle_groups: MuscleGroup[];
-  equipment_type: EquipmentType[];
-  movement_pattern: MovementPattern;
-  difficulty: Difficulty;
-  instructions?: Record<string, any>;
-  is_compound?: boolean;
-  tips?: string[];
-  variations?: string[];
-  [key: string]: any; // Allow additional properties
-}
 
 interface ExerciseWizardProps {
   onComplete: (exercise: Exercise) => void;
@@ -175,7 +158,7 @@ export function ExerciseWizard({ onComplete, onCancel, className }: ExerciseWiza
     const difficultyValue = (selectedExercise?.difficulty || 'intermediate');
 
     // Prepare the exercise data that conforms to the ExerciseInput interface
-    const exerciseData: ExerciseInput = {
+    const exerciseData: ImportedExerciseInput = {
       name: fullExerciseName,
       user_id: user.id,
       description: exerciseDescription || fullExerciseName,

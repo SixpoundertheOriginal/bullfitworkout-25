@@ -9,7 +9,7 @@ import { Loader2 } from 'lucide-react';
 import { useExerciseManagement } from '@/hooks/useExerciseManagement';
 import { useDeleteOperation } from '@/hooks/useAsyncOperation';
 import { deleteWorkout } from '@/services/workoutService';
-import { ExerciseSet } from '@/types/exercise';
+import { ExerciseSet } from '@/store/workout/types';
 
 interface UseWorkoutDialogsProps {
   workoutId: string | undefined;
@@ -61,7 +61,7 @@ export const useWorkoutDialogs = ({
     closeDeleteWorkoutDialog: () => setDeleteDialogOpen(false),
     deleteWorkout: () => deleteWorkoutOperation.execute(workoutId!),
     editExercise: handleEditExercise,
-    saveExerciseSets: (sets: ExerciseSet[]) => handleSaveExerciseSets(sets),
+    saveExerciseSets: handleSaveExerciseSets,
     addExercise: handleAddExercise,
     deleteExercise: handleDeleteExercise,
     saveWorkoutEdit: async (updated: any) => {

@@ -105,12 +105,16 @@ export function ExerciseAutocomplete({ onSelectExercise, className }: ExerciseAu
 
   const handleCreateExercise = () => {
     if (!newExercise.name) {
-      toast.error("Exercise name required");
+      toast({
+        title: "Exercise name required"
+      });
       return;
     }
 
     if (!Array.isArray(newExercise.primary_muscle_groups) || newExercise.primary_muscle_groups.length === 0) {
-      toast.error("Please add at least one primary muscle group");
+      toast({
+        title: "Please add at least one primary muscle group"
+      });
       return;
     }
     
@@ -122,15 +126,19 @@ export function ExerciseAutocomplete({ onSelectExercise, className }: ExerciseAu
       secondary_muscle_groups: newExercise.secondary_muscle_groups || [],
       movement_pattern: newExercise.movement_pattern || "push",
       difficulty: newExercise.difficulty || "beginner", // Ensure difficulty is provided
-      instructions: { steps: newExercise.instructions?.steps || [] } // Ensure steps exists as an array
+      instructions: { 
+        steps: Array.isArray(newExercise.instructions?.steps) ? newExercise.instructions.steps : [] 
+      }
     };
     
     console.log("Creating exercise with data:", exerciseToCreate);
 
     createExercise(exerciseToCreate, {
-      onSuccess: (data) => {
-        console.log("Exercise created successfully:", data);
-        toast.success(`Exercise "${newExercise.name}" created successfully`);
+      onSuccess: () => { // Changed from (data) => void to () => void
+        console.log("Exercise created successfully");
+        toast({
+          title: `Exercise "${newExercise.name}" created successfully`
+        });
         setDialogOpen(false);
         setNewExercise({
           name: "",
@@ -152,7 +160,10 @@ export function ExerciseAutocomplete({ onSelectExercise, className }: ExerciseAu
       },
       onError: (error) => {
         console.error("Error creating exercise:", error);
-        toast.error(`Failed to create exercise: ${error.message}`);
+        toast({
+          title: `Failed to create exercise: ${error.message}`,
+          variant: "destructive"
+        });
       }
     });
   };
