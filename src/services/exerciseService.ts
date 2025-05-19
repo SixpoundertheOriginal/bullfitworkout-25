@@ -82,9 +82,13 @@ const prepareExerciseForDb = (exercise: ExerciseInput | ExerciseUpdateInput) => 
   // Ensure movement_pattern is defined
   const movement_pattern = exercise.movement_pattern || 'push';
   
+  // Ensure name is defined
+  const name = exercise.name || '';
+  
   // Create a properly formatted object for database
   return {
     ...exercise,
+    name,
     is_compound,
     primary_muscle_groups,
     secondary_muscle_groups,
@@ -142,9 +146,21 @@ export async function updateExercise(exercise: ExerciseUpdateInput): Promise<Exe
   // Prepare exercise for database update
   const dbExercise = prepareExerciseForDb(exercise);
 
+  // Ensure all required fields are present for the database
+  const exerciseToUpdate = {
+    ...dbExercise,
+    name: dbExercise.name || '', // Default to empty string if undefined
+    description: dbExercise.description || '', // Default to empty string if undefined
+    difficulty: dbExercise.difficulty || 'intermediate', // Default if undefined
+    is_compound: dbExercise.is_compound === undefined ? false : dbExercise.is_compound,
+    primary_muscle_groups: Array.isArray(dbExercise.primary_muscle_groups) ? dbExercise.primary_muscle_groups : [],
+    equipment_type: Array.isArray(dbExercise.equipment_type) ? dbExercise.equipment_type : [],
+    instructions: dbExercise.instructions || { steps: [] }
+  };
+
   const { data, error } = await supabase
     .from('exercises')
-    .update(dbExercise)
+    .update(exerciseToUpdate)
     .eq('id', exercise.id)
     .select()
     .single();
