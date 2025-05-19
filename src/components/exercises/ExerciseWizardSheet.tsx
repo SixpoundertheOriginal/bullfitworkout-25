@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ExerciseWizard } from '@/components/exercises/ExerciseWizard';
 import { Exercise } from '@/types/exercise';

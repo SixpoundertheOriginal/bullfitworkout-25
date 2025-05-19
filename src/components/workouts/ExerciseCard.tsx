@@ -5,7 +5,7 @@ import { CommonExerciseCard } from '../exercises/CommonExerciseCard';
 import { ExerciseThumbnail } from '../exercises/cards/ExerciseThumbnail';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
-import { getExerciseName } from '@/utils/exerciseAdapter';
+import { getExerciseName, isExerciseObject, safeRenderableExercise } from '@/utils/exerciseAdapter';
 
 interface ExerciseCardProps {
   exercise: Exercise | string;
@@ -22,11 +22,11 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onAdd, cla
     }
   };
 
-  // Get exercise name for display
+  // Get exercise name for display - ensure it's ALWAYS a string
   const exerciseName = getExerciseName(exercise);
   
   // Only try to render thumbnail if we have the full exercise object
-  const thumbnail = typeof exercise !== 'string' ? 
+  const thumbnail = isExerciseObject(exercise) ? 
     <ExerciseThumbnail 
       exercise={exercise} 
       className="transition-all duration-300 group-hover:scale-105" 
@@ -39,7 +39,7 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise, onAdd, cla
       transition={{ type: "spring", stiffness: 300, damping: 15 }}
     >
       <CommonExerciseCard
-        exercise={exerciseName}
+        exercise={exerciseName} // This must always be a string, never an object
         variant="workout-add"
         onAdd={onAdd ? handleAdd : undefined}
         thumbnail={thumbnail}

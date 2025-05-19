@@ -9,7 +9,7 @@ import { useExercises } from "@/hooks/useExercises";
 import { rankExercises, getCurrentTimeOfDay, RankingCriteria } from "@/utils/exerciseRankingUtils";
 import { useWorkoutState } from "@/hooks/useWorkoutState";
 import { TrainingStartButton } from "@/components/training/TrainingStartButton";
-import { getExerciseName } from "@/utils/exerciseAdapter";
+import { getExerciseName, safeRenderableExercise } from "@/utils/exerciseAdapter";
 
 interface ExerciseSelectorProps {
   onSelectExercise: (exerciseName: string) => void;
@@ -92,6 +92,7 @@ export function ExerciseSelector({
 
   // Handle exercise selection, ensuring we always pass a string name
   const handleSelectExercise = (exercise: Exercise | string) => {
+    // Ensure we ALWAYS pass a string to parent component
     const exerciseName = getExerciseName(exercise);
     onSelectExercise(exerciseName);
   };

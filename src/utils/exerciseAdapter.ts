@@ -67,7 +67,7 @@ export function adaptToStoreFormat(
       restTime: set.restTime || 60, // Ensure restTime is always provided
       completed: set.completed,
       isEditing: set.isEditing || false,
-      metadata: {
+      metadata: { 
         autoAdjusted: false,
         previousValues: { 
           weight: set.weight,
@@ -82,6 +82,18 @@ export function adaptToStoreFormat(
 }
 
 /**
+ * Type guard to check if input is an Exercise object
+ * Important for runtime safety
+ */
+export function isExerciseObject(exercise: any): boolean {
+  return exercise !== null && 
+         typeof exercise === 'object' && 
+         !Array.isArray(exercise) &&
+         'name' in exercise &&
+         typeof exercise.name === 'string';
+}
+
+/**
  * Ensures that an exercise identifier is always a string (name)
  * Enhanced to be more robust handling different input types
  */
@@ -92,7 +104,7 @@ export function getExerciseName(exercise: any): string {
   }
   
   // Case 2: Object with name property
-  if (exercise && typeof exercise === 'object' && exercise.name) {
+  if (isExerciseObject(exercise)) {
     return exercise.name;
   }
   
@@ -119,4 +131,21 @@ export function safeGetExerciseProperty<T>(
   }
   
   return (exercise[property] as T) || defaultValue;
+}
+
+/**
+ * Runtime safety wrapper for exercise renderable values
+ * Prevents React errors with object children
+ */
+export function safeRenderableExercise(value: any): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+  
+  if (isExerciseObject(value)) {
+    return value.name;
+  }
+  
+  // Return a string representation or empty string to prevent React errors
+  return String(value || 'Unknown');
 }
