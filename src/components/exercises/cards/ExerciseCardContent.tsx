@@ -22,6 +22,9 @@ export const ExerciseCardContent: React.FC<ExerciseCardContentProps> = ({
   rightContent,
   className
 }) => {
+  // Safety check: ensure we always render a string
+  const safeExerciseName = safeRenderableExercise(exerciseName);
+  
   // Get the exercise properties only if exerciseData is provided
   const primaryMuscleGroups = exerciseData ? exerciseData.primary_muscle_groups : [];
   const equipmentType = exerciseData ? exerciseData.equipment_type : [];
@@ -39,7 +42,7 @@ export const ExerciseCardContent: React.FC<ExerciseCardContentProps> = ({
         )}
         <div className="flex flex-col flex-grow">
           <div className="flex items-center space-x-2">
-            <h3 className="font-medium text-gray-100 line-clamp-1">{exerciseName}</h3>
+            <h3 className="font-medium text-gray-100 line-clamp-1">{safeExerciseName}</h3>
             
             {/* Display variation badge if provided */}
             {variationBadge && (
@@ -49,37 +52,30 @@ export const ExerciseCardContent: React.FC<ExerciseCardContentProps> = ({
           
           {exerciseData && (
             <div className="flex flex-wrap gap-1 mt-1">
-              {primaryMuscleGroups.slice(0, 3).map((muscle, idx) => (
-                <Badge 
-                  key={idx} 
-                  variant="outline" 
-                  className={cn(
-                    "text-xs bg-gray-800/60 border-gray-700/50 text-gray-300",
-                    "transition-all duration-200 hover:bg-gray-800 hover:border-gray-600/70"
-                  )}
-                >
-                  {muscle}
+              {/* Primary muscle groups */}
+              {Array.isArray(primaryMuscleGroups) && primaryMuscleGroups.length > 0 && (
+                <Badge variant="outline" className="bg-purple-900/20 border-purple-700/30 text-purple-300 text-xs">
+                  {primaryMuscleGroups[0]}
                 </Badge>
-              ))}
+              )}
               
-              {equipmentType.slice(0, 1).map((equipment, idx) => (
-                <Badge 
-                  key={idx} 
-                  variant="outline" 
-                  className={cn(
-                    "text-xs bg-gray-800/80 border-gray-700/50 text-gray-400",
-                    "transition-all duration-200 hover:bg-gray-800 hover:border-gray-600/70"
-                  )}
-                >
-                  {equipment}
+              {/* Equipment type */}
+              {Array.isArray(equipmentType) && equipmentType.length > 0 && (
+                <Badge variant="outline" className="bg-blue-900/20 border-blue-700/30 text-blue-300 text-xs">
+                  {equipmentType[0]}
                 </Badge>
-              ))}
+              )}
             </div>
           )}
         </div>
       </div>
       
-      {rightContent && <div>{rightContent}</div>}
+      {/* Right side content */}
+      {rightContent && (
+        <div className="flex-shrink-0">
+          {rightContent}
+        </div>
+      )}
     </div>
   );
 };

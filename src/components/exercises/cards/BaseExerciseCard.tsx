@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Exercise } from '@/types/exercise';
 import { cn } from '@/lib/utils';
+import { safeRenderableExercise } from '@/utils/exerciseAdapter';
 
 interface BaseExerciseCardProps {
   exerciseName: string;
@@ -23,9 +24,12 @@ export const BaseExerciseCard: React.FC<BaseExerciseCardProps> = ({
   isActive,
   isSelected
 }) => {
+  // Safety check: ensure we always have a valid string for data attributes
+  const safeExerciseName = safeRenderableExercise(exerciseName);
+  
   return (
     <Card
-      data-exercise-name={exerciseName}
+      data-exercise-name={safeExerciseName}
       className={cn(
         "overflow-hidden transition-all duration-200 border-gray-800",
         isActive && "border-purple-500/30 shadow-lg shadow-purple-500/10",
