@@ -41,12 +41,42 @@ const transformExerciseFromDb = (dbExercise: any): Exercise => {
 
 // Helper function to prepare exercise for database insertion
 const prepareExerciseForDb = (exercise: ExerciseInput | ExerciseUpdateInput) => {
+  // Ensure is_compound is defined
+  const is_compound = exercise.is_compound === undefined ? false : exercise.is_compound;
+  
+  // Ensure primary_muscle_groups is an array
+  const primary_muscle_groups = Array.isArray(exercise.primary_muscle_groups) 
+    ? exercise.primary_muscle_groups 
+    : [];
+  
+  // Ensure secondary_muscle_groups is an array
+  const secondary_muscle_groups = Array.isArray(exercise.secondary_muscle_groups)
+    ? exercise.secondary_muscle_groups
+    : [];
+    
+  // Ensure equipment_type is an array
+  const equipment_type = Array.isArray(exercise.equipment_type) 
+    ? exercise.equipment_type 
+    : [];
+    
+  // Ensure instructions is properly formatted with steps as array
+  const instructions = exercise.instructions || { steps: [] };
+  if (!Array.isArray(instructions.steps)) {
+    instructions.steps = [];
+  }
+  
+  // Ensure description is a string
+  const description = exercise.description || '';
+  
+  // Create a properly formatted object for database
   return {
     ...exercise,
-    // Ensure is_compound is set (required by db schema)
-    is_compound: exercise.is_compound === undefined ? false : exercise.is_compound,
-    // Ensure instructions is properly formatted
-    instructions: exercise.instructions || { steps: [] }
+    is_compound,
+    primary_muscle_groups,
+    secondary_muscle_groups,
+    equipment_type,
+    instructions,
+    description
   };
 };
 

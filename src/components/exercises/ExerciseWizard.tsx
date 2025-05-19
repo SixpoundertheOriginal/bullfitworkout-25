@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
-import { ExerciseInput as ImportedExerciseInput } from '@/hooks/exercise/types';
+import { ExerciseInput } from '@/hooks/exercise/types';
 
 // Define the steps of our wizard
 type WizardStep = 
@@ -158,7 +158,7 @@ export function ExerciseWizard({ onComplete, onCancel, className }: ExerciseWiza
     const difficultyValue = (selectedExercise?.difficulty || 'intermediate');
 
     // Prepare the exercise data that conforms to the ExerciseInput interface
-    const exerciseData: ImportedExerciseInput = {
+    const exerciseData: ExerciseInput = {
       name: fullExerciseName,
       user_id: user.id,
       description: exerciseDescription || fullExerciseName,

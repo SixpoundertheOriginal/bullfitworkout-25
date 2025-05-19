@@ -1,3 +1,4 @@
+
 import { TrainingConfig } from '@/hooks/useTrainingSetupPersistence';
 
 export interface ExerciseSet {
@@ -6,7 +7,7 @@ export interface ExerciseSet {
   exercise_name: string;
   weight: number;
   reps: number;
-  set_number: number; // Updated to required to match ExerciseSet from types.ts
+  set_number: number;
   completed: boolean;
   isEditing: boolean;
   restTime: number;

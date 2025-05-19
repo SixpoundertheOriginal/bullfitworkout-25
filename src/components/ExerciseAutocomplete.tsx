@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Check, ChevronsUpDown, Plus, Loader2, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -125,16 +124,17 @@ export function ExerciseAutocomplete({ onSelectExercise, className }: ExerciseAu
       equipment_type: newExercise.equipment_type || [],
       secondary_muscle_groups: newExercise.secondary_muscle_groups || [],
       movement_pattern: newExercise.movement_pattern || "push",
-      difficulty: newExercise.difficulty || "beginner", // Ensure difficulty is provided
+      difficulty: newExercise.difficulty || "beginner",
       instructions: { 
         steps: Array.isArray(newExercise.instructions?.steps) ? newExercise.instructions.steps : [] 
-      }
+      },
+      is_compound: newExercise.is_compound ?? false // Ensure is_compound is defined
     };
     
     console.log("Creating exercise with data:", exerciseToCreate);
 
     createExercise(exerciseToCreate, {
-      onSuccess: () => { // Changed from (data) => void to () => void
+      onSuccess: () => {
         console.log("Exercise created successfully");
         toast({
           title: `Exercise "${newExercise.name}" created successfully`
@@ -150,7 +150,7 @@ export function ExerciseAutocomplete({ onSelectExercise, className }: ExerciseAu
           movement_pattern: "push",
           difficulty: "beginner",
           instructions: {
-            steps: [] // Initialize with empty array
+            steps: []
           },
           is_compound: false,
           tips: [],

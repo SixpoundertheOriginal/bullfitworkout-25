@@ -3,6 +3,8 @@ import React, { useEffect } from 'react';
 import { useWorkoutStore } from './store';
 import { getStore } from './store';
 import { toast } from '@/hooks/use-toast';
+import { ExerciseSet } from './types';
+import { v4 as uuidv4 } from 'uuid';
 
 // Hook for using workout timer functionality
 export const useWorkoutTimer = () => {
@@ -74,15 +76,27 @@ export const useAddExercise = () => {
       return false;
     }
     
-    // Add exercise with default set
+    // Add exercise with default set - creating a proper ExerciseSet object
     setExercises(prev => ({
       ...prev, 
-      [name]: [{ 
+      [name]: [{
+        id: uuidv4(),
+        workout_id: 'current-workout', // Default value 
+        exercise_name: name,
+        set_number: 1,
         weight: 0, 
         reps: 0, 
         restTime: 60, 
         completed: false, 
-        isEditing: false 
+        isEditing: false,
+        metadata: {
+          autoAdjusted: false,
+          previousValues: {
+            weight: 0,
+            reps: 0,
+            restTime: 60
+          }
+        }
       }]
     }));
     

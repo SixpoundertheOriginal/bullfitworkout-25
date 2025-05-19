@@ -1,4 +1,3 @@
-
 export interface Exercise {
   id?: string;
   name: string;
@@ -22,7 +21,7 @@ export interface Exercise {
   updated_at?: string;
   movement_pattern?: string;
   tips?: string[];
-  variations?: string[]; // Changed to only string[] for consistency
+  variations?: string[]; // Keeping this as string[] only
   user_id?: string;
   base_exercise_id?: string;
   is_bodyweight?: boolean;
@@ -36,7 +35,7 @@ export interface ExerciseSet {
   exercise_name: string;
   weight: number;
   reps: number;
-  set_number: number; // Made this required to match usage
+  set_number: number; // Required to match usage
   completed: boolean;
   isEditing: boolean;
   restTime: number;
@@ -58,6 +57,39 @@ export interface WeightCalculation {
   value: number;
   isAuto: boolean;
   source: 'default' | 'user' | 'auto';
+}
+
+// Create a separate interface for exercise variations that doesn't extend Exercise
+export interface ExerciseWithVariations {
+  id?: string;
+  name: string;
+  description: string;
+  instructions: {
+    steps: string[];
+    video_url?: string;
+    image_url?: string;
+  };
+  primary_muscle_groups: string[];
+  secondary_muscle_groups?: string[];
+  equipment_type?: string[];
+  is_compound?: boolean;
+  is_custom?: boolean;
+  difficulty?: string;
+  media_url?: string;
+  metadata?: Record<string, any>;
+  variation_type?: string;
+  variation_value?: string;
+  created_at?: string;
+  updated_at?: string;
+  movement_pattern?: string;
+  tips?: string[];
+  user_id?: string;
+  base_exercise_id?: string;
+  is_bodyweight?: boolean;
+  load_factor?: number;
+  duration?: number;
+  // The difference is here - we allow either strings or Exercise objects
+  variations: string[] | Exercise[];
 }
 
 // Export type definitions needed by components
@@ -106,10 +138,6 @@ export interface ExerciseListItem {
   is_compound: boolean;
   is_custom?: boolean;
   difficulty?: string;
-}
-
-export interface ExerciseWithVariations extends Exercise {
-  variations: string[] | Exercise[]; // Allow both string[] and Exercise[] for backward compatibility
 }
 
 export const EXERCISE_LOAD_FACTORS: Record<string, { factor: number }> = {

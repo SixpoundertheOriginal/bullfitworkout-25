@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useExercises } from "@/hooks/useExercises";
 import { Exercise, MuscleGroup, MovementPattern, Difficulty, EquipmentType } from "@/types/exercise";
@@ -148,6 +147,7 @@ export function useExerciseDialog(user: any, standalone: boolean) {
             primary_muscle_groups: Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : [],
             secondary_muscle_groups: Array.isArray(exercise.secondary_muscle_groups) ? exercise.secondary_muscle_groups : [],
             equipment_type: Array.isArray(exercise.equipment_type) ? exercise.equipment_type : [],
+            is_compound: exercise.is_compound ?? false, // Ensure is_compound is defined
             instructions: {
               steps: Array.isArray(exercise.instructions?.steps) ? exercise.instructions.steps : [],
               video_url: exercise.instructions?.form,
@@ -176,6 +176,7 @@ export function useExerciseDialog(user: any, standalone: boolean) {
           primary_muscle_groups: Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : [],
           secondary_muscle_groups: Array.isArray(exercise.secondary_muscle_groups) ? exercise.secondary_muscle_groups : [],
           equipment_type: Array.isArray(exercise.equipment_type) ? exercise.equipment_type : [],
+          is_compound: exercise.is_compound ?? false, // Ensure is_compound is defined
           instructions: {
             steps: Array.isArray(exercise.instructions?.steps) ? exercise.instructions.steps : [],
             video_url: exercise.instructions?.form,

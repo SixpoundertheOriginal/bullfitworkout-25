@@ -27,23 +27,23 @@ export type ExerciseInput = {
     video_url?: string;
     image_url?: string;
   };
-  is_compound: boolean; // Made this required to match database expectations
+  is_compound: boolean; // Kept required to match database expectations
   tips?: string[];
-  variations?: string[]; // Changed to only accept string[] to match database schema
+  variations?: string[]; // String array only to match database schema
   metadata?: Record<string, any>;
   base_exercise_id?: string;
   variation_type?: string;
   variation_value?: string;
   is_bodyweight?: boolean;
   energy_cost_factor?: number;
-  // New fields for media
+  // Additional fields
   media_url?: string;
   variationList?: any[];
-  // Add any missing field that might be required
   created_at?: string;
   updated_at?: string;
   is_custom?: boolean;
   load_factor?: number;
+  duration?: number;
 };
 
 export type ExerciseUpdateInput = Partial<Omit<ExerciseInput, 'created_at'>> & { id: string };

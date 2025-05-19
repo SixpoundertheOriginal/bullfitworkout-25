@@ -1,6 +1,7 @@
 
 import { ExerciseSet as TypesExerciseSet } from '@/types/exercise';
 import { ExerciseSet as StoreExerciseSet } from '@/store/workout/types';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Adapts workout store exercise sets to the format expected by components
@@ -28,9 +29,9 @@ export function adaptExerciseSets(
     
     adaptedExercises[safeExerciseName] = sets.map((set, index) => ({
       id: set.id || `${safeExerciseName}-set-${index}`,
-      set_number: set.set_number || index + 1,
-      exercise_name: safeExerciseName,
       workout_id: set.workout_id || 'current-workout', // Ensure workout_id is always provided
+      exercise_name: safeExerciseName,
+      set_number: set.set_number || index + 1,
       weight: set.weight,
       reps: set.reps,
       // Ensure restTime is always provided and not undefined

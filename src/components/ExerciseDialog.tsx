@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -54,6 +53,9 @@ export const ExerciseDialog: React.FC<ExerciseDialogProps> = ({
       id: placeholder.id,
       name: placeholder.name,
       description: '',
+      instructions: {
+        steps: [] // Add empty steps array to satisfy the type
+      },
       primary_muscle_groups: [],
       secondary_muscle_groups: [],
       equipment_type: [],
