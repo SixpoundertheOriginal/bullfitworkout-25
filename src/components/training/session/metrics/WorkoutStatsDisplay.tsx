@@ -24,7 +24,7 @@ export const WorkoutStatsDisplay: React.FC<WorkoutStatsDisplayProps> = ({
       className
     )}>
       {/* Exercise Count */}
-      <div className="rounded-xl bg-gray-900/80 backdrop-blur-md border border-white/10 p-3 shadow-md">
+      <div className="rounded-xl bg-gray-900/80 backdrop-blur-md border border-white/10 p-3 shadow-md transition-all duration-300 hover:bg-gray-900/90">
         <div className="flex items-center mb-1">
           <Dumbbell className="h-4 w-4 text-blue-400 mr-1.5" />
           <span className="text-xs font-medium text-gray-400">Exercises</span>
@@ -33,7 +33,7 @@ export const WorkoutStatsDisplay: React.FC<WorkoutStatsDisplayProps> = ({
       </div>
       
       {/* Sets Progress */}
-      <div className="rounded-xl bg-gray-900/80 backdrop-blur-md border border-white/10 p-3 shadow-md">
+      <div className="rounded-xl bg-gray-900/80 backdrop-blur-md border border-white/10 p-3 shadow-md transition-all duration-300 hover:bg-gray-900/90">
         <div className="flex items-center mb-1">
           <Award className="h-4 w-4 text-purple-400 mr-1.5" />
           <span className="text-xs font-medium text-gray-400">Sets</span>
@@ -42,9 +42,9 @@ export const WorkoutStatsDisplay: React.FC<WorkoutStatsDisplayProps> = ({
           {completedSets}/{totalSets}
         </div>
         {totalSets > 0 && (
-          <div className="mt-1 h-1 w-full bg-gray-700 rounded-full overflow-hidden">
+          <div className="mt-1.5 h-1.5 w-full bg-gray-700 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full"
+              className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>

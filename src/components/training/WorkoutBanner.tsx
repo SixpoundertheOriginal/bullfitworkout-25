@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useWorkoutStore } from '@/store/workoutStore';
 import { cn } from '@/lib/utils';
 import { Dumbbell, PlayCircle, Clock } from 'lucide-react';
-import { formatTime } from '@/utils/formatTime';
+import { formatDuration } from '@/utils/formatTime';
 import { usePageVisibility } from '@/hooks/usePageVisibility';
 import { toast } from "@/hooks/use-toast";
 
@@ -96,7 +96,7 @@ export const WorkoutBanner: React.FC = () => {
         <div className="flex items-center space-x-4">
           <div className="flex items-center text-blue-200 text-sm">
             <Clock className="h-3.5 w-3.5 mr-1" />
-            {formatTime(elapsedTime)}
+            {formatDuration(elapsedTime)}
           </div>
           <PlayCircle className="h-6 w-6 text-blue-200" />
         </div>

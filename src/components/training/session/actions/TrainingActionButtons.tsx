@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { cn } from '@/lib/utils';
+import { PlusCircle, CheckCircle } from 'lucide-react';
 
 interface TrainingActionButtonsProps {
   onFinishWorkout: () => void;
@@ -19,13 +20,14 @@ export const TrainingActionButtons: React.FC<TrainingActionButtonsProps> = ({
   className
 }) => {
   return (
-    <div className={cn("flex justify-between gap-2 mt-4", className)}>
+    <div className={cn("flex justify-between gap-3 mt-6", className)}>
       <Button
         variant="outline"
         size="sm"
         onClick={onOpenAddExercise}
-        className="flex-1 bg-gray-800 border-gray-700 text-white hover:bg-gray-700"
+        className="flex-1 bg-gray-800/90 border-gray-700 text-white hover:bg-gray-700/90 transition-all duration-300"
       >
+        <PlusCircle className="h-4 w-4 mr-2" />
         Add Exercise
       </Button>
       
@@ -35,8 +37,15 @@ export const TrainingActionButtons: React.FC<TrainingActionButtonsProps> = ({
           size="sm"
           onClick={onFinishWorkout}
           disabled={isSaving}
-          className="flex-1 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white"
+          className={cn(
+            "flex-1 transition-all duration-300",
+            "bg-gradient-to-r from-green-600 to-green-500",
+            "hover:from-green-500 hover:to-green-400", 
+            "text-white shadow-md",
+            "border border-green-500/20"
+          )}
         >
+          <CheckCircle className="h-4 w-4 mr-2" />
           {isSaving ? "Saving..." : "Finish Workout"}
         </Button>
       )}
