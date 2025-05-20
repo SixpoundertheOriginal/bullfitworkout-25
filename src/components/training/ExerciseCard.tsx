@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -163,20 +162,24 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
             {sets.map((set, index) => (
               <SetRow
                 key={`${exerciseName}-set-${index}`}
-                set={set}
-                index={index}
-                onComplete={() => onCompleteSet(index)}
-                onRemove={() => onRemoveSet(index)}
-                onEdit={() => onEditSet(index)}
-                onSave={() => onSaveSet(index)}
-                onWeightChange={(value) => onWeightChange(index, value)}
-                onRepsChange={(value) => onRepsChange(index, value)}
-                onRestTimeChange={(value) => onRestTimeChange(index, value)}
-                onWeightIncrement={(increment) => onWeightIncrement(index, increment)}
-                onRepsIncrement={(increment) => onRepsIncrement(index, increment)}
-                onRestTimeIncrement={(increment) => onRestTimeIncrement(index, increment)}
-                onShowRestTimer={onShowRestTimer}
-                onResetRestTimer={onResetRestTimer}
+                exerciseSet={set}
+                onUpdate={(updatedSet) => {
+                  if (updatedSet.completed !== set.completed) {
+                    onCompleteSet(index);
+                  }
+                  if (updatedSet.weight !== set.weight) {
+                    onWeightChange(index, updatedSet.weight.toString());
+                  }
+                  if (updatedSet.reps !== set.reps) {
+                    onRepsChange(index, updatedSet.reps.toString());
+                  }
+                  if (updatedSet.restTime !== set.restTime) {
+                    onRestTimeChange(index, updatedSet.restTime.toString());
+                  }
+                }}
+                onDelete={() => onRemoveSet(index)}
+                onTimerStart={onShowRestTimer}
+                onFocusSet={() => onFocus && onFocus()}
               />
             ))}
             
