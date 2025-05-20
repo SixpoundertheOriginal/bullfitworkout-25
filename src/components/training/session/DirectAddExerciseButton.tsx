@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { AddExerciseButton } from './AddExerciseButton';
 
 interface DirectAddExerciseButtonProps {
   onAddExercise: (exerciseName: string) => void;
@@ -18,11 +17,10 @@ export const DirectAddExerciseButton: React.FC<DirectAddExerciseButtonProps> = (
   
   return (
     <div className="flex justify-center px-4 my-6">
-      <AddExerciseButton
-        onClick={handleOpenExerciseSheet}
-        label="Add Your First Exercise"
-        className="max-w-md"
-      />
+      {/* Button has been removed, we'll add a replacement in the next step */}
+      <div className="py-4">
+        {/* Placeholder div to maintain spacing */}
+      </div>
     </div>
   );
 };
