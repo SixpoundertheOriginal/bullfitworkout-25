@@ -2,10 +2,10 @@
 import React, { useState } from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Motion, AnimatePresence, motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { PlusCircle, ChevronUp, ChevronDown, Trash2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import SetRow from "@/components/SetRow";
+import { SetRow } from "@/components/SetRow";
 import { ExerciseSet } from "@/types/exercise";
 import { ExerciseCardActions } from "@/components/exercises/cards/ExerciseCardActions";
 import { SafeExerciseName } from '@/components/exercises/SafeExerciseName';
