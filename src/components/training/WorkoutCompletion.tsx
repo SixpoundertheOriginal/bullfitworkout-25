@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { IntelligentMetricsDisplay } from '@/components/metrics/IntelligentMetricsDisplay';
@@ -46,6 +47,7 @@ export const WorkoutCompletion = ({
   const [trainingType, setTrainingType] = useState<string | undefined>(undefined);
   const [previousLevel, setPreviousLevel] = useState<number | undefined>(undefined);
   const [newLevel, setNewLevel] = useState<number | undefined>(undefined);
+  const [processingComplete, setProcessingComplete] = useState(false);
 
   // Convert LocalExerciseSet to ExerciseSet for the chart components
   const convertedExercises = Object.entries(exercises).reduce((acc, [exerciseName, sets]) => {
@@ -77,6 +79,13 @@ export const WorkoutCompletion = ({
   };
 
   const handleSuccessfulSave = async (workout: any) => {
+    if (processingComplete) {
+      console.log("Save processing already complete, skipping");
+      return;
+    }
+    
+    setProcessingComplete(true);
+    
     try {
       // Calculate XP based on duration and workout type
       const workoutDuration = workout.duration || 0;
@@ -88,6 +97,8 @@ export const WorkoutCompletion = ({
       // Save the calculated XP for the animation
       setXpEarned(totalXp);
       setTrainingType(workoutTrainingType || undefined);
+      
+      console.log(`Adding ${totalXp} XP for ${workoutTrainingType} workout`);
       
       // Add the experience
       const result = await addExperienceAsync({
@@ -111,11 +122,6 @@ export const WorkoutCompletion = ({
         previousLevel: result.previousLevel,
         newLevel: result.newLevel
       });
-      
-      console.log(`Added ${totalXp} XP for ${workoutTrainingType} workout`);
-      
-      // Continue with existing completion logic after animation finishes
-      // The onComplete will be called after the animation completes
     } catch (error) {
       console.error("Error adding experience:", error);
       // Continue with existing completion logic anyway
@@ -125,6 +131,7 @@ export const WorkoutCompletion = ({
 
   // Handle when XP animation completes
   const handleXpAnimationComplete = () => {
+    console.log("XP animation complete, hiding animation and completing workout");
     setShowXpAnimation(false);
     // Call the onComplete callback to properly finish the workout
     onComplete();
@@ -137,6 +144,7 @@ export const WorkoutCompletion = ({
           variant="outline"
           className="w-1/2 py-3 border-gray-700 hover:bg-gray-800"
           onClick={handleDiscard}
+          disabled={processingComplete}
         >
           Discard
         </Button>
@@ -146,6 +154,7 @@ export const WorkoutCompletion = ({
             hover:from-green-700 hover:to-emerald-600 text-white font-medium 
             rounded-full shadow-lg hover:shadow-xl"
           onClick={handleSuccessfulSave}
+          disabled={processingComplete}
         >
           Complete Workout
         </Button>

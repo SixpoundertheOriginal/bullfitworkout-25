@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWorkoutTimer } from '@/hooks/useWorkoutTimer';
@@ -55,14 +56,14 @@ const TrainingSessionPage = () => {
           setShowCompletion(false);
           // Navigate to home page after successful completion
           navigate('/');
-        }, 500);
+        }, 300);
       })
       .catch((error) => {
         console.error("Error saving workout:", error);
         // Even on error, navigate back to home page to prevent user getting stuck
         setTimeout(() => {
           navigate('/');
-        }, 2000);
+        }, 1000);
       });
   };
 

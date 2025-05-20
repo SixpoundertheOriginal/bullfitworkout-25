@@ -69,7 +69,9 @@ export const ExperienceGainOverlay: React.FC<ExperienceGainProps> = ({
   onComplete
 }) => {
   React.useEffect(() => {
+    console.log(`Experience animation started, will complete in ${duration}ms`);
     const timer = setTimeout(() => {
+      console.log("Experience animation timer completed, calling onComplete");
       onComplete?.();
     }, duration);
     
