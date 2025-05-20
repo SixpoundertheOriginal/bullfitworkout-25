@@ -17,6 +17,7 @@ import { ExperienceDisplay } from "@/components/training/ExperienceDisplay";
 import { useWorkoutRecommendations } from "@/hooks/useWorkoutRecommendations";
 import { format } from "date-fns";
 import { Calendar, Dumbbell, Trophy, Zap } from "lucide-react";
+import { formatDurationHuman } from "@/utils/formatTime";
 
 // The main Index component
 const Index = () => {
@@ -285,20 +286,22 @@ const RecommendationSection = ({ recommendations, onStartClick }) => {
       
       <div className="p-4">
         <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-center justify-between">
+            <div className="flex items-center gap-3 mb-4 sm:mb-0">
               <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
                 <Dumbbell className="h-5 w-5 text-white" />
               </div>
               <div>
                 <p className="font-medium">{recommendations.trainingType} Workout</p>
-                <p className="text-sm text-gray-400">{recommendations.suggestedDuration} minutes • {recommendations.bestTimeOfDay}</p>
+                <p className="text-sm text-gray-400">
+                  {Math.round(recommendations.suggestedDuration)} minutes • {recommendations.bestTimeOfDay}
+                </p>
               </div>
             </div>
             
             <button 
               onClick={onStartClick}
-              className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm flex items-center gap-2"
+              className="px-6 py-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400 text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-purple-500/20 w-full sm:w-auto flex items-center justify-center gap-2"
             >
               <Trophy className="h-4 w-4" />
               Start Quest

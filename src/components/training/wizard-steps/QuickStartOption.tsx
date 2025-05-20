@@ -3,8 +3,9 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Clock, Dumbbell, Activity, Target, ChevronRight } from 'lucide-react';
+import { Clock, Dumbbell, Activity, Target, ChevronRight, Trophy } from 'lucide-react';
 import { WorkoutStats } from '@/types/workoutStats';
+import { formatDuration, formatDurationHuman } from '@/utils/formatTime';
 
 interface QuickStartOptionProps {
   onSelect: (config: any) => void;
@@ -130,14 +131,27 @@ export default function QuickStartOption({ onSelect, onCustomize, stats }: Quick
                   
                   <span className="text-xs text-gray-500 capitalize">{option.type}</span>
                   
-                  <span className="text-xs text-yellow-400 ml-auto font-medium">
-                    +{option.duration * 2} XP
-                  </span>
+                  <div className="flex items-center ml-auto">
+                    <span className="text-xs text-yellow-400 font-medium mr-2">
+                      +{option.duration * 2} XP
+                    </span>
+                    
+                    <div className="p-1 bg-gray-800/50 rounded-full">
+                      <ChevronRight className="h-3 w-3 text-gray-400" />
+                    </div>
+                  </div>
                 </div>
               </div>
-              
-              <ChevronRight className="h-5 w-5 text-gray-500 ml-2" />
             </div>
+            
+            {option.isPrimary && (
+              <div className="bg-gradient-to-r from-purple-600/30 to-pink-500/30 px-4 py-2 flex justify-end">
+                <div className="bg-gradient-to-r from-purple-600 to-pink-500 text-white text-sm font-medium px-4 py-1.5 rounded-lg flex items-center gap-1.5">
+                  <Trophy className="h-3.5 w-3.5" />
+                  Start Quest
+                </div>
+              </div>
+            )}
           </motion.div>
         ))}
       </div>

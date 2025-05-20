@@ -1,7 +1,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Play } from "lucide-react";
+import { Play, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CircularGradientButtonProps {
@@ -11,7 +11,8 @@ interface CircularGradientButtonProps {
   children?: React.ReactNode;
   size?: number;
   disabled?: boolean;
-  ariaLabel?: string; // Added ariaLabel prop
+  ariaLabel?: string;
+  color?: "primary" | "secondary" | "accent"; // Added color option
 }
 
 export const CircularGradientButton: React.FC<CircularGradientButtonProps> = ({
@@ -22,17 +23,25 @@ export const CircularGradientButton: React.FC<CircularGradientButtonProps> = ({
   size = 72,
   disabled = false,
   ariaLabel,
+  color = "primary",
 }) => {
+  // Define gradient based on color prop
+  const gradientClasses = {
+    primary: "from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400",
+    secondary: "from-blue-600 to-indigo-500 hover:from-blue-500 hover:to-indigo-400", 
+    accent: "from-green-500 to-teal-400 hover:from-green-400 hover:to-teal-300"
+  };
+
   return (
     <motion.button
       whileHover={{ scale: disabled ? 1 : 1.05 }}
       whileTap={{ scale: disabled ? 1 : 0.96 }}
       onClick={onClick}
       disabled={disabled}
-      aria-label={ariaLabel} // Use the ariaLabel prop for accessibility
+      aria-label={ariaLabel}
       className={cn(
         "relative flex flex-col items-center justify-center group transition-all duration-300",
-        "bg-gradient-to-r from-purple-600 to-pink-500 shadow-lg hover:shadow-purple-500/30 text-white font-semibold",
+        `bg-gradient-to-r ${gradientClasses[color]} shadow-lg hover:shadow-purple-500/30 text-white font-semibold`,
         "rounded-full border border-purple-500/30 overflow-hidden",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400",
         disabled && "opacity-60 cursor-not-allowed",

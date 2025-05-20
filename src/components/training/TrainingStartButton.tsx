@@ -1,80 +1,61 @@
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Play } from 'lucide-react';
-import { CircularGradientButton } from '@/components/CircularGradientButton';
-import { cn } from '@/lib/utils';
-import { useWorkoutStore } from '@/store/workout/store';
-import { toast } from '@/hooks/use-toast';
+import React from "react";
+import { CircularGradientButton } from "@/components/CircularGradientButton";
+import { useWorkoutState } from "@/hooks/useWorkoutState";
+import { Trophy } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 interface TrainingStartButtonProps {
-  onStartClick?: () => void;
+  onStartClick: () => void;
   className?: string;
   label?: string;
   size?: number;
 }
 
-export const TrainingStartButton = ({
+export const TrainingStartButton: React.FC<TrainingStartButtonProps> = ({
   onStartClick,
-  className = '',
-  label = 'Start Training',
-  size = 120,
-}: TrainingStartButtonProps) => {
-  const navigate = useNavigate();
-  const { isActive, startWorkout, updateLastActiveRoute } = useWorkoutStore();
+  className,
+  label = "Start",
+  size = 140, // Increased default size
+}) => {
+  const { isActive } = useWorkoutState();
   
-  const handleStartClick = () => {
-    console.log('TrainingStartButton: handleStartClick called');
-    
-    // Call the provided click handler if any
-    if (onStartClick) {
-      console.log('TrainingStartButton: Calling provided onStartClick');
-      onStartClick();
-      return;
-    }
-    
-    try {
-      console.log('TrainingStartButton: Starting workout via store');
-      
-      // Start the workout with our workout state manager
-      startWorkout();
-      
-      // Update last active route for tracking
-      updateLastActiveRoute('/training-session');
-      
-      console.log('TrainingStartButton: Navigating to training-session');
-      
-      // Navigate to the training session page
-      navigate('/training-session');
-      
-      // Show success toast
-      toast({
-        title: "Workout started! Add exercises to begin"
-      });
-    } catch (error) {
-      console.error('TrainingStartButton: Error starting workout:', error);
-      toast({
-        title: "Error starting workout",
-        description: "Please try again",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  // Don't render this button if a workout is already active
+  // Don't render if a workout is already active (to avoid confusion)
   if (isActive) {
-    console.log('TrainingStartButton: Not rendering - workout already active');
+    console.info("TrainingStartButton: Not rendering - workout already active");
     return null;
   }
-  
+
   return (
-    <CircularGradientButton
-      onClick={handleStartClick}
-      className={cn("hover:scale-105 transition-transform", className)}
-      icon={<Play size={40} className="text-white ml-1" />}
-      size={size}
-    >
-      {label}
-    </CircularGradientButton>
+    <div className={cn("flex flex-col items-center", className)}>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        className="relative"
+      >
+        {/* Halo effect */}
+        <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/20 to-pink-500/20 rounded-full blur-lg opacity-70"></div>
+        
+        <CircularGradientButton
+          onClick={onStartClick}
+          size={size}
+          ariaLabel="Start training session"
+          icon={<Trophy size={size * 0.35} className="text-white" />}
+        >
+          {label}
+        </CircularGradientButton>
+      </motion.div>
+      
+      <motion.p 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 0.7 }}
+        transition={{ delay: 0.5 }}
+        className="mt-4 text-sm text-white/70"
+      >
+        Begin your fitness journey
+      </motion.p>
+    </div>
   );
 };

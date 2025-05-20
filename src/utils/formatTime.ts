@@ -29,20 +29,28 @@ export const formatDuration = (seconds: number): string => {
  * Format a duration in seconds to display as a human-readable string
  * 
  * @param seconds Total duration in seconds
- * @returns Human-readable duration string like "1h 30m" or "45m 20s"
+ * @returns Human-readable duration string like "1h 30m" or "45m"
  */
 export const formatDurationHuman = (seconds: number): string => {
   if (seconds < 0) return "0m";
   
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
   
   if (hours > 0) {
-    return `${hours}h ${minutes}m`;
-  } else if (minutes > 0) {
-    return `${minutes}m ${secs}s`;
+    return `${hours}h ${minutes > 0 ? `${minutes}m` : ''}`;
   } else {
-    return `${secs}s`;
+    return `${minutes}m`;
   }
+};
+
+/**
+ * Format a number for display by rounding it to a specified number of decimal places
+ * 
+ * @param value The number to format
+ * @param decimals Number of decimal places to round to (default: 0)
+ * @returns Formatted number string
+ */
+export const formatNumber = (value: number, decimals: number = 0): string => {
+  return Number(value).toFixed(decimals);
 };
