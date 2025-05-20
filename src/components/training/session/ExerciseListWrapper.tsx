@@ -11,6 +11,7 @@ interface ExerciseListWrapperProps {
   nextExerciseName: string | null;
   onFinishWorkout: () => void;
   isSaving: boolean;
+  onOpenAddExercise: () => void;
 }
 
 export const ExerciseListWrapper: React.FC<ExerciseListWrapperProps> = ({
@@ -19,7 +20,8 @@ export const ExerciseListWrapper: React.FC<ExerciseListWrapperProps> = ({
   safeFocusedExercise,
   nextExerciseName,
   onFinishWorkout,
-  isSaving
+  isSaving,
+  onOpenAddExercise
 }) => {
   const {
     handleAddSet,
@@ -135,10 +137,7 @@ export const ExerciseListWrapper: React.FC<ExerciseListWrapperProps> = ({
       onShowRestTimer={handleShowRestTimer}
       onResetRestTimer={triggerRestTimerReset}
       onFocusExercise={handleFocusExercise}
-      onOpenAddExercise={() => {
-        const { setIsAddExerciseSheetOpen } = useTrainingSession();
-        setIsAddExerciseSheetOpen(true);
-      }}
+      onOpenAddExercise={onOpenAddExercise}
       onFinishWorkout={onFinishWorkout}
       isSaving={isSaving}
       onNextExercise={handleNextExercise}

@@ -10,6 +10,7 @@ interface TrainingActionButtonsProps {
   onOpenAddExercise: () => void;
   hasExercises: boolean;
   className?: string;
+  showOnMobile?: boolean;
 }
 
 export const TrainingActionButtons: React.FC<TrainingActionButtonsProps> = ({
@@ -17,8 +18,14 @@ export const TrainingActionButtons: React.FC<TrainingActionButtonsProps> = ({
   isSaving,
   onOpenAddExercise,
   hasExercises,
-  className
+  className,
+  showOnMobile = false
 }) => {
+  // If not showing on mobile, return null for mobile devices
+  if (!showOnMobile) {
+    return null;
+  }
+  
   return (
     <div className={cn("flex justify-between gap-3 mt-6", className)}>
       <Button
@@ -40,7 +47,7 @@ export const TrainingActionButtons: React.FC<TrainingActionButtonsProps> = ({
           className={cn(
             "flex-1 transition-all duration-300",
             "bg-gradient-to-r from-green-600 to-green-500",
-            "hover:from-green-500 hover:to-green-400", 
+            "hover:from-green-700 hover:to-green-400", 
             "text-white shadow-md",
             "border border-green-500/20"
           )}

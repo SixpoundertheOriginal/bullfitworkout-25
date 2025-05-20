@@ -22,7 +22,7 @@ export const ExerciseFAB = ({
   className, 
   visible = true,
   showOnlyIfActive = false,
-  hideOnMobile = true,
+  hideOnMobile = false,  // Changed to show on mobile by default
   floatingPosition = true,
   position = "bottom-right"
 }: ExerciseFABProps) => {
@@ -54,9 +54,9 @@ export const ExerciseFAB = ({
         onClick={handleClick}
         icon={<Plus size={24} className="text-white" />}
         size={56}
-        ariaLabel="Add exercise"
+        ariaLabel="Add set"
       >
-        Add Exercise
+        Add Set
       </CircularGradientButton>
     </div>
   );

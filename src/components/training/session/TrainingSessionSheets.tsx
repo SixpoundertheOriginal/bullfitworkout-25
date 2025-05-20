@@ -2,44 +2,49 @@
 import React from 'react';
 import { useTrainingSession } from "@/hooks/training-session";
 import { AddExerciseSheet } from "@/components/training/AddExerciseSheet";
-import { PostSetRatingSheet } from "@/components/training/PostSetRatingSheet";
-import { safeRenderableExercise } from "@/utils/exerciseAdapter";
+import { PostSetRatingSheet } from '@/components/training/PostSetRatingSheet';
+import { ExerciseWizardSheet } from '@/components/exercises/ExerciseWizardSheet';
+import { safeRenderableExercise } from '@/utils/exerciseAdapter';
 
 export const TrainingSessionSheets: React.FC = () => {
   const {
     isAddExerciseSheetOpen,
     setIsAddExerciseSheetOpen,
+    handleAddExercise,
     isRatingSheetOpen,
     setIsRatingSheetOpen,
-    handleAddExercise,
     handleSubmitRating,
-    trainingConfig,
-    lastCompletedExercise,
-    lastCompletedSetIndex,
-    exercises,
-    setPostSetFlow,
+    trainingConfig
   } = useTrainingSession();
 
   return (
     <>
+      {/* Sheet for adding new exercises */}
       <AddExerciseSheet
         open={isAddExerciseSheetOpen}
         onOpenChange={setIsAddExerciseSheetOpen}
-        onSelectExercise={handleAddExercise}
+        onSelectExercise={(exerciseName) => {
+          handleAddExercise(exerciseName);
+          setIsAddExerciseSheetOpen(false);
+        }}
         trainingType={trainingConfig?.trainingType}
       />
       
+      {/* Alternative wizard for creating new exercises */}
+      <ExerciseWizardSheet
+        open={false}  // Use a separate state if you want to show this sheet
+        onOpenChange={() => {}}
+        onSelectExercise={(exerciseName) => {
+          handleAddExercise(exerciseName);
+        }}
+        trainingType={trainingConfig?.trainingType}
+      />
+      
+      {/* Sheet for rating set difficulty */}
       <PostSetRatingSheet
         open={isRatingSheetOpen}
-        onOpenChange={(open) => {
-          setIsRatingSheetOpen(open);
-          if (!open) setPostSetFlow('idle');
-        }}
-        onSubmitRating={handleSubmitRating}
-        exerciseName={lastCompletedExercise ? safeRenderableExercise(lastCompletedExercise) : ''}
-        setDetails={lastCompletedExercise && lastCompletedSetIndex !== null && exercises[lastCompletedExercise]
-          ? exercises[lastCompletedExercise][lastCompletedSetIndex]
-          : undefined}
+        onOpenChange={setIsRatingSheetOpen}
+        onSubmit={handleSubmitRating}
       />
     </>
   );

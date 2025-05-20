@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useTrainingSession } from "@/hooks/training-session";
 import { ExerciseCompletionConfirmation } from "@/components/training/ExerciseCompletionConfirmation";
 import { SetsDebugger } from "@/components/training/SetsDebugger";
@@ -43,6 +43,8 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     nextExerciseName,
     lastCompletedExercise,
     lastCompletedSetIndex,
+    isAddExerciseSheetOpen,
+    setIsAddExerciseSheetOpen,
     
     // Methods
     handleRestTimerComplete,
@@ -52,10 +54,15 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     triggerRestTimerReset,
     getNextSetDetails,
     attemptRecovery,
+    handleAddSet,
     
     // UI state setters
     setShowCompletionConfirmation,
     setFocusedExercise,
+    setShowRestTimerModal,
+    setShowEnhancedRestTimer,
+    setRestTimerActive,
+    setPostSetFlow
   } = useTrainingSession();
   
   // Make sure focusedExercise is always a safe string
@@ -69,21 +76,25 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     : null;
 
   // Function to handle adding a set to the focused exercise
-  const handleAddSetToFocused = () => {
+  const handleAddSetToFocused = useCallback(() => {
     if (focusedExercise) {
-      const { handleAddSet } = useTrainingSession();
       const safeExerciseName = safeRenderableExercise(focusedExercise);
       handleAddSet(safeExerciseName);
     }
-  };
+  }, [focusedExercise, handleAddSet]);
+
+  // Function to open add exercise sheet
+  const handleOpenAddExercise = useCallback(() => {
+    setIsAddExerciseSheetOpen(true);
+  }, [setIsAddExerciseSheetOpen]);
 
   // Create a wrapper for the attemptRecovery function with the required signature
-  const handleAttemptRecovery = () => {
+  const handleAttemptRecovery = useCallback(() => {
     if (workoutId) {
       // Pass all required arguments for the AttemptRecoveryFn signature
       attemptRecovery(workoutId, 'manual', {});
     }
-  };
+  }, [workoutId, attemptRecovery]);
 
   // Determine if we should show the development debugger
   const showDebugger = process.env.NODE_ENV !== 'production';
@@ -130,28 +141,12 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
         nextSetRecommendation={null}
         motivationalMessage={""}
         volumeStats={""}
-        onClose={() => {
-          const { setShowRestTimerModal } = useTrainingSession();
-          setShowRestTimerModal(false);
-        }}
+        onClose={() => setShowRestTimerModal(false)}
         onRestTimerComplete={handleRestTimerComplete}
-        setRestTimerActive={(active) => {
-          const { setRestTimerActive } = useTrainingSession();
-          setRestTimerActive(active);
-        }}
-        setShowEnhancedRestTimer={(show) => {
-          const { setShowEnhancedRestTimer } = useTrainingSession();
-          setShowEnhancedRestTimer(show);
-        }}
-        setShowRestTimerModal={(show) => {
-          const { setShowRestTimerModal } = useTrainingSession();
-          setShowRestTimerModal(show);
-        }}
-        setPostSetFlow={(flow) => {
-          const { setPostSetFlow } = useTrainingSession();
-          // Fix type error by using the correct PostSetFlowState type
-          setPostSetFlow(flow as PostSetFlowState);
-        }}
+        setRestTimerActive={setRestTimerActive}
+        setShowEnhancedRestTimer={setShowEnhancedRestTimer}
+        setShowRestTimerModal={setShowRestTimerModal}
+        setPostSetFlow={(flow) => setPostSetFlow(flow as PostSetFlowState)}
       />
       
       {/* Exercise List */}
@@ -162,16 +157,14 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
         nextExerciseName={nextExerciseName}
         onFinishWorkout={onFinishWorkoutClick}
         isSaving={isSaving}
+        onOpenAddExercise={handleOpenAddExercise}
       />
       
       {/* Action Buttons */}
       <TrainingActionButtons
         onFinishWorkout={onFinishWorkoutClick}
         isSaving={isSaving}
-        onOpenAddExercise={() => {
-          const { setIsAddExerciseSheetOpen } = useTrainingSession();
-          setIsAddExerciseSheetOpen(true);
-        }}
+        onOpenAddExercise={handleOpenAddExercise}
         hasExercises={hasExercises}
       />
       

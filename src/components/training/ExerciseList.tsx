@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { WorkoutSessionFooter } from "./WorkoutSessionFooter";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { safeRenderableExercise } from "@/utils/exerciseAdapter";
 
 interface ExerciseListProps {
   exercises: Record<string, ExerciseSet[]>;
@@ -115,6 +114,26 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
     show: { opacity: 1, y: 0 }
   };
 
+  // Handle complete exercise
+  const handleCompleteExercise = () => {
+    if (focusedExercise) {
+      // Mark all sets as completed
+      setExercises(prev => {
+        const updatedExercises = { ...prev };
+        updatedExercises[focusedExercise] = prev[focusedExercise].map(set => ({
+          ...set,
+          completed: true
+        }));
+        return updatedExercises;
+      });
+      
+      // Exit focus mode
+      if (onFocusExercise) {
+        onFocusExercise(null);
+      }
+    }
+  };
+
   if (exerciseList.length === 0) {
     return (
       <div className="container max-w-5xl mx-auto pb-10">
@@ -177,7 +196,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
           </motion.div>
         ))}
         
-        {/* Integrated footer buttons */}
+        {/* Show the footer only if there are exercises */}
         <WorkoutSessionFooter
           onAddExercise={onOpenAddExercise}
           onFinishWorkout={onFinishWorkout}
@@ -188,6 +207,7 @@ export const ExerciseList: React.FC<ExerciseListProps> = ({
           visible={true}
           onNextExercise={onNextExercise}
           hasMoreExercises={hasMoreExercises}
+          onCompleteExercise={handleCompleteExercise}
         />
       </motion.div>
     </div>

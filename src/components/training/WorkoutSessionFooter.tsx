@@ -18,6 +18,7 @@ interface WorkoutSessionFooterProps {
   visible?: boolean;
   onNextExercise?: () => void;
   hasMoreExercises?: boolean;
+  onCompleteExercise?: () => void; // Added prop for completing the exercise
 }
 
 export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
@@ -29,12 +30,13 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
   onExitFocus,
   visible = true,
   onNextExercise,
-  hasMoreExercises = false
+  hasMoreExercises = false,
+  onCompleteExercise
 }) => {
   const isMobile = useIsMobile();
   
-  // If not visible and no exercises, don't render
-  if (!visible && !hasExercises) {
+  // If not visible, don't render
+  if (!visible) {
     return null;
   }
 
@@ -109,12 +111,15 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
                     "w-full py-3 text-base sm:text-lg font-medium sm:font-semibold"
                   )}
                   onClick={() => {
-                    if (onExitFocus) onExitFocus();
-                    toast({
-                      title: `${focusedExercise} completed!`,
-                      // Change from 'success' to 'default' to match allowed variants
-                      variant: "default"
-                    });
+                    if (onCompleteExercise) {
+                      onCompleteExercise();
+                    } else if (onExitFocus) {
+                      onExitFocus();
+                      toast({
+                        title: `${focusedExercise} completed!`,
+                        variant: "default"
+                      });
+                    }
                   }}
                 >
                   {isSaving ? (
@@ -148,43 +153,43 @@ export const WorkoutSessionFooter: React.FC<WorkoutSessionFooterProps> = ({
                   "bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-700 hover:to-indigo-900 text-white shadow-lg",
                   "border border-indigo-500/20 transition-all duration-300",
                   "h-10 sm:h-11 py-2", // Adjusted height for better touchability
-                  isMobile && "w-full text-sm"
+                  isMobile ? "w-full text-sm" : ""
                 )}
                 onClick={onAddExercise}
               >
                 <Plus className="mr-1 h-4 w-4" /> Add Exercise
               </Button>
               
-              <Button
-                disabled={!hasExercises || isSaving}
-                className={cn(
-                  "bg-gradient-to-r",
-                  "h-10 sm:h-11 py-2", // Adjusted height for better touchability
-                  hasExercises 
-                    ? "from-green-600 to-emerald-800 hover:from-green-700 hover:to-emerald-900 text-white shadow-lg border border-green-500/20" 
-                    : "from-gray-700 to-gray-800 text-gray-300 cursor-not-allowed opacity-70",
-                  "transition-all duration-300",
-                  isMobile ? "w-full text-sm" : ""
-                )}
-                onClick={() => {
-                  console.log('Finish Workout button clicked!');
-                  if (hasExercises && !isSaving && onFinishWorkout) {
-                    onFinishWorkout();
-                  }
-                }}
-              >
-                {isSaving ? (
-                  <>
-                    <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="mr-1 h-4 w-4" />
-                    Finish Workout
-                  </>
-                )}
-              </Button>
+              {hasExercises && (
+                <Button
+                  disabled={isSaving}
+                  className={cn(
+                    "bg-gradient-to-r",
+                    "h-10 sm:h-11 py-2", // Adjusted height for better touchability
+                    "from-green-600 to-emerald-800 hover:from-green-700 hover:to-emerald-900 text-white shadow-lg border border-green-500/20",
+                    "transition-all duration-300",
+                    isMobile ? "w-full text-sm" : ""
+                  )}
+                  onClick={() => {
+                    console.log('Finish Workout button clicked!');
+                    if (!isSaving && onFinishWorkout) {
+                      onFinishWorkout();
+                    }
+                  }}
+                >
+                  {isSaving ? (
+                    <>
+                      <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="mr-1 h-4 w-4" />
+                      Finish Workout
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           )}
         </div>
