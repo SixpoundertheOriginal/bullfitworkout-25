@@ -1,3 +1,4 @@
+
 import React, { useCallback } from 'react';
 import { useTrainingSession } from "@/hooks/training-session";
 import { ExerciseCompletionConfirmation } from "@/components/training/ExerciseCompletionConfirmation";
@@ -13,6 +14,7 @@ import { TrainingSessionLayout } from "./layout/TrainingSessionLayout";
 import { TrainingActionButtons } from "./actions/TrainingActionButtons";
 import { SaveProgress } from "@/types/workout";
 import { DirectAddExerciseButton } from "./DirectAddExerciseButton";
+import { getStore } from '@/store/workout/store'; // Added missing import for getStore
 
 interface TrainingSessionContentProps {
   onFinishWorkoutClick: () => void;
