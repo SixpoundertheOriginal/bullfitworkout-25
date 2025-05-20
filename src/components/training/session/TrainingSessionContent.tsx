@@ -1,4 +1,3 @@
-
 import React, { useCallback } from 'react';
 import { useTrainingSession } from "@/hooks/training-session";
 import { ExerciseCompletionConfirmation } from "@/components/training/ExerciseCompletionConfirmation";
@@ -13,6 +12,7 @@ import { WorkoutMetricsPanel } from "./metrics/WorkoutMetricsPanel";
 import { TrainingSessionLayout } from "./layout/TrainingSessionLayout";
 import { TrainingActionButtons } from "./actions/TrainingActionButtons";
 import { SaveProgress } from "@/types/workout";
+import { DirectAddExerciseButton } from "./DirectAddExerciseButton";
 
 interface TrainingSessionContentProps {
   onFinishWorkoutClick: () => void;
@@ -71,6 +71,22 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     setPostSetFlow
   } = useTrainingSession();
   
+  // Wrap handleAddExercise with useCallback and add logging
+  const enhancedHandleAddExercise = useCallback((exerciseName: string) => {
+    console.log('TrainingSessionContent: enhancedHandleAddExercise called with', exerciseName);
+    // Log the current state of exercises before adding
+    console.log('TrainingSessionContent: Current exercises before adding:', Object.keys(exercises));
+    
+    // Call the original handler from useTrainingSession
+    handleAddExercise(exerciseName);
+    
+    // Schedule a check to verify if the exercise was added
+    setTimeout(() => {
+      console.log('TrainingSessionContent: Exercises after adding (timeout check):', 
+        Object.keys(getStore().getState().exercises));
+    }, 500);
+  }, [handleAddExercise, exercises]);
+  
   // Make sure focusedExercise is always a safe string
   const safeFocusedExercise = focusedExercise 
     ? safeRenderableExercise(focusedExercise) 
@@ -81,19 +97,30 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     ? safeRenderableExercise(activeExercise) 
     : null;
 
-  // Function to handle adding a set to the focused exercise
+  // Function to handle adding a set to the focused exercise with better logging
   const handleAddSetToFocused = useCallback(() => {
+    console.log('TrainingSessionContent: handleAddSetToFocused called');
     if (focusedExercise) {
       const safeExerciseName = safeRenderableExercise(focusedExercise);
+      console.log('TrainingSessionContent: Adding set to focused exercise:', safeExerciseName);
       handleAddSet(safeExerciseName);
+    } else {
+      console.log('TrainingSessionContent: No focused exercise to add set to');
     }
   }, [focusedExercise, handleAddSet]);
 
-  // Function to open add exercise sheet - defined at component level to avoid inline hooks
+  // Function to open add exercise sheet with better logging
   const handleOpenAddExercise = useCallback(() => {
-    console.log('handleOpenAddExercise called - setting sheet to open');
+    console.log('TrainingSessionContent: handleOpenAddExercise called - setting sheet to open');
+    console.log('TrainingSessionContent: isAddExerciseSheetOpen before:', isAddExerciseSheetOpen);
     setIsAddExerciseSheetOpen(true);
-  }, [setIsAddExerciseSheetOpen]);
+    
+    // Schedule a check to verify if the sheet was opened
+    setTimeout(() => {
+      console.log('TrainingSessionContent: isAddExerciseSheetOpen after (timeout check):', 
+        getStore().getState().isAddExerciseSheetOpen);
+    }, 100);
+  }, [setIsAddExerciseSheetOpen, isAddExerciseSheetOpen]);
 
   // Create a wrapper for the attemptRecovery function with the required signature
   const handleAttemptRecovery = useCallback(() => {
@@ -112,10 +139,12 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
   // Check if there are exercises to show finish button
   const hasExercises = Object.keys(adaptedExercises).length > 0;
   
-  // Debug exercise management
-  console.log('Exercise count:', Object.keys(exercises).length);
-  console.log('isAddExerciseSheetOpen:', isAddExerciseSheetOpen);
-  console.log('Focused exercise:', focusedExercise);
+  // Debug exercise management with more detail
+  console.log('TrainingSessionContent: Exercise count:', Object.keys(exercises).length);
+  console.log('TrainingSessionContent: Exercise names:', Object.keys(exercises));
+  console.log('TrainingSessionContent: isAddExerciseSheetOpen:', isAddExerciseSheetOpen);
+  console.log('TrainingSessionContent: Focused exercise:', focusedExercise);
+  console.log('TrainingSessionContent: handleAddExercise availability:', typeof handleAddExercise === 'function');
 
   return (
     <TrainingSessionLayout
@@ -141,10 +170,13 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
           onRestTimerReset={triggerRestTimerReset}
           restTimerResetSignal={restTimerResetSignal}
           focusedExercise={safeFocusedExercise}
-          onAddExercise={handleOpenAddExercise} // Now properly typed
+          onAddExercise={handleOpenAddExercise}
         />
       }
     >
+      {/* Test button for direct exercise addition */}
+      <DirectAddExerciseButton onAddExercise={enhancedHandleAddExercise} />
+      
       {/* Timer Components */}
       <TrainingSessionTimers
         showRestTimerModal={showRestTimerModal}
@@ -214,7 +246,7 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
         setIsAddExerciseSheetOpen={setIsAddExerciseSheetOpen}
         isRatingSheetOpen={isRatingSheetOpen}
         setIsRatingSheetOpen={setIsRatingSheetOpen}
-        handleAddExercise={handleAddExercise} // Pass the actual handler from useTrainingSession
+        handleAddExercise={enhancedHandleAddExercise} // Use our enhanced handler with logging
         handleSubmitRating={handleSubmitRating}
         trainingConfig={trainingConfig}
         lastCompletedExercise={lastCompletedExercise}

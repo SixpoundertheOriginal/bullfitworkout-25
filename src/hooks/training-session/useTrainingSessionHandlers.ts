@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -5,6 +6,7 @@ import { WorkoutExercises } from '@/store/workout/types';
 import { ExerciseSet } from '@/store/workout/types';
 import { AttemptRecoveryFn, HandleCompleteWorkoutFn } from '@/types/workout';
 import { useTrainingSetupPersistence } from '@/hooks/useTrainingSetupPersistence';
+import { getStore } from '@/store/workout/store';
 
 /**
  * Hook that provides handler functions for the training session
@@ -23,6 +25,9 @@ export const useTrainingSessionHandlers = (
   const navigate = useNavigate();
   const { saveConfig } = useTrainingSetupPersistence();
   
+  console.log('useTrainingSessionHandlers: Hook initialized');
+  console.log('useTrainingSessionHandlers: Current exercises:', Object.keys(exercises));
+  
   // Save training preferences to local storage
   const saveTrainingPreferences = useCallback((config: any) => {
     return saveConfig(config);
@@ -30,12 +35,18 @@ export const useTrainingSessionHandlers = (
 
   // Exercise management - ensure we're always using exercise name (string)
   const handleAddExercise = useCallback((exerciseNameOrObject: string | any) => {
+    console.log('useTrainingSessionHandlers: handleAddExercise called with:', exerciseNameOrObject);
+    console.log('useTrainingSessionHandlers: Current exercises before adding:', Object.keys(exercises));
+    
     // Make sure we always use the exercise name as string
     const exerciseName = typeof exerciseNameOrObject === 'string' 
       ? exerciseNameOrObject 
       : (exerciseNameOrObject?.name || "Unknown exercise");
     
+    console.log('useTrainingSessionHandlers: Normalized exercise name:', exerciseName);
+    
     if (exercises[exerciseName]) {
+      console.log('useTrainingSessionHandlers: Exercise already exists, showing toast');
       toast({
         title: `${exerciseName} is already in your workout`,
         description: "You can add additional sets to the existing exercise."
@@ -60,18 +71,48 @@ export const useTrainingSessionHandlers = (
       }
     }));
     
-    setExercises(prev => ({
-      ...prev,
+    console.log('useTrainingSessionHandlers: Created new sets for exercise:', newSets);
+    
+    // Use both direct update and store update to ensure it works
+    setExercises(prev => {
+      console.log('useTrainingSessionHandlers: Setting exercises with callback');
+      const newExercises = {
+        ...prev,
+        [exerciseName]: newSets
+      };
+      console.log('useTrainingSessionHandlers: New exercises state:', Object.keys(newExercises));
+      return newExercises;
+    });
+    
+    // Direct store update as a fallback
+    const store = getStore();
+    const currentExercises = store.getState().exercises;
+    store.getState().setExercises({
+      ...currentExercises,
       [exerciseName]: newSets
-    }));
+    });
+    
+    console.log('useTrainingSessionHandlers: Zustand store updated directly');
+    console.log('useTrainingSessionHandlers: Store exercises after update:', 
+      Object.keys(getStore().getState().exercises));
     
     // Auto-focus the new exercise
     setFocusedExercise(exerciseName);
+    console.log('useTrainingSessionHandlers: Set focused exercise to:', exerciseName);
     
     toast({
       title: `${exerciseName} added to workout`,
       variant: "default"
     });
+    
+    // Schedule a verification check
+    setTimeout(() => {
+      const storeExercises = getStore().getState().exercises;
+      console.log('useTrainingSessionHandlers: Verification check - exercises in store:', 
+        Object.keys(storeExercises));
+      console.log('useTrainingSessionHandlers: New exercise exists in store:', 
+        !!storeExercises[exerciseName]);
+    }, 1000);
   }, [exercises, setExercises, setFocusedExercise]);
   
   const handleAddSet = useCallback((exerciseName: string) => {

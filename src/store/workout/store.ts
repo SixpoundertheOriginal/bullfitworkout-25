@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { TrainingConfig } from '@/hooks/useTrainingSetupPersistence';
@@ -79,6 +78,7 @@ let store: ReturnType<typeof createStore> | null = null;
 // Helper function to access the store
 export const getStore = () => {
   if (!store) {
+    console.log('workout/store: Creating new store instance');
     store = createStore();
   }
   return store;
@@ -122,11 +122,38 @@ const createStore = () => create<WorkoutState>()(
       // Error handling
       savingErrors: [],
       
-      // Action setters
-      setExercises: (exercises) => set((state) => ({ 
-        exercises: typeof exercises === 'function' ? exercises(state.exercises) : exercises,
-        lastTabActivity: Date.now(),
-      })),
+      // Action setters with enhanced logging
+      setExercises: (exercises) => {
+        console.log('workout/store: setExercises called');
+        console.log('workout/store: Type of exercises param:', typeof exercises);
+        
+        if (typeof exercises === 'function') {
+          console.log('workout/store: Using exercise updater function');
+          const prevExercises = get().exercises;
+          console.log('workout/store: Previous exercises:', Object.keys(prevExercises));
+          const newExercises = exercises(prevExercises);
+          console.log('workout/store: New exercises after function:', Object.keys(newExercises));
+          
+          set({ 
+            exercises: newExercises,
+            lastTabActivity: Date.now(),
+          });
+        } else {
+          console.log('workout/store: Using direct exercise object');
+          console.log('workout/store: New exercises direct:', Object.keys(exercises));
+          
+          set({ 
+            exercises: exercises,
+            lastTabActivity: Date.now(),
+          });
+        }
+        
+        // Log the result after update
+        setTimeout(() => {
+          console.log('workout/store: Exercises after update (timeout check):', 
+            Object.keys(get().exercises));
+        }, 100);
+      },
       
       setActiveExercise: (exerciseName) => set({ 
         activeExercise: exerciseName,
