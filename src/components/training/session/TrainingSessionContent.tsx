@@ -2,7 +2,7 @@ import React, { useCallback, useEffect } from 'react';
 import { useTrainingSession } from "@/hooks/training-session";
 import { ExerciseCompletionConfirmation } from "@/components/training/ExerciseCompletionConfirmation";
 import { SetsDebugger } from "@/components/training/SetsDebugger";
-import { ExerciseFAB } from "@/components/training/ExerciseFAB";
+import { ExerciseFAB } from "@/components/ExerciseFAB";
 import { adaptExerciseSets, safeRenderableExercise } from "@/utils/exerciseAdapter";
 import { WorkoutExercises, PostSetFlowState } from '@/store/workout/types';
 import { ExerciseListWrapper } from "./ExerciseListWrapper";
@@ -309,8 +309,8 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
       {focusedExercise && (
         <ExerciseFAB 
           visible={!!focusedExercise && !showRestTimerModal && !showEnhancedRestTimer}
-          onAddSet={handleAddSetToFocused}
-          position="bottom-center"
+          onClick={handleAddSetToFocused}
+          className=""
         />
       )}
 
@@ -336,6 +336,3 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     </TrainingSessionLayout>
   );
 };
-
-// Add missing Button import
-import { Button } from "@/components/ui/button";
