@@ -83,7 +83,7 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     }
   }, [focusedExercise, handleAddSet]);
 
-  // Function to open add exercise sheet
+  // Function to open add exercise sheet - defined at component level to avoid inline hooks
   const handleOpenAddExercise = useCallback(() => {
     setIsAddExerciseSheetOpen(true);
   }, [setIsAddExerciseSheetOpen]);
@@ -115,6 +115,7 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
       isRecoveryMode={!!workoutId}
       saveProgress={0}
       onRetrySave={handleAttemptRecovery}
+      onAddExercise={handleOpenAddExercise}
       metricsPanel={
         <WorkoutMetricsPanel
           elapsedTime={elapsedTime}
@@ -128,6 +129,7 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
           onRestTimerReset={triggerRestTimerReset}
           restTimerResetSignal={restTimerResetSignal}
           focusedExercise={safeFocusedExercise}
+          onAddExercise={handleOpenAddExercise}
         />
       }
     >
@@ -160,12 +162,14 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
         onOpenAddExercise={handleOpenAddExercise}
       />
       
-      {/* Action Buttons */}
+      {/* Action Buttons - only show on mobile */}
       <TrainingActionButtons
         onFinishWorkout={onFinishWorkoutClick}
         isSaving={isSaving}
         onOpenAddExercise={handleOpenAddExercise}
         hasExercises={hasExercises}
+        className="md:hidden"
+        showOnMobile={true}
       />
       
       {/* Only show debugger in development */}

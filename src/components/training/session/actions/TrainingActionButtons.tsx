@@ -21,7 +21,7 @@ export const TrainingActionButtons: React.FC<TrainingActionButtonsProps> = ({
   className,
   showOnMobile = false
 }) => {
-  // If not showing on mobile, return null for mobile devices
+  // If not showing on mobile and we're on a mobile device, hide
   if (!showOnMobile) {
     return null;
   }
