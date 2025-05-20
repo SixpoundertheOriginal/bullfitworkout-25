@@ -21,6 +21,7 @@ export function ExerciseWizardSheet({
   const handleExerciseCreated = (exercise: Exercise) => {
     // Extract the exercise name and pass it back to the parent component
     const exerciseName = getExerciseName(exercise);
+    console.log('ExerciseWizardSheet: Exercise created with name:', exerciseName);
     onSelectExercise(exerciseName);
     
     // We don't close the sheet immediately because we want to show the completion screen
@@ -41,7 +42,7 @@ export function ExerciseWizardSheet({
           
           <div className="px-4 pb-4 flex-1 overflow-hidden flex flex-col">
             <SheetHeader className="mb-4">
-              <SheetTitle className="text-xl font-bold text-center">Add New Exercise</SheetTitle>
+              <SheetTitle className="text-xl font-bold text-center">Create New Exercise</SheetTitle>
             </SheetHeader>
             
             {/* Wizard component */}
