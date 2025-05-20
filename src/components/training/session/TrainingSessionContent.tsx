@@ -1,3 +1,4 @@
+
 import React, { useCallback } from 'react';
 import { useTrainingSession } from "@/hooks/training-session";
 import { ExerciseCompletionConfirmation } from "@/components/training/ExerciseCompletionConfirmation";
@@ -45,6 +46,9 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     lastCompletedSetIndex,
     isAddExerciseSheetOpen,
     setIsAddExerciseSheetOpen,
+    isRatingSheetOpen,
+    setIsRatingSheetOpen,
+    trainingConfig,
     
     // Methods
     handleRestTimerComplete,
@@ -54,7 +58,8 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     triggerRestTimerReset,
     getNextSetDetails,
     attemptRecovery,
-    handleAddSet,
+    handleAddExercise,
+    handleSubmitRating,
     
     // UI state setters
     setShowCompletionConfirmation,
@@ -196,8 +201,18 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
         position="bottom-center"
       />
 
-      {/* Sheets */}
-      <TrainingSessionSheets />
+      {/* Sheets - Now pass all required props from this component */}
+      <TrainingSessionSheets 
+        isAddExerciseSheetOpen={isAddExerciseSheetOpen}
+        setIsAddExerciseSheetOpen={setIsAddExerciseSheetOpen}
+        isRatingSheetOpen={isRatingSheetOpen}
+        setIsRatingSheetOpen={setIsRatingSheetOpen}
+        handleAddExercise={handleAddExercise}
+        handleSubmitRating={handleSubmitRating}
+        trainingConfig={trainingConfig}
+        lastCompletedExercise={lastCompletedExercise}
+        lastCompletedSetIndex={lastCompletedSetIndex}
+      />
     </TrainingSessionLayout>
   );
 };

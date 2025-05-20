@@ -1,24 +1,44 @@
 
 import React from 'react';
-import { useTrainingSession } from "@/hooks/training-session";
 import { AddExerciseSheet } from "@/components/training/AddExerciseSheet";
 import { PostSetRatingSheet } from '@/components/training/PostSetRatingSheet';
 import { ExerciseWizardSheet } from '@/components/exercises/ExerciseWizardSheet';
 import { safeRenderableExercise } from '@/utils/exerciseAdapter';
+import { ExerciseSet } from '@/store/workout/types';
 
-export const TrainingSessionSheets: React.FC = () => {
-  const {
-    isAddExerciseSheetOpen,
-    setIsAddExerciseSheetOpen,
-    handleAddExercise,
-    isRatingSheetOpen,
-    setIsRatingSheetOpen,
-    handleSubmitRating,
-    trainingConfig,
-    lastCompletedExercise,
-    lastCompletedSetIndex
-  } = useTrainingSession();
+// Create a proper interface for the component props
+interface TrainingSessionSheetsProps {
+  // Sheet open state
+  isAddExerciseSheetOpen: boolean;
+  isRatingSheetOpen: boolean;
+  
+  // Sheet state handlers
+  setIsAddExerciseSheetOpen: (open: boolean) => void;
+  setIsRatingSheetOpen: (open: boolean) => void;
+  
+  // Exercise management
+  handleAddExercise: (exerciseName: string) => void;
+  handleSubmitRating: (rpe: number) => void;
+  
+  // Training configuration
+  trainingConfig: any;
+  
+  // Last completed exercise data
+  lastCompletedExercise: string | null;
+  lastCompletedSetIndex: number | null;
+}
 
+export const TrainingSessionSheets: React.FC<TrainingSessionSheetsProps> = ({
+  isAddExerciseSheetOpen,
+  setIsAddExerciseSheetOpen,
+  isRatingSheetOpen,
+  setIsRatingSheetOpen,
+  handleAddExercise,
+  handleSubmitRating,
+  trainingConfig,
+  lastCompletedExercise,
+  lastCompletedSetIndex
+}) => {
   // Get the last completed exercise details for the rating sheet
   const exerciseName = lastCompletedExercise || '';
   const setDetails = lastCompletedExercise && typeof lastCompletedSetIndex === 'number' ? 
