@@ -98,6 +98,8 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
   // Always pass exercise name string
   const handleAddExercise = (exercise: Exercise | string) => {
     const exerciseName = getExerciseName(exercise);
+    console.log('AddExerciseSheet: handleAddExercise called with', exerciseName);
+    
     onSelectExercise(exerciseName);
     
     // Close the sheet immediately after selecting an exercise

@@ -16,7 +16,7 @@ interface TrainingSessionSheetsProps {
   setIsAddExerciseSheetOpen: (open: boolean) => void;
   setIsRatingSheetOpen: (open: boolean) => void;
   
-  // Exercise management
+  // Exercise management - MUST match the parent's handler signatures
   handleAddExercise: (exerciseName: string) => void;
   handleSubmitRating: (rpe: number) => void;
   
@@ -47,6 +47,18 @@ export const TrainingSessionSheets: React.FC<TrainingSessionSheetsProps> = ({
       weight: 0,
       reps: 0
     } : undefined;
+    
+  // This is the critical handler that wasn't working
+  const handleSelectExercise = (exerciseName: string) => {
+    // Debug log to verify this handler is being called
+    console.log('TrainingSessionSheets: handleSelectExercise called with', exerciseName);
+    
+    // Call the parent's handleAddExercise function (from useTrainingSession hook)
+    handleAddExercise(exerciseName);
+    
+    // Close the sheet after selecting the exercise
+    setIsAddExerciseSheetOpen(false);
+  };
 
   return (
     <>
@@ -54,10 +66,7 @@ export const TrainingSessionSheets: React.FC<TrainingSessionSheetsProps> = ({
       <AddExerciseSheet
         open={isAddExerciseSheetOpen}
         onOpenChange={setIsAddExerciseSheetOpen}
-        onSelectExercise={(exerciseName) => {
-          handleAddExercise(exerciseName);
-          setIsAddExerciseSheetOpen(false);
-        }}
+        onSelectExercise={handleSelectExercise} // Use our local handler
         trainingType={trainingConfig?.trainingType}
       />
       
@@ -65,9 +74,7 @@ export const TrainingSessionSheets: React.FC<TrainingSessionSheetsProps> = ({
       <ExerciseWizardSheet
         open={false}  // Use a separate state if you want to show this sheet
         onOpenChange={() => {}}
-        onSelectExercise={(exerciseName) => {
-          handleAddExercise(exerciseName);
-        }}
+        onSelectExercise={handleSelectExercise} // Use the same handler here too
         trainingType={trainingConfig?.trainingType}
       />
       

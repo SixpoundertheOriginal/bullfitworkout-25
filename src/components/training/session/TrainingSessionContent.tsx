@@ -91,6 +91,7 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
 
   // Function to open add exercise sheet - defined at component level to avoid inline hooks
   const handleOpenAddExercise = useCallback(() => {
+    console.log('handleOpenAddExercise called - setting sheet to open');
     setIsAddExerciseSheetOpen(true);
   }, [setIsAddExerciseSheetOpen]);
 
@@ -110,6 +111,11 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
 
   // Check if there are exercises to show finish button
   const hasExercises = Object.keys(adaptedExercises).length > 0;
+  
+  // Debug exercise management
+  console.log('Exercise count:', Object.keys(exercises).length);
+  console.log('isAddExerciseSheetOpen:', isAddExerciseSheetOpen);
+  console.log('Focused exercise:', focusedExercise);
 
   return (
     <TrainingSessionLayout
@@ -202,13 +208,13 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
         position="bottom-center"
       />
 
-      {/* Sheets - Now pass all required props from this component */}
+      {/* Sheets - Now explicitly pass all required props and handlers */}
       <TrainingSessionSheets 
         isAddExerciseSheetOpen={isAddExerciseSheetOpen}
         setIsAddExerciseSheetOpen={setIsAddExerciseSheetOpen}
         isRatingSheetOpen={isRatingSheetOpen}
         setIsRatingSheetOpen={setIsRatingSheetOpen}
-        handleAddExercise={handleAddExercise}
+        handleAddExercise={handleAddExercise} // Pass the actual handler from useTrainingSession
         handleSubmitRating={handleSubmitRating}
         trainingConfig={trainingConfig}
         lastCompletedExercise={lastCompletedExercise}
