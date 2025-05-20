@@ -1,4 +1,3 @@
-
 import React, { useCallback } from 'react';
 import { useTrainingSession } from "@/hooks/training-session";
 import { ExerciseCompletionConfirmation } from "@/components/training/ExerciseCompletionConfirmation";
@@ -104,13 +103,9 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     }, 500);
   }, [handleAddExercise, exercises, setIsAddExerciseSheetOpen, workoutStore.exercises]);
   
-  // Handle stopping/ending the workout
+  // Handle stopping/ending the workout - simplified to use resetSession directly
   const handleStopWorkout = useCallback(() => {
-    // Confirm with the user before ending
-    if (window.confirm("Are you sure you want to end this workout session? Any unsaved progress will be lost.")) {
-      resetSession();
-      toast.success("Workout session ended");
-    }
+    resetSession();
   }, [resetSession]);
   
   // Make sure focusedExercise is always a safe string
