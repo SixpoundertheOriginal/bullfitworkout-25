@@ -36,6 +36,13 @@ export const useTrainingSessionHandlers = (
   // Exercise management - ensure we're always using exercise name (string)
   const handleAddExercise = useCallback((exerciseNameOrObject: string | any) => {
     console.log('useTrainingSessionHandlers: handleAddExercise called with:', exerciseNameOrObject);
+    
+    // If empty string is passed, open the exercise selection sheet instead
+    if (exerciseNameOrObject === '') {
+      console.log('useTrainingSessionHandlers: Empty string passed, should open selection sheet');
+      return;
+    }
+    
     console.log('useTrainingSessionHandlers: Current exercises before adding:', Object.keys(exercises));
     
     // Make sure we always use the exercise name as string
@@ -56,7 +63,7 @@ export const useTrainingSessionHandlers = (
     
     // Add new exercise with default 3 sets - with type-safe metadata
     const newSets: ExerciseSet[] = Array.from({ length: 3 }, (_, i) => ({
-      id: `temp-${exerciseName}-${i}`, // Temporary ID until saved
+      id: `temp-${exerciseName}-${i}-${Date.now()}`, // Temporary ID until saved with timestamp for uniqueness
       workout_id: 'temp', // Temporary workout ID until saved
       exercise_name: exerciseName,
       set_number: i + 1,
@@ -84,17 +91,20 @@ export const useTrainingSessionHandlers = (
       return newExercises;
     });
     
-    // Direct store update as a fallback
-    const store = getStore();
-    const currentExercises = store.getState().exercises;
-    store.getState().setExercises({
-      ...currentExercises,
-      [exerciseName]: newSets
-    });
-    
-    console.log('useTrainingSessionHandlers: Zustand store updated directly');
-    console.log('useTrainingSessionHandlers: Store exercises after update:', 
-      Object.keys(getStore().getState().exercises));
+    // Direct store update as a fallback (ensuring it's properly batched)
+    setTimeout(() => {
+      const store = getStore();
+      const currentExercises = store.getState().exercises;
+      
+      // Only update if the exercise wasn't already added
+      if (!currentExercises[exerciseName]) {
+        store.getState().setExercises({
+          ...currentExercises,
+          [exerciseName]: newSets
+        });
+        console.log('useTrainingSessionHandlers: Direct store update completed');
+      }
+    }, 10);
     
     // Auto-focus the new exercise
     setFocusedExercise(exerciseName);
@@ -112,7 +122,7 @@ export const useTrainingSessionHandlers = (
         Object.keys(storeExercises));
       console.log('useTrainingSessionHandlers: New exercise exists in store:', 
         !!storeExercises[exerciseName]);
-    }, 1000);
+    }, 500);
   }, [exercises, setExercises, setFocusedExercise]);
   
   const handleAddSet = useCallback((exerciseName: string) => {

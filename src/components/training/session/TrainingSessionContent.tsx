@@ -1,3 +1,4 @@
+
 import React, { useCallback } from 'react';
 import { useTrainingSession } from "@/hooks/training-session";
 import { ExerciseCompletionConfirmation } from "@/components/training/ExerciseCompletionConfirmation";
@@ -13,7 +14,10 @@ import { TrainingSessionLayout } from "./layout/TrainingSessionLayout";
 import { TrainingActionButtons } from "./actions/TrainingActionButtons";
 import { SaveProgress } from "@/types/workout";
 import { DirectAddExerciseButton } from "./DirectAddExerciseButton";
-import { useWorkoutStore } from '@/store/workout/store'; // Correct import for store
+import { useWorkoutStore } from '@/store/workout/store';
+import { toast } from "@/hooks/use-toast";
+import { EmptyWorkoutState } from "./EmptyWorkoutState";
+import { StopWorkoutButton } from "../StopWorkoutButton";
 
 interface TrainingSessionContentProps {
   onFinishWorkoutClick: () => void;
@@ -62,6 +66,7 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     handleAddExercise,
     handleSubmitRating,
     handleAddSet,
+    resetSession,
     
     // UI state setters
     setShowCompletionConfirmation,
@@ -98,6 +103,15 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
         Object.keys(workoutStore.exercises));
     }, 500);
   }, [handleAddExercise, exercises, setIsAddExerciseSheetOpen, workoutStore.exercises]);
+  
+  // Handle stopping/ending the workout
+  const handleStopWorkout = useCallback(() => {
+    // Confirm with the user before ending
+    if (window.confirm("Are you sure you want to end this workout session? Any unsaved progress will be lost.")) {
+      resetSession();
+      toast.success("Workout session ended");
+    }
+  }, [resetSession]);
   
   // Make sure focusedExercise is always a safe string
   const safeFocusedExercise = focusedExercise 
@@ -158,7 +172,7 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
       totalSets={totalSets}
       workoutStatus={workoutStatus}
       isRecoveryMode={!!workoutId}
-      saveProgress={0 as any} // Fixed: properly cast as SaveProgress or use 0 directly
+      saveProgress={0 as any}
       onRetrySave={handleAttemptRecovery}
       onAddExercise={handleOpenAddExercise}
       metricsPanel={
@@ -178,19 +192,14 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
         />
       }
     >
+      {/* Stop Workout Button - Always show at the top right for easy access */}
+      <div className="absolute top-2 right-2 z-10">
+        <StopWorkoutButton onStopWorkout={handleStopWorkout} />
+      </div>
+
       {/* New Exercise Button for empty state */}
       {!hasExercises && (
-        <div className="flex flex-col items-center justify-center p-6 mt-8">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold mb-2">Add Your First Exercise</h2>
-            <p className="text-gray-400 max-w-md">
-              Start by adding an exercise to your workout session.
-            </p>
-          </div>
-          
-          {/* Using the DirectAddExerciseButton component with the properly styled button */}
-          <DirectAddExerciseButton onAddExercise={enhancedHandleAddExercise} />
-        </div>
+        <EmptyWorkoutState onAddExercise={enhancedHandleAddExercise} />
       )}
       
       {/* Timer Components */}
@@ -268,7 +277,7 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
         setIsAddExerciseSheetOpen={setIsAddExerciseSheetOpen}
         isRatingSheetOpen={isRatingSheetOpen}
         setIsRatingSheetOpen={setIsRatingSheetOpen}
-        handleAddExercise={enhancedHandleAddExercise} // Use our enhanced handler with logging
+        handleAddExercise={enhancedHandleAddExercise}
         handleSubmitRating={handleSubmitRating}
         trainingConfig={trainingConfig}
         lastCompletedExercise={lastCompletedExercise}

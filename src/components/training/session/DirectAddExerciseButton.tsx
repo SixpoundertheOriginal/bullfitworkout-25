@@ -11,8 +11,7 @@ export const DirectAddExerciseButton: React.FC<DirectAddExerciseButtonProps> = (
 }) => {
   const handleOpenExerciseSheet = () => {
     console.log('DirectAddExerciseButton: Opening exercise sheet');
-    // This would normally add a directly selected exercise, but we'll use it to open the sheet
-    // We'll pass an empty string to signal we want to open the exercise selection UI
+    // Pass empty string to signal we want to open the exercise selection sheet
     onAddExercise('');
   };
   
