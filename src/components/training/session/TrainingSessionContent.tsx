@@ -14,7 +14,7 @@ import { TrainingSessionLayout } from "./layout/TrainingSessionLayout";
 import { TrainingActionButtons } from "./actions/TrainingActionButtons";
 import { SaveProgress } from "@/types/workout";
 import { DirectAddExerciseButton } from "./DirectAddExerciseButton";
-import { getStore } from '@/store/workout/store'; // Added missing import for getStore
+import { getStore } from '@/store/workout/store'; // Added import for getStore
 
 interface TrainingSessionContentProps {
   onFinishWorkoutClick: () => void;
@@ -119,8 +119,9 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     
     // Schedule a check to verify if the sheet was opened
     setTimeout(() => {
+      // We need to use the local state variable here, not the one from the store
       console.log('TrainingSessionContent: isAddExerciseSheetOpen after (timeout check):', 
-        getStore().getState().isAddExerciseSheetOpen);
+        isAddExerciseSheetOpen);
     }, 100);
   }, [setIsAddExerciseSheetOpen, isAddExerciseSheetOpen]);
 
