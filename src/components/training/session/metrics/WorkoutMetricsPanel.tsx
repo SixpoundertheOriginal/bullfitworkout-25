@@ -16,6 +16,7 @@ interface WorkoutMetricsPanelProps {
   onRestTimerReset: () => void;
   restTimerResetSignal: number;
   focusedExercise: string | null;
+  onAddExercise?: () => void;  // Added this optional prop
   className?: string;
 }
 
@@ -31,6 +32,7 @@ export const WorkoutMetricsPanel: React.FC<WorkoutMetricsPanelProps> = ({
   onRestTimerReset,
   restTimerResetSignal,
   focusedExercise,
+  onAddExercise,
   className
 }) => {
   return (

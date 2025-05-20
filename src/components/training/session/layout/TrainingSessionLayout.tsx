@@ -40,7 +40,7 @@ export const TrainingSessionLayout: React.FC<TrainingSessionLayoutProps> = ({
       {/* Top save status indicator */}
       <WorkoutSaveStatus 
         status={workoutStatus} 
-        progress={saveProgress}
+        saveProgress={saveProgress}  // Changed from progress to saveProgress
         onRetry={onRetrySave} 
       />
       

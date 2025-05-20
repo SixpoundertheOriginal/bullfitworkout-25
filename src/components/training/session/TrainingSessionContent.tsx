@@ -1,4 +1,3 @@
-
 import React, { useCallback } from 'react';
 import { useTrainingSession } from "@/hooks/training-session";
 import { ExerciseCompletionConfirmation } from "@/components/training/ExerciseCompletionConfirmation";
@@ -129,7 +128,7 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
           onRestTimerReset={triggerRestTimerReset}
           restTimerResetSignal={restTimerResetSignal}
           focusedExercise={safeFocusedExercise}
-          onAddExercise={handleOpenAddExercise}
+          onAddExercise={handleOpenAddExercise} // Now properly typed
         />
       }
     >
@@ -174,7 +173,7 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
       
       {/* Only show debugger in development */}
       {showDebugger && <SetsDebugger />}
-
+      
       {/* Exercise Completion Confirmation */}
       <ExerciseCompletionConfirmation
         isOpen={showCompletionConfirmation}
