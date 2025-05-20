@@ -153,7 +153,7 @@ export const WorkoutCompletion = ({
           className="w-1/2 py-3 bg-gradient-to-r from-green-600 to-emerald-500 
             hover:from-green-700 hover:to-emerald-600 text-white font-medium 
             rounded-full shadow-lg hover:shadow-xl"
-          onClick={handleSuccessfulSave}
+          onClick={() => handleSuccessfulSave({ duration, training_type: trainingType })}
           disabled={processingComplete}
         >
           Complete Workout

@@ -1,46 +1,51 @@
 
-import React, { useState } from 'react';
-import { Exercise, ExerciseSet } from '@/types/exercise';
-import { CommonExerciseCard } from '../exercises/CommonExerciseCard';
-import { ExerciseThumbnail } from '../exercises/cards/ExerciseThumbnail';
-import { cn } from '@/lib/utils';
-import { SetsTable } from '../workouts/SetsTable';
-import { ExerciseMetricsDisplay } from './ExerciseMetricsDisplay';
-import { motion } from 'framer-motion';
-import { Dumbbell, Target, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { safeRenderableExercise } from '@/utils/exerciseAdapter';
+import React, { useState } from "react";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Motion, AnimatePresence, motion } from "framer-motion";
+import { PlusCircle, ChevronUp, ChevronDown, Trash2, AlertTriangle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import SetRow from "@/components/SetRow";
+import { ExerciseSet } from "@/types/exercise";
+import { ExerciseCardActions } from "@/components/exercises/cards/ExerciseCardActions";
+import { SafeExerciseName } from '@/components/exercises/SafeExerciseName';
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ExerciseCardProps {
   exerciseName: string;
-  exerciseData?: Exercise;
-  onAdd?: (exerciseName: string) => void;
-  sets?: any[];
-  isActive?: boolean;
-  isFocused?: boolean;
-  onAddSet?: () => void;
-  onCompleteSet?: (setIndex: number) => void;
-  onDeleteExercise?: () => void;
-  onRemoveSet?: (setIndex: number) => void;
-  onEditSet?: (setIndex: number) => void;
-  onSaveSet?: (setIndex: number) => void;
-  onWeightChange?: (setIndex: number, value: string) => void;
-  onRepsChange?: (setIndex: number, value: string) => void;
-  onRestTimeChange?: (setIndex: number, value: string) => void;
-  onWeightIncrement?: (setIndex: number, increment: number) => void;
-  onRepsIncrement?: (setIndex: number, increment: number) => void;
-  onRestTimeIncrement?: (setIndex: number, increment: number) => void;
-  onShowRestTimer?: () => void;
-  onResetRestTimer?: () => void;
+  sets: ExerciseSet[];
+  isActive: boolean;
+  isFocused: boolean;
+  onAddSet: () => void;
+  onCompleteSet: (setIndex: number) => void;
+  onDeleteExercise: () => void;
+  onRemoveSet: (setIndex: number) => void;
+  onEditSet: (setIndex: number) => void;
+  onSaveSet: (setIndex: number) => void;
+  onWeightChange: (setIndex: number, value: string) => void;
+  onRepsChange: (setIndex: number, value: string) => void;
+  onRestTimeChange: (setIndex: number, value: string) => void;
+  onWeightIncrement: (setIndex: number, increment: number) => void;
+  onRepsIncrement: (setIndex: number, increment: number) => void;
+  onRestTimeIncrement: (setIndex: number, increment: number) => void;
+  onShowRestTimer: () => void;
+  onResetRestTimer: () => void;
   onFocus?: () => void;
-  className?: string;
 }
 
-export const ExerciseCard: React.FC<ExerciseCardProps> = ({ 
-  exerciseName, 
-  exerciseData,
-  onAdd,
-  sets = [],
+const ExerciseCard: React.FC<ExerciseCardProps> = ({
+  exerciseName,
+  sets,
   isActive,
   isFocused,
   onAddSet,
@@ -58,153 +63,159 @@ export const ExerciseCard: React.FC<ExerciseCardProps> = ({
   onShowRestTimer,
   onResetRestTimer,
   onFocus,
-  className
 }) => {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const isMobile = useIsMobile();
   
-  // Create thumbnail if exerciseData is available
-  const thumbnail = exerciseData ? 
-    <ExerciseThumbnail 
-      exercise={exerciseData} 
-      className={cn(
-        "transition-all duration-300",
-        isActive ? "ring-2 ring-purple-500/40 shadow-lg shadow-purple-500/20" : "",
-        isFocused ? "ring-2 ring-purple-500/60 shadow-lg shadow-purple-500/30 scale-105" : ""
-      )}
-      size="lg"
-    /> : 
-    <div className={cn(
-      "w-12 h-12 rounded-lg flex items-center justify-center",
-      "bg-gradient-to-br from-purple-600/20 to-purple-800/20",
-      "transition-all duration-300",
-      isActive ? "ring-2 ring-purple-500/40 shadow-lg shadow-purple-500/20" : "",
-      isFocused ? "ring-2 ring-purple-500/60 shadow-lg shadow-purple-500/30 scale-110" : ""
-    )}>
-      {isFocused ? 
-        <Target className="w-6 h-6 text-green-400 animate-pulse" /> : 
-        <Dumbbell className="w-6 h-6 text-purple-400" />
-      }
-    </div>;
-
-  // Handle set update
-  const handleSetUpdate = (updatedSet: ExerciseSet) => {
-    if (!sets) return;
-    
-    console.log("ExerciseCard - handling set update:", updatedSet);
-    
-    const setIndex = sets.findIndex(s => 
-      (s.set_number !== undefined && updatedSet.set_number !== undefined && s.set_number === updatedSet.set_number) || 
-      (s.id !== undefined && updatedSet.id !== undefined && s.id === updatedSet.id)
-    );
-    
-    if (setIndex === -1) return;
-    
-    if (updatedSet.completed && onCompleteSet) {
-      onCompleteSet(setIndex);
-    }
-    
-    if (onWeightChange && updatedSet.weight !== undefined && updatedSet.weight !== sets[setIndex].weight) {
-      onWeightChange(setIndex, updatedSet.weight.toString());
-    }
-    
-    if (onRepsChange && updatedSet.reps !== undefined && updatedSet.reps !== sets[setIndex].reps) {
-      onRepsChange(setIndex, updatedSet.reps.toString());
-    }
-    
-    if (onRestTimeChange && updatedSet.restTime !== undefined && updatedSet.restTime !== sets[setIndex].restTime) {
-      onRestTimeChange(setIndex, updatedSet.restTime.toString());
+  const completedSets = sets.filter(set => set.completed).length;
+  const totalSets = sets.length;
+  const progress = totalSets ? (completedSets / totalSets) * 100 : 0;
+  
+  const toggleExpanded = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpanded(prev => !prev);
+  };
+  
+  const handleCardClick = () => {
+    if (onFocus) {
+      onFocus();
     }
   };
 
-  // Handle set deletion
-  const handleSetDelete = (setToDelete: ExerciseSet) => {
-    if (!sets) return;
-    
-    const setIndex = sets.findIndex(s => 
-      (s.set_number !== undefined && setToDelete.set_number !== undefined && s.set_number === setToDelete.set_number) || 
-      (s.id !== undefined && setToDelete.id !== undefined && s.id === setToDelete.id)
-    );
-    
-    if (setIndex === -1) return;
-    
-    if (onRemoveSet) {
-      onRemoveSet(setIndex);
-    }
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDeleteConfirmOpen(true);
   };
 
-  // Custom content for the CommonExerciseCard
-  const customContent = sets && sets.length > 0 ? (
-    <div className="mt-4">
-      <SetsTable
-        sets={sets}
-        onAddSet={onAddSet}
-        onUpdateSet={handleSetUpdate}
-        onDeleteSet={handleSetDelete}
-        onShowRestTimer={onShowRestTimer}
-        expanded={expanded}
-        onToggleExpanded={() => setExpanded(!expanded)}
-        onFocusSet={(setIndex) => onFocus && onFocus()}
-        highlightActive={!!isFocused}
-      />
-      
-      {/* Add exercise metrics display */}
-      {sets.some(set => set.completed) && (
-        <ExerciseMetricsDisplay
-          sets={sets}
-          exerciseName={exerciseName}
-          className="mt-2"
-        />
-      )}
-      
-      {/* Floating Add Set button for better visibility */}
-      {onAddSet && sets.length > 0 && isFocused && (
-        <div className="flex justify-center mt-4">
-          <Button
-            onClick={onAddSet}
-            className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20"
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Add Set
-          </Button>
-        </div>
-      )}
-    </div>
-  ) : null;
-
+  const confirmDelete = () => {
+    setDeleteConfirmOpen(false);
+    onDeleteExercise();
+  };
+  
   return (
-    <motion.div
-      whileHover={{ scale: isFocused ? 1.0 : 1.01 }}
-      whileTap={{ scale: isFocused ? 1.0 : 0.99 }}
-      transition={{ type: "spring", stiffness: 300, damping: 15 }}
-      className={cn(
-        "w-full",
-        isActive ? "z-10" : "",
-        isFocused ? "z-20" : "",
-        className
-      )}
-      onClick={onFocus ? onFocus : undefined}
-    >
-      <CommonExerciseCard
-        exerciseName={exerciseName}
-        exerciseData={exerciseData}
-        variant={onAdd ? "workout-add" : "workout"}
-        onAdd={onAdd ? () => onAdd(exerciseName) : undefined}
-        sets={sets}
-        isActive={isActive}
-        thumbnail={thumbnail}
-        customContent={customContent}
+    <>
+      <Card 
         className={cn(
-          "transition-all duration-300",
-          "shadow-md hover:shadow-lg",
-          "bg-gradient-to-br from-gray-900/90 to-gray-800/70",
-          "border border-white/5",
-          isActive ? "border-purple-500/40 shadow-lg shadow-purple-500/10" : "",
-          isFocused ? "border-green-500/60 shadow-xl shadow-green-500/20 scale-[1.02]" : "",
-          "tap-highlight-transparent",
-          className
+          "overflow-hidden transition-all duration-300",
+          isFocused ? "border-purple-500/50 bg-gradient-to-br from-purple-900/20 to-gray-900/90" : "bg-gray-900/90",
+          "hover:border-gray-700"
         )}
-      />
-    </motion.div>
+        onClick={handleCardClick}
+      >
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <div className="flex-1">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center">
+                <SafeExerciseName 
+                  exercise={exerciseName} 
+                  className="text-lg font-medium text-white truncate" 
+                />
+                
+                {!isFocused && completedSets > 0 && (
+                  <span className="ml-2 text-sm text-gray-400">
+                    {completedSets}/{totalSets}
+                  </span>
+                )}
+              </div>
+              
+              <div className="flex space-x-1">
+                {!isFocused && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-red-500 hover:text-red-400 hover:bg-red-900/20"
+                    onClick={handleDeleteClick}
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                )}
+                
+                {!isFocused && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-gray-400"
+                    onClick={toggleExpanded}
+                  >
+                    {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  </Button>
+                )}
+              </div>
+            </div>
+            
+            {!isFocused && (
+              <div className="w-full h-1 bg-gray-800 rounded-full mt-2">
+                <div 
+                  className="h-1 rounded-full bg-gradient-to-r from-green-500 to-emerald-400" 
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            )}
+          </div>
+        </CardHeader>
+
+        <CardContent className={cn(
+          "transition-all duration-300",
+          isFocused ? "block" : (expanded ? "block" : "hidden")
+        )}>
+          <div className="space-y-2">
+            {sets.map((set, index) => (
+              <SetRow
+                key={`${exerciseName}-set-${index}`}
+                set={set}
+                index={index}
+                onComplete={() => onCompleteSet(index)}
+                onRemove={() => onRemoveSet(index)}
+                onEdit={() => onEditSet(index)}
+                onSave={() => onSaveSet(index)}
+                onWeightChange={(value) => onWeightChange(index, value)}
+                onRepsChange={(value) => onRepsChange(index, value)}
+                onRestTimeChange={(value) => onRestTimeChange(index, value)}
+                onWeightIncrement={(increment) => onWeightIncrement(index, increment)}
+                onRepsIncrement={(increment) => onRepsIncrement(index, increment)}
+                onRestTimeIncrement={(increment) => onRestTimeIncrement(index, increment)}
+                onShowRestTimer={onShowRestTimer}
+                onResetRestTimer={onResetRestTimer}
+              />
+            ))}
+            
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full border-dashed border-gray-700 mt-2 hover:bg-gray-800/50"
+              onClick={onAddSet}
+            >
+              <PlusCircle className="mr-1 h-3.5 w-3.5 text-gray-400" />
+              <span className="text-xs">Add Set</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent className="bg-gray-900 border-gray-800">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white">Delete Exercise</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{exerciseName}" from your workout? 
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-gray-800 text-white border-gray-700 hover:bg-gray-700">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-red-600 hover:bg-red-700 text-white" 
+              onClick={confirmDelete}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 
