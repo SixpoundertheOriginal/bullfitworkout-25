@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { AddExerciseButton } from '@/components/training/session/AddExerciseButton';
 
 interface DirectAddExerciseButtonProps {
   onAddExercise: (exerciseName: string) => void;
@@ -15,12 +16,13 @@ export const DirectAddExerciseButton: React.FC<DirectAddExerciseButtonProps> = (
     onAddExercise('');
   };
   
-  // Button has been intentionally removed as requested
-  // The component still exists to maintain the codebase structure
-  // and will be replaced with a new button in a future update
   return (
     <div className="flex justify-center px-4 my-6">
-      {/* No button rendered - intentionally removed as requested */}
+      <AddExerciseButton
+        onClick={handleOpenExerciseSheet}
+        className="w-full max-w-md"
+        label="Add Exercise"
+      />
     </div>
   );
 };
