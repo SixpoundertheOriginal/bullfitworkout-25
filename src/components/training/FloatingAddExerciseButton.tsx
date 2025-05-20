@@ -16,6 +16,12 @@ export const FloatingAddExerciseButton: React.FC<FloatingAddExerciseButtonProps>
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
+  // Log when button is clicked to help debug
+  const handleClick = () => {
+    console.log('FloatingAddExerciseButton: Button clicked');
+    onClick();
+  };
+
   return (
     <motion.div 
       className={cn(
@@ -29,7 +35,7 @@ export const FloatingAddExerciseButton: React.FC<FloatingAddExerciseButtonProps>
       onHoverEnd={() => setIsHovered(false)}
     >
       <Button
-        onClick={onClick}
+        onClick={handleClick}
         size="lg"
         variant="gradient"
         className={cn(

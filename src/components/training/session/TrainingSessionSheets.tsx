@@ -44,30 +44,12 @@ export const TrainingSessionSheets: React.FC<TrainingSessionSheetsProps> = ({
   console.log('TrainingSessionSheets: isAddExerciseSheetOpen:', isAddExerciseSheetOpen);
   console.log('TrainingSessionSheets: handleAddExercise is a function:', typeof handleAddExercise === 'function');
   
-  // Check if we have access to handleAddExercise
-  React.useEffect(() => {
-    console.log('TrainingSessionSheets: Effect running, sheet open:', isAddExerciseSheetOpen);
-    console.log('TrainingSessionSheets: handleAddExercise exists in effect:', !!handleAddExercise);
-  }, [isAddExerciseSheetOpen, handleAddExercise]);
-  
-  // Get the last completed exercise details for the rating sheet
-  const exerciseName = lastCompletedExercise || '';
-  const setDetails = lastCompletedExercise && typeof lastCompletedSetIndex === 'number' ? 
-    {
-      set_number: lastCompletedSetIndex + 1,
-      weight: 0,
-      reps: 0
-    } : undefined;
-    
   // This is the critical handler with enhanced logging
   const handleSelectExercise = (exerciseName: string) => {
     // Debug log to verify this handler is being called
     console.log('TrainingSessionSheets: handleSelectExercise called with', exerciseName);
     console.log('TrainingSessionSheets: Current exercises before adding:', 
       Object.keys(getStore().getState().exercises));
-    
-    // Log the handler we received from props
-    console.log('TrainingSessionSheets: handleAddExercise type:', typeof handleAddExercise);
     
     // Call the parent's handleAddExercise function (from useTrainingSession hook)
     handleAddExercise(exerciseName);
@@ -106,8 +88,12 @@ export const TrainingSessionSheets: React.FC<TrainingSessionSheetsProps> = ({
         open={isRatingSheetOpen}
         onOpenChange={setIsRatingSheetOpen}
         onSubmitRating={handleSubmitRating}
-        exerciseName={exerciseName}
-        setDetails={setDetails}
+        exerciseName={lastCompletedExercise || ''}
+        setDetails={lastCompletedSetIndex !== null ? {
+          set_number: lastCompletedSetIndex + 1,
+          weight: 0,
+          reps: 0
+        } : undefined}
       />
     </>
   );

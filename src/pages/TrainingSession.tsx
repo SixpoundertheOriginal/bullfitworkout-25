@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWorkoutTimer } from '@/hooks/useWorkoutTimer';
@@ -109,6 +108,7 @@ const TrainingSessionPage = () => {
 
   // Quick handler to open add exercise sheet from anywhere
   const handleOpenAddExercise = () => {
+    console.log("TrainingSessionPage: Opening add exercise sheet");
     setIsAddExerciseSheetOpen(true);
   };
 
@@ -147,7 +147,6 @@ const TrainingSessionPage = () => {
       {isEmptyState && (
         <FloatingAddExerciseButton 
           onClick={handleOpenAddExercise}
-          className="md:hidden" // Show only on mobile for empty state
         />
       )}
     </>

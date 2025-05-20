@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect } from 'react';
 import { useTrainingSession } from "@/hooks/training-session";
 import { ExerciseCompletionConfirmation } from "@/components/training/ExerciseCompletionConfirmation";
@@ -20,6 +19,7 @@ import { EmptyWorkoutState } from "./EmptyWorkoutState";
 import { StopWorkoutButton } from "../StopWorkoutButton";
 import { validateWorkoutState } from '@/store/workout/actions';
 import { FloatingAddExerciseButton } from "@/components/training/FloatingAddExerciseButton";
+import { Button } from "@/components/ui/button";
 
 interface TrainingSessionContentProps {
   onFinishWorkoutClick: () => void;
@@ -314,11 +314,10 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
         />
       )}
 
-      {/* New engaging FloatingAddExerciseButton - show only if we have exercises and not focused on one */}
+      {/* New engaging FloatingAddExerciseButton - show when we have exercises and not focused on one */}
       {hasExercises && !focusedExercise && !showRestTimerModal && !showEnhancedRestTimer && (
         <FloatingAddExerciseButton
           onClick={handleOpenAddExercise}
-          className="hidden md:flex" // Hide on mobile, show on desktop
         />
       )}
 

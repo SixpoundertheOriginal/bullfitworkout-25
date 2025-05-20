@@ -24,6 +24,12 @@ export const ExerciseFAB = ({
 }: ExerciseFABProps) => {
   const { isActive } = useWorkoutStore();
   
+  // Add click handler with logging
+  const handleClick = () => {
+    console.log("ExerciseFAB: Button clicked");
+    onClick();
+  };
+  
   // Option to only show when workout is active
   if (showOnlyIfActive && !isActive) {
     return null;
@@ -38,7 +44,7 @@ export const ExerciseFAB = ({
       className
     )}>
       <CircularGradientButton
-        onClick={onClick}
+        onClick={handleClick}
         icon={<Plus size={24} className="text-white" />}
         size={56}
         ariaLabel="Add exercise"
