@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWorkoutTimer } from '@/hooks/useWorkoutTimer';
@@ -9,7 +10,6 @@ import { WorkoutCompletion } from "@/components/training/WorkoutCompletion";
 import { safeRenderableExercise } from "@/utils/exerciseAdapter";
 import { validateWorkoutState } from '@/store/workout/actions';
 import { toast } from '@/hooks/use-toast';
-import { FloatingAddExerciseButton } from '@/components/training/FloatingAddExerciseButton';
 
 const TrainingSessionPage = () => {
   const { isLoading: loadingExercises } = useExercises();
@@ -133,23 +133,14 @@ const TrainingSessionPage = () => {
     );
   }
 
-  // Empty state detector for global floating button
-  const isEmptyState = Object.keys(exercises).length === 0;
-
+  // We'll pass the handleOpenAddExercise directly to TrainingSessionContent
+  // and remove the duplicate FloatingAddExerciseButton from here
   return (
-    <>
-      <TrainingSessionContent 
-        onFinishWorkoutClick={handleFinishWorkoutClick}
-        isSaving={isSaving}
-      />
-      
-      {/* Global floating add exercise button that appears on empty state */}
-      {isEmptyState && (
-        <FloatingAddExerciseButton 
-          onClick={handleOpenAddExercise}
-        />
-      )}
-    </>
+    <TrainingSessionContent 
+      onFinishWorkoutClick={handleFinishWorkoutClick}
+      isSaving={isSaving}
+      onOpenAddExercise={handleOpenAddExercise}
+    />
   );
 };
 

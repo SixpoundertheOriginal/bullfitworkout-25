@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AddExerciseSheet } from "@/components/training/AddExerciseSheet";
 import { PostSetRatingSheet } from '@/components/training/PostSetRatingSheet';
 import { ExerciseWizardSheet } from '@/components/exercises/ExerciseWizardSheet';
@@ -40,9 +40,19 @@ export const TrainingSessionSheets: React.FC<TrainingSessionSheetsProps> = ({
   lastCompletedExercise,
   lastCompletedSetIndex
 }) => {
-  console.log('TrainingSessionSheets: Component rendering');
-  console.log('TrainingSessionSheets: isAddExerciseSheetOpen:', isAddExerciseSheetOpen);
-  console.log('TrainingSessionSheets: handleAddExercise is a function:', typeof handleAddExercise === 'function');
+  // Enhanced debug logging
+  console.log('TrainingSessionSheets: Component rendering with props:', { 
+    isAddExerciseSheetOpen, 
+    isRatingSheetOpen 
+  });
+
+  // Add effect to track sheet open state changes
+  useEffect(() => {
+    console.log('TrainingSessionSheets: Sheet open state changed:', { 
+      addExerciseOpen: isAddExerciseSheetOpen, 
+      ratingOpen: isRatingSheetOpen 
+    });
+  }, [isAddExerciseSheetOpen, isRatingSheetOpen]);
   
   // This is the critical handler with enhanced logging
   const handleSelectExercise = (exerciseName: string) => {
@@ -70,12 +80,15 @@ export const TrainingSessionSheets: React.FC<TrainingSessionSheetsProps> = ({
       {/* Sheet for adding new exercises */}
       <AddExerciseSheet
         open={isAddExerciseSheetOpen}
-        onOpenChange={setIsAddExerciseSheetOpen}
+        onOpenChange={(isOpen) => {
+          console.log('TrainingSessionSheets: AddExerciseSheet onOpenChange called with:', isOpen);
+          setIsAddExerciseSheetOpen(isOpen);
+        }}
         onSelectExercise={handleSelectExercise} // Use our local handler
         trainingType={trainingConfig?.trainingType}
       />
       
-      {/* Alternative wizard for creating new exercises */}
+      {/* Alternative wizard for creating new exercises - disabled for now */}
       <ExerciseWizardSheet
         open={false}  // Use a separate state if you want to show this sheet
         onOpenChange={() => {}}

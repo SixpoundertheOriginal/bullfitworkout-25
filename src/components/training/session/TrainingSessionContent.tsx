@@ -1,3 +1,4 @@
+
 import React, { useCallback, useEffect } from 'react';
 import { useTrainingSession } from "@/hooks/training-session";
 import { ExerciseCompletionConfirmation } from "@/components/training/ExerciseCompletionConfirmation";
@@ -11,24 +12,24 @@ import { TrainingSessionTimers } from "@/components/training/TrainingSessionTime
 import { WorkoutMetricsPanel } from "./metrics/WorkoutMetricsPanel";
 import { TrainingSessionLayout } from "./layout/TrainingSessionLayout";
 import { TrainingActionButtons } from "./actions/TrainingActionButtons";
-import { SaveProgress } from "@/types/workout";
-import { DirectAddExerciseButton } from "./DirectAddExerciseButton";
-import { useWorkoutStore } from '@/store/workout/store';
-import { toast } from "@/hooks/use-toast";
 import { EmptyWorkoutState } from "./EmptyWorkoutState";
 import { StopWorkoutButton } from "../StopWorkoutButton";
 import { validateWorkoutState } from '@/store/workout/actions';
 import { FloatingAddExerciseButton } from "@/components/training/FloatingAddExerciseButton";
 import { Button } from "@/components/ui/button";
+import { useWorkoutStore } from '@/store/workout/store';
+import { toast } from "@/hooks/use-toast";
 
 interface TrainingSessionContentProps {
   onFinishWorkoutClick: () => void;
   isSaving: boolean;
+  onOpenAddExercise?: () => void; // New prop to handle exercise sheet opening
 }
 
 export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
   onFinishWorkoutClick,
   isSaving,
+  onOpenAddExercise: externalOpenAddExercise, // Rename to avoid confusion
 }) => {
   const {
     // State
@@ -161,11 +162,26 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     }
   }, [focusedExercise, handleAddSet]);
 
-  // Function to open add exercise sheet with better logging
+  // Function to open add exercise sheet with better logging - UNIFIED APPROACH
   const handleOpenAddExercise = useCallback(() => {
     console.log('TrainingSessionContent: handleOpenAddExercise called - setting sheet to open');
-    setIsAddExerciseSheetOpen(true);
-  }, [setIsAddExerciseSheetOpen]);
+    
+    // If an external handler is provided (from parent component), use it instead
+    // This helps ensure we're consistently using the same state across components
+    if (externalOpenAddExercise) {
+      console.log('TrainingSessionContent: Using external handler for opening exercise sheet');
+      externalOpenAddExercise();
+    } else {
+      console.log('TrainingSessionContent: Using local handler for opening exercise sheet');
+      setIsAddExerciseSheetOpen(true);
+    }
+    
+    // Add a verification timeout
+    setTimeout(() => {
+      console.log('TrainingSessionContent: Verification - isAddExerciseSheetOpen after click:', 
+        useTrainingSession().isAddExerciseSheetOpen);
+    }, 100);
+  }, [setIsAddExerciseSheetOpen, externalOpenAddExercise]);
 
   // Create a wrapper for the attemptRecovery function with the required signature
   const handleAttemptRecovery = useCallback(() => {
@@ -189,6 +205,13 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
   console.log('TrainingSessionContent: Exercise names:', Object.keys(exercises));
   console.log('TrainingSessionContent: isAddExerciseSheetOpen:', isAddExerciseSheetOpen);
   console.log('TrainingSessionContent: Focused exercise:', focusedExercise);
+
+  // Debug the sheets state specifically
+  useEffect(() => {
+    console.log('TrainingSessionContent: Sheet open state changed:', { 
+      isAddExerciseSheetOpen 
+    });
+  }, [isAddExerciseSheetOpen]);
 
   return (
     <TrainingSessionLayout
@@ -321,8 +344,28 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
         />
       )}
 
+      {/* Debug Button to force open the sheet - only show in development */}
+      {showDebugger && (
+        <div className="fixed top-20 right-4 z-50">
+          <Button 
+            variant="secondary" 
+            size="sm"
+            onClick={() => {
+              console.log("Debug: Manually opening add exercise sheet");
+              setIsAddExerciseSheetOpen(true);
+              setTimeout(() => {
+                console.log("Debug: Sheet state after forced open:", useTrainingSession().isAddExerciseSheetOpen);
+              }, 100);
+            }}
+            className="text-xs"
+          >
+            Force Open Sheet
+          </Button>
+        </div>
+      )}
+
       {/* Sheets - Now explicitly pass all required props and handlers */}
-      <TrainingSessionSheets 
+      <TrainingSessionSheets
         isAddExerciseSheetOpen={isAddExerciseSheetOpen}
         setIsAddExerciseSheetOpen={setIsAddExerciseSheetOpen}
         isRatingSheetOpen={isRatingSheetOpen}

@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Search, Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -28,6 +27,9 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
   onSelectExercise,
   trainingType = ""
 }) => {
+  // Add detailed logging
+  console.log('AddExerciseSheet: Rendering with open state:', open);
+  
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<string>("suggested");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -36,6 +38,11 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
   const { exercises: allExercises = [] } = useExercises();
   const [showAllExercises, setShowAllExercises] = useState(false);
   const [exerciseDialogV2Open, setExerciseDialogV2Open] = useState(false);
+
+  // Add effect to track open state changes
+  useEffect(() => {
+    console.log('AddExerciseSheet: Open state changed to:', open);
+  }, [open]);
 
   // Extract recently used exercises from workout history
   const recentExercises = React.useMemo(() => {
@@ -103,6 +110,7 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
     onSelectExercise(exerciseName);
     
     // Close the sheet immediately after selecting an exercise
+    console.log('AddExerciseSheet: Closing sheet after selecting exercise');
     onOpenChange(false);
     
     // Show toast notification
@@ -110,6 +118,12 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
       title: "Exercise added",
       description: `Added ${exerciseName} to your workout`
     });
+  };
+
+  // Handle open state changes with better logging
+  const handleOpenChange = (isOpen: boolean) => {
+    console.log('AddExerciseSheet: handleOpenChange called with', isOpen);
+    onOpenChange(isOpen);
   };
 
   const renderExerciseCard = (exercise: Exercise) => {
@@ -137,12 +151,13 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
     );
   };
 
+  // If showing all exercises page
   if (showAllExercises) {
     return (
-      <Sheet open={open} onOpenChange={onOpenChange}>
+      <Sheet open={open} onOpenChange={handleOpenChange}>
         <SheetContent 
           side="bottom" 
-          className="h-[90vh] rounded-t-xl border-t border-gray-700 bg-gray-900 p-0"
+          className="h-[90vh] rounded-t-xl border-t border-gray-700 bg-gray-900 p-0 z-50"
         >
           <AllExercisesPage 
             onSelectExercise={(exercise) => handleAddExercise(getExerciseName(exercise))}
@@ -154,11 +169,13 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
     );
   }
 
+  console.log('AddExerciseSheet: Before final return with open =', open);
+  
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent 
         side="bottom" 
-        className="h-[80vh] rounded-t-xl border-t border-gray-700 bg-gray-900 p-0"
+        className="h-[80vh] rounded-t-xl border-t border-gray-700 bg-gray-900 p-0 z-50"
       >
         <div className="flex flex-col h-full">
           {/* Handle for dragging */}

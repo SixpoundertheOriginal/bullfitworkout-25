@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -15,17 +15,34 @@ export const FloatingAddExerciseButton: React.FC<FloatingAddExerciseButtonProps>
   className,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [isClicked, setIsClicked] = useState(false);
 
-  // Log when button is clicked to help debug
+  // Reset click state after animation
+  useEffect(() => {
+    if (isClicked) {
+      const timer = setTimeout(() => {
+        setIsClicked(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isClicked]);
+
+  // Enhanced click handler with visual feedback
   const handleClick = () => {
     console.log('FloatingAddExerciseButton: Button clicked');
+    setIsClicked(true);
     onClick();
+    
+    // Add a delayed verification log
+    setTimeout(() => {
+      console.log('FloatingAddExerciseButton: Verification check 100ms after click');
+    }, 100);
   };
 
   return (
     <motion.div 
       className={cn(
-        "fixed bottom-24 right-8 z-50",
+        "fixed bottom-24 right-8 z-[100]", // Increased z-index
         className
       )}
       initial={{ scale: 0.8, opacity: 0 }}
@@ -45,7 +62,8 @@ export const FloatingAddExerciseButton: React.FC<FloatingAddExerciseButtonProps>
           "shadow-purple-500/30 hover:shadow-purple-500/40",
           "border border-purple-500/20",
           "flex items-center justify-center gap-2",
-          isHovered ? "scale-110" : "scale-100"
+          isHovered ? "scale-110" : "scale-100",
+          isClicked ? "scale-90" : "" // Add a press effect
         )}
       >
         <Plus className="h-6 w-6 text-white" />
