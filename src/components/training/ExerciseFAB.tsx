@@ -2,54 +2,71 @@
 import React from "react";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useWorkoutStore } from "@/store/workout"; // Updated import path
 import { CircularGradientButton } from "@/components/CircularGradientButton";
 
 interface ExerciseFABProps {
-  visible?: boolean;
   onAddSet?: () => void;
   onClick?: () => void;
   className?: string;
+  visible?: boolean;
+  showOnlyIfActive?: boolean;
+  hideOnMobile?: boolean;
+  floatingPosition?: boolean;
   position?: "bottom-right" | "bottom-center";
-  label?: string;
 }
 
 export const ExerciseFAB = ({ 
-  visible = true, 
   onAddSet,
   onClick,
-  className,
-  position = "bottom-right",
-  label = "Add Set"
+  className, 
+  visible = true,
+  showOnlyIfActive = false,
+  hideOnMobile = true,
+  floatingPosition = true,
+  position = "bottom-right"
 }: ExerciseFABProps) => {
-  // Handler that uses either addSet or onClick
+  const { isActive } = useWorkoutStore();
+  
+  // Option to only show when workout is active
+  if (showOnlyIfActive && !isActive) {
+    return null;
+  }
+  
   const handleClick = () => {
-    if (onAddSet) {
-      onAddSet();
-    } else if (onClick) {
+    console.log('ExerciseFAB: Click handler called');
+    
+    // Use onAddSet for backward compatibility, but prefer onClick if provided
+    if (onClick) {
+      console.log('ExerciseFAB: Calling onClick handler');
       onClick();
+    } else if (onAddSet) {
+      console.log('ExerciseFAB: Calling onAddSet handler');
+      onAddSet();
+    } else {
+      console.log('ExerciseFAB: No click handler provided');
     }
   };
 
   const positionClasses = {
-    "bottom-right": "fixed bottom-24 right-6",
-    "bottom-center": "fixed bottom-24 left-1/2 transform -translate-x-1/2"
+    "bottom-right": "bottom-24 right-6",
+    "bottom-center": "bottom-24 left-1/2 -translate-x-1/2"
   };
   
   return (
     <div className={cn(
-      positionClasses[position], 
-      "z-50 transform transition-all duration-300 ease-in-out",
+      floatingPosition ? `fixed ${positionClasses[position]} z-50` : "relative", 
+      "transform transition-all duration-300 ease-in-out",
       visible ? "translate-y-0 opacity-100" : "translate-y-16 opacity-0 pointer-events-none",
+      hideOnMobile ? "hidden md:block" : "",
       className
     )}>
       <CircularGradientButton
         onClick={handleClick}
         icon={<Plus size={24} className="text-white" />}
         size={56}
-        ariaLabel={label}
-      >
-        {label}
-      </CircularGradientButton>
+        ariaLabel="Add set or exercise"
+      />
     </div>
   );
 };

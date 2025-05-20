@@ -14,7 +14,7 @@ import { TrainingSessionLayout } from "./layout/TrainingSessionLayout";
 import { TrainingActionButtons } from "./actions/TrainingActionButtons";
 import { SaveProgress } from "@/types/workout";
 import { DirectAddExerciseButton } from "./DirectAddExerciseButton";
-import { getStore } from '@/store/workout/store'; // Added import for getStore
+import { useWorkoutStore } from '@/store/workout/store'; // Correct import for store
 
 interface TrainingSessionContentProps {
   onFinishWorkoutClick: () => void;
@@ -72,22 +72,33 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     setRestTimerActive,
     setPostSetFlow
   } = useTrainingSession();
+
+  // Access the store directly for checking current state
+  const workoutStore = useWorkoutStore();
   
   // Wrap handleAddExercise with useCallback and add logging
   const enhancedHandleAddExercise = useCallback((exerciseName: string) => {
     console.log('TrainingSessionContent: enhancedHandleAddExercise called with', exerciseName);
+    
+    // If empty string is passed, just open the exercise sheet instead
+    if (!exerciseName) {
+      console.log('TrainingSessionContent: Opening add exercise sheet');
+      setIsAddExerciseSheetOpen(true);
+      return;
+    }
+    
     // Log the current state of exercises before adding
     console.log('TrainingSessionContent: Current exercises before adding:', Object.keys(exercises));
     
     // Call the original handler from useTrainingSession
     handleAddExercise(exerciseName);
     
-    // Schedule a check to verify if the exercise was added
+    // Check if the exercise was added after a delay
     setTimeout(() => {
       console.log('TrainingSessionContent: Exercises after adding (timeout check):', 
-        Object.keys(getStore().getState().exercises));
+        Object.keys(workoutStore.exercises));
     }, 500);
-  }, [handleAddExercise, exercises]);
+  }, [handleAddExercise, exercises, setIsAddExerciseSheetOpen, workoutStore.exercises]);
   
   // Make sure focusedExercise is always a safe string
   const safeFocusedExercise = focusedExercise 
@@ -114,16 +125,8 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
   // Function to open add exercise sheet with better logging
   const handleOpenAddExercise = useCallback(() => {
     console.log('TrainingSessionContent: handleOpenAddExercise called - setting sheet to open');
-    console.log('TrainingSessionContent: isAddExerciseSheetOpen before:', isAddExerciseSheetOpen);
     setIsAddExerciseSheetOpen(true);
-    
-    // Schedule a check to verify if the sheet was opened
-    setTimeout(() => {
-      // We need to use the local state variable here, not the one from the store
-      console.log('TrainingSessionContent: isAddExerciseSheetOpen after (timeout check):', 
-        isAddExerciseSheetOpen);
-    }, 100);
-  }, [setIsAddExerciseSheetOpen, isAddExerciseSheetOpen]);
+  }, [setIsAddExerciseSheetOpen]);
 
   // Create a wrapper for the attemptRecovery function with the required signature
   const handleAttemptRecovery = useCallback(() => {
@@ -147,7 +150,6 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
   console.log('TrainingSessionContent: Exercise names:', Object.keys(exercises));
   console.log('TrainingSessionContent: isAddExerciseSheetOpen:', isAddExerciseSheetOpen);
   console.log('TrainingSessionContent: Focused exercise:', focusedExercise);
-  console.log('TrainingSessionContent: handleAddExercise availability:', typeof handleAddExercise === 'function');
 
   return (
     <TrainingSessionLayout
@@ -177,8 +179,19 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
         />
       }
     >
-      {/* Test button for direct exercise addition */}
-      <DirectAddExerciseButton onAddExercise={enhancedHandleAddExercise} />
+      {/* New Exercise Button for empty state */}
+      {!hasExercises && (
+        <div className="flex flex-col items-center justify-center p-6 mt-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold mb-2">Add Your First Exercise</h2>
+            <p className="text-gray-400 max-w-md">
+              Start by adding an exercise to your workout session.
+            </p>
+          </div>
+          
+          <DirectAddExerciseButton onAddExercise={enhancedHandleAddExercise} />
+        </div>
+      )}
       
       {/* Timer Components */}
       <TrainingSessionTimers
@@ -198,26 +211,30 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
         setPostSetFlow={(flow) => setPostSetFlow(flow as PostSetFlowState)}
       />
       
-      {/* Exercise List */}
-      <ExerciseListWrapper 
-        adaptedExercises={adaptedExercises}
-        safeActiveExercise={safeActiveExercise} 
-        safeFocusedExercise={safeFocusedExercise}
-        nextExerciseName={nextExerciseName}
-        onFinishWorkout={onFinishWorkoutClick}
-        isSaving={isSaving}
-        onOpenAddExercise={handleOpenAddExercise}
-      />
+      {/* Exercise List - only show if has exercises */}
+      {hasExercises && (
+        <ExerciseListWrapper 
+          adaptedExercises={adaptedExercises}
+          safeActiveExercise={safeActiveExercise} 
+          safeFocusedExercise={safeFocusedExercise}
+          nextExerciseName={nextExerciseName}
+          onFinishWorkout={onFinishWorkoutClick}
+          isSaving={isSaving}
+          onOpenAddExercise={handleOpenAddExercise}
+        />
+      )}
       
-      {/* Action Buttons - only show on mobile */}
-      <TrainingActionButtons
-        onFinishWorkout={onFinishWorkoutClick}
-        isSaving={isSaving}
-        onOpenAddExercise={handleOpenAddExercise}
-        hasExercises={hasExercises}
-        className="md:hidden"
-        showOnMobile={true}
-      />
+      {/* Action Buttons - only show on mobile and if has exercises */}
+      {hasExercises && (
+        <TrainingActionButtons
+          onFinishWorkout={onFinishWorkoutClick}
+          isSaving={isSaving}
+          onOpenAddExercise={handleOpenAddExercise}
+          hasExercises={hasExercises}
+          className="md:hidden"
+          showOnMobile={true}
+        />
+      )}
       
       {/* Only show debugger in development */}
       {showDebugger && <SetsDebugger />}
@@ -236,12 +253,14 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
         hasNext={!!nextExerciseName}
       />
 
-      {/* Floating Action Button for Adding Sets */}
-      <ExerciseFAB 
-        visible={!!focusedExercise && !showRestTimerModal && !showEnhancedRestTimer}
-        onAddSet={handleAddSetToFocused}
-        position="bottom-center"
-      />
+      {/* Floating Action Button for Adding Sets - only show if focused on an exercise */}
+      {focusedExercise && (
+        <ExerciseFAB 
+          visible={!!focusedExercise && !showRestTimerModal && !showEnhancedRestTimer}
+          onAddSet={handleAddSetToFocused}
+          position="bottom-center"
+        />
+      )}
 
       {/* Sheets - Now explicitly pass all required props and handlers */}
       <TrainingSessionSheets 

@@ -1,31 +1,28 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { AddExerciseButton } from './AddExerciseButton';
 
 interface DirectAddExerciseButtonProps {
   onAddExercise: (exerciseName: string) => void;
 }
 
-export const DirectAddExerciseButton: React.FC<DirectAddExerciseButtonProps> = ({
-  onAddExercise
+export const DirectAddExerciseButton: React.FC<DirectAddExerciseButtonProps> = ({ 
+  onAddExercise 
 }) => {
-  const handleClick = () => {
-    console.log('DirectAddExerciseButton: Direct test button clicked');
-    // Use a hardcoded exercise name for testing
-    const testExerciseName = "Bench Press";
-    console.log('DirectAddExerciseButton: Attempting to add:', testExerciseName);
-    onAddExercise(testExerciseName);
+  const handleOpenExerciseSheet = () => {
+    console.log('DirectAddExerciseButton: Opening exercise sheet');
+    // This would normally add a directly selected exercise, but we'll use it to open the sheet
+    // We'll pass an empty string to signal we want to open the exercise selection UI
+    onAddExercise('');
   };
-
+  
   return (
-    <Button 
-      onClick={handleClick} 
-      className="absolute top-2 right-2 bg-red-600 hover:bg-red-700"
-      size="sm"
-    >
-      <PlusCircle className="mr-1 h-4 w-4" />
-      TEST ADD
-    </Button>
+    <div className="flex justify-center px-4 my-6">
+      <AddExerciseButton
+        onClick={handleOpenExerciseSheet}
+        label="Add Your First Exercise"
+        className="max-w-md"
+      />
+    </div>
   );
 };
