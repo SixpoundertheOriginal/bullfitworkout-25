@@ -1,12 +1,12 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dumbbell } from "lucide-react";
+import { Dumbbell, Plus } from "lucide-react";
 import { TrainingStartButton } from './TrainingStartButton';
-import { useWorkoutState } from '@/hooks/useWorkoutState';
+import { useWorkoutStore } from '@/store/workout/store';
 import { useExerciseSuggestions } from '@/hooks/useExerciseSuggestions';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
 
 interface WorkoutStarterProps {
   trainingType?: string;
@@ -17,9 +17,36 @@ export const WorkoutStarter: React.FC<WorkoutStarterProps> = ({
   trainingType = "strength",
   onAddExerciseClick 
 }) => {
-  const { isActive, exercises } = useWorkoutState();
+  const navigate = useNavigate();
+  const { isActive, exercises, startWorkout, updateLastActiveRoute } = useWorkoutStore();
   const { suggestedExercises } = useExerciseSuggestions(trainingType);
   const hasExercises = Object.keys(exercises).length > 0;
+  
+  // Handle starting a new workout and immediately navigating to add exercises
+  const handleStartAndAddExercises = () => {
+    console.log('WorkoutStarter: handleStartAndAddExercises called');
+    
+    // If there's a custom handler provided, use that instead
+    if (onAddExerciseClick) {
+      console.log('WorkoutStarter: Using provided onAddExerciseClick handler');
+      onAddExerciseClick();
+      return;
+    }
+    
+    // Otherwise, start a workout and navigate to the training session
+    console.log('WorkoutStarter: Starting workout and navigating to training session');
+    startWorkout();
+    updateLastActiveRoute('/training-session');
+    navigate('/training-session');
+    
+    // Show notification for adding exercises
+    setTimeout(() => {
+      toast({
+        title: "Add your first exercise",
+        description: "Click the + button to start tracking your workout"
+      });
+    }, 300);
+  };
   
   // Don't show this component if a workout is active and has exercises
   if (isActive && hasExercises) {
@@ -63,7 +90,15 @@ export const WorkoutStarter: React.FC<WorkoutStarterProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col items-center justify-center p-10">
-        <TrainingStartButton label="Start Workout" />
+        <TrainingStartButton 
+          label="Start Workout" 
+          onStartClick={() => {
+            console.log('WorkoutStarter: TrainingStartButton clicked');
+            startWorkout();
+            updateLastActiveRoute('/training-session');
+            navigate('/training-session');
+          }} 
+        />
         
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-400 mb-2">
