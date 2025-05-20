@@ -1,4 +1,3 @@
-
 import React, { useCallback } from 'react';
 import { useTrainingSession } from "@/hooks/training-session";
 import { ExerciseCompletionConfirmation } from "@/components/training/ExerciseCompletionConfirmation";
@@ -189,7 +188,18 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
             </p>
           </div>
           
+          {/* DirectAddExerciseButton is kept for structure but doesn't render a button */}
           <DirectAddExerciseButton onAddExercise={enhancedHandleAddExercise} />
+
+          {/* Adding a direct way to open the exercise sheet */}
+          <div className="mt-2">
+            <button 
+              onClick={handleOpenAddExercise}
+              className="text-purple-400 hover:text-purple-300 text-sm font-medium"
+            >
+              Open exercise selection
+            </button>
+          </div>
         </div>
       )}
       

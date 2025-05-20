@@ -15,12 +15,12 @@ export const DirectAddExerciseButton: React.FC<DirectAddExerciseButtonProps> = (
     onAddExercise('');
   };
   
+  // Button has been intentionally removed as requested
+  // The component still exists to maintain the codebase structure
+  // and will be replaced with a new button in a future update
   return (
     <div className="flex justify-center px-4 my-6">
-      {/* Button has been removed, we'll add a replacement in the next step */}
-      <div className="py-4">
-        {/* Placeholder div to maintain spacing */}
-      </div>
+      {/* No button rendered - intentionally removed as requested */}
     </div>
   );
 };
