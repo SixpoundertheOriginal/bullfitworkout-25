@@ -1,7 +1,8 @@
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useWorkoutStore } from '@/store/workout';
 import { getExerciseName } from '@/utils/exerciseAdapter';
+import { validateWorkoutState } from '@/store/workout/actions';
 
 /**
  * Hook that provides access to all workout state and actions
@@ -19,6 +20,17 @@ export const useTrainingSessionState = () => {
   
   // Get the workout store state and actions
   const workoutState = useWorkoutStore();
+  
+  // Validate workout state on initialization to prevent zombie workouts
+  useEffect(() => {
+    console.log("Running workout state validation on init");
+    // Add a short delay to ensure store is fully loaded
+    const timer = setTimeout(() => {
+      validateWorkoutState();
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, []);
   
   // Use a memoized structure for improved performance
   const state = useMemo(() => {

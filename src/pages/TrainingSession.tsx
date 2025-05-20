@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWorkoutTimer } from '@/hooks/useWorkoutTimer';
 import { useExercises } from "@/hooks/useExercises";
@@ -8,6 +8,8 @@ import { TrainingSessionLoading } from "@/components/training/TrainingSessionLoa
 import { TrainingSessionContent } from "@/components/training/session/TrainingSessionContent";
 import { WorkoutCompletion } from "@/components/training/WorkoutCompletion";
 import { safeRenderableExercise } from "@/utils/exerciseAdapter";
+import { validateWorkoutState } from '@/store/workout/actions';
+import { toast } from '@/hooks/use-toast';
 
 const TrainingSessionPage = () => {
   const { isLoading: loadingExercises } = useExercises();
@@ -20,11 +22,47 @@ const TrainingSessionPage = () => {
     hasExercises,
     resetSession,
     handleFinishWorkout,
-    isSaving
+    isSaving,
+    workoutStatus
   } = useTrainingSession();
 
   // Initialize the workout timer
   useWorkoutTimer();
+  
+  // Validate workout state when page loads
+  useEffect(() => {
+    console.log("TrainingSessionPage: Running state validation");
+    // Validate with slight delay to ensure store is hydrated
+    const timer = setTimeout(() => {
+      const isValid = validateWorkoutState();
+      if (!isValid) {
+        toast.warning("Workout session was reset due to data inconsistency", {
+          description: "Start a new workout to continue"
+        });
+      }
+    }, 800);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Detect inconsistent state
+  useEffect(() => {
+    const exerciseKeys = Object.keys(exercises);
+    
+    // Check for active workout with no exercises
+    if (workoutStatus === 'active' && exerciseKeys.length === 0) {
+      console.warn("TrainingSessionPage: Detected inconsistent state");
+      toast({
+        title: "Workout data inconsistency detected",
+        description: "Workout appears to be active but has no exercises",
+        variant: "destructive",
+        action: {
+          label: "Reset",
+          onClick: () => resetSession()
+        }
+      });
+    }
+  }, [workoutStatus, exercises, resetSession]);
 
   if (loadingExercises) {
     return <TrainingSessionLoading />;

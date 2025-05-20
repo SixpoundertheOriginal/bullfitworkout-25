@@ -1,4 +1,5 @@
-import React, { useCallback } from 'react';
+
+import React, { useCallback, useEffect } from 'react';
 import { useTrainingSession } from "@/hooks/training-session";
 import { ExerciseCompletionConfirmation } from "@/components/training/ExerciseCompletionConfirmation";
 import { SetsDebugger } from "@/components/training/SetsDebugger";
@@ -17,6 +18,7 @@ import { useWorkoutStore } from '@/store/workout/store';
 import { toast } from "@/hooks/use-toast";
 import { EmptyWorkoutState } from "./EmptyWorkoutState";
 import { StopWorkoutButton } from "../StopWorkoutButton";
+import { validateWorkoutState } from '@/store/workout/actions';
 
 interface TrainingSessionContentProps {
   onFinishWorkoutClick: () => void;
@@ -78,6 +80,34 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
 
   // Access the store directly for checking current state
   const workoutStore = useWorkoutStore();
+  
+  // Run workout validation on component mount
+  useEffect(() => {
+    console.log("TrainingSessionContent: Validating workout state on mount");
+    // Short delay to ensure store is fully loaded
+    const timer = setTimeout(() => {
+      validateWorkoutState();
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  // Detect inconsistent state and offer to fix it
+  useEffect(() => {
+    const exerciseKeys = Object.keys(exercises);
+    
+    // Check if workout is active but has no exercises
+    if (workoutStatus === 'active' && exerciseKeys.length === 0) {
+      console.warn("TrainingSessionContent: Detected inconsistent state - active workout with no exercises");
+      toast.error("Workout data inconsistency detected", {
+        description: "The workout appears active but contains no exercises.",
+        action: {
+          label: "Reset Workout",
+          onClick: () => resetSession()
+        }
+      });
+    }
+  }, [workoutStatus, exercises, resetSession]);
   
   // Wrap handleAddExercise with useCallback and add logging
   const enhancedHandleAddExercise = useCallback((exerciseName: string) => {
@@ -240,8 +270,25 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
         />
       )}
       
-      {/* Only show debugger in development */}
-      {showDebugger && <SetsDebugger />}
+      {/* Enhanced debugger in development that shows reset button */}
+      {showDebugger && (
+        <>
+          <SetsDebugger />
+          <div className="fixed bottom-4 left-4 z-50">
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={() => {
+                console.log("Manually triggering validation");
+                validateWorkoutState();
+              }}
+              className="text-xs"
+            >
+              Validate State
+            </Button>
+          </div>
+        </>
+      )}
       
       {/* Exercise Completion Confirmation */}
       <ExerciseCompletionConfirmation
@@ -281,3 +328,6 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     </TrainingSessionLayout>
   );
 };
+
+// Add missing Button import
+import { Button } from "@/components/ui/button";

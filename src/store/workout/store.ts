@@ -1,3 +1,4 @@
+
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { TrainingConfig } from '@/hooks/useTrainingSetupPersistence';
@@ -82,6 +83,34 @@ export const getStore = () => {
     store = createStore();
   }
   return store;
+}
+
+// Helper function to validate workout data structure
+const validateExercises = (exercises: WorkoutExercises): WorkoutExercises => {
+  if (!exercises || typeof exercises !== 'object') {
+    console.warn('workout/store: Invalid exercises data structure, resetting');
+    return {};
+  }
+  
+  const validExercises: WorkoutExercises = {};
+  let hasInvalidData = false;
+  
+  Object.keys(exercises).forEach(key => {
+    const sets = exercises[key];
+    // Check if sets exists and is an array with at least one item
+    if (sets && Array.isArray(sets) && sets.length > 0) {
+      validExercises[key] = sets;
+    } else {
+      hasInvalidData = true;
+      console.warn(`workout/store: Invalid sets for exercise "${key}"`);
+    }
+  });
+  
+  if (hasInvalidData) {
+    console.warn('workout/store: Some exercises were invalid and have been filtered out');
+  }
+  
+  return validExercises;
 }
 
 // Create the store with all the logic
@@ -230,7 +259,7 @@ const createStore = () => create<WorkoutState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         // Only persist these specific parts of the state
-        exercises: state.exercises,
+        exercises: validateExercises(state.exercises),
         activeExercise: state.activeExercise,
         elapsedTime: state.elapsedTime,
         workoutId: state.workoutId,
@@ -251,8 +280,49 @@ const createStore = () => create<WorkoutState>()(
             return;
           }
           
-          if (rehydratedState && rehydratedState.isActive) {
-            console.log('Rehydrated workout state:', rehydratedState);
+          if (rehydratedState) {
+            console.log('Rehydrated workout state:', {
+              hasExercises: rehydratedState.exercises ? Object.keys(rehydratedState.exercises).length > 0 : false,
+              exerciseCount: rehydratedState.exercises ? Object.keys(rehydratedState.exercises).length : 0,
+              isActive: rehydratedState.isActive,
+              workoutStatus: rehydratedState.workoutStatus,
+            });
+            
+            // Validate exercises after rehydration
+            const validatedExercises = validateExercises(rehydratedState.exercises || {});
+            const exerciseKeys = Object.keys(validatedExercises);
+            
+            // Detect zombie state: workout active but no exercises
+            if (rehydratedState.isActive && exerciseKeys.length === 0) {
+              console.warn('Detected zombie workout state - active but no exercises');
+              
+              // Reset the workout in the next event loop
+              setTimeout(() => {
+                actions.resetSession();
+              }, 100);
+              
+              return;
+            }
+            
+            // If activeExercise is set but doesn't exist in exercises, clear it
+            if (rehydratedState.activeExercise && !exerciseKeys.includes(rehydratedState.activeExercise)) {
+              console.warn('Active exercise does not exist in loaded exercises, clearing');
+              
+              setTimeout(() => {
+                const store = getStore();
+                store.setState({ activeExercise: null });
+              }, 100);
+            }
+            
+            // If focusedExercise is set but doesn't exist in exercises, clear it
+            if (rehydratedState.focusedExercise && !exerciseKeys.includes(rehydratedState.focusedExercise)) {
+              console.warn('Focused exercise does not exist in loaded exercises, clearing');
+              
+              setTimeout(() => {
+                const store = getStore();
+                store.setState({ focusedExercise: null });
+              }, 100);
+            }
             
             // Update elapsed time based on stored start time for active workouts
             if (rehydratedState.isActive && rehydratedState.startTime) {

@@ -1,4 +1,3 @@
-
 import { toast } from "@/hooks/use-toast";
 import { WorkoutExercises, WorkoutError, WorkoutStatus } from "./types";
 import { getStore } from "./store";
@@ -112,6 +111,18 @@ export const endWorkout = () => {
 export const resetSession = () => {
   const store = getStore();
   
+  // First, log the current state to help with debugging
+  const currentState = store.getState();
+  console.log("Resetting workout session. Current state:", {
+    exerciseCount: Object.keys(currentState.exercises).length,
+    exercises: Object.keys(currentState.exercises),
+    activeExercise: currentState.activeExercise,
+    focusedExercise: currentState.focusedExercise,
+    isActive: currentState.isActive,
+    workoutStatus: currentState.workoutStatus
+  });
+
+  // Clear absolutely everything to prevent zombie states
   store.setState({ 
     exercises: {},
     activeExercise: null,
@@ -134,7 +145,14 @@ export const resetSession = () => {
     lastCompletedSetIndex: null,
   });
   
-  console.log("Workout session reset");
+  console.log("Workout session reset complete");
+  
+  // Force clear localStorage directly as well to ensure a clean state
+  try {
+    localStorage.removeItem('workout-storage');
+  } catch (e) {
+    console.error("Failed to clear localStorage:", e);
+  }
 };
 
 // Status management
@@ -294,3 +312,68 @@ export const applySetRecommendation = (
     return {}; // No changes needed
   });
 };
+
+// New function to detect and repair inconsistent state
+export const validateWorkoutState = () => {
+  const store = getStore();
+  const state = store.getState();
+  const exerciseKeys = Object.keys(state.exercises);
+  const exerciseCount = exerciseKeys.length;
+  
+  console.log("Validating workout state:", {
+    exerciseKeys,
+    exerciseCount,
+    isActive: state.isActive
+  });
+  
+  // Check for zombie state: workout active but no exercises
+  if (state.isActive && exerciseCount === 0) {
+    console.log("Detected zombie state: workout active but no exercises");
+    toast.error("Workout data inconsistency detected. Resetting session.", {
+      description: "The workout appeared to be active but contained no exercises."
+    });
+    resetSession();
+    return false;
+  }
+  
+  // Check for invalid exercises (empty objects)
+  const hasInvalidExercises = exerciseKeys.some(key => {
+    const sets = state.exercises[key];
+    return !sets || !Array.isArray(sets) || sets.length === 0;
+  });
+  
+  if (hasInvalidExercises) {
+    console.log("Detected invalid exercises with no sets");
+    // Clean up the invalid exercises
+    const validExercises = { ...state.exercises };
+    let hasChanged = false;
+    
+    exerciseKeys.forEach(key => {
+      const sets = validExercises[key];
+      if (!sets || !Array.isArray(sets) || sets.length === 0) {
+        delete validExercises[key];
+        hasChanged = true;
+      }
+    });
+    
+    if (hasChanged) {
+      toast.warning("Some exercises were invalid and have been removed.", {
+        description: "Your workout has been repaired."
+      });
+      
+      store.setState({ 
+        exercises: validExercises,
+        lastTabActivity: Date.now(),
+      });
+      
+      // If no exercises left after cleanup, reset the session
+      if (Object.keys(validExercises).length === 0 && state.isActive) {
+        console.log("No valid exercises left after cleanup, resetting session");
+        resetSession();
+        return false;
+      }
+    }
+  }
+  
+  return true;
+}
