@@ -10,6 +10,7 @@ import { WorkoutCompletion } from "@/components/training/WorkoutCompletion";
 import { safeRenderableExercise } from "@/utils/exerciseAdapter";
 import { validateWorkoutState } from '@/store/workout/actions';
 import { toast } from '@/hooks/use-toast';
+import { FloatingAddExerciseButton } from '@/components/training/FloatingAddExerciseButton';
 
 const TrainingSessionPage = () => {
   const { isLoading: loadingExercises } = useExercises();
@@ -23,7 +24,8 @@ const TrainingSessionPage = () => {
     resetSession,
     handleFinishWorkout,
     isSaving,
-    workoutStatus
+    workoutStatus,
+    setIsAddExerciseSheetOpen
   } = useTrainingSession();
 
   // Initialize the workout timer
@@ -105,6 +107,11 @@ const TrainingSessionPage = () => {
       });
   };
 
+  // Quick handler to open add exercise sheet from anywhere
+  const handleOpenAddExercise = () => {
+    setIsAddExerciseSheetOpen(true);
+  };
+
   // If showing completion modal, render that instead
   if (showCompletion) {
     return (
@@ -126,11 +133,24 @@ const TrainingSessionPage = () => {
     );
   }
 
+  // Empty state detector for global floating button
+  const isEmptyState = Object.keys(exercises).length === 0;
+
   return (
-    <TrainingSessionContent 
-      onFinishWorkoutClick={handleFinishWorkoutClick}
-      isSaving={isSaving}
-    />
+    <>
+      <TrainingSessionContent 
+        onFinishWorkoutClick={handleFinishWorkoutClick}
+        isSaving={isSaving}
+      />
+      
+      {/* Global floating add exercise button that appears on empty state */}
+      {isEmptyState && (
+        <FloatingAddExerciseButton 
+          onClick={handleOpenAddExercise}
+          className="md:hidden" // Show only on mobile for empty state
+        />
+      )}
+    </>
   );
 };
 

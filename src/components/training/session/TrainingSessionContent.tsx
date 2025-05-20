@@ -19,6 +19,7 @@ import { toast } from "@/hooks/use-toast";
 import { EmptyWorkoutState } from "./EmptyWorkoutState";
 import { StopWorkoutButton } from "../StopWorkoutButton";
 import { validateWorkoutState } from '@/store/workout/actions';
+import { FloatingAddExerciseButton } from "@/components/training/FloatingAddExerciseButton";
 
 interface TrainingSessionContentProps {
   onFinishWorkoutClick: () => void;
@@ -310,6 +311,14 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
           visible={!!focusedExercise && !showRestTimerModal && !showEnhancedRestTimer}
           onAddSet={handleAddSetToFocused}
           position="bottom-center"
+        />
+      )}
+
+      {/* New engaging FloatingAddExerciseButton - show only if we have exercises and not focused on one */}
+      {hasExercises && !focusedExercise && !showRestTimerModal && !showEnhancedRestTimer && (
+        <FloatingAddExerciseButton
+          onClick={handleOpenAddExercise}
+          className="hidden md:flex" // Hide on mobile, show on desktop
         />
       )}
 
