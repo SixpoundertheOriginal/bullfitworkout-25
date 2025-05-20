@@ -14,8 +14,19 @@ export const TrainingSessionSheets: React.FC = () => {
     isRatingSheetOpen,
     setIsRatingSheetOpen,
     handleSubmitRating,
-    trainingConfig
+    trainingConfig,
+    lastCompletedExercise,
+    lastCompletedSetIndex
   } = useTrainingSession();
+
+  // Get the last completed exercise details for the rating sheet
+  const exerciseName = lastCompletedExercise || '';
+  const setDetails = lastCompletedExercise && typeof lastCompletedSetIndex === 'number' ? 
+    {
+      set_number: lastCompletedSetIndex + 1,
+      weight: 0,
+      reps: 0
+    } : undefined;
 
   return (
     <>
@@ -44,7 +55,9 @@ export const TrainingSessionSheets: React.FC = () => {
       <PostSetRatingSheet
         open={isRatingSheetOpen}
         onOpenChange={setIsRatingSheetOpen}
-        onSubmit={handleSubmitRating}
+        onSubmitRating={handleSubmitRating}
+        exerciseName={exerciseName}
+        setDetails={setDetails}
       />
     </>
   );

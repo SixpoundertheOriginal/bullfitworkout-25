@@ -22,7 +22,7 @@ const RPE_RATINGS = [
   { value: 10, label: "Maximum", description: "Could not complete the set" }
 ];
 
-interface PostSetRatingSheetProps {
+export interface PostSetRatingSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmitRating: (rating: number) => void;
