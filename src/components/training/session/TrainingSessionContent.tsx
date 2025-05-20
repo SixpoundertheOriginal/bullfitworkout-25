@@ -60,6 +60,7 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     attemptRecovery,
     handleAddExercise,
     handleSubmitRating,
+    handleAddSet,
     
     // UI state setters
     setShowCompletionConfirmation,
