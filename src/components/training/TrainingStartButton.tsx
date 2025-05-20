@@ -5,9 +5,10 @@ import { useWorkoutState } from "@/hooks/useWorkoutState";
 import { Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 interface TrainingStartButtonProps {
-  onStartClick: () => void;
+  onStartClick?: () => void;
   className?: string;
   label?: string;
   size?: number;
@@ -20,6 +21,17 @@ export const TrainingStartButton: React.FC<TrainingStartButtonProps> = ({
   size = 140, // Increased default size
 }) => {
   const { isActive } = useWorkoutState();
+  const navigate = useNavigate();
+  
+  // Default handler if onStartClick is not provided
+  const handleStartClick = () => {
+    if (onStartClick) {
+      onStartClick();
+    } else {
+      // Default behavior is to navigate to training session
+      navigate('/training-session');
+    }
+  };
   
   // Don't render if a workout is already active (to avoid confusion)
   if (isActive) {
@@ -39,7 +51,7 @@ export const TrainingStartButton: React.FC<TrainingStartButtonProps> = ({
         <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/20 to-pink-500/20 rounded-full blur-lg opacity-70"></div>
         
         <CircularGradientButton
-          onClick={onStartClick}
+          onClick={handleStartClick}
           size={size}
           ariaLabel="Start training session"
           icon={<Trophy size={size * 0.35} className="text-white" />}

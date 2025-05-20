@@ -10,6 +10,7 @@ import { rankExercises, getCurrentTimeOfDay, RankingCriteria } from "@/utils/exe
 import { useWorkoutState } from "@/hooks/useWorkoutState";
 import { TrainingStartButton } from "@/components/training/TrainingStartButton";
 import { getExerciseName, safeRenderableExercise } from "@/utils/exerciseAdapter";
+import { useNavigate } from "react-router-dom";
 
 interface ExerciseSelectorProps {
   onSelectExercise: (exerciseName: string) => void;
@@ -36,6 +37,7 @@ export function ExerciseSelector({
   const { workouts } = useWorkoutHistory();
   const { exercises: allExercises } = useExercises();
   const { isActive } = useWorkoutState();
+  const navigate = useNavigate();
   const timeOfDay = getCurrentTimeOfDay();
   
   // Extract recently used exercises from workout history
@@ -97,11 +99,19 @@ export function ExerciseSelector({
     onSelectExercise(exerciseName);
   };
 
+  // Handle start workout button click
+  const handleStartWorkout = () => {
+    navigate('/training-session');
+  };
+
   // Render start button if requested and no active workout
   if (showStartButton && !isActive) {
     return (
       <div className="flex flex-col items-center justify-center p-4">
-        <TrainingStartButton label="Start Workout" />
+        <TrainingStartButton 
+          label="Start Workout" 
+          onStartClick={handleStartWorkout}
+        />
         <p className="mt-4 text-sm text-gray-400 max-w-md text-center">
           Start a workout session to begin tracking your exercises and progress
         </p>

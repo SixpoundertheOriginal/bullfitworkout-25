@@ -26,6 +26,10 @@ export const AdaptiveTrainingButton = ({
     navigate('/training-session');
   };
   
+  const handleStartClick = () => {
+    navigate('/training-session');
+  };
+  
   if (isActive) {
     if (variant === 'prominent') {
       return (
@@ -76,7 +80,10 @@ export const AdaptiveTrainingButton = ({
   if (variant === 'prominent') {
     return (
       <div className={`text-center ${className}`}>
-        <TrainingStartButton label="Start Workout" />
+        <TrainingStartButton 
+          label="Start Workout" 
+          onStartClick={handleStartClick}
+        />
       </div>
     );
   }

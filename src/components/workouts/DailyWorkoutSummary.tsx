@@ -37,6 +37,10 @@ export const DailyWorkoutSummary = ({ date, onClose, preview = false }: DailyWor
     navigate(`/training?tab=history&date=${date}`);
   };
   
+  const handleStartWorkout = () => {
+    navigate('/training-session');
+  };
+  
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -127,6 +131,7 @@ export const DailyWorkoutSummary = ({ date, onClose, preview = false }: DailyWor
                 <TrainingStartButton 
                   label="Start Today's Workout" 
                   size={100}
+                  onStartClick={handleStartWorkout}
                 />
               </div>
             )}
