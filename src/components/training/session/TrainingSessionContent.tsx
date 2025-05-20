@@ -11,6 +11,7 @@ import { TrainingSessionTimers } from "@/components/training/TrainingSessionTime
 import { WorkoutMetricsPanel } from "./metrics/WorkoutMetricsPanel";
 import { TrainingSessionLayout } from "./layout/TrainingSessionLayout";
 import { TrainingActionButtons } from "./actions/TrainingActionButtons";
+import { SaveProgress } from "@/types/workout";
 
 interface TrainingSessionContentProps {
   onFinishWorkoutClick: () => void;
@@ -112,7 +113,7 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
       totalSets={totalSets}
       workoutStatus={workoutStatus}
       isRecoveryMode={!!workoutId}
-      saveProgress={0}
+      saveProgress={0 as any} // Fixed: properly cast as SaveProgress or use 0 directly
       onRetrySave={handleAttemptRecovery}
       onAddExercise={handleOpenAddExercise}
       metricsPanel={

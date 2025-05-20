@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { WorkoutSaveStatus } from '@/components/WorkoutSaveStatus';
+import { SaveProgress } from '@/types/workout';
 
 interface TrainingSessionLayoutProps {
   children: React.ReactNode;
@@ -14,7 +15,7 @@ interface TrainingSessionLayoutProps {
   totalSets: number;
   workoutStatus: WorkoutStatus;
   isRecoveryMode: boolean;
-  saveProgress: number;
+  saveProgress: SaveProgress | number;  // Updated type to allow both SaveProgress and number
   onRetrySave: () => void;
   onAddExercise?: () => void;
   metricsPanel?: React.ReactNode;
@@ -40,7 +41,7 @@ export const TrainingSessionLayout: React.FC<TrainingSessionLayoutProps> = ({
       {/* Top save status indicator */}
       <WorkoutSaveStatus 
         status={workoutStatus} 
-        saveProgress={saveProgress}  // Changed from progress to saveProgress
+        saveProgress={saveProgress}  // This line had the type error
         onRetry={onRetrySave} 
       />
       

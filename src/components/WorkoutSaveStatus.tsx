@@ -1,3 +1,4 @@
+
 import React from "react";
 import { SaveProgress, WorkoutStatus } from "@/types/workout";
 import { Loader2, CheckCircle, AlertCircle, Clock, RefreshCw } from "lucide-react";
@@ -7,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 interface WorkoutSaveStatusProps {
   status: WorkoutStatus;
-  saveProgress?: SaveProgress;
+  saveProgress?: SaveProgress | number;  // Updated to accept number as well for backward compatibility
   onRetry?: () => void;
   className?: string;
 }
@@ -26,12 +27,18 @@ export const WorkoutSaveStatus = ({
             <div className="flex items-center">
               <Loader2 className="h-5 w-5 animate-spin mr-2 text-purple-400" />
               <span>
-                {saveProgress?.step === 'workout' && "Creating workout record..."}
-                {saveProgress?.step === 'exercise-sets' && "Saving exercise sets..."}
-                {saveProgress?.step === 'analytics' && "Updating analytics..."}
+                {typeof saveProgress === 'object' && saveProgress?.step === 'workout' && "Creating workout record..."}
+                {typeof saveProgress === 'object' && saveProgress?.step === 'exercise-sets' && "Saving exercise sets..."}
+                {typeof saveProgress === 'object' && saveProgress?.step === 'analytics' && "Updating analytics..."}
+                {typeof saveProgress !== 'object' && "Saving workout..."}
               </span>
             </div>
-            <Progress value={(saveProgress?.completed ?? 0) * 100} className="h-1.5 bg-gray-700" />
+            <Progress 
+              value={typeof saveProgress === 'number' 
+                ? saveProgress * 100 
+                : ((saveProgress?.completed ?? 0) * 100)} 
+              className="h-1.5 bg-gray-700" 
+            />
           </div>
         );
       case 'saved':
