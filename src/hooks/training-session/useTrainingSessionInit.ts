@@ -113,11 +113,14 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
       // If Supabase is integrated and we have a sessionId, invalidate remote record
       if (sessionId) {
         try {
-          // Fix: Use dynamic import properly with explicit type annotations
-          // to avoid TypeScript's excessive type instantiation depth
-          void (async () => {
+          // Resolve TypeScript's excessive type instantiation depth issue
+          // by using a simpler approach with type assertions
+          const invalidateRemoteWorkout = async () => {
             try {
-              const { supabase } = await import('@/integrations/supabase/client');
+              // Use type assertion to help TypeScript with the import
+              const module = await import('@/integrations/supabase/client') as { supabase: any };
+              const { supabase } = module;
+              
               if (!supabase) return;
               
               const result = await supabase
@@ -139,7 +142,10 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
             } catch (err) {
               console.warn("⚠️ Error invalidating remote workout:", err);
             }
-          })();
+          };
+          
+          // Execute the function but don't await its result
+          void invalidateRemoteWorkout();
         } catch (error) {
           // Supabase might not be integrated, silently continue
           console.log("ℹ️ Supabase not available for remote cleanup", error);
