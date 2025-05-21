@@ -11,6 +11,8 @@ import { SetsDebugger } from '../SetsDebugger';
 import { useTrainingSessionState } from '@/hooks/training-session/useTrainingSessionState';
 import { useWorkoutStore } from '@/store/workout';
 import { useTrainingSessionData } from '@/hooks/training-session/useTrainingSessionData';
+import { submitSetRating } from '@/store/workout/actions';
+import { useAddExercise } from '@/store/workout/hooks';
 
 interface TrainingSessionContentProps {
   onFinishWorkoutClick: () => void;
@@ -50,6 +52,9 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
   // Get additional workout state info to determine if we should show empty state
   const { isActive } = useWorkoutStore();
 
+  // Get the addExercise function from the hook
+  const { addExercise } = useAddExercise();
+
   // Need to convert exercises to adaptedExercises
   const adaptedExercises = React.useMemo(() => {
     return exercises;
@@ -63,10 +68,8 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
   // Handler for adding an exercise after selection
   const handleAddExercise = (exerciseName: string) => {
     console.log('TrainingSessionContent: Adding exercise', exerciseName);
-    // Here you would typically add the exercise to the workout
-    // For example by calling a function from your workout store
-    const { addExerciseToWorkout } = require('@/store/workout/actions');
-    addExerciseToWorkout(exerciseName);
+    // Use the hook's addExercise function
+    addExercise(exerciseName);
     
     // Close the sheet afterward
     setIsAddExerciseSheetOpen(false);
@@ -75,7 +78,6 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
   // Handler for when the rating is submitted
   const handleSubmitRating = (rpe: number) => {
     console.log('Submitting RPE rating:', rpe);
-    const { submitSetRating } = require('@/store/workout/actions');
     submitSetRating(rpe);
     
     setIsRatingSheetOpen(false);
@@ -139,4 +141,3 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     </TrainingSessionLayout>
   );
 };
-

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
 import { useWorkoutStore } from '@/store/workout';
-import { resetSession } from '@/store/workout/actions';
+import { resetSession, validateWorkoutState } from '@/store/workout/actions';
 
 /**
  * Emergency component to help developers recover from zombie workout states
@@ -38,7 +38,6 @@ export const EmergencyWorkoutReset: React.FC = () => {
   };
 
   const handleForceValidate = () => {
-    const { validateWorkoutState } = require('@/store/workout/actions');
     const isValid = validateWorkoutState();
     
     toast({
