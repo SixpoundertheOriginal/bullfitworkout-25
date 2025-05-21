@@ -3,19 +3,25 @@ import React from 'react';
 import { TimerDisplay } from './TimerDisplay';
 import { WorkoutStatsDisplay } from './WorkoutStatsDisplay';
 import { cn } from '@/lib/utils';
+import { TrainingConfig } from '@/hooks/useTrainingSetupPersistence';
 
 interface WorkoutMetricsPanelProps {
   elapsedTime: number;
   exerciseCount: number;
   completedSets: number;
   totalSets: number;
-  restTimerActive: boolean;
-  currentRestTime: number;
-  onManualRestStart: () => void;
-  onRestTimerComplete: () => void;
-  onRestTimerReset: () => void;
-  restTimerResetSignal: number;
-  focusedExercise: string | null;
+  isActive?: boolean;
+  lastActivity?: number;
+  workoutId?: string | null;
+  workoutStatus?: string;
+  trainingConfig?: TrainingConfig | null;
+  restTimerActive?: boolean;
+  currentRestTime?: number;
+  onManualRestStart?: () => void;
+  onRestTimerComplete?: () => void;
+  onRestTimerReset?: () => void;
+  restTimerResetSignal?: number;
+  focusedExercise?: string | null;
   onAddExercise?: () => void;  // Added this optional prop
   className?: string;
 }
@@ -25,13 +31,13 @@ export const WorkoutMetricsPanel: React.FC<WorkoutMetricsPanelProps> = ({
   exerciseCount,
   completedSets,
   totalSets,
-  restTimerActive,
-  currentRestTime,
-  onManualRestStart,
-  onRestTimerComplete,
-  onRestTimerReset,
-  restTimerResetSignal,
-  focusedExercise,
+  restTimerActive = false,
+  currentRestTime = 60,
+  onManualRestStart = () => {},
+  onRestTimerComplete = () => {},
+  onRestTimerReset = () => {},
+  restTimerResetSignal = 0,
+  focusedExercise = null,
   onAddExercise,
   className
 }) => {

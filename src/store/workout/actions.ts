@@ -1,3 +1,4 @@
+
 import { toast } from "@/hooks/use-toast";
 import { WorkoutExercises, WorkoutError, WorkoutStatus, ExerciseSet } from "./types";
 import { getStore } from "./store";
@@ -18,7 +19,7 @@ export const createDefaultSet = (exerciseName: string, setNumber: number = 1): E
   set_number: setNumber,
   isEditing: false,
   metadata: {
-    autoCreated: true,
+    autoAdjusted: true, // Changed from autoCreated to autoAdjusted to match the type
     exerciseName,
     createdAt: new Date().toISOString()
   }

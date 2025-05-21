@@ -9,9 +9,14 @@ interface ExerciseListWrapperProps {
   safeActiveExercise: string | null;
   safeFocusedExercise: string | null;
   nextExerciseName: string | null;
-  onFinishWorkout: () => void;
-  isSaving: boolean;
-  onOpenAddExercise: () => void;
+  handleAddExercise?: (exerciseName: string | any) => void;
+  exerciseCount: number;
+  isComplete?: boolean;
+  totalSets: number;
+  completedSets: number;
+  onFinishWorkout?: () => void;
+  isSaving?: boolean;
+  onOpenAddExercise?: () => void;
 }
 
 export const ExerciseListWrapper: React.FC<ExerciseListWrapperProps> = ({
@@ -19,8 +24,13 @@ export const ExerciseListWrapper: React.FC<ExerciseListWrapperProps> = ({
   safeActiveExercise,
   safeFocusedExercise,
   nextExerciseName,
+  handleAddExercise,
+  exerciseCount,
+  isComplete = false,
+  totalSets,
+  completedSets,
   onFinishWorkout,
-  isSaving,
+  isSaving = false,
   onOpenAddExercise
 }) => {
   const {

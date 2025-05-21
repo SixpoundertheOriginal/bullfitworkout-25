@@ -10,6 +10,7 @@ import { FloatingAddExerciseButton } from '../FloatingAddExerciseButton';
 import { SetsDebugger } from '../SetsDebugger';
 import { useTrainingSessionState } from '@/hooks/training-session/useTrainingSessionState';
 import { useWorkoutStore } from '@/store/workout';
+import { useTrainingSessionData } from '@/hooks/training-session/useTrainingSessionData';
 
 interface TrainingSessionContentProps {
   onFinishWorkoutClick: () => void;
@@ -33,20 +34,26 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     lastCompletedExercise,
     lastCompletedSetIndex,
     elapsedTime,
-    completedSets,
-    totalSets,
-    adaptedExercises,
     activeExercise,
-    focusedExercise,
-    handleAddExercise,
-    handleFinishWorkout,
-    exerciseCount
+    focusedExercise
   } = useTrainingSessionState();
+  
+  // Use the hook to get computed data from exercises
+  const {
+    hasExercises,
+    exerciseCount,
+    totalSets,
+    completedSets,
+    nextExerciseName
+  } = useTrainingSessionData(exercises, focusedExercise);
 
   // Get additional workout state info to determine if we should show empty state
   const { isActive } = useWorkoutStore();
-  
-  const hasExercises = exerciseCount > 0;
+
+  // Need to convert exercises to adaptedExercises
+  const adaptedExercises = React.useMemo(() => {
+    return exercises;
+  }, [exercises]);
   
   const handleOpenAddExerciseSheet = () => {
     console.log('TrainingSessionContent: Opening add exercise sheet');
@@ -81,17 +88,18 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
           adaptedExercises={adaptedExercises}
           safeActiveExercise={activeExercise}
           safeFocusedExercise={focusedExercise}
-          nextExerciseName=""
-          handleAddExercise={handleAddExercise}
+          nextExerciseName={nextExerciseName || ""}
           exerciseCount={exerciseCount}
           isComplete={false}
           totalSets={totalSets}
           completedSets={completedSets}
+          onFinishWorkout={onFinishWorkoutClick}
+          isSaving={isSaving}
+          onOpenAddExercise={onOpenAddExercise || handleOpenAddExerciseSheet}
         />
       ) : (
         <EmptyWorkoutState 
           onAddExerciseClick={handleOpenAddExerciseSheet}
-          onTemplateSelect={handleAddExercise}
         />
       )}
 
@@ -112,7 +120,6 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
         setIsAddExerciseSheetOpen={setIsAddExerciseSheetOpen}
         isRatingSheetOpen={isRatingSheetOpen}
         setIsRatingSheetOpen={setIsRatingSheetOpen}
-        handleAddExercise={handleAddExercise}
         handleSubmitRating={handleSubmitRating}
         trainingConfig={trainingConfig}
         lastCompletedExercise={lastCompletedExercise}

@@ -14,6 +14,8 @@ export interface ExerciseSet {
   rpe?: number;
   metadata?: {
     autoAdjusted?: boolean;
+    exerciseName?: string;
+    createdAt?: string;
     previousValues?: {
       weight?: number;
       reps?: number;
