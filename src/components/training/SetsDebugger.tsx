@@ -3,6 +3,7 @@ import React from 'react';
 import { useWorkoutStore } from '@/store/workout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { EmergencyWorkoutReset } from './EmergencyWorkoutReset';
 
 /**
  * This is a development-only component to help debug workout state issues
@@ -63,6 +64,9 @@ export const SetsDebugger: React.FC = () => {
             <div className="text-gray-500">No exercises in workout</div>
           )}
         </div>
+        
+        {/* Add the emergency reset component */}
+        <EmergencyWorkoutReset />
       </CardContent>
     </Card>
   );

@@ -7,6 +7,20 @@ import { createDefaultSet } from "@/hooks/training-session/useTrainingSessionHan
 export const generateSessionId = () =>
   crypto.randomUUID ? crypto.randomUUID() : `session-${Date.now()}`;
 
+// Create a default set - making this function public so it can be used in other functions
+export const createDefaultSet = (exerciseName: string, setNumber: number = 1) => ({
+  weight: 0,
+  reps: 10,
+  restTime: 60,
+  completed: false,
+  set_number: setNumber,
+  metadata: {
+    autoCreated: true,
+    exerciseName,
+    createdAt: new Date().toISOString()
+  }
+});
+
 // Exercise management actions
 export const handleCompleteSet = (exerciseName: string, setIndex: number) => {
   const store = getStore();
@@ -143,6 +157,7 @@ export const resetSession = () => {
 
   try {
     localStorage.removeItem("workout-storage");
+    console.log("Workout storage cleared from localStorage");
   } catch (e) {
     console.error("Failed to clear localStorage:", e);
   }
@@ -324,8 +339,24 @@ export const validateWorkoutState = () => {
 
   for (const key of exerciseKeys) {
     const sets = validExercises[key];
-    const isValid = Array.isArray(sets) && sets.every(set => {
+    
+    // First check if sets array exists and is valid
+    if (!Array.isArray(sets) || sets.length === 0) {
+      console.warn(`Exercise "${key}" has empty or invalid sets array. Repairing with default sets.`);
+      validExercises[key] = [
+        createDefaultSet(key, 1),
+        createDefaultSet(key, 2),
+        createDefaultSet(key, 3)
+      ];
+      repaired++;
+      continue;
+    }
+    
+    // Check each set for validity
+    const isValid = sets.every(set => {
       return (
+        typeof set === 'object' &&
+        set !== null &&
         typeof set.reps === "number" &&
         typeof set.restTime === "number" &&
         typeof set.set_number === "number"
