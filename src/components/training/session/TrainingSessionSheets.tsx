@@ -74,6 +74,10 @@ export const TrainingSessionSheets: React.FC<TrainingSessionSheetsProps> = ({
     console.log('TrainingSessionSheets: Closing sheet after selection');
     setIsAddExerciseSheetOpen(false);
   };
+  
+useEffect(() => {
+  console.log("🟡 Sheets re-rendered with open =", isAddExerciseSheetOpen);
+}, [isAddExerciseSheetOpen]);
 
   return (
     <>
