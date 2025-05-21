@@ -12,7 +12,9 @@ import { toast } from '@/hooks/use-toast';
 export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean, startWorkout: () => void) => {
   const { storedConfig, saveConfig } = useTrainingSetupPersistence();
   const cleanupPerformedRef = useRef(false);
-  const { resetSession } = useWorkoutStore();
+  
+  // Get workout store state at the top level of the hook
+  const { exercises, sessionId, isActive: storeIsActive, resetSession } = useWorkoutStore();
   
   // Explicitly implement with the centralized type
   const loadTrainingConfig: LoadTrainingConfigFn = useCallback(() => {
@@ -45,21 +47,17 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
     // Only run this check once per component mount
     if (cleanupPerformedRef.current) return;
     
-    // Get the current workout state
-    // Changed: Using the store directly instead of trying to access getState()
-    const exercises = useWorkoutStore().exercises;
-    const sessionId = useWorkoutStore().sessionId;
-    const isStoreActive = useWorkoutStore().isActive;
+    // Use the workout state obtained from the hook at the top level
     let zombieDetected = false;
     
     console.log('🔍 Checking for zombie workout state on app boot:', {
       exerciseCount: Object.keys(exercises).length,
-      isActive: isStoreActive,
+      isActive: storeIsActive,
       hasExercises
     });
     
     // Case 1: Check for empty exercise objects
-    if (isStoreActive && Object.keys(exercises).length === 0) {
+    if (storeIsActive && Object.keys(exercises).length === 0) {
       console.warn('🧟‍♂️ Detected zombie workout: active but no exercises');
       zombieDetected = true;
     }
@@ -149,7 +147,7 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
     
     // Mark cleanup as performed
     cleanupPerformedRef.current = true;
-  }, [resetSession, hasExercises]);
+  }, [exercises, storeIsActive, hasExercises, sessionId, resetSession]);
   
   return {
     loadTrainingConfig,
