@@ -29,13 +29,13 @@ export const TrainingSessionSheets: React.FC<TrainingSessionSheetsProps> = ({
   lastCompletedExercise,
   lastCompletedSetIndex
 }) => {
-  console.log('TrainingSessionSheets: Component rendering with props:', { 
+  console.log('🚀 TrainingSessionSheets: Component rendering with props:', { 
     isAddExerciseSheetOpen, 
     isRatingSheetOpen 
   });
 
   useEffect(() => {
-    console.log("🟡 Sheets re-rendered with open =", isAddExerciseSheetOpen);
+    console.log("🟡 TrainingSessionSheets: Sheet open state changed:", isAddExerciseSheetOpen);
   }, [isAddExerciseSheetOpen]);
 
   const handleSelectExercise = (exerciseName: string) => {
@@ -44,22 +44,39 @@ export const TrainingSessionSheets: React.FC<TrainingSessionSheetsProps> = ({
       return;
     }
 
-    console.log('TrainingSessionSheets: handleSelectExercise called with', exerciseName);
-    console.log('TrainingSessionSheets: Current exercises before adding:', 
+    console.log('🔵 TrainingSessionSheets: handleSelectExercise called with:', exerciseName);
+    
+    // First, check current exercise state
+    console.log('🔄 TrainingSessionSheets: Current exercises before adding:', 
       Object.keys(getStore().getState().exercises));
 
+    // Call the parent's handler to add the exercise
     handleAddExercise(exerciseName);
 
-    setTimeout(() => {
-      console.log('TrainingSessionSheets: Exercises after adding (timeout check):', 
-        Object.keys(getStore().getState().exercises));
-    }, 500);
-
-    console.log('🟢 Scheduling sheet close after short delay');
-    setTimeout(() => {
-      console.log('✅ Closing sheet after delay');
-      setIsAddExerciseSheetOpen(false);
-    }, 300);
+    // We'll delay closing the sheet to ensure the exercise is fully added first
+    console.log('⏳ TrainingSessionSheets: Delaying sheet close to ensure exercise is added');
+    
+    // Schedule a verification check before closing
+    const checkAddedAndClose = () => {
+      const storeExercises = getStore().getState().exercises;
+      console.log('✅ TrainingSessionSheets: Verification before close - exercises in store:', 
+        Object.keys(storeExercises));
+      
+      const exerciseAdded = !!storeExercises[exerciseName];
+      console.log('✅ TrainingSessionSheets: Exercise added successfully?', exerciseAdded);
+      
+      // Only close if the exercise was successfully added
+      if (exerciseAdded) {
+        console.log('🔒 TrainingSessionSheets: Exercise added, now closing sheet');
+        setIsAddExerciseSheetOpen(false);
+      } else {
+        console.warn('🚫 TrainingSessionSheets: Exercise not added! Keeping sheet open');
+        // Keep sheet open if exercise wasn't added
+      }
+    };
+    
+    // Delay closure to ensure the exercise is added first
+    setTimeout(checkAddedAndClose, 300);
   };
 
   return (
@@ -67,7 +84,7 @@ export const TrainingSessionSheets: React.FC<TrainingSessionSheetsProps> = ({
       <AddExerciseSheet
         open={isAddExerciseSheetOpen}
         onOpenChange={(isOpen) => {
-          console.log('TrainingSessionSheets: AddExerciseSheet onOpenChange called with:', isOpen);
+          console.log('🔄 TrainingSessionSheets: AddExerciseSheet onOpenChange called with:', isOpen);
           setIsAddExerciseSheetOpen(isOpen);
         }}
         onSelectExercise={handleSelectExercise}

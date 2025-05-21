@@ -1,6 +1,7 @@
 import { toast } from "@/hooks/use-toast";
 import { WorkoutExercises, WorkoutError, WorkoutStatus } from "./types";
 import { getStore } from "./store";
+import { createDefaultSet } from "@/hooks/training-session/useTrainingSessionHandlers";
 
 // Generate a unique session ID
 export const generateSessionId = () => 
@@ -35,8 +36,13 @@ export const deleteExercise = (exerciseName: string) => {
   const store = getStore();
   
   store.setState(state => {
+    console.log(`Deleting exercise: ${exerciseName}`);
+    console.log(`Before deletion - exercise count: ${Object.keys(state.exercises).length}`);
+    
     const newExercises = { ...state.exercises };
     delete newExercises[exerciseName];
+    
+    console.log(`After deletion - exercise count: ${Object.keys(newExercises).length}`);
     
     // Show notification
     toast.success(`Removed ${exerciseName} from workout`);
@@ -67,7 +73,9 @@ export const deleteExercise = (exerciseName: string) => {
         });
       }
     }, 500);
-    validateWorkoutState();
+    
+    // Always validate after deletion
+    setTimeout(() => validateWorkoutState(), 100);
 
     return newState;
   });
@@ -314,7 +322,7 @@ export const applySetRecommendation = (
   });
 };
 
-// New function to detect and repair inconsistent state
+// New function to detect and repair inconsistent state with improved validation
 export const validateWorkoutState = () => {
   const store = getStore();
   const state = store.getState();
@@ -344,36 +352,46 @@ export const validateWorkoutState = () => {
   });
   
   if (hasInvalidExercises) {
-    console.log("Detected invalid exercises with no sets");
-    // Clean up the invalid exercises
+    console.log("Detected invalid exercises with no sets - attempting repair");
+    // Instead of just removing, try to repair invalid exercises
     const validExercises = { ...state.exercises };
     let hasChanged = false;
+    let exercisesRepaired = 0;
     
     exerciseKeys.forEach(key => {
       const sets = validExercises[key];
       if (!sets || !Array.isArray(sets) || sets.length === 0) {
-        delete validExercises[key];
+        console.log(`Attempting to repair invalid exercise: "${key}"`);
+        
+        // Instead of deleting, try to repair by adding default sets
+        validExercises[key] = [
+          createDefaultSet(key, 1),
+          createDefaultSet(key, 2),
+          createDefaultSet(key, 3)
+        ];
         hasChanged = true;
+        exercisesRepaired++;
       }
     });
     
     if (hasChanged) {
-      toast.warning("Some exercises were invalid and have been removed.", {
-        description: "Your workout has been repaired."
+      toast.success(`Workout data repaired`, {
+        description: `Fixed ${exercisesRepaired} invalid exercise(s)`
       });
       
       store.setState({ 
         exercises: validExercises,
         lastTabActivity: Date.now(),
       });
-      
-      // If no exercises left after cleanup, reset the session
-      if (Object.keys(validExercises).length === 0 && state.isActive) {
-        console.log("No valid exercises left after cleanup, resetting session");
-        resetSession();
-        return false;
-      }
     }
+  }
+  
+  // One more final check - if we still have no valid exercises after repair attempts and
+  // the workout is active, then reset
+  if (Object.keys(state.exercises).length === 0 && state.isActive) {
+    console.log("No valid exercises left after repair attempts, resetting session");
+    resetSession();
+    return false;
   }
   
   return true;

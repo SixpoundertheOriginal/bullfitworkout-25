@@ -31,7 +31,11 @@ export const FloatingAddExerciseButton: React.FC<FloatingAddExerciseButtonProps>
   const handleClick = () => {
     console.log('FloatingAddExerciseButton: Button clicked');
     setIsClicked(true);
-    onClick();
+    
+    // Call the onClick handler with a small delay to allow animation
+    setTimeout(() => {
+      onClick();
+    }, 50);
     
     // Add a delayed verification log
     setTimeout(() => {
@@ -42,7 +46,7 @@ export const FloatingAddExerciseButton: React.FC<FloatingAddExerciseButtonProps>
   return (
     <motion.div 
       className={cn(
-        "fixed bottom-24 right-8 z-[100]", // Increased z-index
+        "fixed bottom-24 right-8 z-[80]", // z-index that's high but below sheet
         className
       )}
       initial={{ scale: 0.8, opacity: 0 }}

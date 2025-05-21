@@ -8,6 +8,23 @@ import { AttemptRecoveryFn, HandleCompleteWorkoutFn } from '@/types/workout';
 import { useTrainingSetupPersistence } from '@/hooks/useTrainingSetupPersistence';
 import { getStore } from '@/store/workout/store';
 
+// Helper function to create a valid default set with all required fields
+export const createDefaultSet = (exerciseName: string, setNumber: number = 1): ExerciseSet => ({
+  id: `temp-${exerciseName}-${setNumber}-${Date.now()}`,
+  workout_id: 'temp',
+  exercise_name: exerciseName,
+  set_number: setNumber,
+  weight: 0,
+  reps: 10, // Default to 10 reps
+  restTime: 60,
+  completed: false,
+  isEditing: false,
+  metadata: { 
+    autoAdjusted: false,
+    previousValues: { weight: 0, reps: 10, restTime: 60 }
+  }
+});
+
 /**
  * Hook that provides handler functions for the training session
  */
@@ -61,24 +78,13 @@ export const useTrainingSessionHandlers = (
       return;
     }
     
-    // Add new exercise with default 3 sets - with type-safe metadata
-    const newSets: ExerciseSet[] = Array.from({ length: 3 }, (_, i) => ({
-      id: `temp-${exerciseName}-${i}-${Date.now()}`, // Temporary ID until saved with timestamp for uniqueness
-      workout_id: 'temp', // Temporary workout ID until saved
-      exercise_name: exerciseName,
-      set_number: i + 1,
-      weight: 0,
-      reps: 0,
-      restTime: 60,
-      completed: false,
-      isEditing: false,
-      metadata: { 
-        autoAdjusted: false,
-        previousValues: { weight: 0, reps: 0, restTime: 60 }
-      }
-    }));
+    // Add new exercise with default 3 sets - with valid data structure
+    console.log('useTrainingSessionHandlers: Creating new valid sets for exercise:', exerciseName);
+    const newSets: ExerciseSet[] = Array.from({ length: 3 }, (_, i) => 
+      createDefaultSet(exerciseName, i + 1)
+    );
     
-    console.log('useTrainingSessionHandlers: Created new sets for exercise:', newSets);
+    console.log('useTrainingSessionHandlers: Generated valid sets:', newSets);
     
     // Use both direct update and store update to ensure it works
     setExercises(prev => {
@@ -103,6 +109,18 @@ export const useTrainingSessionHandlers = (
           [exerciseName]: newSets
         });
         console.log('useTrainingSessionHandlers: Direct store update completed');
+        
+        // Verify the exercise was properly added
+        setTimeout(() => {
+          const storeExercises = getStore().getState().exercises;
+          const wasAdded = !!storeExercises[exerciseName];
+          console.log(`useTrainingSessionHandlers: Exercise "${exerciseName}" added successfully: ${wasAdded}`);
+          console.log('useTrainingSessionHandlers: Sets validity check:', 
+            wasAdded ? 
+            `Valid sets: ${Array.isArray(storeExercises[exerciseName])}` : 
+            'Exercise not found'
+          );
+        }, 50);
       }
     }, 10);
     
@@ -122,6 +140,10 @@ export const useTrainingSessionHandlers = (
         Object.keys(storeExercises));
       console.log('useTrainingSessionHandlers: New exercise exists in store:', 
         !!storeExercises[exerciseName]);
+      if (storeExercises[exerciseName]) {
+        console.log('useTrainingSessionHandlers: Set count:', 
+          storeExercises[exerciseName]?.length || 0);
+      }
     }, 500);
   }, [exercises, setExercises, setFocusedExercise]);
   
@@ -131,31 +153,20 @@ export const useTrainingSessionHandlers = (
       
       // Get weight and reps from last set as a starting point
       let weight = 0;
-      let reps = 0;
+      let reps = 10;
       let nextSetNumber = 1;
       
       if (currentSets.length > 0) {
         const lastSet = currentSets[currentSets.length - 1];
         weight = lastSet.weight || 0;
-        reps = lastSet.reps || 0;
+        reps = lastSet.reps || 10;
         nextSetNumber = (lastSet.set_number || 0) + 1;
       }
       
-      const newSet: ExerciseSet = {
-        id: `temp-${exerciseName}-${Date.now()}`,
-        workout_id: 'temp',
-        exercise_name: exerciseName,
-        set_number: nextSetNumber,
-        weight,
-        reps,
-        restTime: 60,
-        completed: false,
-        isEditing: false,
-        metadata: { 
-          autoAdjusted: false,
-          previousValues: { weight, reps, restTime: 60 }
-        }
-      };
+      // Create a new valid set
+      const newSet = createDefaultSet(exerciseName, nextSetNumber);
+      newSet.weight = weight;
+      newSet.reps = reps;
       
       return {
         ...prev,

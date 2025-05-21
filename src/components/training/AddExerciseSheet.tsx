@@ -28,7 +28,7 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
   trainingType = ""
 }) => {
   // Add detailed logging
-  console.log('AddExerciseSheet: Rendering with open state:', open);
+  console.log('📋 AddExerciseSheet: Rendering with open state:', open);
   
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<string>("suggested");
@@ -38,10 +38,20 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
   const { exercises: allExercises = [] } = useExercises();
   const [showAllExercises, setShowAllExercises] = useState(false);
   const [exerciseDialogV2Open, setExerciseDialogV2Open] = useState(false);
+  const [isClosePending, setIsClosePending] = useState(false);
+
+  // Track whether a selection has been made recently
+  const [hasRecentlySelected, setHasRecentlySelected] = useState(false);
 
   // Add effect to track open state changes
   useEffect(() => {
-    console.log('AddExerciseSheet: Open state changed to:', open);
+    console.log('📋 AddExerciseSheet: Open state changed to:', open);
+    
+    // If sheet is opening, reset the selection flag
+    if (open) {
+      setHasRecentlySelected(false);
+      setIsClosePending(false);
+    }
   }, [open]);
 
   // Extract recently used exercises from workout history
@@ -102,27 +112,46 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
       : recentExercises;
   }, [recentExercises, searchQuery]);
 
-  // Always pass exercise name string
+  // Always pass exercise name string and prevent double selections
   const handleAddExercise = (exercise: Exercise | string) => {
     const exerciseName = getExerciseName(exercise);
-    console.log('AddExerciseSheet: handleAddExercise called with', exerciseName);
+    console.log('📋 AddExerciseSheet: handleAddExercise called with', exerciseName);
     
+    if (hasRecentlySelected) {
+      console.log('📋 AddExerciseSheet: Ignoring duplicate selection');
+      return;
+    }
+    
+    // Mark that we've made a selection to prevent duplicates
+    setHasRecentlySelected(true);
+    
+    // Call the parent handler with the exercise name
     onSelectExercise(exerciseName);
-    
-    // Close the sheet immediately after selecting an exercise
-    console.log('AddExerciseSheet: Closing sheet after selecting exercise');
-    onOpenChange(false);
     
     // Show toast notification
     toast({
       title: "Exercise added",
       description: `Added ${exerciseName} to your workout`
     });
+    
+    // Let the parent component handle closing the sheet
+    console.log('📋 AddExerciseSheet: Selection complete, parent will handle closing');
   };
 
   // Handle open state changes with better logging
   const handleOpenChange = (isOpen: boolean) => {
-    console.log('AddExerciseSheet: handleOpenChange called with', isOpen);
+    console.log('📋 AddExerciseSheet: handleOpenChange called with', isOpen);
+    
+    // If trying to close, check if we just selected an exercise
+    if (!isOpen && hasRecentlySelected) {
+      console.log('📋 AddExerciseSheet: Detected close after selection, delaying to ensure exercise is added');
+      setIsClosePending(true);
+      
+      // Let parent decide when to close
+      return;
+    }
+    
+    // Otherwise, pass through the open state change
     onOpenChange(isOpen);
   };
 
@@ -157,7 +186,7 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
       <Sheet open={open} onOpenChange={handleOpenChange}>
         <SheetContent 
           side="bottom" 
-          className="h-[90vh] rounded-t-xl border-t border-gray-700 bg-gray-900 p-0 z-50"
+          className="h-[90vh] rounded-t-xl border-t border-gray-700 bg-gray-900 p-0 z-[100]"
         >
           <AllExercisesPage 
             onSelectExercise={(exercise) => handleAddExercise(getExerciseName(exercise))}
@@ -169,13 +198,13 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
     );
   }
 
-  console.log('AddExerciseSheet: Before final return with open =', open);
+  console.log('📋 AddExerciseSheet: Before final return with open =', open);
   
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent 
         side="bottom" 
-        className="h-[80vh] rounded-t-xl border-t border-gray-700 bg-gray-900 p-0 z-50"
+        className="h-[80vh] rounded-t-xl border-t border-gray-700 bg-gray-900 p-0 z-[100]"
       >
         <div className="flex flex-col h-full">
           {/* Handle for dragging */}
