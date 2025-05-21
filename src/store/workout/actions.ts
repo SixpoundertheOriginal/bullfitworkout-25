@@ -67,7 +67,8 @@ export const deleteExercise = (exerciseName: string) => {
         });
       }
     }, 500);
-    
+    validateWorkoutState();
+
     return newState;
   });
 };
