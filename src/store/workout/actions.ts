@@ -4,26 +4,25 @@ import { getStore } from "./store";
 import { createDefaultSet } from "@/hooks/training-session/useTrainingSessionHandlers";
 
 // Generate a unique session ID
-export const generateSessionId = () => 
+export const generateSessionId = () =>
   crypto.randomUUID ? crypto.randomUUID() : `session-${Date.now()}`;
 
 // Exercise management actions
 export const handleCompleteSet = (exerciseName: string, setIndex: number) => {
   const store = getStore();
-  
+
   store.setState(state => {
     const newExercises = { ...state.exercises };
-    newExercises[exerciseName] = state.exercises[exerciseName].map((set, i) => 
+    newExercises[exerciseName] = state.exercises[exerciseName].map((set, i) =>
       i === setIndex ? { ...set, completed: true } : set
     );
-    
-    // Start the post-set flow after a short delay
+
     setTimeout(() => {
       const store = getStore();
       store.getState().startPostSetFlow(exerciseName, setIndex);
     }, 10);
-    
-    return { 
+
+    return {
       exercises: newExercises,
       lastTabActivity: Date.now(),
       lastCompletedExercise: exerciseName,
@@ -34,31 +33,23 @@ export const handleCompleteSet = (exerciseName: string, setIndex: number) => {
 
 export const deleteExercise = (exerciseName: string) => {
   const store = getStore();
-  
+
   store.setState(state => {
-    console.log(`Deleting exercise: ${exerciseName}`);
-    console.log(`Before deletion - exercise count: ${Object.keys(state.exercises).length}`);
-    
     const newExercises = { ...state.exercises };
     delete newExercises[exerciseName];
-    
-    console.log(`After deletion - exercise count: ${Object.keys(newExercises).length}`);
-    
-    // Show notification
+
     toast.success(`Removed ${exerciseName} from workout`);
-    
-    // Clear focus if this was the focused exercise
+
     const newState: any = {
       exercises: newExercises,
       lastTabActivity: Date.now(),
     };
-    
+
     if (state.focusedExercise === exerciseName) {
       newState.focusedExercise = null;
       newState.focusedSetIndex = null;
     }
-    
-    // Check if this was the last exercise
+
     setTimeout(() => {
       const exerciseCount = Object.keys(newExercises).length;
       if (exerciseCount === 0) {
@@ -68,13 +59,12 @@ export const deleteExercise = (exerciseName: string) => {
             onClick: () => {
               store.getState().endWorkout();
               toast.success("Workout ended");
-            }
-          }
+            },
+          },
         });
       }
     }, 500);
-    
-    // Always validate after deletion
+
     setTimeout(() => validateWorkoutState(), 100);
 
     return newState;
@@ -85,42 +75,40 @@ export const deleteExercise = (exerciseName: string) => {
 export const startWorkout = () => {
   const now = new Date();
   const store = getStore();
-  
-  store.setState({ 
+
+  store.setState({
     isActive: true,
     explicitlyEnded: false,
-    workoutStatus: 'active',
+    workoutStatus: "active",
     startTime: now.toISOString(),
     elapsedTime: 0,
     sessionId: generateSessionId(),
     lastTabActivity: Date.now(),
   });
-  
-  // Show a toast notification
+
   toast.success("Workout started", {
-    description: "Your workout session has begun"
+    description: "Your workout session has begun",
   });
-  
+
   console.log("Workout started at:", now);
 };
 
 export const endWorkout = () => {
   const store = getStore();
-  
-  store.setState({ 
+
+  store.setState({
     isActive: false,
     explicitlyEnded: true,
-    workoutStatus: 'idle',
+    workoutStatus: "idle",
     lastTabActivity: Date.now(),
   });
-  
+
   console.log("Workout ended");
 };
 
 export const resetSession = () => {
   const store = getStore();
-  
-  // First, log the current state to help with debugging
+
   const currentState = store.getState();
   console.log("Resetting workout session. Current state:", {
     exerciseCount: Object.keys(currentState.exercises).length,
@@ -128,17 +116,16 @@ export const resetSession = () => {
     activeExercise: currentState.activeExercise,
     focusedExercise: currentState.focusedExercise,
     isActive: currentState.isActive,
-    workoutStatus: currentState.workoutStatus
+    workoutStatus: currentState.workoutStatus,
   });
 
-  // Clear absolutely everything to prevent zombie states
-  store.setState({ 
+  store.setState({
     exercises: {},
     activeExercise: null,
     elapsedTime: 0,
     workoutId: null,
     startTime: null,
-    workoutStatus: 'idle',
+    workoutStatus: "idle",
     trainingConfig: null,
     restTimerActive: false,
     currentRestTime: 60,
@@ -149,16 +136,13 @@ export const resetSession = () => {
     savingErrors: [],
     focusedExercise: null,
     focusedSetIndex: null,
-    postSetFlow: 'idle',
+    postSetFlow: "idle",
     lastCompletedExercise: null,
     lastCompletedSetIndex: null,
   });
-  
-  console.log("Workout session reset complete");
-  
-  // Force clear localStorage directly as well to ensure a clean state
+
   try {
-    localStorage.removeItem('workout-storage');
+    localStorage.removeItem("workout-storage");
   } catch (e) {
     console.error("Failed to clear localStorage:", e);
   }
@@ -166,48 +150,45 @@ export const resetSession = () => {
 
 // Status management
 export const markAsSaving = () => {
-  getStore().setState({ 
-    workoutStatus: 'saving' as WorkoutStatus,
+  getStore().setState({
+    workoutStatus: "saving" as WorkoutStatus,
     lastTabActivity: Date.now(),
   });
 };
 
 export const markAsSaved = () => {
   const store = getStore();
-  
-  store.setState({ 
-    workoutStatus: 'saved' as WorkoutStatus,
+
+  store.setState({
+    workoutStatus: "saved" as WorkoutStatus,
     isActive: false,
     explicitlyEnded: true,
     lastTabActivity: Date.now(),
   });
-  
-  // Show success notification
+
   toast.success("Workout saved successfully!");
-  
-  // Reset the session after a short delay
+
   setTimeout(() => {
     resetSession();
   }, 500);
 };
 
 export const markAsFailed = (error: WorkoutError) => {
-  getStore().setState((state) => ({ 
-    workoutStatus: 'failed' as WorkoutStatus,
+  getStore().setState(state => ({
+    workoutStatus: "failed" as WorkoutStatus,
     savingErrors: [...(state.savingErrors || []), error],
     lastTabActivity: Date.now(),
   }));
 };
 
-// Post-set flow management
 export const startPostSetFlow = (exerciseName: string, setIndex: number) => {
   getStore().setState(state => {
     if (!state.exercises[exerciseName] || setIndex >= state.exercises[exerciseName].length) {
-      return {}; // Invalid exercise or set index
+      return {};
     }
-    
+
     return {
-      postSetFlow: 'rating',
+      postSetFlow: "rating",
       lastCompletedExercise: exerciseName,
       lastCompletedSetIndex: setIndex,
       focusedExercise: exerciseName,
@@ -219,42 +200,37 @@ export const startPostSetFlow = (exerciseName: string, setIndex: number) => {
 
 export const submitSetRating = (rpe: number) => {
   const store = getStore();
-  
+
   store.setState(state => {
     const { lastCompletedExercise, lastCompletedSetIndex } = state;
-    
+
     if (!lastCompletedExercise || lastCompletedSetIndex === null) {
-      return { postSetFlow: 'idle' }; // Reset if no context
+      return { postSetFlow: "idle" };
     }
-    
+
     const newExercises = { ...state.exercises };
-    
-    // Update the set with the RPE rating
+
     if (newExercises[lastCompletedExercise] && lastCompletedSetIndex < newExercises[lastCompletedExercise].length) {
-      newExercises[lastCompletedExercise] = newExercises[lastCompletedExercise].map((set, i) => 
+      newExercises[lastCompletedExercise] = newExercises[lastCompletedExercise].map((set, i) =>
         i === lastCompletedSetIndex ? { ...set, rpe } : set
       );
-      
-      // Find the next set if it exists
+
       const nextSetIndex = lastCompletedSetIndex + 1;
       const hasNextSet = nextSetIndex < newExercises[lastCompletedExercise].length;
-      
-      // If there's a next set, try to adjust it based on the RPE
+
       if (hasNextSet) {
         const currentSet = newExercises[lastCompletedExercise][lastCompletedSetIndex];
-        
-        // Import recommendations dynamically to avoid circular dependencies
-        import('@/utils/setRecommendations').then(({ getNextSetRecommendation }) => {
+
+        import("@/utils/setRecommendations").then(({ getNextSetRecommendation }) => {
           const recommendation = getNextSetRecommendation(
             currentSet,
             rpe,
             lastCompletedExercise,
             []
           );
-          
-          // Apply the recommendation to the next set
+
           applySetRecommendation(
-            lastCompletedExercise, 
+            lastCompletedExercise,
             nextSetIndex,
             recommendation.weight,
             recommendation.reps,
@@ -263,11 +239,10 @@ export const submitSetRating = (rpe: number) => {
         });
       }
     }
-    
-    // Start rest timer
-    return { 
+
+    return {
       exercises: newExercises,
-      postSetFlow: 'resting',
+      postSetFlow: "resting",
       restTimerActive: true,
       currentRestTime: newExercises[lastCompletedExercise]?.[lastCompletedSetIndex]?.restTime || 60,
       lastTabActivity: Date.now(),
@@ -276,30 +251,31 @@ export const submitSetRating = (rpe: number) => {
 };
 
 export const applySetRecommendation = (
-  exerciseName: string, 
-  setIndex: number, 
-  weight: number, 
-  reps: number, 
+  exerciseName: string,
+  setIndex: number,
+  weight: number,
+  reps: number,
   restTime: number
 ) => {
   getStore().setState(state => {
     if (!state.exercises[exerciseName] || setIndex >= state.exercises[exerciseName].length) {
-      return {}; // Invalid exercise or set index
+      return {};
     }
-    
+
     const newExercises = { ...state.exercises };
     const currentSet = newExercises[exerciseName][setIndex];
-    
-    // Only update if values are actually different
-    if (currentSet.weight !== weight || currentSet.reps !== reps || currentSet.restTime !== restTime) {
-      // Store previous values for reference
+
+    if (
+      currentSet.weight !== weight ||
+      currentSet.reps !== reps ||
+      currentSet.restTime !== restTime
+    ) {
       const previousValues = {
         weight: currentSet.weight,
         reps: currentSet.reps,
-        restTime: currentSet.restTime
+        restTime: currentSet.restTime,
       };
-      
-      // Update the set with new values and mark as auto-adjusted
+
       newExercises[exerciseName][setIndex] = {
         ...currentSet,
         weight,
@@ -308,91 +284,81 @@ export const applySetRecommendation = (
         metadata: {
           ...currentSet.metadata,
           autoAdjusted: true,
-          previousValues
-        }
+          previousValues,
+        },
       };
-      
-      return { 
+
+      return {
         exercises: newExercises,
         lastTabActivity: Date.now(),
       };
     }
-    
-    return {}; // No changes needed
+
+    return {};
   });
 };
 
-// New function to detect and repair inconsistent state with improved validation
 export const validateWorkoutState = () => {
   const store = getStore();
   const state = store.getState();
   const exerciseKeys = Object.keys(state.exercises);
   const exerciseCount = exerciseKeys.length;
-  
+
   console.log("Validating workout state:", {
     exerciseKeys,
     exerciseCount,
-    isActive: state.isActive
+    isActive: state.isActive,
   });
-  
-  // Check for zombie state: workout active but no exercises
+
   if (state.isActive && exerciseCount === 0) {
     console.log("Detected zombie state: workout active but no exercises");
     toast.error("Workout data inconsistency detected. Resetting session.", {
-      description: "The workout appeared to be active but contained no exercises."
+      description: "The workout appeared to be active but contained no exercises.",
     });
     resetSession();
     return false;
   }
-  
-  // Check for invalid exercises (empty objects)
-  const hasInvalidExercises = exerciseKeys.some(key => {
-    const sets = state.exercises[key];
-    return !sets || !Array.isArray(sets) || sets.length === 0;
-  });
-  
-  if (hasInvalidExercises) {
-    console.log("Detected invalid exercises with no sets - attempting repair");
-    // Instead of just removing, try to repair invalid exercises
-    const validExercises = { ...state.exercises };
-    let hasChanged = false;
-    let exercisesRepaired = 0;
-    
-    exerciseKeys.forEach(key => {
-      const sets = validExercises[key];
-      if (!sets || !Array.isArray(sets) || sets.length === 0) {
-        console.log(`Attempting to repair invalid exercise: "${key}"`);
-        
-        // Instead of deleting, try to repair by adding default sets
-        validExercises[key] = [
-          createDefaultSet(key, 1),
-          createDefaultSet(key, 2),
-          createDefaultSet(key, 3)
-        ];
-        hasChanged = true;
-        exercisesRepaired++;
-      }
+
+  let repaired = 0;
+  const validExercises = { ...state.exercises };
+
+  for (const key of exerciseKeys) {
+    const sets = validExercises[key];
+    const isValid = Array.isArray(sets) && sets.every(set => {
+      return (
+        typeof set.reps === "number" &&
+        typeof set.restTime === "number" &&
+        typeof set.set_number === "number"
+      );
     });
-    
-    if (hasChanged) {
-      toast.success(`Workout data repaired`, {
-        description: `Fixed ${exercisesRepaired} invalid exercise(s)`
-      });
-      
-      store.setState({ 
-        exercises: validExercises,
-        lastTabActivity: Date.now(),
-      });
+
+    if (!isValid) {
+      console.warn(`Invalid sets found for exercise: ${key}. Attempting auto-repair.`);
+      validExercises[key] = [
+        createDefaultSet(key, 1),
+        createDefaultSet(key, 2),
+        createDefaultSet(key, 3)
+      ];
+      repaired++;
     }
   }
-  
-  // One more final check - if we still have no valid exercises after repair attempts and
-  // the workout is active, then reset
-  if (Object.keys(state.exercises).length === 0 && state.isActive) {
+
+  if (repaired > 0) {
+    toast.success(`Workout repaired`, {
+      description: `${repaired} exercise(s) were fixed with default sets.`
+    });
+
+    store.setState({
+      exercises: validExercises,
+      lastTabActivity: Date.now(),
+    });
+  }
+
+  if (Object.keys(validExercises).length === 0 && state.isActive) {
     console.log("No valid exercises left after repair attempts, resetting session");
     resetSession();
     return false;
   }
-  
+
   return true;
-}
+};
