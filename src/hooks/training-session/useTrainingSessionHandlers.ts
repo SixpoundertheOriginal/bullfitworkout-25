@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -7,23 +6,7 @@ import { ExerciseSet } from '@/store/workout/types';
 import { AttemptRecoveryFn, HandleCompleteWorkoutFn } from '@/types/workout';
 import { useTrainingSetupPersistence } from '@/hooks/useTrainingSetupPersistence';
 import { getStore } from '@/store/workout/store';
-
-// Helper function to create a valid default set with all required fields
-export const createDefaultSet = (exerciseName: string, setNumber: number = 1): ExerciseSet => ({
-  id: `temp-${exerciseName}-${setNumber}-${Date.now()}`,
-  workout_id: 'temp',
-  exercise_name: exerciseName,
-  set_number: setNumber,
-  weight: 0,
-  reps: 10, // Default to 10 reps
-  restTime: 60,
-  completed: false,
-  isEditing: false,
-  metadata: { 
-    autoAdjusted: false,
-    previousValues: { weight: 0, reps: 10, restTime: 60 }
-  }
-});
+import { createDefaultSet } from '@/store/workout/actions';
 
 /**
  * Hook that provides handler functions for the training session
@@ -163,7 +146,7 @@ export const useTrainingSessionHandlers = (
         nextSetNumber = (lastSet.set_number || 0) + 1;
       }
       
-      // Create a new valid set
+      // Create a new valid set using the imported function
       const newSet = createDefaultSet(exerciseName, nextSetNumber);
       newSet.weight = weight;
       newSet.reps = reps;
@@ -175,8 +158,6 @@ export const useTrainingSessionHandlers = (
     });
   }, [setExercises]);
   
-  // ... keep existing code (remain handlers and functions)
-
   return {
     handleAddExercise,
     handleAddSet,

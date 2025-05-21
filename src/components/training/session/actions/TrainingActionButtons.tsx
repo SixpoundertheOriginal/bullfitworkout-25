@@ -1,61 +1,42 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { cn } from '@/lib/utils';
-import { PlusCircle, CheckCircle } from 'lucide-react';
+import { SaveAll } from "lucide-react";
 
-interface TrainingActionButtonsProps {
+export interface TrainingActionButtonsProps {
   onFinishWorkout: () => void;
-  isSaving: boolean;
-  onOpenAddExercise: () => void;
-  hasExercises: boolean;
-  className?: string;
-  showOnMobile?: boolean;
+  isSubmitting?: boolean;
+  exerciseCount: number;
+  completedSets: number;
 }
 
 export const TrainingActionButtons: React.FC<TrainingActionButtonsProps> = ({
   onFinishWorkout,
-  isSaving,
-  onOpenAddExercise,
-  hasExercises,
-  className,
-  showOnMobile = false
+  isSubmitting = false,
+  exerciseCount,
+  completedSets
 }) => {
-  // If not showing on mobile and we're on a mobile device, hide
-  if (!showOnMobile) {
-    return null;
-  }
+  const disabled = exerciseCount === 0 || completedSets === 0 || isSubmitting;
   
   return (
-    <div className={cn("flex justify-between gap-3 mt-6", className)}>
+    <div className="fixed bottom-20 left-0 right-0 flex justify-center px-4 z-50">
       <Button
-        variant="outline"
-        size="sm"
-        onClick={onOpenAddExercise}
-        className="flex-1 bg-gray-800/90 border-gray-700 text-white hover:bg-gray-700/90 transition-all duration-300"
+        onClick={onFinishWorkout}
+        disabled={disabled}
+        size="lg"
+        variant="default"
+        className={`
+          w-full max-w-md shadow-lg 
+          ${isSubmitting ? 'opacity-80' : 'opacity-100'} 
+          ${disabled 
+            ? 'bg-gray-700 text-gray-300' 
+            : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
+          }
+        `}
       >
-        <PlusCircle className="h-4 w-4 mr-2" />
-        Add Exercise
+        <SaveAll className="mr-2 h-5 w-5" />
+        {isSubmitting ? "Saving..." : "Finish Workout"}
       </Button>
-      
-      {hasExercises && (
-        <Button
-          variant="default"
-          size="sm"
-          onClick={onFinishWorkout}
-          disabled={isSaving}
-          className={cn(
-            "flex-1 transition-all duration-300",
-            "bg-gradient-to-r from-green-600 to-green-500",
-            "hover:from-green-700 hover:to-green-400", 
-            "text-white shadow-md",
-            "border border-green-500/20"
-          )}
-        >
-          <CheckCircle className="h-4 w-4 mr-2" />
-          {isSaving ? "Saving..." : "Finish Workout"}
-        </Button>
-      )}
     </div>
   );
 };

@@ -32,24 +32,27 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     postSetFlow,
     lastCompletedExercise,
     lastCompletedSetIndex,
+    elapsedTime,
+    completedSets,
+    totalSets,
+    adaptedExercises,
+    activeExercise,
+    focusedExercise,
+    handleAddExercise,
+    handleFinishWorkout,
+    exerciseCount
   } = useTrainingSessionState();
 
   // Get additional workout state info to determine if we should show empty state
   const { isActive } = useWorkoutStore();
   
-  const exerciseCount = Object.keys(exercises).length;
   const hasExercises = exerciseCount > 0;
   
-  // Handler for adding an exercise directly or through sheet
-  const handleAddExercise = (exerciseName: string) => {
-    console.log('TrainingSessionContent: handleAddExercise called with', exerciseName);
-    
-    // Forward to the workout store action
-    const { useTrainingSessionHandlers } = require('@/hooks/training-session');
-    const { handleAddExercise: addExercise } = useTrainingSessionHandlers();
-    addExercise(exerciseName);
+  const handleOpenAddExerciseSheet = () => {
+    console.log('TrainingSessionContent: Opening add exercise sheet');
+    setIsAddExerciseSheetOpen(true);
   };
-  
+
   // Handler for when the rating is submitted
   const handleSubmitRating = (rpe: number) => {
     console.log('Submitting RPE rating:', rpe);
@@ -58,28 +61,45 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     
     setIsRatingSheetOpen(false);
   };
-
-  const handleOpenAddExerciseSheet = () => {
-    console.log('TrainingSessionContent: Opening add exercise sheet');
-    setIsAddExerciseSheetOpen(true);
-  };
   
   return (
-    <TrainingSessionLayout
-      workoutMetricsPanel={<WorkoutMetricsPanel />}
-    >
+    <TrainingSessionLayout>
+      <WorkoutMetricsPanel 
+        elapsedTime={elapsedTime}
+        exerciseCount={exerciseCount}
+        completedSets={completedSets}
+        totalSets={totalSets}
+        isActive={isActive}
+        lastActivity={Date.now()}
+        workoutId={null}
+        workoutStatus="active"
+        trainingConfig={trainingConfig}
+      />
+      
       {hasExercises ? (
-        <ExerciseListWrapper />
+        <ExerciseListWrapper 
+          adaptedExercises={adaptedExercises}
+          safeActiveExercise={activeExercise}
+          safeFocusedExercise={focusedExercise}
+          nextExerciseName=""
+          handleAddExercise={handleAddExercise}
+          exerciseCount={exerciseCount}
+          isComplete={false}
+          totalSets={totalSets}
+          completedSets={completedSets}
+        />
       ) : (
         <EmptyWorkoutState 
-          onAddExercise={handleOpenAddExerciseSheet} 
-          isActive={isActive}
+          onAddExerciseClick={handleOpenAddExerciseSheet}
+          onTemplateSelect={handleAddExercise}
         />
       )}
 
       <TrainingActionButtons 
-        onFinishWorkoutClick={onFinishWorkoutClick}
+        onFinishWorkout={onFinishWorkoutClick}
         isSubmitting={isSaving}
+        exerciseCount={exerciseCount}
+        completedSets={completedSets}
       />
       
       <FloatingAddExerciseButton

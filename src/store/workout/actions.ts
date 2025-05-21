@@ -1,19 +1,22 @@
 import { toast } from "@/hooks/use-toast";
-import { WorkoutExercises, WorkoutError, WorkoutStatus } from "./types";
+import { WorkoutExercises, WorkoutError, WorkoutStatus, ExerciseSet } from "./types";
 import { getStore } from "./store";
-import { createDefaultSet } from "@/hooks/training-session/useTrainingSessionHandlers";
 
 // Generate a unique session ID
 export const generateSessionId = () =>
   crypto.randomUUID ? crypto.randomUUID() : `session-${Date.now()}`;
 
 // Create a default set - making this function public so it can be used in other functions
-export const createDefaultSet = (exerciseName: string, setNumber: number = 1) => ({
+export const createDefaultSet = (exerciseName: string, setNumber: number = 1): ExerciseSet => ({
+  id: `temp-${exerciseName}-${setNumber}-${Date.now()}`,
+  workout_id: 'temp',
+  exercise_name: exerciseName,
   weight: 0,
   reps: 10,
   restTime: 60,
   completed: false,
   set_number: setNumber,
+  isEditing: false,
   metadata: {
     autoCreated: true,
     exerciseName,
