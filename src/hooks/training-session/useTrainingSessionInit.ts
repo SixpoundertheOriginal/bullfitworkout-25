@@ -113,34 +113,33 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
       // If Supabase is integrated and we have a sessionId, invalidate remote record
       if (sessionId) {
         try {
-          // Fix 1: Use a proper dynamic import with Promise handling
-          import('@/integrations/supabase/client')
-            .then(({ supabase }) => {
-              if (supabase) {
-                // Attempt to flag this session as abandoned in the database
-                return supabase
-                  .from('workout_sessions')
-                  .update({ 
-                    status: 'abandoned',
-                    metadata: { 
-                      zombie_detected: true, 
-                      cleaned_at: new Date().toISOString() 
-                    }
-                  })
-                  .eq('session_id', sessionId);
-              }
-              return null;
-            })
-            .then((result) => {
-              if (result?.error) {
+          // Fix: Use dynamic import properly with explicit type annotations
+          // to avoid TypeScript's excessive type instantiation depth
+          void (async () => {
+            try {
+              const { supabase } = await import('@/integrations/supabase/client');
+              if (!supabase) return;
+              
+              const result = await supabase
+                .from('workout_sessions')
+                .update({ 
+                  status: 'abandoned',
+                  metadata: { 
+                    zombie_detected: true, 
+                    cleaned_at: new Date().toISOString() 
+                  }
+                })
+                .eq('session_id', sessionId);
+                
+              if (result.error) {
                 console.warn("⚠️ Failed to invalidate remote workout:", result.error);
-              } else if (result) {
+              } else {
                 console.log("🔄 Invalidated remote workout session:", sessionId);
               }
-            })
-            .catch((err) => {
+            } catch (err) {
               console.warn("⚠️ Error invalidating remote workout:", err);
-            });
+            }
+          })();
         } catch (error) {
           // Supabase might not be integrated, silently continue
           console.log("ℹ️ Supabase not available for remote cleanup", error);
