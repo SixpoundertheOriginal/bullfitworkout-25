@@ -6,7 +6,7 @@ import { ExerciseSet } from '@/store/workout/types';
 import { AttemptRecoveryFn, HandleCompleteWorkoutFn } from '@/types/workout';
 import { useTrainingSetupPersistence } from '@/hooks/useTrainingSetupPersistence';
 import { getStore } from '@/store/workout/store';
-import { createDefaultSet } from '@/store/workout/actions';
+import { createDefaultSet, validateWorkoutState } from '@/store/workout/actions';
 
 /**
  * Hook that provides handler functions for the training session
@@ -61,7 +61,7 @@ export const useTrainingSessionHandlers = (
       return;
     }
     
-    // Add new exercise with default 3 sets - with valid data structure
+    // Add new exercise with default 3 sets - ensure they're valid
     console.log('useTrainingSessionHandlers: Creating new valid sets for exercise:', exerciseName);
     const newSets: ExerciseSet[] = Array.from({ length: 3 }, (_, i) => 
       createDefaultSet(exerciseName, i + 1)
@@ -92,19 +92,24 @@ export const useTrainingSessionHandlers = (
           [exerciseName]: newSets
         });
         console.log('useTrainingSessionHandlers: Direct store update completed');
-        
-        // Verify the exercise was properly added
-        setTimeout(() => {
-          const storeExercises = getStore().getState().exercises;
-          const wasAdded = !!storeExercises[exerciseName];
-          console.log(`useTrainingSessionHandlers: Exercise "${exerciseName}" added successfully: ${wasAdded}`);
-          console.log('useTrainingSessionHandlers: Sets validity check:', 
-            wasAdded ? 
-            `Valid sets: ${Array.isArray(storeExercises[exerciseName])}` : 
-            'Exercise not found'
-          );
-        }, 50);
       }
+      
+      // Verify the exercise was properly added
+      setTimeout(() => {
+        const storeExercises = getStore().getState().exercises;
+        const wasAdded = !!storeExercises[exerciseName];
+        console.log(`useTrainingSessionHandlers: Exercise "${exerciseName}" added successfully: ${wasAdded}`);
+        if (wasAdded) {
+          console.log('useTrainingSessionHandlers: Sets validity check:', 
+            Array.isArray(storeExercises[exerciseName]) ? 
+            `Valid sets: ${storeExercises[exerciseName].length} sets` : 
+            'Invalid sets structure'
+          );
+          
+          // Run validation to catch any issues immediately
+          validateWorkoutState();
+        }
+      }, 50);
     }, 10);
     
     // Auto-focus the new exercise
@@ -115,19 +120,6 @@ export const useTrainingSessionHandlers = (
       title: `${exerciseName} added to workout`,
       variant: "default"
     });
-    
-    // Schedule a verification check
-    setTimeout(() => {
-      const storeExercises = getStore().getState().exercises;
-      console.log('useTrainingSessionHandlers: Verification check - exercises in store:', 
-        Object.keys(storeExercises));
-      console.log('useTrainingSessionHandlers: New exercise exists in store:', 
-        !!storeExercises[exerciseName]);
-      if (storeExercises[exerciseName]) {
-        console.log('useTrainingSessionHandlers: Set count:', 
-          storeExercises[exerciseName]?.length || 0);
-      }
-    }, 500);
   }, [exercises, setExercises, setFocusedExercise]);
   
   const handleAddSet = useCallback((exerciseName: string) => {
@@ -197,6 +189,7 @@ export const useTrainingSessionHandlers = (
       console.log("Current completedSets:", completedSets);
       console.log("Current exercises:", Object.keys(exercises));
       
+      // Enhanced input validation
       if (completedSets === 0 && Object.keys(exercises).length === 0) {
         toast({
           title: "No exercises added", 
@@ -213,6 +206,17 @@ export const useTrainingSessionHandlers = (
           variant: "destructive"
         });
         return null;
+      }
+      
+      // Validate workout state before finishing
+      const isValid = validateWorkoutState();
+      if (!isValid) {
+        toast({
+          title: "Workout data issues detected",
+          description: "There were problems with your workout data that needed to be fixed. Please check your exercises.",
+          variant: "destructive"
+        });
+        // Continue anyway since validateWorkoutState should have fixed issues
       }
       
       // Use the provided config or fall back to the injected one

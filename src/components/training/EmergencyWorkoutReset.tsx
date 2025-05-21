@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { AlertTriangle, RotateCcw } from 'lucide-react';
+import { AlertTriangle, RotateCcw, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
@@ -13,19 +13,21 @@ import { resetSession, validateWorkoutState } from '@/store/workout/actions';
  */
 export const EmergencyWorkoutReset: React.FC = () => {
   const [expanded, setExpanded] = useState(false);
-  const { exercises, workoutStatus, isActive } = useWorkoutStore();
+  const { exercises, workoutStatus, isActive, workoutId } = useWorkoutStore();
   
   const exerciseCount = Object.keys(exercises).length;
   const hasPotentialIssue = isActive && exerciseCount === 0;
   const hasNoSets = Object.values(exercises).some(sets => 
     !Array.isArray(sets) || sets.length === 0
   );
+  const noWorkoutId = isActive && !workoutId;
 
   // Determine if there's a possible zombie state
   const hasPossibleZombieState = 
     (isActive && exerciseCount === 0) || 
     (workoutStatus === 'active' && exerciseCount === 0) ||
-    hasNoSets;
+    hasNoSets ||
+    noWorkoutId;
 
   const handleEmergencyReset = () => {
     if (window.confirm('⚠️ EMERGENCY RESET: This will completely reset your workout. Continue?')) {
@@ -34,6 +36,18 @@ export const EmergencyWorkoutReset: React.FC = () => {
       toast.success('Workout completely reset', {
         description: 'All workout data has been cleared. Start a new workout.',
       });
+    }
+  };
+
+  const handleForceFullReset = () => {
+    if (window.confirm('⚠️ FORCE FULL RESET: This will purge ALL local storage and reload the page. Continue?')) {
+      console.log('Force full reset triggered - clearing localStorage and reloading');
+      localStorage.removeItem("workout-storage");
+      toast.success('Local storage cleared', {
+        description: 'Reloading page to start fresh.',
+      });
+      // Give toast time to display before reload
+      setTimeout(() => window.location.reload(), 1000);
     }
   };
 
@@ -82,6 +96,8 @@ export const EmergencyWorkoutReset: React.FC = () => {
               <div>{isActive ? 'Yes' : 'No'}</div>
               <div className="text-gray-400">Has Empty Sets:</div>
               <div>{hasNoSets ? '⚠️ Yes' : 'No'}</div>
+              <div className="text-gray-400">Workout ID:</div>
+              <div>{workoutId ? workoutId : '⚠️ Missing'}</div>
             </div>
           </div>
 
@@ -96,7 +112,7 @@ export const EmergencyWorkoutReset: React.FC = () => {
             </Alert>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button 
               variant="outline" 
               size="sm"
@@ -114,6 +130,16 @@ export const EmergencyWorkoutReset: React.FC = () => {
             >
               <RotateCcw size={12} />
               Emergency Reset
+            </Button>
+            
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={handleForceFullReset}
+              className="text-xs flex items-center gap-1 bg-red-800 hover:bg-red-900"
+            >
+              <Trash2 size={12} />
+              Force Full Reset (Dev)
             </Button>
           </div>
         </div>

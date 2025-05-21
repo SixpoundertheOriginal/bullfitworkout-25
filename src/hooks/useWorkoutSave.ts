@@ -95,6 +95,7 @@ export const useWorkoutSave = (exercises: Record<string, ExerciseSet[]>, elapsed
   const handleCompleteWorkout: HandleCompleteWorkoutFn = async (trainingConfig?: any) => {
     console.log("handleCompleteWorkout called with exercises:", Object.keys(exercises).length);
     
+    // Enhanced validation before attempting workout completion
     if (!Object.keys(exercises).length) {
       console.warn("No exercises found in workout");
       toast({
@@ -142,11 +143,28 @@ export const useWorkoutSave = (exercises: Record<string, ExerciseSet[]>, elapsed
       // Convert ExerciseSet to EnhancedExerciseSet by ensuring isEditing is always defined
       const enhancedExercises: Record<string, EnhancedExerciseSet[]> = {};
       Object.entries(exercises).forEach(([exerciseName, sets]) => {
+        // Additional validation to prevent malformed sets
+        if (!Array.isArray(sets) || sets.length === 0) {
+          console.warn(`Skipping malformed sets for ${exerciseName}`);
+          return;
+        }
+        
         enhancedExercises[exerciseName] = sets.map(set => ({
           ...set,
           isEditing: set.isEditing === undefined ? false : set.isEditing
         }));
       });
+      
+      // Check if we have any valid exercises after filtering
+      if (Object.keys(enhancedExercises).length === 0) {
+        console.error("No valid exercises found after validation");
+        toast({
+          title: "Invalid workout data",
+          description: "Your workout contains invalid exercise data. Please restart your session.",
+          variant: "destructive"
+        });
+        return null;
+      }
       
       const saveResult = await saveWorkout({
         userData: user,

@@ -1,4 +1,3 @@
-
 import { toast } from "@/hooks/use-toast";
 import { WorkoutExercises, WorkoutError, WorkoutStatus, ExerciseSet } from "./types";
 import { getStore } from "./store";
@@ -94,6 +93,9 @@ export const startWorkout = () => {
   const now = new Date();
   const store = getStore();
 
+  // Generate a temporary workoutId to ensure it's never null
+  const tempWorkoutId = `temp-${Date.now()}`;
+
   store.setState({
     isActive: true,
     explicitlyEnded: false,
@@ -101,6 +103,7 @@ export const startWorkout = () => {
     startTime: now.toISOString(),
     elapsedTime: 0,
     sessionId: generateSessionId(),
+    workoutId: tempWorkoutId, // Ensure workoutId is always set
     lastTabActivity: Date.now(),
   });
 
@@ -108,7 +111,7 @@ export const startWorkout = () => {
     description: "Your workout session has begun",
   });
 
-  console.log("Workout started at:", now);
+  console.log("Workout started at:", now, "with temporary ID:", tempWorkoutId);
 };
 
 export const endWorkout = () => {
@@ -327,6 +330,7 @@ export const validateWorkoutState = () => {
     exerciseKeys,
     exerciseCount,
     isActive: state.isActive,
+    workoutId: state.workoutId || "not set"
   });
 
   if (state.isActive && exerciseCount === 0) {
@@ -339,6 +343,7 @@ export const validateWorkoutState = () => {
   }
 
   let repaired = 0;
+  let hasChanged = false;
   const validExercises = { ...state.exercises };
 
   for (const key of exerciseKeys) {
@@ -353,28 +358,37 @@ export const validateWorkoutState = () => {
         createDefaultSet(key, 3)
       ];
       repaired++;
+      hasChanged = true;
       continue;
     }
     
-    // Check each set for validity
+    // Check each set for validity with more detailed logging
     const isValid = sets.every(set => {
-      return (
+      const validity = (
         typeof set === 'object' &&
         set !== null &&
         typeof set.reps === "number" &&
+        set.reps >= 1 &&
         typeof set.restTime === "number" &&
         typeof set.set_number === "number"
       );
+      
+      if (!validity) {
+        console.warn(`Invalid set found in "${key}":`, set);
+      }
+      
+      return validity;
     });
 
     if (!isValid) {
-      console.warn(`Invalid sets found for exercise: ${key}. Attempting auto-repair.`);
+      console.warn(`Invalid sets found for exercise: ${key}. Attempting auto-repair.`, sets);
       validExercises[key] = [
         createDefaultSet(key, 1),
         createDefaultSet(key, 2),
         createDefaultSet(key, 3)
       ];
       repaired++;
+      hasChanged = true;
     }
   }
 
@@ -395,5 +409,5 @@ export const validateWorkoutState = () => {
     return false;
   }
 
-  return true;
+  return !hasChanged;
 };

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { TrainingSessionLayout } from './layout/TrainingSessionLayout';
 import { ExerciseListWrapper } from './ExerciseListWrapper';
 import { TrainingSessionSheets } from './TrainingSessionSheets';
@@ -8,11 +8,13 @@ import { WorkoutMetricsPanel } from './metrics/WorkoutMetricsPanel';
 import { EmptyWorkoutState } from './EmptyWorkoutState';
 import { FloatingAddExerciseButton } from '../FloatingAddExerciseButton';
 import { SetsDebugger } from '../SetsDebugger';
+import { EmergencyWorkoutReset } from '../EmergencyWorkoutReset';
 import { useTrainingSessionState } from '@/hooks/training-session/useTrainingSessionState';
 import { useWorkoutStore } from '@/store/workout';
 import { useTrainingSessionData } from '@/hooks/training-session/useTrainingSessionData';
 import { submitSetRating } from '@/store/workout/actions';
 import { useAddExercise } from '@/store/workout/hooks';
+import { toast } from '@/hooks/use-toast';
 
 interface TrainingSessionContentProps {
   onFinishWorkoutClick: () => void;
@@ -50,7 +52,7 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
   } = useTrainingSessionData(exercises, focusedExercise);
 
   // Get additional workout state info to determine if we should show empty state
-  const { isActive } = useWorkoutStore();
+  const { isActive, workoutId } = useWorkoutStore();
 
   // Get the addExercise function from the hook
   const { addExercise } = useAddExercise();
@@ -59,6 +61,19 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
   const adaptedExercises = React.useMemo(() => {
     return exercises;
   }, [exercises]);
+  
+  // Show warning if workout is active but has no workoutId (only in development)
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && isActive && !workoutId) {
+      console.error("⚠️ Active workout session detected without a valid workoutId");
+      toast({
+        title: "Developer Warning",
+        description: "This workout has no ID. This may cause issues with saving.",
+        variant: "destructive",
+        duration: 5000,
+      });
+    }
+  }, [isActive, workoutId]);
   
   const handleOpenAddExerciseSheet = () => {
     console.log('TrainingSessionContent: Opening add exercise sheet');
@@ -138,6 +153,9 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
       
       {/* Only visible in dev environment */}
       <SetsDebugger />
+
+      {/* Added EmergencyWorkoutReset to the main session for easy access */}
+      <EmergencyWorkoutReset />
     </TrainingSessionLayout>
   );
 };
