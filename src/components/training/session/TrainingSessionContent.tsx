@@ -60,6 +60,18 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     setIsAddExerciseSheetOpen(true);
   };
 
+  // Handler for adding an exercise after selection
+  const handleAddExercise = (exerciseName: string) => {
+    console.log('TrainingSessionContent: Adding exercise', exerciseName);
+    // Here you would typically add the exercise to the workout
+    // For example by calling a function from your workout store
+    const { addExerciseToWorkout } = require('@/store/workout/actions');
+    addExerciseToWorkout(exerciseName);
+    
+    // Close the sheet afterward
+    setIsAddExerciseSheetOpen(false);
+  };
+
   // Handler for when the rating is submitted
   const handleSubmitRating = (rpe: number) => {
     console.log('Submitting RPE rating:', rpe);
@@ -76,11 +88,6 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
         exerciseCount={exerciseCount}
         completedSets={completedSets}
         totalSets={totalSets}
-        isActive={isActive}
-        lastActivity={Date.now()}
-        workoutId={null}
-        workoutStatus="active"
-        trainingConfig={trainingConfig}
       />
       
       {hasExercises ? (
@@ -124,6 +131,7 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
         trainingConfig={trainingConfig}
         lastCompletedExercise={lastCompletedExercise}
         lastCompletedSetIndex={lastCompletedSetIndex}
+        handleAddExercise={handleAddExercise}
       />
       
       {/* Only visible in dev environment */}
@@ -131,3 +139,4 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     </TrainingSessionLayout>
   );
 };
+

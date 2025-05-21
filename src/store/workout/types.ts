@@ -14,6 +14,7 @@ export interface ExerciseSet {
   rpe?: number;
   metadata?: {
     autoAdjusted?: boolean;
+    autoCreated?: boolean; // Added this property to match usage in actions.ts
     exerciseName?: string;
     createdAt?: string;
     previousValues?: {
@@ -51,3 +52,4 @@ export type PostSetFlowState =
   | 'rating'      // Showing RPE rating UI
   | 'resting'     // In rest period with enhanced timer
   | 'preparing';  // Preparing for next set
+

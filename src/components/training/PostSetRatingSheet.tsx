@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -25,16 +24,18 @@ const RPE_RATINGS = [
 export interface PostSetRatingSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmitRating: (rating: number) => void;
+  onSubmitRating: (rating: number) => void; // Changed from onSubmit to onSubmitRating
   exerciseName: string;
+  setNumber: number;
   setDetails?: MinimalExerciseSet;
 }
 
 export const PostSetRatingSheet: React.FC<PostSetRatingSheetProps> = ({
   open,
   onOpenChange,
-  onSubmitRating,
+  onSubmitRating, // Changed from onSubmit to onSubmitRating
   exerciseName,
+  setNumber,
   setDetails
 }) => {
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
@@ -49,7 +50,7 @@ export const PostSetRatingSheet: React.FC<PostSetRatingSheetProps> = ({
 
   const handleSubmit = () => {
     if (selectedRating !== null) {
-      onSubmitRating(selectedRating);
+      onSubmitRating(selectedRating); // Changed from onSubmit to onSubmitRating
       playSuccess();
       setSelectedRating(null);
     }

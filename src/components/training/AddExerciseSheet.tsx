@@ -17,14 +17,14 @@ import { getExerciseName } from "@/utils/exerciseAdapter";
 interface AddExerciseSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelectExercise: (exerciseName: string) => void;
+  onSelectExercise?: (exerciseName: string) => void;
   trainingType?: string;
 }
 
 export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
   open,
   onOpenChange,
-  onSelectExercise,
+  onSelectExercise = () => {}, // Default to empty function
   trainingType = ""
 }) => {
   // Add detailed logging
