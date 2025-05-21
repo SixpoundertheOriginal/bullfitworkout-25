@@ -1,13 +1,18 @@
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useTrainingSetupPersistence } from '@/hooks/useTrainingSetupPersistence';
 import { LoadTrainingConfigFn } from '@/types/workout';
+import { useWorkoutStore } from '@/store/workout';
+import { toast } from '@/hooks/use-toast';
 
 /**
  * Hook for handling initialization logic for training sessions
+ * with enhanced zombie state detection
  */
 export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean, startWorkout: () => void) => {
   const { storedConfig, saveConfig } = useTrainingSetupPersistence();
+  const cleanupPerformedRef = useRef(false);
+  const { resetSession } = useWorkoutStore();
   
   // Explicitly implement with the centralized type
   const loadTrainingConfig: LoadTrainingConfigFn = useCallback(() => {
@@ -34,6 +39,116 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
       }
     }
   }, [isActive, hasExercises, startWorkout, loadTrainingConfig]);
+  
+  // Add defensive logic to detect and clean up zombie workouts
+  useEffect(() => {
+    // Only run this check once per component mount
+    if (cleanupPerformedRef.current) return;
+    
+    // Get the current workout state
+    const state = useWorkoutStore.getState();
+    const exercises = state.exercises;
+    const sessionId = state.sessionId;
+    let zombieDetected = false;
+    
+    console.log('🔍 Checking for zombie workout state on app boot:', {
+      exerciseCount: Object.keys(exercises).length,
+      isActive: state.isActive,
+      hasExercises
+    });
+    
+    // Case 1: Check for empty exercise objects
+    if (state.isActive && Object.keys(exercises).length === 0) {
+      console.warn('🧟‍♂️ Detected zombie workout: active but no exercises');
+      zombieDetected = true;
+    }
+    
+    // Case 2: Check for invalid exercise data structures
+    Object.keys(exercises).forEach(key => {
+      const sets = exercises[key];
+      
+      // Check if sets is undefined, null, or an empty array
+      if (!sets || !Array.isArray(sets) || sets.length === 0) {
+        console.warn(`🧟‍♂️ Detected zombie exercise "${key}" with empty sets array`);
+        zombieDetected = true;
+        return;
+      }
+      
+      // Check for malformed sets (missing required properties)
+      const malformedSets = sets.some(set => 
+        !set || 
+        typeof set !== 'object' || 
+        typeof set.weight !== 'number' || 
+        typeof set.reps !== 'number' || 
+        typeof set.restTime !== 'number'
+      );
+      
+      if (malformedSets) {
+        console.warn(`🧟‍♂️ Detected zombie exercise "${key}" with malformed sets`, sets);
+        zombieDetected = true;
+      }
+    });
+    
+    // If zombie state detected, clean it up
+    if (zombieDetected) {
+      console.warn("🧹 Clearing zombie workout from persistent storage");
+      
+      // Reset workout state completely
+      resetSession();
+      
+      // Double-check by also manually removing from localStorage
+      try {
+        localStorage.removeItem("workout-storage");
+        console.log("🗑️ Manually removed workout-storage from localStorage");
+      } catch (e) {
+        console.error("⚠️ Failed to clear localStorage:", e);
+      }
+      
+      // Show toast notification to inform user
+      toast({
+        title: "Workout reset",
+        description: "Detected and cleared invalid workout data",
+        variant: "destructive"
+      });
+      
+      // If Supabase is integrated and we have a sessionId, invalidate remote record
+      if (sessionId) {
+        try {
+          // Check if supabase client is available and integrated
+          const { supabase } = require('@/integrations/supabase/client');
+          if (supabase) {
+            // Attempt to flag this session as abandoned in the database
+            supabase
+              .from('workout_sessions')
+              .update({ 
+                status: 'abandoned',
+                metadata: { 
+                  zombie_detected: true, 
+                  cleaned_at: new Date().toISOString() 
+                }
+              })
+              .eq('session_id', sessionId)
+              .then((result: any) => {
+                if (result.error) {
+                  console.warn("⚠️ Failed to invalidate remote workout:", result.error);
+                } else {
+                  console.log("🔄 Invalidated remote workout session:", sessionId);
+                }
+              })
+              .catch((err: any) => {
+                console.warn("⚠️ Error invalidating remote workout:", err);
+              });
+          }
+        } catch (error) {
+          // Supabase might not be integrated, silently continue
+          console.log("ℹ️ Supabase not available for remote cleanup", error);
+        }
+      }
+    }
+    
+    // Mark cleanup as performed
+    cleanupPerformedRef.current = true;
+  }, [resetSession, hasExercises]);
   
   return {
     loadTrainingConfig,
