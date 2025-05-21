@@ -46,19 +46,20 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
     if (cleanupPerformedRef.current) return;
     
     // Get the current workout state
-    const state = useWorkoutStore.getState();
-    const exercises = state.exercises;
-    const sessionId = state.sessionId;
+    // Changed: Using the store directly instead of trying to access getState()
+    const exercises = useWorkoutStore().exercises;
+    const sessionId = useWorkoutStore().sessionId;
+    const isStoreActive = useWorkoutStore().isActive;
     let zombieDetected = false;
     
     console.log('🔍 Checking for zombie workout state on app boot:', {
       exerciseCount: Object.keys(exercises).length,
-      isActive: state.isActive,
+      isActive: isStoreActive,
       hasExercises
     });
     
     // Case 1: Check for empty exercise objects
-    if (state.isActive && Object.keys(exercises).length === 0) {
+    if (isStoreActive && Object.keys(exercises).length === 0) {
       console.warn('🧟‍♂️ Detected zombie workout: active but no exercises');
       zombieDetected = true;
     }
