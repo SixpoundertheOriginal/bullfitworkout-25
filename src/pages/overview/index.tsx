@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { OverviewHeader } from './OverviewHeader';
 import { ChartsGrid } from './ChartsGrid';
 import { KPISection } from './KPISection';
 import { LoadingSkeleton } from './LoadingSkeleton';
@@ -13,8 +12,13 @@ import { WeightUnit } from '@/utils/unitConversion';
 import { MainVolumeChart } from './MainVolumeChart';
 import { useDateRange } from '@/context/DateRangeContext';
 import { useWorkoutComparisonStats } from '@/hooks/useWorkoutComparisonStats';
-import { DateRangeFilter } from '@/components/date-filters/DateRangeFilter';
-import { ComparisonToggle } from '@/components/ui/period-comparison/ComparisonToggle';
+import { EnhancedHeader } from './EnhancedHeader';
+import { PersonalRecordsSection } from '@/components/metrics/PersonalRecordsSection';
+import { WorkoutBalanceChart } from '@/components/metrics/WorkoutBalanceChart';
+import { TrainingQualityScore } from '@/components/metrics/TrainingQualityScore';
+import { usePersonalRecords } from '@/hooks/usePersonalRecords';
+import { useWorkoutBalance } from '@/hooks/useWorkoutBalance';
+import { useTrainingQuality } from '@/hooks/useTrainingQuality';
 
 const OverviewPage: React.FC = () => {
   // Access date range context to get current and comparison date ranges
@@ -54,16 +58,25 @@ const OverviewPage: React.FC = () => {
     comparisonEnabled && safePreviousWorkouts.length > 0 ? safePreviousWorkouts : []
   );
   
-  // Chart data for current period - always call hooks unconditionally
+  // Chart data for current period
   const volumeChartData = useVolumeChartData(processedMetrics || []);
   const densityChartData = useChartData(processedMetrics as unknown as DensityDataPoint[]);
   
-  // Chart data for comparison period - always call hooks unconditionally
+  // Chart data for comparison period
   const comparisonVolumeChartData = useVolumeChartData(
     comparisonEnabled && comparisonMetrics && comparisonMetrics.length > 0 
       ? comparisonMetrics 
       : []
   );
+
+  // Get personal records
+  const { records: personalRecords, loading: recordsLoading } = usePersonalRecords();
+  
+  // Get workout balance data
+  const { data: balanceData, loading: balanceLoading } = useWorkoutBalance();
+  
+  // Get training quality score
+  const { score, previousScore, loading: qualityLoading } = useTrainingQuality();
 
   if (loading) {
     return <LoadingSkeleton />;
@@ -86,7 +99,7 @@ const OverviewPage: React.FC = () => {
     average: densityChartData?.averages?.overall || 0
   };
 
-  // Prepare data for KPI section
+  // Prepare data for KPI section and header
   const kpiData = {
     totalWorkouts: stats?.totalWorkouts || 0,
     volumeTotal: volumeChartData?.volumeStats?.total || 0,
@@ -105,18 +118,13 @@ const OverviewPage: React.FC = () => {
 
   return (
     <div className="container py-6">
-      <OverviewHeader title="Workout Overview">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mt-2">
-          <div className="md:order-1">
-            <DateRangeFilter />
-          </div>
-          <div className="md:order-2">
-            <ComparisonToggle showDateSelector={true} />
-          </div>
-        </div>
-      </OverviewHeader>
+      {/* Enhanced Header with Period Summary */}
+      <EnhancedHeader 
+        title="Workout Overview" 
+        stats={kpiData}
+      />
       
-      {/* KPI Section - No date filter or comparison toggle here anymore */}
+      {/* KPI Section */}
       {stats && <KPISection {...kpiData} />}
       
       {/* Main Volume Chart - With Comparison Support */}
@@ -126,6 +134,21 @@ const OverviewPage: React.FC = () => {
         height={350}
         className="mb-6"
       />
+      
+      {/* New Metrics Grid Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        {/* Training Quality Score */}
+        <TrainingQualityScore 
+          score={score} 
+          previousScore={previousScore}
+        />
+        
+        {/* Personal Records Section */}
+        <PersonalRecordsSection records={personalRecords} />
+        
+        {/* Workout Balance Chart */}
+        <WorkoutBalanceChart data={balanceData} />
+      </div>
       
       {/* Charts Grid - Pass both current and comparison data */}
       <ChartsGrid 
