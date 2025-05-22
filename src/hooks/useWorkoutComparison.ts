@@ -97,14 +97,16 @@ export function useWorkoutComparison() {
       
       // Update the stats object with weekly comparison data
       if (stats) {
-        stats.weeklyWorkouts = currentWeek.workouts;
-        stats.lastWeekWorkouts = previousWeek.workouts;
-        stats.weeklyVolume = currentWeek.volume;
-        stats.lastWeekVolume = previousWeek.volume;
+        // Create a type assertion to allow property assignment
+        const extendedStats = stats as any;
+        extendedStats.weeklyWorkouts = currentWeek.workouts;
+        extendedStats.lastWeekWorkouts = previousWeek.workouts;
+        extendedStats.weeklyVolume = currentWeek.volume;
+        extendedStats.lastWeekVolume = previousWeek.volume;
         
         // Create dailyWorkouts object if it doesn't exist
-        if (!stats.dailyWorkouts) {
-          stats.dailyWorkouts = {};
+        if (!extendedStats.dailyWorkouts) {
+          extendedStats.dailyWorkouts = {};
         }
       }
     } catch (error) {
