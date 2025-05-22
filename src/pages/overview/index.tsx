@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ChartsGrid } from './ChartsGrid';
 import { KPISection } from './KPISection';
@@ -99,7 +98,14 @@ const OverviewPage: React.FC = () => {
     average: densityChartData?.averages?.overall || 0
   };
 
-  // Prepare data for KPI section and header
+  // Prepare data for header - fixing the property names to match what EnhancedHeader expects
+  const headerStats = {
+    totalWorkouts: stats?.totalWorkouts || 0,
+    totalVolume: volumeChartData?.volumeStats?.total || 0,
+    avgDuration: stats?.avgDuration || 0
+  };
+
+  // Prepare data for KPI section (keep the original property names for KPI section)
   const kpiData = {
     totalWorkouts: stats?.totalWorkouts || 0,
     volumeTotal: volumeChartData?.volumeStats?.total || 0,
@@ -118,10 +124,10 @@ const OverviewPage: React.FC = () => {
 
   return (
     <div className="container py-6">
-      {/* Enhanced Header with Period Summary */}
+      {/* Enhanced Header with Period Summary - Now with correct property names */}
       <EnhancedHeader 
         title="Workout Overview" 
-        stats={kpiData}
+        stats={headerStats}
       />
       
       {/* KPI Section */}
