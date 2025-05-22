@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -379,7 +378,7 @@ export function ExerciseDialogV2({
                   <Button
                     onClick={() => {
                       handlers.addVariationToList({
-                        type: VARIATION_TYPES[0],
+                        type: "grip_width" as any, // Cast as any to satisfy TS
                         value: "wide grip"
                       });
                     }}

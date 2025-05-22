@@ -64,7 +64,8 @@ export const useUserExperience = () => {
         if (error) throw error;
         
         if (data?.training_experience) {
-          const exp = data.training_experience;
+          // Fix: Properly cast the JSON data as Record<string, any>
+          const exp = data.training_experience as Record<string, any>;
           const totalXp = exp.totalXp || 0;
           
           // Calculate level based on total XP
@@ -72,7 +73,9 @@ export const useUserExperience = () => {
           
           // Process training type levels
           const trainingTypeLevels: Record<string, any> = {};
-          if (exp.trainingTypeLevels) {
+          
+          // Fix: Check if trainingTypeLevels exists and is an object
+          if (exp.trainingTypeLevels && typeof exp.trainingTypeLevels === 'object') {
             Object.entries(exp.trainingTypeLevels).forEach(([type, data]: [string, any]) => {
               const typeXp = data.xp || 0;
               const typeLevelData = calculateLevel(typeXp);

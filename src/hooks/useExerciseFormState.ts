@@ -8,7 +8,11 @@ export interface ExerciseFormState {
   description: string;
   movement_pattern: MovementPattern;
   difficulty: Difficulty;
-  instructions: { steps: string; form: string };
+  instructions: { 
+    steps: string[];  // Changed from string to string[]
+    form: string;
+    video_url?: string; // Added video_url property
+  };
   is_compound: boolean;
   tips: string[];
   variations: string[];
@@ -17,7 +21,7 @@ export interface ExerciseFormState {
   variant_category: string | undefined;
   is_bodyweight: boolean;
   energy_cost_factor: number;
-  primary_muscle_groups: MuscleGroup[];  // Keep MuscleGroup type
+  primary_muscle_groups: MuscleGroup[];
   secondary_muscle_groups: MuscleGroup[];
   equipment_type: string[];
   metadata: Record<string, any>;
@@ -45,7 +49,7 @@ export interface ExerciseFormHandlers {
   removeVariation: (index: number) => void;
   setIsBodyweight: (isBodyweight: boolean) => void;
   setEstimatedLoadPercent: (percent: number) => void;
-  setPrimaryMuscleGroups: (groups: MuscleGroup[]) => void;  // Keep MuscleGroup type
+  setPrimaryMuscleGroups: (groups: MuscleGroup[]) => void;
   setSecondaryMuscleGroups: (groups: MuscleGroup[]) => void;
   setEquipmentType: (types: string[]) => void;
   // Add variation handlers
@@ -55,6 +59,17 @@ export interface ExerciseFormHandlers {
   // New handlers for variation list
   addVariationToList: (variation: Variation) => void;
   removeVariationFromList: (index: number) => void;
+  // Add the missing handlers
+  addPrimaryMuscle: (muscle: string) => void;
+  removePrimaryMuscle: (muscle: string) => void;
+  addSecondaryMuscle: (muscle: string) => void;
+  removeSecondaryMuscle: (muscle: string) => void;
+  addEquipment: (equipment: string) => void;
+  removeEquipment: (equipment: string) => void;
+  addInstructionStep: (step: string) => void;
+  updateInstructionStep: (index: number, value: string) => void;
+  removeInstructionStep: (index: number) => void;
+  setInstructionVideoUrl: (url: string) => void;
   reset: () => void;
 }
 
@@ -67,7 +82,7 @@ export const useExerciseFormState = (
     description: '',
     movement_pattern: 'push',
     difficulty: 'beginner',
-    instructions: { steps: '', form: '' },
+    instructions: { steps: [], form: '', video_url: '' }, // Initialize steps as array, add video_url
     is_compound: false,
     tips: [],
     variations: [],
@@ -76,7 +91,7 @@ export const useExerciseFormState = (
     variant_category: undefined,
     is_bodyweight: false,
     energy_cost_factor: 1,
-    primary_muscle_groups: [],  // Initialize as empty array
+    primary_muscle_groups: [],
     secondary_muscle_groups: [],
     equipment_type: [],
     metadata: {},
@@ -101,13 +116,19 @@ export const useExerciseFormState = (
           value: initialExercise.variation_value
         }];
       }
-      
+
+      // Ensure instructions.steps is always an array
+      const instructionSteps = Array.isArray(initialExercise.instructions?.steps) 
+        ? initialExercise.instructions?.steps 
+        : [];
+
       setExercise({
         ...exercise,
         ...initialExercise,
         instructions: {
-          steps: initialExercise.instructions?.steps ?? '',
+          steps: instructionSteps,
           form: initialExercise.instructions?.form ?? '',
+          video_url: initialExercise.instructions?.video_url ?? '',
         },
         // Ensure these properties exist as arrays even if not in initialExercise
         primary_muscle_groups: Array.isArray(initialExercise.primary_muscle_groups) 
@@ -160,7 +181,7 @@ export const useExerciseFormState = (
   const setInstructionsSteps = useCallback((steps: string) => {
     setExercise(ex => ({ 
       ...ex, 
-      instructions: { ...ex.instructions, steps } 
+      instructions: { ...ex.instructions, steps: [steps] } 
     }));
   }, []);
 
@@ -220,6 +241,115 @@ export const useExerciseFormState = (
     setExercise(ex => ({ ...ex, estimated_load_percent: percent }));
   }, []);
 
+  // Add the missing muscle group handlers
+  const addPrimaryMuscle = useCallback((muscle: string) => {
+    setExercise(ex => {
+      const primary_muscle_groups = [...ex.primary_muscle_groups];
+      if (!primary_muscle_groups.includes(muscle as MuscleGroup)) {
+        primary_muscle_groups.push(muscle as MuscleGroup);
+      }
+      return { ...ex, primary_muscle_groups };
+    });
+  }, []);
+
+  const removePrimaryMuscle = useCallback((muscle: string) => {
+    setExercise(ex => {
+      const primary_muscle_groups = ex.primary_muscle_groups.filter(
+        m => m !== muscle
+      );
+      return { ...ex, primary_muscle_groups };
+    });
+  }, []);
+
+  const addSecondaryMuscle = useCallback((muscle: string) => {
+    setExercise(ex => {
+      const secondary_muscle_groups = [...ex.secondary_muscle_groups];
+      if (!secondary_muscle_groups.includes(muscle as MuscleGroup)) {
+        secondary_muscle_groups.push(muscle as MuscleGroup);
+      }
+      return { ...ex, secondary_muscle_groups };
+    });
+  }, []);
+
+  const removeSecondaryMuscle = useCallback((muscle: string) => {
+    setExercise(ex => {
+      const secondary_muscle_groups = ex.secondary_muscle_groups.filter(
+        m => m !== muscle
+      );
+      return { ...ex, secondary_muscle_groups };
+    });
+  }, []);
+
+  // Add equipment handlers
+  const addEquipment = useCallback((equipment: string) => {
+    setExercise(ex => {
+      const equipment_type = [...ex.equipment_type];
+      if (!equipment_type.includes(equipment)) {
+        equipment_type.push(equipment);
+      }
+      return { ...ex, equipment_type };
+    });
+  }, []);
+
+  const removeEquipment = useCallback((equipment: string) => {
+    setExercise(ex => {
+      const equipment_type = ex.equipment_type.filter(e => e !== equipment);
+      return { ...ex, equipment_type };
+    });
+  }, []);
+
+  // Add instruction handlers
+  const addInstructionStep = useCallback((step: string) => {
+    setExercise(ex => {
+      const steps = [...(ex.instructions?.steps || [])];
+      steps.push(step);
+      return {
+        ...ex,
+        instructions: {
+          ...ex.instructions,
+          steps
+        }
+      };
+    });
+  }, []);
+
+  const updateInstructionStep = useCallback((index: number, value: string) => {
+    setExercise(ex => {
+      const steps = [...(ex.instructions?.steps || [])];
+      steps[index] = value;
+      return {
+        ...ex,
+        instructions: {
+          ...ex.instructions,
+          steps
+        }
+      };
+    });
+  }, []);
+
+  const removeInstructionStep = useCallback((index: number) => {
+    setExercise(ex => {
+      const steps = [...(ex.instructions?.steps || [])].filter((_, i) => i !== index);
+      return {
+        ...ex,
+        instructions: {
+          ...ex.instructions,
+          steps
+        }
+      };
+    });
+  }, []);
+
+  const setInstructionVideoUrl = useCallback((video_url: string) => {
+    setExercise(ex => ({
+      ...ex,
+      instructions: {
+        ...ex.instructions,
+        video_url
+      }
+    }));
+  }, []);
+
   // Keep muscle group handlers with correct types
   const setPrimaryMuscleGroups = useCallback((groups: MuscleGroup[]) => {
     setExercise(ex => ({ ...ex, primary_muscle_groups: Array.isArray(groups) ? groups : [] }));
@@ -233,7 +363,7 @@ export const useExerciseFormState = (
     setExercise(ex => ({ ...ex, equipment_type: Array.isArray(types) ? types : [] }));
   }, []);
 
-  // Add new handlers for managing variation list
+  // Add handlers for variation list
   const addVariationToList = useCallback((variation: Variation) => {
     setExercise(ex => {
       // Ensure we have a valid list
@@ -276,7 +406,7 @@ export const useExerciseFormState = (
       description: '',
       movement_pattern: 'push',
       difficulty: 'beginner',
-      instructions: { steps: '', form: '' },
+      instructions: { steps: [], form: '', video_url: '' },  // Initialize steps as array, add video_url
       is_compound: false,
       tips: [],
       variations: [],
@@ -285,7 +415,7 @@ export const useExerciseFormState = (
       variant_category: undefined,
       is_bodyweight: false,
       energy_cost_factor: 1,
-      primary_muscle_groups: [],  // Initialize as empty array
+      primary_muscle_groups: [],
       secondary_muscle_groups: [],
       equipment_type: [],
       metadata: {},
@@ -337,6 +467,17 @@ export const useExerciseFormState = (
     // New variation list handlers
     addVariationToList,
     removeVariationFromList,
+    // Add the newly implemented handlers
+    addPrimaryMuscle,
+    removePrimaryMuscle,
+    addSecondaryMuscle,
+    removeSecondaryMuscle,
+    addEquipment,
+    removeEquipment,
+    addInstructionStep,
+    updateInstructionStep,
+    removeInstructionStep,
+    setInstructionVideoUrl,
     reset
   };
 
