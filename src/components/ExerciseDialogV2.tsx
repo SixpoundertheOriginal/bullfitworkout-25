@@ -242,7 +242,7 @@ export function ExerciseDialogV2({
                   </label>
                   <Select
                     value={exercise.movement_pattern || ""}
-                    onValueChange={(value) => handlers.setMovementPattern(value)}
+                    onValueChange={(value) => handlers.setMovementPattern(value as MovementPattern)}
                   >
                     <SelectTrigger className="bg-gray-800 border-gray-700">
                       <SelectValue placeholder="Select movement pattern" />
@@ -263,7 +263,7 @@ export function ExerciseDialogV2({
                   </label>
                   <Select
                     value={exercise.difficulty || ""}
-                    onValueChange={(value) => handlers.setDifficulty(value)}
+                    onValueChange={(value) => handlers.setDifficulty(value as Difficulty)}
                   >
                     <SelectTrigger className="bg-gray-800 border-gray-700">
                       <SelectValue placeholder="Select difficulty" />
@@ -360,7 +360,7 @@ export function ExerciseDialogV2({
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handlers.removeVariation(index)}
+                            onClick={() => handlers.removeVariationFromList(index)}
                             className="h-8 w-8 p-0 hover:bg-red-900/30 hover:text-red-500"
                           >
                             <Trash2 size={16} />
@@ -378,7 +378,7 @@ export function ExerciseDialogV2({
                 <div className="pt-2">
                   <Button
                     onClick={() => {
-                      handlers.addVariation({
+                      handlers.addVariationToList({
                         type: VARIATION_TYPES[0],
                         value: "wide grip"
                       });
