@@ -14,6 +14,7 @@ import { toast } from '@/hooks/use-toast';
 const TrainingSessionPage = () => {
   const { isLoading: loadingExercises } = useExercises();
   const [showCompletion, setShowCompletion] = useState(false);
+  const [completionInitiated, setCompletionInitiated] = useState(false);
   const navigate = useNavigate();
   
   const {
@@ -24,7 +25,8 @@ const TrainingSessionPage = () => {
     handleFinishWorkout,
     isSaving,
     workoutStatus,
-    setIsAddExerciseSheetOpen
+    setIsAddExerciseSheetOpen,
+    isActive
   } = useTrainingSession();
 
   // Initialize the workout timer
@@ -65,6 +67,25 @@ const TrainingSessionPage = () => {
     }
   }, [workoutStatus, exercises, resetSession]);
 
+  // Safety effect to monitor completion state
+  useEffect(() => {
+    if (completionInitiated && !showCompletion && !isSaving && isActive) {
+      console.warn("Workout completion was initiated but workout is still active");
+      toast({
+        title: "Workout completion issue detected",
+        description: "The workout completion process may have stalled",
+        variant: "destructive",
+        action: {
+          label: "Force Reset",
+          onClick: () => {
+            resetSession();
+            navigate('/');
+          }
+        }
+      });
+    }
+  }, [completionInitiated, showCompletion, isSaving, isActive]);
+
   if (loadingExercises) {
     return <TrainingSessionLoading />;
   }
@@ -76,8 +97,13 @@ const TrainingSessionPage = () => {
         return;
       }
       
+      // Mark completion as initiated for tracking
+      setCompletionInitiated(true);
+      
       // Show completion screen
       setShowCompletion(true);
+      
+      console.log("Workout completion view shown, workout status:", workoutStatus);
     } catch (error) {
       console.error("Error while finishing workout:", error);
     }
@@ -85,22 +111,34 @@ const TrainingSessionPage = () => {
 
   // Handle completion screens
   const handleWorkoutComplete = () => {
-    console.log("Saving workout data...");
+    console.log("Saving workout data...", {
+      currentStatus: workoutStatus,
+      exerciseCount: Object.keys(exercises).length,
+      elapsedTime: elapsedTime
+    });
+    
     handleFinishWorkout()
       .then((result) => {
         console.log("Workout saved with result:", result);
+        
         // Add a small delay to show success message before redirecting
         setTimeout(() => {
+          console.log("Workout completely finished, resetting session and navigating home");
           resetSession();
           setShowCompletion(false);
+          setCompletionInitiated(false);
+          
           // Navigate to home page after successful completion
           navigate('/');
         }, 300);
       })
       .catch((error) => {
         console.error("Error saving workout:", error);
+        toast.error("Error saving workout. Attempting to navigate to home anyway.");
+        
         // Even on error, navigate back to home page to prevent user getting stuck
         setTimeout(() => {
+          resetSession(); // Force reset on error
           navigate('/');
         }, 1000);
       });

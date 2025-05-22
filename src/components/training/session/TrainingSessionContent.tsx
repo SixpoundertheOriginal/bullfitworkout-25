@@ -15,6 +15,8 @@ import { useTrainingSessionData } from '@/hooks/training-session/useTrainingSess
 import { submitSetRating } from '@/store/workout/actions';
 import { useAddExercise } from '@/store/workout/hooks';
 import { toast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { AlertTriangle } from 'lucide-react';
 
 interface TrainingSessionContentProps {
   onFinishWorkoutClick: () => void;
@@ -64,10 +66,10 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
   
   // Show warning if workout is active but has no workoutId (only in development)
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development' && isActive && !workoutId) {
+    if (isActive && !workoutId) {
       console.error("⚠️ Active workout session detected without a valid workoutId");
       toast({
-        title: "Developer Warning",
+        title: "Workout ID Missing",
         description: "This workout has no ID. This may cause issues with saving.",
         variant: "destructive",
         duration: 5000,
@@ -98,6 +100,9 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     setIsRatingSheetOpen(false);
   };
   
+  // Detect potential issues with workoutId
+  const hasWorkoutIdIssue = isActive && !workoutId;
+  
   return (
     <TrainingSessionLayout>
       <WorkoutMetricsPanel 
@@ -106,6 +111,16 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
         completedSets={completedSets}
         totalSets={totalSets}
       />
+      
+      {/* Show warning badge for missing workout ID */}
+      {hasWorkoutIdIssue && process.env.NODE_ENV !== 'production' && (
+        <div className="mx-4 mb-2">
+          <Badge variant="destructive" className="flex items-center gap-1 py-1 px-2 w-full justify-center">
+            <AlertTriangle size={14} />
+            <span className="text-xs">Missing Workout ID - Save Issues Likely</span>
+          </Badge>
+        </div>
+      )}
       
       {hasExercises ? (
         <ExerciseListWrapper 

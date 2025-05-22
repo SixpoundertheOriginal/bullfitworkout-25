@@ -1,11 +1,12 @@
 
 import React, { useState } from 'react';
-import { AlertTriangle, RotateCcw, Trash2 } from 'lucide-react';
+import { AlertTriangle, RotateCcw, Trash2, RefreshCw } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
 import { useWorkoutStore } from '@/store/workout';
 import { resetSession, validateWorkoutState } from '@/store/workout/actions';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * Emergency component to help developers recover from zombie workout states
@@ -14,6 +15,7 @@ import { resetSession, validateWorkoutState } from '@/store/workout/actions';
 export const EmergencyWorkoutReset: React.FC = () => {
   const [expanded, setExpanded] = useState(false);
   const { exercises, workoutStatus, isActive, workoutId } = useWorkoutStore();
+  const navigate = useNavigate();
   
   const exerciseCount = Object.keys(exercises).length;
   const hasPotentialIssue = isActive && exerciseCount === 0;
@@ -59,6 +61,22 @@ export const EmergencyWorkoutReset: React.FC = () => {
       description: `Validation result: ${isValid ? 'OK' : 'Issues detected and fixed'}`,
       variant: isValid ? 'default' : 'destructive',
     });
+  };
+  
+  const handleFixStuckWorkout = () => {
+    if (window.confirm('⚠️ FIX STUCK WORKOUT: This will attempt to fix a stuck workout completion. Continue?')) {
+      console.log('Fix stuck workout triggered');
+      
+      // First reset the session
+      resetSession();
+      
+      // Then navigate to home page
+      navigate('/');
+      
+      toast.success('Stuck workout fix attempted', {
+        description: 'Session reset and redirected to home page.',
+      });
+    }
   };
 
   if (process.env.NODE_ENV === 'production') {
@@ -120,6 +138,16 @@ export const EmergencyWorkoutReset: React.FC = () => {
               className="text-xs"
             >
               Force Validate
+            </Button>
+            
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={handleFixStuckWorkout}
+              className="text-xs flex items-center gap-1"
+            >
+              <RefreshCw size={12} />
+              Fix Stuck Completion
             </Button>
             
             <Button 

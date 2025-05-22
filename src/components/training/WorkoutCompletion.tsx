@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { IntelligentMetricsDisplay } from '@/components/metrics/IntelligentMetricsDisplay';
 import { ExerciseVolumeChart } from '@/components/metrics/ExerciseVolumeChart';
@@ -48,6 +48,8 @@ export const WorkoutCompletion = ({
   const [previousLevel, setPreviousLevel] = useState<number | undefined>(undefined);
   const [newLevel, setNewLevel] = useState<number | undefined>(undefined);
   const [processingComplete, setProcessingComplete] = useState(false);
+  // Add a safety timeout state
+  const [safetyTimeoutId, setSafetyTimeoutId] = useState<number | null>(null);
 
   // Convert LocalExerciseSet to ExerciseSet for the chart components
   const convertedExercises = Object.entries(exercises).reduce((acc, [exerciseName, sets]) => {
@@ -64,7 +66,32 @@ export const WorkoutCompletion = ({
     return acc;
   }, {} as Record<string, ExerciseSet[]>);
   
+  // Safety cleanup effect - ensure animation doesn't get stuck
+  useEffect(() => {
+    // If XP animation shows but doesn't complete within 10 seconds, force completion
+    if (showXpAnimation) {
+      const timeout = window.setTimeout(() => {
+        console.log("🔄 Safety timeout triggered - XP animation didn't complete in time");
+        setShowXpAnimation(false);
+        handleXpAnimationComplete();
+      }, 10000); // 10 second safety timeout
+      
+      setSafetyTimeoutId(timeout as unknown as number);
+      
+      return () => {
+        if (safetyTimeoutId) {
+          window.clearTimeout(safetyTimeoutId);
+        }
+      };
+    }
+  }, [showXpAnimation]);
+  
   const handleDiscard = () => {
+    // Clear any pending timeouts
+    if (safetyTimeoutId) {
+      window.clearTimeout(safetyTimeoutId);
+    }
+    
     // Fully terminate the workout session
     resetSession();
     
@@ -85,6 +112,7 @@ export const WorkoutCompletion = ({
     }
     
     setProcessingComplete(true);
+    console.log("Starting XP processing sequence");
     
     try {
       // Calculate XP based on duration and workout type
@@ -98,7 +126,7 @@ export const WorkoutCompletion = ({
       setXpEarned(totalXp);
       setTrainingType(workoutTrainingType || undefined);
       
-      console.log(`Adding ${totalXp} XP for ${workoutTrainingType} workout`);
+      console.log(`Adding ${totalXp} XP for ${workoutTrainingType || 'unspecified'} workout`);
       
       // Add the experience
       const result = await addExperienceAsync({
@@ -113,6 +141,7 @@ export const WorkoutCompletion = ({
       }
       
       // Show XP animation
+      console.log("Starting XP animation sequence");
       setShowXpAnimation(true);
       
       // Show the experience gain toast as well (as backup)
@@ -125,6 +154,7 @@ export const WorkoutCompletion = ({
     } catch (error) {
       console.error("Error adding experience:", error);
       // Continue with existing completion logic anyway
+      console.log("Error in XP processing, skipping animation and completing workout");
       onComplete();
     }
   };
@@ -133,8 +163,18 @@ export const WorkoutCompletion = ({
   const handleXpAnimationComplete = () => {
     console.log("XP animation complete, hiding animation and completing workout");
     setShowXpAnimation(false);
-    // Call the onComplete callback to properly finish the workout
-    onComplete();
+    
+    // Clear any pending safety timeouts
+    if (safetyTimeoutId) {
+      window.clearTimeout(safetyTimeoutId);
+      setSafetyTimeoutId(null);
+    }
+    
+    // Use setTimeout to ensure state updates are processed first
+    setTimeout(() => {
+      // Call the onComplete callback to properly finish the workout
+      onComplete();
+    }, 100);
   };
 
   return (

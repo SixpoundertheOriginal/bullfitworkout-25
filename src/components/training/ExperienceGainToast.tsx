@@ -1,180 +1,157 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Star } from 'lucide-react';
+import { ToastAction } from '@/components/ui/toast';
 import { toast } from '@/hooks/use-toast';
-import { Trophy, Star, ArrowUp, Award, Zap } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
 
-interface ExperienceGainData {
+interface ExperienceGainProps {
   amount: number;
-  trainingType?: string | null;
+  trainingType?: string;
   previousLevel?: number;
   newLevel?: number;
 }
 
-/**
- * Shows a toast notification with experience gains
- */
-export function showExperienceGain(data: ExperienceGainData) {
-  const { amount, trainingType, previousLevel, newLevel } = data;
-  const levelUp = newLevel && previousLevel && newLevel > previousLevel;
+// Toast function for XP display
+export const showExperienceGain = ({ amount, trainingType, previousLevel, newLevel }: ExperienceGainProps) => {
+  const isLevelUp = previousLevel !== undefined && newLevel !== undefined && newLevel > previousLevel;
   
   toast({
-    title: levelUp ? "Level Up! 🎉" : "Experience Gained!",
-    description: (
-      <div className="flex flex-col">
-        <div className="flex items-center space-x-2">
-          <Star className="w-4 h-4 text-yellow-400" />
-          <span className="font-mono text-sm font-medium">+{amount} XP</span>
-          {trainingType && (
-            <span className="text-xs opacity-80">({trainingType})</span>
-          )}
-        </div>
-        
-        {levelUp && (
-          <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-1.5 flex items-center text-sm font-medium text-emerald-400"
-          >
-            <ArrowUp className="w-3.5 h-3.5 mr-1" />
-            <span>You reached level {newLevel}!</span>
-          </motion.div>
-        )}
-      </div>
-    ),
-    variant: levelUp ? "default" : "default",
-    duration: levelUp ? 5000 : 3000
+    title: isLevelUp ? `Level Up! ${previousLevel} → ${newLevel}` : `+${amount} XP`,
+    description: trainingType 
+      ? `Gained from ${trainingType} workout`
+      : 'Gained from workout',
+    variant: "default",
+    duration: isLevelUp ? 5000 : 3000,
+    className: isLevelUp ? 'bg-gradient-to-r from-amber-700 to-amber-500 text-amber-50' : undefined,
   });
-}
+};
 
-interface ExperienceGainProps {
-  duration?: number;
-  className?: string;
-  children?: React.ReactNode;
-  onComplete?: () => void;
+// Interface for the overlay props
+export interface ExperienceGainOverlayProps {
   amount: number;
   trainingType?: string;
+  duration?: number;
+  onComplete: () => void;
+  className?: string;
+  children?: React.ReactNode;
 }
 
-/**
- * Visual overlay component for experience gains
- */
-export const ExperienceGainOverlay: React.FC<ExperienceGainProps> = ({
-  amount,
-  trainingType,
-  duration = 2000,
-  className,
-  children,
-  onComplete
+// Full screen overlay component
+export const ExperienceGainOverlay: React.FC<ExperienceGainOverlayProps> = ({ 
+  amount, 
+  trainingType, 
+  duration = 3000,
+  onComplete,
+  className = '',
+  children 
 }) => {
-  React.useEffect(() => {
-    console.log(`Experience animation started, will complete in ${duration}ms`);
-    const timer = setTimeout(() => {
-      console.log("Experience animation timer completed, calling onComplete");
-      onComplete?.();
+  const [show, setShow] = useState(true);
+  const [animationComplete, setAnimationComplete] = useState(false);
+  const [timeoutId, setTimeoutId] = useState<number | null>(null);
+  
+  // When this component mounts, start the auto-dismiss timer
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      console.log("ExperienceGainOverlay: Duration timeout triggered, starting exit animation");
+      setShow(false);
     }, duration);
     
-    return () => clearTimeout(timer);
-  }, [duration, onComplete]);
-
+    setTimeoutId(id as unknown as number);
+    
+    // Safety timeout - ensure we complete even if animation fails
+    const safetyId = window.setTimeout(() => {
+      console.log("ExperienceGainOverlay: Safety timeout triggered");
+      if (!animationComplete) {
+        console.warn("Animation didn't complete normally, forcing completion");
+        handleAnimationComplete();
+      }
+    }, duration + 5000); // 5 seconds after normal timeout
+    
+    return () => {
+      // Always clean up timeouts
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+      window.clearTimeout(safetyId);
+      
+      // If component unmounts before animation completes, ensure callback fires
+      if (!animationComplete) {
+        console.log("ExperienceGainOverlay: Component unmounted before animation completed, calling onComplete");
+        onComplete();
+      }
+    };
+  }, [duration, animationComplete]);
+  
+  // Handle animation complete state
+  const handleAnimationComplete = () => {
+    console.log("ExperienceGainOverlay: Animation completed, calling onComplete callback");
+    setAnimationComplete(true);
+    
+    try {
+      // Call the callback to let parent know we're done
+      if (typeof onComplete === 'function') {
+        onComplete();
+      } else {
+        console.error("ExperienceGainOverlay: onComplete is not a function", onComplete);
+      }
+    } catch (error) {
+      console.error("ExperienceGainOverlay: Error in onComplete callback", error);
+    }
+  };
+  
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, y: -20 }}
-      className={cn(
-        "fixed inset-0 flex items-center justify-center z-50 bg-black/50 backdrop-blur-sm",
-        className
-      )}
-    >
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2, type: "spring" }}
-        className="flex flex-col items-center"
-      >
+    <AnimatePresence onExitComplete={handleAnimationComplete}>
+      {show && (
         <motion.div
-          animate={{ 
-            scale: [1, 1.2, 1],
-            rotate: [0, 5, -5, 0]
-          }}
-          transition={{ 
-            duration: 0.6,
-            times: [0, 0.3, 0.6, 1],
-            repeat: 1
-          }}
-          className="p-4 rounded-full bg-gradient-to-br from-yellow-400 to-amber-600 mb-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0, transition: { duration: 0.5 } }}
+          className={`fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-50 ${className}`}
         >
-          <Trophy className="w-10 h-10 text-white" />
-        </motion.div>
-        
-        <motion.h2
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="text-2xl font-bold text-white mb-1"
-        >
-          Experience Gained!
-        </motion.h2>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="text-4xl font-mono font-bold text-yellow-400 mb-2"
-        >
-          +{amount} XP
-        </motion.div>
-        
-        {trainingType && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.8 }}
-            transition={{ delay: 0.5 }}
-            className="text-white/80 text-sm mb-2"
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", duration: 0.6 }}
+            className="flex items-center gap-3 mb-6"
           >
-            {trainingType} Training
-          </motion.div>
-        )}
-        
-        {/* Animated XP particles */}
-        <div className="relative w-40 h-20">
-          {Array(8).fill(0).map((_, i) => (
             <motion.div
-              key={i}
-              initial={{ 
-                x: 0, 
-                y: 0, 
-                opacity: 0,
-                scale: 0.2 
-              }}
               animate={{ 
-                x: Math.random() * 120 - 60,
-                y: Math.random() * -80 - 20,
-                opacity: [0, 1, 0],
-                scale: [0.2, 0.8, 0.1]
+                rotate: [0, 10, -10, 10, 0],
+                scale: [1, 1.2, 1] 
               }}
-              transition={{ 
-                duration: 1.2 + Math.random() * 0.8,
-                delay: 0.5 + Math.random() * 0.5,
-                ease: "easeOut"
-              }}
-              className="absolute left-1/2 top-1/2"
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="bg-yellow-500 p-3 rounded-full"
             >
-              {i % 4 === 0 ? (
-                <Star className="w-4 h-4 text-yellow-400" />
-              ) : i % 3 === 0 ? (
-                <Zap className="w-4 h-4 text-yellow-300" />
-              ) : (
-                <span className="text-xs font-bold text-yellow-400">+XP</span>
-              )}
+              <Star className="h-8 w-8 text-white" />
             </motion.div>
-          ))}
-        </div>
-        
-        {children}
-      </motion.div>
-    </motion.div>
+            
+            <div className="flex flex-col">
+              <motion.h2
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-2xl sm:text-4xl font-bold text-yellow-400"
+              >
+                +{amount} XP
+              </motion.h2>
+              
+              {trainingType && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="text-white/80 text-sm sm:text-base"
+                >
+                  {trainingType} training
+                </motion.p>
+              )}
+            </div>
+          </motion.div>
+          
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };

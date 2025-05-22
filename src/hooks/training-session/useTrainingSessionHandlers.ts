@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -217,6 +218,22 @@ export const useTrainingSessionHandlers = (
           variant: "destructive"
         });
         // Continue anyway since validateWorkoutState should have fixed issues
+      }
+      
+      // Make sure workoutId exists
+      const store = getStore();
+      const { workoutId } = store.getState();
+      
+      if (!workoutId) {
+        console.warn("❌ Missing workout ID. Generating temporary ID");
+        // Generate and set temporary ID
+        const tempId = `temp-${Date.now()}`;
+        store.setState({ workoutId: tempId });
+        toast({
+          title: "Workout ID missing", 
+          description: "Generated temporary ID to complete workout",
+          variant: "warning"
+        });
       }
       
       // Use the provided config or fall back to the injected one

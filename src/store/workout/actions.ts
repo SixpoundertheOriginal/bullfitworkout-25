@@ -1,3 +1,4 @@
+
 import { toast } from "@/hooks/use-toast";
 import { WorkoutExercises, WorkoutError, WorkoutStatus, ExerciseSet } from "./types";
 import { getStore } from "./store";
@@ -140,6 +141,7 @@ export const resetSession = () => {
     workoutStatus: currentState.workoutStatus,
   });
 
+  // Clear all state completely to avoid any lingering issues
   store.setState({
     exercises: {},
     activeExercise: null,
@@ -163,8 +165,23 @@ export const resetSession = () => {
   });
 
   try {
+    // Clear localStorage to ensure complete cleanup
     localStorage.removeItem("workout-storage");
     console.log("Workout storage cleared from localStorage");
+    
+    // Some browsers may need a delay to ensure state is consistent
+    setTimeout(() => {
+      // Verify the reset was successful
+      const postResetState = store.getState();
+      console.log("Post-reset check - workout is active?", postResetState.isActive);
+      console.log("Post-reset check - exercise count:", Object.keys(postResetState.exercises || {}).length);
+      
+      if (postResetState.isActive || Object.keys(postResetState.exercises || {}).length > 0) {
+        console.warn("Reset may not have fully cleared state, forcing reload");
+        // Last resort - hard reload the page if state persists
+        window.location.reload();
+      }
+    }, 100);
   } catch (e) {
     console.error("Failed to clear localStorage:", e);
   }
@@ -190,6 +207,7 @@ export const markAsSaved = () => {
 
   toast.success("Workout saved successfully!");
 
+  // Schedule resetSession to run after state updates
   setTimeout(() => {
     resetSession();
   }, 500);
@@ -364,17 +382,25 @@ export const validateWorkoutState = () => {
     
     // Check each set for validity with more detailed logging
     const isValid = sets.every(set => {
+      if (!set || typeof set !== 'object') {
+        console.warn(`Invalid set found in "${key}": set is not an object`, set);
+        return false;
+      }
+      
       const validity = (
-        typeof set === 'object' &&
-        set !== null &&
         typeof set.reps === "number" &&
-        set.reps >= 1 &&
+        set.reps >= 0 &&  // Allow 0 temporarily during validation but we'll fix it
+        typeof set.weight !== 'undefined' &&
         typeof set.restTime === "number" &&
         typeof set.set_number === "number"
       );
       
       if (!validity) {
         console.warn(`Invalid set found in "${key}":`, set);
+        if (typeof set.reps !== "number") console.warn(`- reps is not a number: ${typeof set.reps}`);
+        if (typeof set.weight === 'undefined') console.warn(`- weight is missing`);
+        if (typeof set.restTime !== "number") console.warn(`- restTime is not a number: ${typeof set.restTime}`);
+        if (typeof set.set_number !== "number") console.warn(`- set_number is not a number: ${typeof set.set_number}`);
       }
       
       return validity;
@@ -387,6 +413,20 @@ export const validateWorkoutState = () => {
         createDefaultSet(key, 2),
         createDefaultSet(key, 3)
       ];
+      repaired++;
+      hasChanged = true;
+    }
+    
+    // Fix any sets with zero reps (minimum should be 1)
+    const hasBadReps = Array.isArray(sets) && sets.some(set => set.reps === 0);
+    if (hasBadReps) {
+      console.warn(`Exercise "${key}" has sets with 0 reps. Fixing these sets.`);
+      validExercises[key] = sets.map(set => {
+        if (set.reps === 0) {
+          return { ...set, reps: 1 };
+        }
+        return set;
+      });
       repaired++;
       hasChanged = true;
     }
