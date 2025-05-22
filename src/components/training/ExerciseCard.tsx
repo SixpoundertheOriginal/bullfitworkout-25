@@ -1,24 +1,22 @@
-import React, { useState } from "react";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
-import { PlusCircle, ChevronUp, ChevronDown, Trash2, AlertTriangle } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { SetRow } from "@/components/SetRow";
+
+import React, { useState, useEffect } from "react";
+import { Card } from "@/components/ui/card";
 import { ExerciseSet } from "@/types/exercise";
-import { ExerciseCardActions } from "@/components/exercises/cards/ExerciseCardActions";
+import { Button } from "@/components/ui/button";
+import { PlusCircle, ArrowRight, Pencil, Trash2, CheckCircle2, MoreVertical } from "lucide-react";
+import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { SafeExerciseName } from '@/components/exercises/SafeExerciseName';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { SetRow } from "./SetRow";
 import { useIsMobile } from "@/hooks/use-mobile";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Separator } from "@/components/ui/separator";
 
 interface ExerciseCardProps {
   exerciseName: string;
@@ -42,7 +40,7 @@ interface ExerciseCardProps {
   onFocus?: () => void;
 }
 
-const ExerciseCard: React.FC<ExerciseCardProps> = ({
+export const ExerciseCard: React.FC<ExerciseCardProps> = ({
   exerciseName,
   sets,
   isActive,
@@ -61,164 +59,190 @@ const ExerciseCard: React.FC<ExerciseCardProps> = ({
   onRestTimeIncrement,
   onShowRestTimer,
   onResetRestTimer,
-  onFocus,
+  onFocus
 }) => {
-  const [expanded, setExpanded] = useState(false);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [allCompleted, setAllCompleted] = useState(false);
   const isMobile = useIsMobile();
+
+  // Check if all sets are completed
+  useEffect(() => {
+    const completed = sets.every(set => set.completed);
+    setAllCompleted(completed && sets.length > 0);
+  }, [sets]);
   
-  const completedSets = sets.filter(set => set.completed).length;
+  // Calculate how many sets are completed
+  const completedCount = sets.filter(set => set.completed).length;
   const totalSets = sets.length;
-  const progress = totalSets ? (completedSets / totalSets) * 100 : 0;
-  
-  const toggleExpanded = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setExpanded(prev => !prev);
-  };
-  
+  const progressPercentage = totalSets > 0 ? (completedCount / totalSets) * 100 : 0;
+
   const handleCardClick = () => {
-    if (onFocus) {
+    if (onFocus && !isFocused) {
       onFocus();
     }
   };
 
-  const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setDeleteConfirmOpen(true);
-  };
-
-  const confirmDelete = () => {
-    setDeleteConfirmOpen(false);
-    onDeleteExercise();
-  };
-  
   return (
-    <>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      transition={{ duration: 0.3 }}
+      onClick={handleCardClick}
+      className={cn(
+        "mb-4 relative overflow-hidden",
+        isFocused ? "z-20" : "z-10",
+        onFocus && !isFocused ? "cursor-pointer" : ""
+      )}
+    >
       <Card 
         className={cn(
-          "overflow-hidden transition-all duration-300",
-          isFocused ? "border-purple-500/50 bg-gradient-to-br from-purple-900/20 to-gray-900/90" : "bg-gray-900/90",
-          "hover:border-gray-700"
+          "transition-all duration-300 overflow-hidden",
+          isActive ? "border-purple-500/40 shadow-lg shadow-purple-900/10" : "border-gray-800",
+          allCompleted ? "border-green-500/30 bg-gradient-to-br from-green-900/10 to-transparent" : "",
+          isFocused ? "ring-2 ring-purple-500" : ""
         )}
-        onClick={handleCardClick}
       >
-        <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <div className="flex-1">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <SafeExerciseName 
-                  exercise={exerciseName} 
-                  className="text-lg font-medium text-white truncate" 
-                />
-                
-                {!isFocused && completedSets > 0 && (
-                  <span className="ml-2 text-sm text-gray-400">
-                    {completedSets}/{totalSets}
-                  </span>
-                )}
-              </div>
-              
-              <div className="flex space-x-1">
-                {!isFocused && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-red-500 hover:text-red-400 hover:bg-red-900/20"
-                    onClick={handleDeleteClick}
-                  >
-                    <Trash2 size={16} />
-                  </Button>
-                )}
-                
-                {!isFocused && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-gray-400"
-                    onClick={toggleExpanded}
-                  >
-                    {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                  </Button>
+        {/* Progress bar */}
+        {totalSets > 0 && progressPercentage > 0 && (
+          <div className="absolute top-0 left-0 h-1 bg-gradient-to-r from-purple-500 to-blue-500" style={{ width: `${progressPercentage}%` }}></div>
+        )}
+        
+        <div className="p-4">
+          {/* Exercise header */}
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center space-x-2">
+              <div className="flex flex-col">
+                <div className="flex items-center">
+                  <SafeExerciseName 
+                    exercise={exerciseName} 
+                    className="font-semibold text-lg text-white" 
+                  />
+                  {isFocused && <ArrowRight size={16} className="ml-2 text-purple-400" />}
+                </div>
+                {totalSets > 0 && (
+                  <div className="text-sm text-gray-400">
+                    {completedCount}/{totalSets} sets completed
+                  </div>
                 )}
               </div>
             </div>
             
-            {!isFocused && (
-              <div className="w-full h-1 bg-gray-800 rounded-full mt-2">
-                <div 
-                  className="h-1 rounded-full bg-gradient-to-r from-green-500 to-emerald-400" 
-                  style={{ width: `${progress}%` }}
-                />
+            <div className="flex items-center space-x-1">
+              {allCompleted ? (
+                <Badge variant="outline" className="bg-green-900/20 text-green-400 border-green-500/30">
+                  <CheckCircle2 size={12} className="mr-1" /> Completed
+                </Badge>
+              ) : (
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddSet();
+                  }}
+                  size="sm"
+                  className="bg-purple-900/20 border-purple-700/30 hover:bg-purple-800/30"
+                  variant="outline"
+                >
+                  <PlusCircle size={14} className="mr-1" />
+                  <span className="text-xs">Add Set</span>
+                </Button>
+              )}
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <MoreVertical size={16} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-gray-900 border-gray-800">
+                  <DropdownMenuItem
+                    className="text-red-400 focus:text-red-400 focus:bg-red-950/50"
+                    onClick={onDeleteExercise}
+                  >
+                    <Trash2 size={14} className="mr-2" />
+                    Delete Exercise
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+          
+          {/* Exercise sets */}
+          {sets.length > 0 ? (
+            <div>
+              {/* Header row */}
+              <div className="grid grid-cols-12 gap-2 mb-1 px-1 text-xs text-gray-500">
+                <div className="col-span-2">#</div>
+                <div className="col-span-3 text-center">Weight</div>
+                <div className="col-span-3 text-center">Reps</div>
+                <div className="col-span-2 text-center">Rest</div>
+                <div className="col-span-2"></div>
               </div>
-            )}
-          </div>
-        </CardHeader>
-
-        <CardContent className={cn(
-          "transition-all duration-300",
-          isFocused ? "block" : (expanded ? "block" : "hidden")
-        )}>
-          <div className="space-y-2">
-            {sets.map((set, index) => (
-              <SetRow
-                key={`${exerciseName}-set-${index}`}
-                exerciseSet={set}
-                onUpdate={(updatedSet) => {
-                  if (updatedSet.completed !== set.completed) {
-                    onCompleteSet(index);
-                  }
-                  if (updatedSet.weight !== set.weight) {
-                    onWeightChange(index, updatedSet.weight.toString());
-                  }
-                  if (updatedSet.reps !== set.reps) {
-                    onRepsChange(index, updatedSet.reps.toString());
-                  }
-                  if (updatedSet.restTime !== set.restTime) {
-                    onRestTimeChange(index, updatedSet.restTime.toString());
-                  }
+              <Separator className="my-1 bg-gray-800" />
+              
+              {/* Set rows */}
+              <div className="space-y-2 mt-2">
+                {sets.map((set, index) => (
+                  <SetRow
+                    key={`${exerciseName}-set-${index}-${set.id || index}`}
+                    set={set}
+                    index={index}
+                    onComplete={() => onCompleteSet(index)}
+                    onEdit={() => onEditSet(index)}
+                    onSave={() => onSaveSet(index)}
+                    onRemove={() => onRemoveSet(index)}
+                    onWeightChange={(value) => onWeightChange(index, value)}
+                    onRepsChange={(value) => onRepsChange(index, value)}
+                    onRestTimeChange={(value) => onRestTimeChange(index, value)}
+                    onWeightIncrement={(inc) => onWeightIncrement(index, inc)}
+                    onRepsIncrement={(inc) => onRepsIncrement(index, inc)}
+                    onRestTimeIncrement={(inc) => onRestTimeIncrement(index, inc)}
+                    onShowRestTimer={onShowRestTimer}
+                    onResetRestTimer={onResetRestTimer}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-4 bg-gray-800/30 rounded-md">
+              <p className="text-gray-400">No sets added yet</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddSet();
                 }}
-                onDelete={() => onRemoveSet(index)}
-                onTimerStart={onShowRestTimer}
-                onFocusSet={() => onFocus && onFocus()}
-              />
-            ))}
-            
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full border-dashed border-gray-700 mt-2 hover:bg-gray-800/50"
-              onClick={onAddSet}
-            >
-              <PlusCircle className="mr-1 h-3.5 w-3.5 text-gray-400" />
-              <span className="text-xs">Add Set</span>
-            </Button>
-          </div>
-        </CardContent>
+                className="mt-2"
+              >
+                <PlusCircle size={16} className="mr-2" /> Add First Set
+              </Button>
+            </div>
+          )}
+          
+          {/* Exercise actions footer */}
+          {sets.length > 0 && !allCompleted && (
+            <div className="mt-4 flex justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddSet();
+                }}
+                className="bg-purple-900/10 hover:bg-purple-900/20"
+              >
+                <PlusCircle size={16} className="mr-2" /> Add Set
+              </Button>
+            </div>
+          )}
+        </div>
       </Card>
-
-      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <AlertDialogContent className="bg-gray-900 border-gray-800">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-white">Delete Exercise</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{exerciseName}" from your workout? 
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="bg-gray-800 text-white border-gray-700 hover:bg-gray-700">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              className="bg-red-600 hover:bg-red-700 text-white" 
-              onClick={confirmDelete}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+    </motion.div>
   );
 };
 
