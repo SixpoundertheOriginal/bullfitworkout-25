@@ -35,7 +35,7 @@ export const ProgressSnapshot: React.FC = () => {
       const dayLower = day.toLowerCase();
       const adjustedIndex = (index + today) % 7; // Adjust index to make today the last day
       
-      if (stats.dailyWorkouts[dayLower]) {
+      if (stats.dailyWorkouts && stats.dailyWorkouts[dayLower]) {
         streakData[adjustedIndex] = true;
       }
     });

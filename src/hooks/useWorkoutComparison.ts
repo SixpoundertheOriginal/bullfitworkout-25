@@ -94,11 +94,24 @@ export function useWorkoutComparison() {
         previousWeek,
         changes
       });
+      
+      // Update the stats object with weekly comparison data
+      if (stats) {
+        stats.weeklyWorkouts = currentWeek.workouts;
+        stats.lastWeekWorkouts = previousWeek.workouts;
+        stats.weeklyVolume = currentWeek.volume;
+        stats.lastWeekVolume = previousWeek.volume;
+        
+        // Create dailyWorkouts object if it doesn't exist
+        if (!stats.dailyWorkouts) {
+          stats.dailyWorkouts = {};
+        }
+      }
     } catch (error) {
       console.error("Error calculating workout comparison:", error);
       setComparison(null);
     }
-  }, [workouts, loading]);
+  }, [workouts, loading, stats]);
   
   return { comparison, loading };
 }

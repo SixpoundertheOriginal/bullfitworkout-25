@@ -1,4 +1,5 @@
 
+
 export interface WorkoutStats {
   totalWorkouts: number;
   totalXp?: number;
@@ -22,3 +23,4 @@ export interface WorkoutStats {
   avgDuration?: number;
   density?: number;
 }
+
