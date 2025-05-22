@@ -1,0 +1,73 @@
+
+/* iOS-specific animations and styles */
+
+/* Touch feedback effect for iOS-style buttons */
+.ios-touch-feedback {
+  transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.ios-touch-feedback:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+/* iOS-style spring animations */
+.ios-spring-animation {
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* iOS-style modal transitions */
+.ios-modal-in {
+  animation: ios-modal-in 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.ios-modal-out {
+  animation: ios-modal-out 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes ios-modal-in {
+  0% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes ios-modal-out {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+/* iOS-style press animation */
+.ios-press-animation {
+  transition: transform 0.2s cubic-bezier(0.23, 1, 0.32, 1), 
+              box-shadow 0.2s cubic-bezier(0.23, 1, 0.32, 1),
+              opacity 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.ios-press-animation:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+/* iOS-style swipe actions */
+.ios-swipe-actions {
+  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* iOS-style pull to refresh indicator */
+.ios-ptr-indicator {
+  transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Disable highlight on touch for iOS-like feel */
+.touch-callout-none {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}

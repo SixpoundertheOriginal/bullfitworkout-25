@@ -13,10 +13,11 @@ import {
   ChevronDown,
   Info,
   BarChart3,
-  Zap
+  Clipboard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { useHaptics } from '@/hooks/use-haptics';
 
 interface EnhancedExerciseCardProps {
   exerciseName: string;
@@ -47,6 +48,8 @@ export const EnhancedExerciseCard: React.FC<EnhancedExerciseCardProps> = ({
   expanded,
   toggleExpand
 }) => {
+  const { triggerHaptic } = useHaptics();
+  
   const renderMuscleGroups = (muscles?: string[]) => {
     if (!muscles || !muscles.length) return null;
     return muscles.slice(0, 3).map((muscle, i) => (
@@ -60,11 +63,13 @@ export const EnhancedExerciseCard: React.FC<EnhancedExerciseCardProps> = ({
     // If this is clickable to select an exercise
     if (onSelect) {
       e.stopPropagation();
+      triggerHaptic('selection');
       onSelect();
     }
     // If this is expandable
     else if (toggleExpand) {
       e.stopPropagation();
+      triggerHaptic('selection');
       toggleExpand();
     }
   };
@@ -93,6 +98,8 @@ export const EnhancedExerciseCard: React.FC<EnhancedExerciseCardProps> = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.2 }}
+      whileHover={{ scale: 1.01 }}
+      whileTap={{ scale: 0.98 }}
     >
       <Card 
         className={cn(
@@ -100,6 +107,7 @@ export const EnhancedExerciseCard: React.FC<EnhancedExerciseCardProps> = ({
           isVariation && "border-l-purple-700 border-l-2",
           onSelect && "cursor-pointer hover:bg-gray-800/40",
           expanded && "ring-1 ring-purple-500/50",
+          "ios-press-animation",
           className
         )}
         onClick={handleClick}
@@ -124,8 +132,10 @@ export const EnhancedExerciseCard: React.FC<EnhancedExerciseCardProps> = ({
                     className="h-6 w-6 p-0 ml-auto"
                     onClick={(e) => {
                       e.stopPropagation();
+                      triggerHaptic('selection');
                       if (toggleExpand) toggleExpand();
                     }}
+                    haptic
                   >
                     {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                   </Button>
@@ -166,8 +176,10 @@ export const EnhancedExerciseCard: React.FC<EnhancedExerciseCardProps> = ({
                   className="h-8 w-8 p-0 text-blue-500 hover:text-blue-400 hover:bg-blue-900/20"
                   onClick={(e) => {
                     e.stopPropagation();
+                    triggerHaptic('selection');
                     onViewDetails();
                   }}
+                  haptic
                 >
                   <Info className="h-4 w-4" />
                 </Button>
@@ -180,8 +192,10 @@ export const EnhancedExerciseCard: React.FC<EnhancedExerciseCardProps> = ({
                   className="h-8 px-2 bg-purple-900/20 border-purple-800/30 hover:bg-purple-800/30"
                   onClick={(e) => {
                     e.stopPropagation();
+                    triggerHaptic('selection');
                     onAdd();
                   }}
+                  haptic
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -194,8 +208,10 @@ export const EnhancedExerciseCard: React.FC<EnhancedExerciseCardProps> = ({
                   className="h-8 px-2 bg-gray-800 border-gray-700 hover:bg-gray-700"
                   onClick={(e) => {
                     e.stopPropagation();
+                    triggerHaptic('selection');
                     onAddVariation();
                   }}
+                  haptic
                 >
                   <Plus className="h-3.5 w-3.5 mr-1" />
                   Variation
@@ -209,8 +225,10 @@ export const EnhancedExerciseCard: React.FC<EnhancedExerciseCardProps> = ({
                   className="h-8 w-8 p-0"
                   onClick={(e) => {
                     e.stopPropagation();
+                    triggerHaptic('selection');
                     onEdit();
                   }}
+                  haptic
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
@@ -223,8 +241,11 @@ export const EnhancedExerciseCard: React.FC<EnhancedExerciseCardProps> = ({
                   className="h-8 w-8 p-0 text-red-500 hover:text-red-400 hover:bg-gray-800"
                   onClick={(e) => {
                     e.stopPropagation();
+                    triggerHaptic('warning');
                     onDelete();
                   }}
+                  haptic
+                  hapticPattern="warning"
                 >
                   <Trash className="h-4 w-4" />
                 </Button>

@@ -6,6 +6,7 @@ import { Exercise, MuscleGroup, EquipmentType, MovementPattern, Difficulty } fro
 import { ExerciseVariationGroup } from "@/components/exercises/ExerciseVariationGroup";
 import { useExerciseList } from "../hooks/useExerciseList";
 import { ExercisePagination } from "./ExercisePagination";
+import { EnhancedExerciseVariationGroup } from "../components/EnhancedExerciseVariationGroup";
 
 interface ExerciseTabContentProps {
   tab: "suggested" | "recent" | "browse";
@@ -22,6 +23,7 @@ interface ExerciseTabContentProps {
     selectedDifficulty: Difficulty | "all";
     selectedMovement: MovementPattern | "all";
   };
+  useEnhancedUI?: boolean;
 }
 
 export function ExerciseTabContent({
@@ -32,7 +34,8 @@ export function ExerciseTabContent({
   onSelectExercise,
   standalone,
   showPagination = false,
-  filters
+  filters,
+  useEnhancedUI = true
 }: ExerciseTabContentProps) {
   const {
     filteredExercises,
@@ -45,6 +48,20 @@ export function ExerciseTabContent({
   // Render ExerciseVariationGroup component
   const renderExerciseVariationGroup = (exercise: Exercise) => {
     if (!exercise) return null;
+    
+    if (useEnhancedUI) {
+      return (
+        <div key={exercise.id} className="mb-4">
+          <EnhancedExerciseVariationGroup
+            baseExercise={exercise}
+            onSelect={standalone ? undefined : onSelectExercise}
+            onEdit={standalone ? onEdit : undefined}
+            onDelete={standalone ? onDelete : undefined}
+            onAddVariation={standalone ? onAddVariation : undefined}
+          />
+        </div>
+      );
+    }
     
     return (
       <div key={exercise.id} className="mb-4">

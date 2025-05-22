@@ -1,3 +1,5 @@
+/* Import iOS-specific animations and styles */
+@import './styles/ios-animations.css';
 
 #root {
   max-width: 1280px;

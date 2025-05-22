@@ -1,0 +1,93 @@
+
+import React, { useState } from 'react';
+import { Exercise } from '@/types/exercise';
+import { EnhancedExerciseCard } from '@/components/exercises/EnhancedExerciseCard';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useExercises } from '@/hooks/exercise/useExerciseQueries';
+import { useHaptics } from '@/hooks/use-haptics';
+
+interface EnhancedExerciseVariationGroupProps {
+  baseExercise: Exercise;
+  onSelect?: (exercise: Exercise) => void;
+  onEdit?: (exercise: Exercise) => void;
+  onDelete?: (exercise: Exercise) => void;
+  onAddVariation?: (exercise: Exercise) => void;
+}
+
+export const EnhancedExerciseVariationGroup: React.FC<EnhancedExerciseVariationGroupProps> = ({
+  baseExercise,
+  onSelect,
+  onEdit,
+  onDelete,
+  onAddVariation
+}) => {
+  const { exercises } = useExercises();
+  const [expanded, setExpanded] = useState(false);
+  const { triggerHaptic } = useHaptics();
+
+  // Find variations for this base exercise
+  const variations = React.useMemo(() => {
+    if (!baseExercise?.id || !exercises) return [];
+    
+    return exercises.filter(ex => 
+      ex?.base_exercise_id === baseExercise.id
+    );
+  }, [baseExercise, exercises]);
+
+  // Toggle expanded state to show/hide variations
+  const toggleExpand = () => {
+    triggerHaptic('selection');
+    setExpanded(prev => !prev);
+  };
+
+  return (
+    <div className="space-y-2">
+      {/* Base exercise */}
+      <EnhancedExerciseCard
+        exerciseName={baseExercise.name}
+        exerciseData={baseExercise}
+        onSelect={onSelect ? () => onSelect(baseExercise) : undefined}
+        onEdit={onEdit ? () => onEdit(baseExercise) : undefined}
+        onDelete={onDelete ? () => onDelete(baseExercise) : undefined}
+        onAddVariation={onAddVariation ? () => onAddVariation(baseExercise) : undefined}
+        expanded={expanded}
+        toggleExpand={variations.length > 0 ? toggleExpand : undefined}
+      />
+      
+      {/* Variations */}
+      {variations.length > 0 && (
+        <AnimatePresence>
+          {expanded && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="pl-4 space-y-2 overflow-hidden"
+            >
+              {variations.map(variation => (
+                <motion.div
+                  key={variation.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <EnhancedExerciseCard
+                    exerciseName={variation.name}
+                    exerciseData={variation}
+                    isVariation
+                    onSelect={onSelect ? () => onSelect(variation) : undefined}
+                    onEdit={onEdit ? () => onEdit(variation) : undefined}
+                    onDelete={onDelete ? () => onDelete(variation) : undefined}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
+    </div>
+  );
+};
+
+export default EnhancedExerciseVariationGroup;

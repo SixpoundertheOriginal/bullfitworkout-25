@@ -11,8 +11,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Exercise } from "@/types/exercise";
 import { useAuth } from "@/hooks/useAuth";
 import { ExerciseDetailView } from "./components/ExerciseDetailView";
+import { EnhancedExerciseDetailView } from "./components/EnhancedExerciseDetailView";
 import { Separator } from "@/components/ui/separator";
 import { motion, AnimatePresence } from "framer-motion";
+import { isIOS } from "@/utils/iosUtils";
 
 interface ExerciseLibraryPageProps {
   onSelectExercise?: (exercise: string | Exercise) => void;
@@ -29,6 +31,8 @@ export default function ExerciseLibraryPage({
   const isMobile = useIsMobile();
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [useNewDialog, setUseNewDialog] = useState(true);
+  const [useEnhancedDetail, setUseEnhancedDetail] = useState(true);
+  const isIOSDevice = isIOS();
   
   const {
     showDialog,
@@ -58,6 +62,24 @@ export default function ExerciseLibraryPage({
 
   const handleCloseDetail = () => {
     setSelectedExercise(null);
+  };
+
+  const renderDetailView = () => {
+    if (!selectedExercise) return null;
+    
+    return useEnhancedDetail ? (
+      <EnhancedExerciseDetailView 
+        exercise={selectedExercise}
+        onClose={handleCloseDetail}
+        onEditExercise={handleEdit}
+      />
+    ) : (
+      <ExerciseDetailView 
+        exercise={selectedExercise} 
+        onClose={handleCloseDetail}
+        onEditExercise={handleEdit}
+      />
+    );
   };
 
   return (
@@ -124,14 +146,10 @@ export default function ExerciseLibraryPage({
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.3, ease: isIOSDevice ? [0.23, 1, 0.32, 1] : 'easeOut' }}
                     className="hidden md:flex flex-col flex-1 overflow-hidden"
                   >
-                    <ExerciseDetailView 
-                      exercise={selectedExercise} 
-                      onClose={handleCloseDetail}
-                      onEditExercise={handleEdit}
-                    />
+                    {renderDetailView()}
                   </motion.div>
                 )}
               </AnimatePresence>
