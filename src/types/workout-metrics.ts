@@ -67,6 +67,12 @@ export interface WorkoutStats {
   density?: number;
   intensity?: number;
   totalVolume?: number;
+  // Add weekly comparison properties
+  weeklyWorkouts?: number;
+  lastWeekWorkouts?: number;
+  weeklyVolume?: number;
+  lastWeekVolume?: number;
+  dailyWorkouts?: Record<string, number>;
 }
 
 // Updated TopExerciseStats interface to include trend properties

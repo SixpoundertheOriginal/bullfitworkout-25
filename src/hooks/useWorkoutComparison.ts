@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useWorkoutStats } from '@/hooks/useWorkoutStats';
 import { subDays, startOfWeek, endOfWeek } from 'date-fns';
-import { WorkoutStats } from '@/types/workoutStats';
+import { WorkoutStats } from '@/types/workout-metrics';
 
 export interface WorkoutComparison {
   currentWeek: {
