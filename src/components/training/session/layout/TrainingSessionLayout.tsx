@@ -41,9 +41,10 @@ export const TrainingSessionLayout: React.FC<TrainingSessionLayoutProps> = ({
   // Lock screen orientation to portrait for training sessions
   useEffect(() => {
     // Check if the Screen Orientation API is available
-    if (screen.orientation && screen.orientation.lock) {
+    if (typeof screen !== 'undefined' && screen.orientation) {
       try {
-        screen.orientation.lock('portrait').catch(err => {
+        // Use type assertion to access the lock method
+        (screen.orientation as any).lock('portrait').catch(err => {
           console.log('Orientation lock not supported:', err);
         });
       } catch (err) {
@@ -53,9 +54,10 @@ export const TrainingSessionLayout: React.FC<TrainingSessionLayoutProps> = ({
     
     return () => {
       // Unlock orientation when unmounting
-      if (screen.orientation && screen.orientation.unlock) {
+      if (typeof screen !== 'undefined' && screen.orientation) {
         try {
-          screen.orientation.unlock();
+          // Use type assertion for unlock as well
+          (screen.orientation as any).unlock();
         } catch (err) {
           console.log('Failed to unlock orientation');
         }

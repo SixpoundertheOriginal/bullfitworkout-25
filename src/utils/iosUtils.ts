@@ -62,7 +62,9 @@ export const getSafeAreaInsets = (): { top: number; right: number; bottom: numbe
 
 // Apply iOS-style momentum scrolling to an element
 export const applyIOSScrolling = (element: HTMLElement): void => {
-  element.style.WebkitOverflowScrolling = 'touch';
+  // Use standard properties instead of vendor-prefixed ones
+  // TypeScript doesn't recognize WebkitOverflowScrolling as a valid CSS property
+  (element.style as any).WebkitOverflowScrolling = 'touch';
   element.style.overscrollBehavior = 'none';
   element.style.overflowY = 'auto';
 };
@@ -72,7 +74,7 @@ export const getIOSSpringAnimation = (
   damping = 'medium'
 ): { stiffness: number; damping: number; mass: number } => {
   // iOS-style spring animations with different damping levels
-  const springPresets = {
+  const springPresets: Record<string, { stiffness: number; damping: number; mass: number }> = {
     light: { stiffness: 300, damping: 20, mass: 1 },
     medium: { stiffness: 400, damping: 28, mass: 1 },
     heavy: { stiffness: 500, damping: 36, mass: 1 },
@@ -111,6 +113,7 @@ export const getIOSSystemFont = (): string => {
 
 // Convert rem to px for consistent scaling on iOS
 export const remToPx = (rem: number): number => {
+  if (typeof window === 'undefined') return rem * 16; // Default assumption
   const fontSize = window.getComputedStyle(document.documentElement).fontSize;
   return rem * parseFloat(fontSize);
 };

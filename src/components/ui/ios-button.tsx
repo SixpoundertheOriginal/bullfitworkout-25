@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { useHaptics } from "@/hooks/use-haptics";
+import { useHaptics, HapticPattern } from "@/hooks/use-haptics";
 import { Slot } from "@radix-ui/react-slot";
 
 // Define iOS-style button variants
@@ -29,7 +29,7 @@ export interface IOSButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEle
   iconRight?: React.ReactNode;
   fullWidth?: boolean;
   haptic?: boolean;
-  hapticPattern?: Parameters<typeof useHaptics>['0']['triggerHaptic'][0];
+  hapticPattern?: HapticPattern;
 }
 
 const IOSButton = React.forwardRef<HTMLButtonElement, IOSButtonProps>(

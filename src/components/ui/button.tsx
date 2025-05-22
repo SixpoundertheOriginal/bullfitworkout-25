@@ -3,7 +3,7 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
-import { useHaptics } from "@/hooks/use-haptics"
+import { useHaptics, HapticPattern } from "@/hooks/use-haptics"
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-base font-montserrat font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none",
@@ -72,7 +72,7 @@ export interface ButtonProps
   icon?: React.ReactNode
   iconOnly?: boolean
   haptic?: boolean
-  hapticPattern?: Parameters<typeof useHaptics>['0']['triggerHaptic'][0]
+  hapticPattern?: HapticPattern
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
