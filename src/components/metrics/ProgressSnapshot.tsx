@@ -11,18 +11,18 @@ export const ProgressSnapshot: React.FC = () => {
   const { stats, loading } = useWorkoutStats();
   
   // Extract weekly metrics from stats with safe fallbacks
-  const weeklyWorkouts = stats?.weeklyWorkouts || 0;
-  const lastWeekWorkouts = stats?.lastWeekWorkouts || 0;
+  const weeklyWorkouts = stats?.weeklyWorkouts ?? 0;
+  const lastWeekWorkouts = stats?.lastWeekWorkouts ?? 0;
   const workoutChange = weeklyWorkouts - lastWeekWorkouts;
   const workoutChangePercent = lastWeekWorkouts ? Math.round((workoutChange / lastWeekWorkouts) * 100) : 0;
   
-  const weeklyVolume = stats?.weeklyVolume || 0;
-  const lastWeekVolume = stats?.lastWeekVolume || 0;
+  const weeklyVolume = stats?.weeklyVolume ?? 0;
+  const lastWeekVolume = stats?.lastWeekVolume ?? 0;
   const volumeChange = weeklyVolume - lastWeekVolume;
   const volumeChangePercent = lastWeekVolume ? Math.round((volumeChange / lastWeekVolume) * 100) : 0;
   
   // Generate streakData array for mini-calendar visualization
-  const currentStreak = stats?.streakDays || 0;
+  const currentStreak = stats?.streakDays ?? 0;
   const streakData = Array(7).fill(false);
   
   // Fill in streak data based on dailyWorkouts

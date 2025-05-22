@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useWorkoutStats } from '@/hooks/useWorkoutStats';
 import { subDays, startOfWeek, endOfWeek } from 'date-fns';
+import { WorkoutStats } from '@/types/workoutStats';
 
 export interface WorkoutComparison {
   currentWeek: {
@@ -97,16 +98,18 @@ export function useWorkoutComparison() {
       
       // Update the stats object with weekly comparison data
       if (stats) {
-        // Create a type assertion to allow property assignment
-        const extendedStats = stats as any;
-        extendedStats.weeklyWorkouts = currentWeek.workouts;
-        extendedStats.lastWeekWorkouts = previousWeek.workouts;
-        extendedStats.weeklyVolume = currentWeek.volume;
-        extendedStats.lastWeekVolume = previousWeek.volume;
+        // Create a mutable typed variable
+        const statsCopy = stats as WorkoutStats;
+        
+        // Update weekly stats properly
+        statsCopy.weeklyWorkouts = currentWeek.workouts;
+        statsCopy.lastWeekWorkouts = previousWeek.workouts;
+        statsCopy.weeklyVolume = currentWeek.volume;
+        statsCopy.lastWeekVolume = previousWeek.volume;
         
         // Create dailyWorkouts object if it doesn't exist
-        if (!extendedStats.dailyWorkouts) {
-          extendedStats.dailyWorkouts = {};
+        if (!statsCopy.dailyWorkouts) {
+          statsCopy.dailyWorkouts = {};
         }
       }
     } catch (error) {
