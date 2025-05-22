@@ -4,15 +4,24 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfileForm } from "@/components/UserProfileForm";
-import { UserStats } from "@/components/UserStats";
 import { Loader2 } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { ProfileHeader } from "@/components/profile/ProfileHeader";
+import { TabsContent } from "@/components/ui/tabs";
+import { useLocation } from "react-router-dom";
+
+// Import new components
+import { EnhancedProfileHeader } from "@/components/profile/EnhancedProfileHeader";
+import { ProfileDashboard } from "@/components/profile/ProfileDashboard";
+import { EnhancedTabs } from "@/components/profile/EnhancedTabs";
 import { StatsSection } from "@/components/profile/StatsSection";
 import { RecentWorkoutsSection } from "@/components/profile/RecentWorkoutsSection";
 import { SettingsSection } from "@/components/profile/SettingsSection";
-import { useLocation } from "react-router-dom";
+import { AchievementBadges } from "@/components/profile/AchievementBadges";
+
+// Import new hooks
+import { useUserExperience } from "@/hooks/useUserExperience";
+import { useUserAchievements } from "@/hooks/useUserAchievements";
+import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 
 export type UserProfileData = {
   full_name: string | null;
@@ -39,10 +48,15 @@ const ProfilePage = () => {
     totalDuration: 0
   });
   
-  // Get tab from URL query param or default to "stats"
+  // Get tab from URL query param or default to "dashboard"
   const searchParams = new URLSearchParams(location.search);
-  const defaultTab = searchParams.get("tab") || "stats";
+  const defaultTab = searchParams.get("tab") || "dashboard";
   const [activeTab, setActiveTab] = useState(defaultTab);
+
+  // Use our new hooks
+  const { experienceData, loading: expLoading } = useUserExperience();
+  const { achievements, loading: achievementsLoading } = useUserAchievements();
+  const { completionPercentage } = useProfileCompletion(profileData);
 
   // Update URL when tab changes without full navigation
   const handleTabChange = useCallback((value: string) => {
@@ -182,28 +196,32 @@ const ProfilePage = () => {
           </div>
         ) : (
           <>
-            <ProfileHeader 
+            <EnhancedProfileHeader 
               fullName={profileData?.full_name || user?.user_metadata?.full_name}
               email={user?.email}
               avatarUrl={user?.user_metadata?.avatar_url}
               fitnessGoal={profileData?.fitness_goal}
+              experienceData={experienceData}
               onAvatarChange={handleAvatarChange}
             />
             
-            <Tabs 
-              defaultValue="stats" 
-              value={activeTab} 
-              onValueChange={handleTabChange} 
-              className="w-full"
+            <EnhancedTabs 
+              defaultTab="dashboard" 
+              activeTab={activeTab} 
+              onTabChange={handleTabChange}
             >
-              <TabsList className="grid grid-cols-2 bg-gray-800 border-gray-700 mb-6">
-                <TabsTrigger value="stats" className="data-[state=active]:bg-gray-700">
-                  Stats
-                </TabsTrigger>
-                <TabsTrigger value="profile" className="data-[state=active]:bg-gray-700">
-                  Edit Profile
-                </TabsTrigger>
-              </TabsList>
+              <TabsContent value="dashboard" className="mt-0 space-y-6">
+                <ProfileDashboard 
+                  stats={{
+                    ...statsData,
+                    profileCompletion: completionPercentage
+                  }}
+                />
+                
+                <AchievementBadges achievements={achievements} />
+                
+                <RecentWorkoutsSection workouts={recentWorkouts} />
+              </TabsContent>
               
               <TabsContent value="stats" className="mt-0 space-y-6">
                 <StatsSection 
@@ -228,7 +246,7 @@ const ProfilePage = () => {
                   )}
                 </div>
               </TabsContent>
-            </Tabs>
+            </EnhancedTabs>
           </>
         )}
       </main>
