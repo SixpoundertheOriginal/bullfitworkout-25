@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -400,7 +399,7 @@ export function ExerciseDialogV2({
                     Instruction Steps
                   </label>
                   
-                  {exercise.instructions?.steps && exercise.instructions.steps.length > 0 ? (
+                  {Array.isArray(exercise.instructions?.steps) && exercise.instructions.steps.length > 0 ? (
                     <div className="space-y-2">
                       {exercise.instructions.steps.map((step: string, index: number) => (
                         <div key={index} className="flex items-start space-x-2">

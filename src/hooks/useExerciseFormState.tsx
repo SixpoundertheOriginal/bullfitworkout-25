@@ -1,6 +1,6 @@
 
-import { useState, useEffect } from 'react';
-import { Exercise } from '@/types/exercise';
+import { useState, useEffect, useCallback } from 'react';
+import { Exercise, MovementPattern, Difficulty, MuscleGroup } from '@/types/exercise';
 import { Variation } from '@/types/exerciseVariation';
 
 const emptyExercise = {
@@ -31,7 +31,7 @@ export function useExerciseFormState(initialExercise: Exercise | undefined, isOp
         const variationList = initialExercise.metadata?.variations || [];
         
         // Transform instructions if needed
-        let instructions = initialExercise.instructions || { steps: [] };
+        let instructions = initialExercise.instructions || { steps: [], video_url: '' };
         if (typeof instructions === 'object' && !Array.isArray(instructions.steps)) {
           // If instructions is an object but doesn't have steps array, create it
           const steps = Object.entries(instructions)
@@ -39,7 +39,7 @@ export function useExerciseFormState(initialExercise: Exercise | undefined, isOp
             .sort(([a], [b]) => parseInt(a) - parseInt(b))
             .map(([, value]) => value as string);
             
-          instructions = { ...instructions, steps };
+          instructions = { ...instructions, steps, video_url: instructions.video_url || '' };
         }
         
         setExercise({

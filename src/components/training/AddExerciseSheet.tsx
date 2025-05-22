@@ -271,8 +271,8 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
             </div>
             
             {/* Quick filters */}
-            <ScrollArea className="w-full" orientation="horizontal">
-              <div className="flex space-x-2 mb-4 pb-1 pt-1">
+            <ScrollArea className="w-full">
+              <div className="flex space-x-2 mb-4 pb-1 pt-1 overflow-x-auto">
                 <Badge 
                   variant={selectedMuscleGroup === "all" ? "default" : "outline"} 
                   className={`cursor-pointer py-1 px-3 ${selectedMuscleGroup === "all" ? "bg-purple-600" : "bg-gray-800 hover:bg-gray-700"}`}
