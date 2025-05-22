@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useWorkoutStats } from '@/hooks/useWorkoutStats';
 import { subDays, startOfWeek, endOfWeek } from 'date-fns';
