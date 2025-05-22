@@ -29,7 +29,8 @@ const TrainingSessionPage = () => {
     handleFinishWorkout,
     isSaving,
     workoutStatus,
-    setIsAddExerciseSheetOpen
+    setIsAddExerciseSheetOpen,
+    nextExerciseName
   } = useTrainingSession();
 
   // Initialize the workout timer

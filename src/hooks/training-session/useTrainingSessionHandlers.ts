@@ -151,6 +151,49 @@ export const useTrainingSessionHandlers = (
     });
   }, [setExercises]);
   
+  // Enhanced handleNextExercise with better logging and ability to handle no-next-exercise scenario
+  const handleNextExercise = useCallback((
+    nextExerciseName: string | null, 
+    handleFinishWorkout: () => Promise<string | null>,
+    onAddExerciseCallback?: () => void // Added param for opening add exercise dialog
+  ) => {
+    console.log("useTrainingSessionHandlers: handleNextExercise called with", { 
+      nextExerciseName, 
+      hasAddExerciseCallback: !!onAddExerciseCallback 
+    });
+    
+    setShowCompletionConfirmation(false);
+    
+    if (nextExerciseName) {
+      console.log("useTrainingSessionHandlers: Focusing next exercise:", nextExerciseName);
+      setFocusedExercise(nextExerciseName);
+    } else {
+      // No more exercises
+      console.log("useTrainingSessionHandlers: No more exercises available");
+      
+      // If we have a callback to add exercises, we'll open the add exercise sheet
+      if (onAddExerciseCallback && typeof onAddExerciseCallback === 'function') {
+        console.log("useTrainingSessionHandlers: Opening add exercise dialog via callback");
+        
+        // Small delay to ensure UI state is updated properly
+        setTimeout(() => {
+          onAddExerciseCallback();
+        }, 100);
+      } else {
+        // Fallback to toast with finish workout option
+        console.log("useTrainingSessionHandlers: No add exercise callback provided, showing toast");
+        toast({
+          title: "All exercises completed!",
+          description: "You've completed all exercises in this workout.",
+          action: {
+            label: "Finish Workout",
+            onClick: handleFinishWorkout
+          }
+        });
+      }
+    }
+  }, [setShowCompletionConfirmation, setFocusedExercise]);
+  
   return {
     handleAddExercise,
     handleAddSet,
@@ -168,23 +211,7 @@ export const useTrainingSessionHandlers = (
       setCompletedExerciseName(exerciseName);
       setShowCompletionConfirmation(true);
     },
-    handleNextExercise: (nextExerciseName: string | null, handleFinishWorkout: () => Promise<string | null>) => {
-      setShowCompletionConfirmation(false);
-      
-      if (nextExerciseName) {
-        setFocusedExercise(nextExerciseName);
-      } else {
-        // No more exercises, prompt to finish workout
-        toast({
-          title: "All exercises completed!",
-          description: "You've completed all exercises in this workout.",
-          action: {
-            label: "Finish Workout",
-            onClick: handleFinishWorkout
-          }
-        });
-      }
-    },
+    handleNextExercise,
     handleFinishWorkout: async (trainingConfigParam?: any) => {
       console.log("handleFinishWorkout called with config:", trainingConfigParam || trainingConfig);
       console.log("Current completedSets:", completedSets);
