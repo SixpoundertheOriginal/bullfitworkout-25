@@ -22,8 +22,10 @@ const TrainingSessionPage = () => {
     const timer = setTimeout(() => {
       const isValid = validateWorkoutState();
       if (!isValid) {
-        toast.warning("Workout session was reset due to data inconsistency", {
-          description: "Start a new workout to continue"
+        toast({
+          title: "Workout session was reset",
+          description: "Start a new workout to continue",
+          variant: "destructive"
         });
         navigate('/');
       }

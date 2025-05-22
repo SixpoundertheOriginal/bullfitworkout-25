@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, Filter, X, ArrowLeft } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Exercise } from "@/types/exercise";
 import { useExerciseSuggestions } from "@/hooks/useExerciseSuggestions";
@@ -13,6 +13,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AllExercisesPage from "@/pages/AllExercisesPage";
 import { ExerciseDialogV2 } from '@/components/ExerciseDialogV2';
 import { getExerciseName } from "@/utils/exerciseAdapter";
+import { EnhancedExerciseCard } from '@/components/exercises/EnhancedExerciseCard';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface AddExerciseSheetProps {
   open: boolean;
@@ -39,6 +44,8 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
   const [showAllExercises, setShowAllExercises] = useState(false);
   const [exerciseDialogV2Open, setExerciseDialogV2Open] = useState(false);
   const [isClosePending, setIsClosePending] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedMuscleGroup, setSelectedMuscleGroup] = useState("all");
 
   // Track whether a selection has been made recently
   const [hasRecentlySelected, setHasRecentlySelected] = useState(false);
@@ -51,6 +58,7 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
     if (open) {
       setHasRecentlySelected(false);
       setIsClosePending(false);
+      setSearchQuery("");
     }
   }, [open]);
 
@@ -76,8 +84,8 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
       
       exerciseNames.forEach(name => {
         const exercise = allExercises.find(e => e?.name === name);
-        if (exercise && !exerciseMap.has(exercise.id)) {
-          exerciseMap.set(exercise.id, exercise);
+        if (exercise && !exerciseMap.has(exercise.id || '')) {
+          exerciseMap.set(exercise.id || '', exercise);
         }
       });
     });
@@ -85,32 +93,63 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
     return Array.from(exerciseMap.values());
   }, [workouts, allExercises]);
 
-  // Filter exercises based on search query
+  // Filter exercises based on search query and filters
   const filteredSuggested = React.useMemo(() => {
     // Ensure suggestedExercises is an array
     if (!Array.isArray(suggestedExercises)) return [];
     
-    return searchQuery
-      ? suggestedExercises.filter(e => 
-          e && e.name && e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (e && e.primary_muscle_groups && Array.isArray(e.primary_muscle_groups) && 
-           e.primary_muscle_groups.some(m => m && m.toLowerCase().includes(searchQuery.toLowerCase())))
-        )
-      : suggestedExercises;
-  }, [suggestedExercises, searchQuery]);
+    let filtered = suggestedExercises;
+    
+    // Apply search filter
+    if (searchQuery) {
+      filtered = filtered.filter(e => 
+        e && e.name && e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (e && e.primary_muscle_groups && Array.isArray(e.primary_muscle_groups) && 
+         e.primary_muscle_groups.some(m => m && m.toLowerCase().includes(searchQuery.toLowerCase())))
+      );
+    }
+    
+    // Apply muscle group filter
+    if (selectedMuscleGroup !== "all") {
+      filtered = filtered.filter(e => 
+        e && e.primary_muscle_groups && Array.isArray(e.primary_muscle_groups) && 
+        e.primary_muscle_groups.includes(selectedMuscleGroup)
+      );
+    }
+    
+    return filtered;
+  }, [suggestedExercises, searchQuery, selectedMuscleGroup]);
 
   const filteredRecent = React.useMemo(() => {
     // Ensure recentExercises is an array
     if (!Array.isArray(recentExercises)) return [];
     
-    return searchQuery
-      ? recentExercises.filter(e => 
-          e && e.name && e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (e && e.primary_muscle_groups && Array.isArray(e.primary_muscle_groups) && 
-           e.primary_muscle_groups.some(m => m && m.toLowerCase().includes(searchQuery.toLowerCase())))
-        )
-      : recentExercises;
-  }, [recentExercises, searchQuery]);
+    let filtered = recentExercises;
+    
+    // Apply search filter
+    if (searchQuery) {
+      filtered = filtered.filter(e => 
+        e && e.name && e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (e && e.primary_muscle_groups && Array.isArray(e.primary_muscle_groups) && 
+         e.primary_muscle_groups.some(m => m && m.toLowerCase().includes(searchQuery.toLowerCase())))
+      );
+    }
+    
+    // Apply muscle group filter
+    if (selectedMuscleGroup !== "all") {
+      filtered = filtered.filter(e => 
+        e && e.primary_muscle_groups && Array.isArray(e.primary_muscle_groups) && 
+        e.primary_muscle_groups.includes(selectedMuscleGroup)
+      );
+    }
+    
+    return filtered;
+  }, [recentExercises, searchQuery, selectedMuscleGroup]);
+
+  // Common muscle groups for quick filters
+  const quickFilterMuscleGroups = [
+    "chest", "back", "shoulders", "biceps", "triceps", "legs", "core"
+  ];
 
   // Always pass exercise name string and prevent double selections
   const handleAddExercise = (exercise: Exercise | string) => {
@@ -134,8 +173,10 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
       description: `Added ${exerciseName} to your workout`
     });
     
-    // Let the parent component handle closing the sheet
-    console.log('📋 AddExerciseSheet: Selection complete, parent will handle closing');
+    // Close the sheet after a short delay
+    setTimeout(() => {
+      onOpenChange(false);
+    }, 300);
   };
 
   // Handle open state changes with better logging
@@ -146,8 +187,6 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
     if (!isOpen && hasRecentlySelected) {
       console.log('📋 AddExerciseSheet: Detected close after selection, delaying to ensure exercise is added');
       setIsClosePending(true);
-      
-      // Let parent decide when to close
       return;
     }
     
@@ -155,29 +194,9 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
     onOpenChange(isOpen);
   };
 
-  const renderExerciseCard = (exercise: Exercise) => {
-    if (!exercise || !Array.isArray(exercise.primary_muscle_groups)) return null;
-    
-    const muscleGroups = (Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : [])
-      .slice(0, 2).join(', ');
-    
-    return (
-      <div key={exercise.id} className="flex items-center justify-between p-3 mb-2 bg-gray-800/50 rounded-lg border border-gray-700/50">
-        <div className="flex flex-col flex-1 mr-2">
-          <span className="font-medium text-white">{exercise.name}</span>
-          <span className="text-sm text-gray-400">{muscleGroups}</span>
-        </div>
-        <Button
-          onClick={() => handleAddExercise(exercise.name)}
-          size="sm"
-          variant="outline"
-          className="h-9 px-3 rounded-full bg-purple-900/30 border-purple-500/30 hover:bg-purple-800/50"
-        >
-          <Plus size={16} className="mr-1" />
-          Add
-        </Button>
-      </div>
-    );
+  // Function to handle creating a new exercise
+  const handleCreateExercise = () => {
+    setExerciseDialogV2Open(true);
   };
 
   // If showing all exercises page
@@ -188,6 +207,19 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
           side="bottom" 
           className="h-[90vh] rounded-t-xl border-t border-gray-700 bg-gray-900 p-0 z-[100]"
         >
+          <div className="flex items-center justify-between p-4 border-b border-gray-800">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowAllExercises(false)}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft size={16} />
+              Back
+            </Button>
+            <h2 className="text-lg font-semibold">Browse All Exercises</h2>
+            <div className="w-10"></div> {/* Spacer for alignment */}
+          </div>
           <AllExercisesPage 
             onSelectExercise={(exercise) => handleAddExercise(getExerciseName(exercise))}
             standalone={false}
@@ -226,7 +258,41 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
+              {searchQuery && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="absolute right-2 top-1.5 h-7 w-7 p-0"
+                  onClick={() => setSearchQuery("")}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
             </div>
+            
+            {/* Quick filters */}
+            <ScrollArea className="w-full" orientation="horizontal">
+              <div className="flex space-x-2 mb-4 pb-1 pt-1">
+                <Badge 
+                  variant={selectedMuscleGroup === "all" ? "default" : "outline"} 
+                  className={`cursor-pointer py-1 px-3 ${selectedMuscleGroup === "all" ? "bg-purple-600" : "bg-gray-800 hover:bg-gray-700"}`}
+                  onClick={() => setSelectedMuscleGroup("all")}
+                >
+                  All
+                </Badge>
+                
+                {quickFilterMuscleGroups.map(muscle => (
+                  <Badge 
+                    key={muscle}
+                    variant={selectedMuscleGroup === muscle ? "default" : "outline"} 
+                    className={`cursor-pointer py-1 px-3 capitalize ${selectedMuscleGroup === muscle ? "bg-purple-600" : "bg-gray-800 hover:bg-gray-700"}`}
+                    onClick={() => setSelectedMuscleGroup(muscle)}
+                  >
+                    {muscle}
+                  </Badge>
+                ))}
+              </div>
+            </ScrollArea>
             
             {/* Tabs */}
             <Tabs defaultValue="suggested" className="w-full flex-1 flex flex-col" onValueChange={setActiveTab} value={activeTab}>
@@ -236,30 +302,74 @@ export const AddExerciseSheet: React.FC<AddExerciseSheetProps> = ({
                 <TabsTrigger value="browse" onClick={() => setShowAllExercises(true)}>Browse All</TabsTrigger>
               </TabsList>
               
-              <TabsContent value="suggested" className="mt-0 flex-1 overflow-auto">
-                <div className="overflow-y-auto max-h-[calc(80vh-170px)]">
+              <TabsContent value="suggested" className="mt-0 flex-1 overflow-hidden">
+                <ScrollArea className="h-[calc(80vh-220px)]">
                   {Array.isArray(filteredSuggested) && filteredSuggested.length > 0 ? (
-                    filteredSuggested.map(exercise => exercise ? renderExerciseCard(exercise) : null)
+                    <div className="space-y-2 pr-2">
+                      {filteredSuggested.map(exercise => exercise ? (
+                        <EnhancedExerciseCard
+                          key={exercise.id || exercise.name}
+                          exerciseName={exercise.name}
+                          exerciseData={exercise}
+                          onAdd={() => handleAddExercise(exercise)}
+                        />
+                      ) : null)}
+                    </div>
                   ) : (
-                    <div className="text-center py-6 text-gray-400">
-                      No suggested exercises found
+                    <div className="text-center py-6 flex flex-col items-center">
+                      <p className="text-gray-400 mb-4">No suggested exercises found</p>
+                      <Button 
+                        variant="outline" 
+                        onClick={handleCreateExercise}
+                        className="bg-purple-900/20 border-purple-700/30"
+                      >
+                        <Plus size={16} className="mr-2" />
+                        Create New Exercise
+                      </Button>
                     </div>
                   )}
-                </div>
+                </ScrollArea>
               </TabsContent>
               
-              <TabsContent value="recent" className="mt-0 flex-1 overflow-auto">
-                <div className="overflow-y-auto max-h-[calc(80vh-170px)]">
+              <TabsContent value="recent" className="mt-0 flex-1 overflow-hidden">
+                <ScrollArea className="h-[calc(80vh-220px)]">
                   {Array.isArray(filteredRecent) && filteredRecent.length > 0 ? (
-                    filteredRecent.map(exercise => exercise ? renderExerciseCard(exercise) : null)
+                    <div className="space-y-2 pr-2">
+                      {filteredRecent.map(exercise => exercise ? (
+                        <EnhancedExerciseCard
+                          key={exercise.id || exercise.name}
+                          exerciseName={exercise.name}
+                          exerciseData={exercise}
+                          onAdd={() => handleAddExercise(exercise)}
+                        />
+                      ) : null)}
+                    </div>
                   ) : (
-                    <div className="text-center py-6 text-gray-400">
-                      No recent exercises found
+                    <div className="text-center py-6 flex flex-col items-center">
+                      <p className="text-gray-400 mb-4">No recent exercises found</p>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setActiveTab("suggested")}
+                      >
+                        View Suggested Exercises
+                      </Button>
                     </div>
                   )}
-                </div>
+                </ScrollArea>
               </TabsContent>
             </Tabs>
+            
+            {/* Create new exercise button */}
+            <div className="pt-4 border-t border-gray-800 mt-4">
+              <Button 
+                variant="outline"
+                onClick={handleCreateExercise}
+                className="w-full bg-purple-900/20 border-purple-700/30"
+              >
+                <Plus size={16} className="mr-2" />
+                Create New Exercise
+              </Button>
+            </div>
           </div>
         </div>
       </SheetContent>
