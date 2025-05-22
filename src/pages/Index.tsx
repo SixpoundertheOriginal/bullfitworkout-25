@@ -19,6 +19,11 @@ import { format } from "date-fns";
 import { Calendar, Dumbbell, Trophy, Zap } from "lucide-react";
 import { formatDurationHuman } from "@/utils/formatTime";
 
+// Import our new components
+import { ProgressSnapshot } from "@/components/metrics/ProgressSnapshot";
+import { AchievementShowcase } from "@/components/achievements/AchievementShowcase";
+import { EnhancedRecommendations } from "@/components/recommendations/EnhancedRecommendations";
+
 // The main Index component
 const Index = () => {
   const navigate = useNavigate();
@@ -170,6 +175,9 @@ const Index = () => {
         {/* Quick Stats with enhanced data */}
         <QuickStatsSection />
 
+        {/* NEW: Progress Snapshot */}
+        <ProgressSnapshot />
+
         {/* Experience Display & Start Button Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Experience Display */}
@@ -239,10 +247,11 @@ const Index = () => {
           </section>
         </div>
 
-        {/* Personalized Recommendations */}
-        {recommendations && (
-          <RecommendationSection recommendations={recommendations} onStartClick={() => setDialogOpen(true)} />
-        )}
+        {/* NEW: Achievement Showcase */}
+        <AchievementShowcase />
+
+        {/* NEW: Enhanced Recommendations Section */}
+        <EnhancedRecommendations onStartWorkout={() => setDialogOpen(true)} />
 
         {/* Workout Log */}
         <WorkoutLogSection 
@@ -265,68 +274,7 @@ const Index = () => {
   );
 };
 
-// Recommendation section based on user data
-const RecommendationSection = ({ recommendations, onStartClick }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.3 }}
-      className="rounded-xl overflow-hidden bg-gray-800/50 border border-gray-700/50"
-    >
-      <div className="px-4 py-3 bg-gray-800/80 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Zap className="h-5 w-5 text-yellow-400" />
-          <h3 className="font-medium text-white">Recommended for You</h3>
-        </div>
-        <span className="text-xs text-white/60 px-2 py-1 rounded-full bg-white/10">
-          {Math.round(recommendations.confidence * 100)}% match
-        </span>
-      </div>
-      
-      <div className="p-4">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between">
-            <div className="flex items-center gap-3 mb-4 sm:mb-0">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                <Dumbbell className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p className="font-medium">{recommendations.trainingType} Workout</p>
-                <p className="text-sm text-gray-400">
-                  {Math.round(recommendations.suggestedDuration)} minutes • {recommendations.bestTimeOfDay}
-                </p>
-              </div>
-            </div>
-            
-            <button 
-              onClick={onStartClick}
-              className="px-6 py-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-500 hover:to-pink-400 text-white font-semibold transition-all duration-300 shadow-lg hover:shadow-purple-500/20 w-full sm:w-auto flex items-center justify-center gap-2"
-            >
-              <Trophy className="h-4 w-4" />
-              Start Quest
-            </button>
-          </div>
-          
-          {recommendations.reasoning && (
-            <div className="mt-1">
-              <p className="text-xs text-gray-400 mb-2">Why this recommendation:</p>
-              <ul className="text-sm space-y-1">
-                {recommendations.reasoning.slice(0, 2).map((reason, i) => (
-                  <li key={i} className="flex items-start">
-                    <div className="h-1.5 w-1.5 mt-1.5 bg-purple-400 rounded-full mr-2"></div>
-                    <span className="text-gray-300">{reason}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      </div>
-    </motion.div>
-  );
-};
-
+// Keep existing AnimatedLevelUp component (unchanged)
 const AnimatedLevelUp = ({ show }: { show: boolean }) => {
   return (
     <motion.div
