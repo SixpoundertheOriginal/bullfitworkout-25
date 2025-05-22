@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star } from 'lucide-react';
-import { ToastAction } from '@/components/ui/toast';
 import { toast } from '@/hooks/use-toast';
 
 interface ExperienceGainProps {
@@ -52,6 +51,8 @@ export const ExperienceGainOverlay: React.FC<ExperienceGainOverlayProps> = ({
   
   // When this component mounts, start the auto-dismiss timer
   useEffect(() => {
+    console.log("ExperienceGainOverlay: Component mounted");
+    
     const id = window.setTimeout(() => {
       console.log("ExperienceGainOverlay: Duration timeout triggered, starting exit animation");
       setShow(false);
@@ -68,24 +69,50 @@ export const ExperienceGainOverlay: React.FC<ExperienceGainOverlayProps> = ({
       }
     }, duration + 5000); // 5 seconds after normal timeout
     
+    // Additional extreme safety timeout (last resort)
+    const emergencyId = window.setTimeout(() => {
+      console.log("ExperienceGainOverlay: EMERGENCY timeout triggered");
+      if (!animationComplete) {
+        console.error("Animation completely failed to complete, forcing emergency completion");
+        try {
+          setAnimationComplete(true);
+          onComplete();
+        } catch (error) {
+          console.error("Failed to call onComplete in emergency timeout:", error);
+        }
+      }
+    }, duration + 10000); // 10 seconds after normal timeout
+    
     return () => {
       // Always clean up timeouts
       if (timeoutId !== null) {
         window.clearTimeout(timeoutId);
       }
       window.clearTimeout(safetyId);
+      window.clearTimeout(emergencyId);
       
       // If component unmounts before animation completes, ensure callback fires
       if (!animationComplete) {
         console.log("ExperienceGainOverlay: Component unmounted before animation completed, calling onComplete");
-        onComplete();
+        try {
+          onComplete();
+        } catch (error) {
+          console.error("Error in onComplete during unmount:", error);
+        }
       }
     };
-  }, [duration, animationComplete]);
+  }, [duration, animationComplete, onComplete]);
   
   // Handle animation complete state
   const handleAnimationComplete = () => {
     console.log("ExperienceGainOverlay: Animation completed, calling onComplete callback");
+    
+    // Prevent multiple calls
+    if (animationComplete) {
+      console.log("ExperienceGainOverlay: Animation already completed, skipping callback");
+      return;
+    }
+    
     setAnimationComplete(true);
     
     try {
@@ -97,6 +124,12 @@ export const ExperienceGainOverlay: React.FC<ExperienceGainOverlayProps> = ({
       }
     } catch (error) {
       console.error("ExperienceGainOverlay: Error in onComplete callback", error);
+      // Try to recover by forcing navigation
+      try {
+        window.location.href = '/';
+      } catch (navError) {
+        console.error("Failed to navigate after error:", navError);
+      }
     }
   };
   

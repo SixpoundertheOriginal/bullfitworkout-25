@@ -10,12 +10,16 @@ import { WorkoutCompletion } from "@/components/training/WorkoutCompletion";
 import { safeRenderableExercise } from "@/utils/exerciseAdapter";
 import { validateWorkoutState } from '@/store/workout/actions';
 import { toast } from '@/hooks/use-toast';
+import { useWorkoutStore } from '@/store/workout';
 
 const TrainingSessionPage = () => {
   const { isLoading: loadingExercises } = useExercises();
   const [showCompletion, setShowCompletion] = useState(false);
   const [completionInitiated, setCompletionInitiated] = useState(false);
   const navigate = useNavigate();
+  
+  // Get isActive directly from the store 
+  const { isActive: storeIsActive } = useWorkoutStore();
   
   const {
     exercises,
@@ -25,8 +29,7 @@ const TrainingSessionPage = () => {
     handleFinishWorkout,
     isSaving,
     workoutStatus,
-    setIsAddExerciseSheetOpen,
-    isActive
+    setIsAddExerciseSheetOpen
   } = useTrainingSession();
 
   // Initialize the workout timer
@@ -69,7 +72,7 @@ const TrainingSessionPage = () => {
 
   // Safety effect to monitor completion state
   useEffect(() => {
-    if (completionInitiated && !showCompletion && !isSaving && isActive) {
+    if (completionInitiated && !showCompletion && !isSaving && storeIsActive) {
       console.warn("Workout completion was initiated but workout is still active");
       toast({
         title: "Workout completion issue detected",
@@ -84,7 +87,7 @@ const TrainingSessionPage = () => {
         }
       });
     }
-  }, [completionInitiated, showCompletion, isSaving, isActive]);
+  }, [completionInitiated, showCompletion, isSaving, storeIsActive, resetSession, navigate]);
 
   if (loadingExercises) {
     return <TrainingSessionLoading />;

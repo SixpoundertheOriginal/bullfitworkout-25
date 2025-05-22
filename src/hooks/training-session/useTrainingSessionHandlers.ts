@@ -232,7 +232,7 @@ export const useTrainingSessionHandlers = (
         toast({
           title: "Workout ID missing", 
           description: "Generated temporary ID to complete workout",
-          variant: "warning"
+          variant: "destructive"  // Changed from "warning" to "destructive"
         });
       }
       
