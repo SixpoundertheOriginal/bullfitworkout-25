@@ -8,6 +8,7 @@ import { EmergencyWorkoutReset } from './components/training/EmergencyWorkoutRes
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@/context/RouterProvider';
 import { LayoutProvider } from '@/context/LayoutContext';
+import { WorkoutNavigationProvider } from '@/context/WorkoutNavigationContext';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -19,13 +20,15 @@ function App() {
         <WorkoutProvider>
           <Router>
             <LayoutProvider>
-              <div className="flex flex-col min-h-screen bg-gray-950 text-white">
-                <main className="flex-grow">
-                  <RouterProvider />
-                  <EmergencyWorkoutReset />
-                </main>
-                <Toaster />
-              </div>
+              <WorkoutNavigationProvider>
+                <div className="flex flex-col min-h-screen bg-gray-950 text-white">
+                  <main className="flex-grow">
+                    <RouterProvider />
+                    <EmergencyWorkoutReset />
+                  </main>
+                  <Toaster />
+                </div>
+              </WorkoutNavigationProvider>
             </LayoutProvider>
           </Router>
         </WorkoutProvider>
