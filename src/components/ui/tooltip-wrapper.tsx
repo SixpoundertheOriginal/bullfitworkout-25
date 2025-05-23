@@ -102,16 +102,17 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
     }
   }
 
-  // Handle single React element
+  // Handle single React element - this is the key fix
   if (React.isValidElement(children)) {
+    const element = children as React.ReactElement<any>;
     const mergedClassName = className 
-      ? `${children.props.className || ''} ${className}`.trim()
-      : children.props.className;
+      ? `${element.props.className || ''} ${className}`.trim()
+      : element.props.className;
     
     return (
       <TooltipTrigger asChild={true}>
-        {React.cloneElement(children, {
-          ...children.props,
+        {React.cloneElement(element, {
+          ...element.props,
           className: mergedClassName
         })}
       </TooltipTrigger>
