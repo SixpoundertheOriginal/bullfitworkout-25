@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Exercise } from '@/types/exercise';
 import { getExerciseName } from '@/utils/exerciseAdapter';
 import { EnhancedExerciseCreationSheet } from './enhanced/EnhancedExerciseCreationSheet';
@@ -33,8 +32,7 @@ export function ExerciseWizardSheet({
     // The wizard's complete step has its own close button
   };
 
-  // Return the EnhancedExerciseCreationSheet component directly
-  // This ensures we're passing a single child element to Sheet
+  // Return the EnhancedExerciseCreationSheet directly without wrapping it in a Sheet component
   return (
     <EnhancedExerciseCreationSheet
       open={open}
