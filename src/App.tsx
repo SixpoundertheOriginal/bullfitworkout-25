@@ -10,6 +10,7 @@ import { RouterProvider } from '@/context/RouterProvider';
 import { LayoutProvider } from '@/context/LayoutContext';
 import { WorkoutNavigationProvider } from '@/context/WorkoutNavigationContext';
 import { WeightUnitContextProvider } from '@/context/WeightUnitContext';
+import { DateRangeProvider } from '@/context/DateRangeContext';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -23,13 +24,15 @@ function App() {
             <LayoutProvider>
               <WorkoutNavigationProvider>
                 <WeightUnitContextProvider>
-                  <div className="flex flex-col min-h-screen bg-gray-950 text-white">
-                    <main className="flex-grow">
-                      <RouterProvider />
-                      <EmergencyWorkoutReset />
-                    </main>
-                    <Toaster />
-                  </div>
+                  <DateRangeProvider>
+                    <div className="flex flex-col min-h-screen bg-gray-950 text-white">
+                      <main className="flex-grow">
+                        <RouterProvider />
+                        <EmergencyWorkoutReset />
+                      </main>
+                      <Toaster />
+                    </div>
+                  </DateRangeProvider>
                 </WeightUnitContextProvider>
               </WorkoutNavigationProvider>
             </LayoutProvider>
