@@ -25,11 +25,10 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   // For asChild=true, we need to handle specially
   
   // Check if we have a single valid React element that can be cloned
-  const childCount = React.Children.count(children);
-  const hasValidSingleChild = childCount === 1 && React.isValidElement(children);
+  const isValidElement = React.isValidElement(children);
   
-  // If we have a single valid element, we can pass it directly to TooltipTrigger with asChild
-  if (hasValidSingleChild) {
+  // If children is a valid React element, use it directly
+  if (isValidElement) {
     return <TooltipTrigger asChild>{children}</TooltipTrigger>;
   }
   
