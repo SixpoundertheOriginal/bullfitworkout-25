@@ -20,7 +20,7 @@ interface EnhancedTooltipProps {
 
 /**
  * A completely safe tooltip component that never triggers React.Children.only errors
- * by wrapping content in a single div element instead of using asChild.
+ * by always using a span wrapper and avoiding asChild entirely.
  */
 export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
   content,
@@ -38,14 +38,14 @@ export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
     return <>{children}</>;
   }
   
-  // Always wrap in a single div to avoid React.Children.only errors
+  // Always use a span element with asChild=false to avoid React.Children.only errors
   return (
     <TooltipProvider delayDuration={delayDuration}>
       <Tooltip>
-        <TooltipTrigger asChild={false} className={className}>
-          <div className="inline-block w-full">
+        <TooltipTrigger asChild={false}>
+          <span className={`inline-flex items-center justify-center ${className}`}>
             {children}
-          </div>
+          </span>
         </TooltipTrigger>
         <TooltipContent side={side} align={align} className={contentClassName}>
           {content}
