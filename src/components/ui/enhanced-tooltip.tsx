@@ -31,7 +31,7 @@ export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
   contentClassName = "",
   asChild = true,
 }) => {
-  // If no content or children, just render children
+  // If no content or children, just render children without tooltip
   if (!content || children == null) {
     return <>{children}</>;
   }
@@ -39,6 +39,11 @@ export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
   // If content is empty string, just render children
   if (typeof content === 'string' && content.trim() === '') {
     return <>{children}</>;
+  }
+  
+  // Ensure we have valid children before wrapping with tooltip
+  if (children == null) {
+    return null;
   }
   
   return (

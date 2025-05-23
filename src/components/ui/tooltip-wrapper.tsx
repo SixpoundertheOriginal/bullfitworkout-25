@@ -17,7 +17,7 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   asChild = true,
   className = "",
 }) => {
-  // If asChild is false, we can safely wrap children in a span
+  // If asChild is false, always wrap in a span
   if (!asChild) {
     return (
       <TooltipTrigger asChild={false} className={className}>
@@ -51,13 +51,17 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
     const validElements = children.filter(child => React.isValidElement(child));
     
     if (validElements.length === 1) {
-      const singleChild = validElements[0];
+      const singleChild = validElements[0] as React.ReactElement;
+      const mergedClassName = className 
+        ? `${singleChild.props.className || ''} ${className}`.trim()
+        : singleChild.props.className;
+      
       return (
         <TooltipTrigger asChild={true}>
-          {className ? React.cloneElement(singleChild, {
+          {React.cloneElement(singleChild, {
             ...singleChild.props,
-            className: `${singleChild.props.className || ''} ${className}`.trim()
-          }) : singleChild}
+            className: mergedClassName
+          })}
         </TooltipTrigger>
       );
     } else {
@@ -77,12 +81,16 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
     
     if (validElements.length === 1) {
       const singleChild = validElements[0] as React.ReactElement;
+      const mergedClassName = className 
+        ? `${singleChild.props.className || ''} ${className}`.trim()
+        : singleChild.props.className;
+      
       return (
         <TooltipTrigger asChild={true}>
-          {className ? React.cloneElement(singleChild, {
+          {React.cloneElement(singleChild, {
             ...singleChild.props,
-            className: `${singleChild.props.className || ''} ${className}`.trim()
-          }) : singleChild}
+            className: mergedClassName
+          })}
         </TooltipTrigger>
       );
     } else {
@@ -96,12 +104,16 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
 
   // Handle single React element
   if (React.isValidElement(children)) {
+    const mergedClassName = className 
+      ? `${children.props.className || ''} ${className}`.trim()
+      : children.props.className;
+    
     return (
       <TooltipTrigger asChild={true}>
-        {className ? React.cloneElement(children, {
+        {React.cloneElement(children, {
           ...children.props,
-          className: `${children.props.className || ''} ${className}`.trim()
-        }) : children}
+          className: mergedClassName
+        })}
       </TooltipTrigger>
     );
   }
