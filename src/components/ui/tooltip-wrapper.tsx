@@ -17,23 +17,39 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   asChild = true,
   className = "",
 }) => {
-  // Be very conservative - only use asChild={true} for simple, direct React elements
-  const canUseAsChild = () => {
+  // Be extremely conservative - only use asChild for very specific cases
+  const shouldUseAsChild = React.useMemo(() => {
+    // If asChild is explicitly false, don't use it
     if (!asChild) return false;
+    
+    // Must be a valid React element
     if (!React.isValidElement(children)) return false;
     
-    // Don't use asChild for fragments
-    if (children.type === React.Fragment) return false;
+    // Convert children to array to check count
+    const childArray = React.Children.toArray(children);
     
-    // Don't use asChild for arrays or other complex structures
-    if (Array.isArray(children)) return false;
+    // Must have exactly one child
+    if (childArray.length !== 1) return false;
     
-    // Only use asChild for simple React elements
-    return true;
-  };
+    // The single child must be a valid React element
+    const singleChild = childArray[0];
+    if (!React.isValidElement(singleChild)) return false;
+    
+    // Don't use asChild for fragments - they can contain multiple children
+    if (singleChild.type === React.Fragment) return false;
+    
+    // Don't use asChild for certain built-in elements that might cause issues
+    if (typeof singleChild.type === 'string') {
+      // Allow most HTML elements but be cautious with certain ones
+      return true;
+    }
+    
+    // For custom components, only use asChild if they're likely to be simple
+    return typeof singleChild.type === 'function';
+  }, [children, asChild]);
 
-  // If we can't safely use asChild, always use the wrapper approach
-  if (!canUseAsChild()) {
+  // If we can't use asChild safely, wrap in a span
+  if (!shouldUseAsChild) {
     return (
       <TooltipTrigger asChild={false} className={className}>
         <span style={{ display: 'contents' }}>{children}</span>
@@ -41,7 +57,7 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
     );
   }
 
-  // We have a simple React element - safe to use asChild={true}
+  // We're confident we have a single React element - clone it with merged className
   const element = children as React.ReactElement;
   
   const mergedClassName = className 
