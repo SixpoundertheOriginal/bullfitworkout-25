@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -7,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ExerciseFormState } from '@/hooks/useExerciseFormState';
 import { Variation, VariationType, VARIATION_TYPES, getVariationLabel, getDefaultValueForType, getVariationValueSuggestions, getVariationTypeDescriptions } from '@/types/exerciseVariation';
 import { X, Plus, HelpCircle } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipWrapper } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import { TooltipWrapper } from '@/components/ui/tooltip-wrapper';
 import { Card } from '@/components/ui/card';
 
 interface ExerciseDialogVariationsProps {
