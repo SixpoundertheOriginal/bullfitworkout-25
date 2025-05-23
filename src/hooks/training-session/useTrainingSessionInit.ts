@@ -4,6 +4,8 @@ import { useTrainingSetupPersistence } from '@/hooks/useTrainingSetupPersistence
 import { LoadTrainingConfigFn } from '@/types/workout';
 import { useWorkoutStore } from '@/store/workout';
 import { toast } from '@/hooks/use-toast';
+import { validateWorkoutState, isZombieWorkout } from '@/store/workout/validators';
+import { resetSession } from '@/store/workout/actions';
 
 /**
  * Hook for handling initialization logic for training sessions
@@ -42,55 +44,28 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
     }
   }, [isActive, hasExercises, startWorkout, loadTrainingConfig]);
   
-  // Add defensive logic to detect and clean up zombie workouts
+  // Add centralized validation logic to detect and clean up zombie workouts
   useEffect(() => {
     // Only run this check once per component mount
     if (cleanupPerformedRef.current) return;
     
     // Use the workout state obtained from the hook at the top level
-    let zombieDetected = false;
+    const state = useWorkoutStore.getState();
     
-    console.log('🔍 Checking for zombie workout state on app boot:', {
+    console.log('🔍 Checking for workout state validity on app boot:', {
       exerciseCount: Object.keys(exercises).length,
       isActive: storeIsActive,
       hasExercises
     });
     
-    // Case 1: Check for empty exercise objects
-    if (storeIsActive && Object.keys(exercises).length === 0) {
-      console.warn('🧟‍♂️ Detected zombie workout: active but no exercises');
-      zombieDetected = true;
-    }
-    
-    // Case 2: Check for invalid exercise data structures
-    Object.keys(exercises).forEach(key => {
-      const sets = exercises[key];
-      
-      // Check if sets is undefined, null, or an empty array
-      if (!sets || !Array.isArray(sets) || sets.length === 0) {
-        console.warn(`🧟‍♂️ Detected zombie exercise "${key}" with empty sets array`);
-        zombieDetected = true;
-        return;
-      }
-      
-      // Check for malformed sets (missing required properties)
-      const malformedSets = sets.some(set => 
-        !set || 
-        typeof set !== 'object' || 
-        typeof set.weight !== 'number' || 
-        typeof set.reps !== 'number' || 
-        typeof set.restTime !== 'number'
-      );
-      
-      if (malformedSets) {
-        console.warn(`🧟‍♂️ Detected zombie exercise "${key}" with malformed sets`, sets);
-        zombieDetected = true;
-      }
+    // Use our centralized validators
+    const { isValid, needsRepair } = validateWorkoutState(state, { 
+      showToasts: false, 
+      attemptRepair: false
     });
     
-    // If zombie state detected, clean it up
-    if (zombieDetected) {
-      console.warn("🧹 Clearing zombie workout from persistent storage");
+    if (!isValid && needsRepair) {
+      console.warn("🧟‍♂️ Detected problematic workout state that needs to be repaired");
       
       // Reset workout state completely
       resetSession();
@@ -110,8 +85,9 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
         variant: "destructive"
       });
       
-      // If Supabase is integrated and we have a sessionId, invalidate remote record
+      // Check if we have a session ID for remote cleanup
       if (sessionId) {
+        // Handle remote cleanup if needed
         try {
           // Resolve TypeScript's excessive type instantiation depth issue
           // by using a simpler approach with type assertions
