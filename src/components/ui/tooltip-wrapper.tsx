@@ -17,25 +17,47 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   asChild = true,
   className = "",
 }) => {
-  // For the non-asChild case, we can just render the TooltipTrigger normally
+  // If asChild is false, render as a normal button wrapper
   if (!asChild) {
-    return <TooltipTrigger className={className}>{children}</TooltipTrigger>;
+    return (
+      <TooltipTrigger className={className}>
+        {children}
+      </TooltipTrigger>
+    );
   }
   
-  // For asChild=true case, we need special handling
+  // For asChild=true, we need to be very careful about what we pass
+  // Let's be more defensive and check multiple conditions
   
-  // If we have a single valid React element, pass it directly to avoid wrapper elements
-  if (
-    React.isValidElement(children) && 
-    !Array.isArray(children) && 
-    React.Children.count(children) === 1
-  ) {
-    // This is safe because we've verified that children is a single valid element
-    return <TooltipTrigger asChild>{children}</TooltipTrigger>;
+  // First, check if children is null, undefined, or empty
+  if (!children) {
+    return (
+      <TooltipTrigger asChild>
+        <span className={className} />
+      </TooltipTrigger>
+    );
   }
   
-  // For any other case (text nodes, multiple children, etc.)
-  // we must wrap in a single element to satisfy React.Children.only()
+  // Convert children to array to handle all cases
+  const childrenArray = React.Children.toArray(children);
+  
+  // If we have exactly one child and it's a valid React element
+  if (childrenArray.length === 1 && React.isValidElement(childrenArray[0])) {
+    const singleChild = childrenArray[0];
+    
+    // Clone the element to ensure we can add props safely
+    const clonedChild = React.cloneElement(
+      singleChild,
+      {
+        className: className ? `${singleChild.props.className || ''} ${className}`.trim() : singleChild.props.className,
+      }
+    );
+    
+    return <TooltipTrigger asChild>{clonedChild}</TooltipTrigger>;
+  }
+  
+  // For all other cases (multiple children, text nodes, fragments, etc.)
+  // wrap everything in a span to ensure we have a single React element
   return (
     <TooltipTrigger asChild>
       <span className={className}>{children}</span>
