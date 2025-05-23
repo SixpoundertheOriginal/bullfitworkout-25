@@ -27,7 +27,6 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   }
   
   // For asChild=true, we need to be very careful about what we pass
-  // Let's be more defensive and check multiple conditions
   
   // First, check if children is null, undefined, or empty
   if (!children) {
@@ -45,15 +44,24 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   if (childrenArray.length === 1 && React.isValidElement(childrenArray[0])) {
     const singleChild = childrenArray[0];
     
-    // Clone the element to ensure we can add props safely
-    const clonedChild = React.cloneElement(
-      singleChild,
-      {
-        className: className ? `${singleChild.props.className || ''} ${className}`.trim() : singleChild.props.className,
-      }
-    );
+    // Only clone and merge className if the child has a className prop
+    // Use type assertion to tell TypeScript this element can have className
+    if (className && 'className' in singleChild.props) {
+      const existingClassName = singleChild.props.className as string || '';
+      const mergedClassName = existingClassName ? `${existingClassName} ${className}`.trim() : className;
+      
+      const clonedChild = React.cloneElement(
+        singleChild as React.ReactElement<{ className?: string }>,
+        {
+          className: mergedClassName,
+        }
+      );
+      
+      return <TooltipTrigger asChild>{clonedChild}</TooltipTrigger>;
+    }
     
-    return <TooltipTrigger asChild>{clonedChild}</TooltipTrigger>;
+    // If no className to merge, just pass the child directly
+    return <TooltipTrigger asChild>{singleChild}</TooltipTrigger>;
   }
   
   // For all other cases (multiple children, text nodes, fragments, etc.)
