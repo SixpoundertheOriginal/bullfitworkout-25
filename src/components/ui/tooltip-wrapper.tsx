@@ -17,26 +17,23 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   asChild = true,
   className = "",
 }) => {
-  // Helper function to safely check if we have exactly one valid React element
-  const isSingleReactElement = (children: React.ReactNode): children is React.ReactElement => {
-    // Must be a valid React element
-    if (!React.isValidElement(children)) {
-      return false;
-    }
+  // Be very conservative - only use asChild={true} for simple, direct React elements
+  const canUseAsChild = () => {
+    if (!asChild) return false;
+    if (!React.isValidElement(children)) return false;
     
-    // Handle React fragments - check if fragment contains exactly one element
-    if (children.type === React.Fragment) {
-      const fragmentChildren = React.Children.toArray(children.props.children);
-      const validElements = fragmentChildren.filter(child => React.isValidElement(child));
-      return validElements.length === 1;
-    }
+    // Don't use asChild for fragments
+    if (children.type === React.Fragment) return false;
     
-    // For regular elements, ensure it's not an array or other complex structure
+    // Don't use asChild for arrays or other complex structures
+    if (Array.isArray(children)) return false;
+    
+    // Only use asChild for simple React elements
     return true;
   };
 
-  // If asChild is false or we don't have a single React element, use wrapper approach
-  if (!asChild || !isSingleReactElement(children)) {
+  // If we can't safely use asChild, always use the wrapper approach
+  if (!canUseAsChild()) {
     return (
       <TooltipTrigger asChild={false} className={className}>
         <span style={{ display: 'contents' }}>{children}</span>
@@ -44,29 +41,9 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
     );
   }
 
-  // We have exactly one React element - safe to use asChild={true}
+  // We have a simple React element - safe to use asChild={true}
   const element = children as React.ReactElement;
   
-  // Handle React fragments by extracting the single child
-  if (element.type === React.Fragment) {
-    const fragmentChildren = React.Children.toArray(element.props.children);
-    const validElement = fragmentChildren.find(child => React.isValidElement(child)) as React.ReactElement;
-    
-    const mergedClassName = className 
-      ? `${validElement.props?.className || ''} ${className}`.trim()
-      : validElement.props?.className || '';
-    
-    return (
-      <TooltipTrigger asChild={true}>
-        {React.cloneElement(validElement, {
-          ...validElement.props,
-          className: mergedClassName || undefined
-        })}
-      </TooltipTrigger>
-    );
-  }
-  
-  // Handle regular React elements
   const mergedClassName = className 
     ? `${element.props?.className || ''} ${className}`.trim()
     : element.props?.className || '';
