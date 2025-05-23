@@ -19,7 +19,7 @@ interface EnhancedTooltipProps {
 }
 
 /**
- * An enhanced tooltip component that safely handles all types of children
+ * A completely safe tooltip component that never triggers React.Children.only errors
  */
 export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
   content,
@@ -29,22 +29,22 @@ export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
   delayDuration = 200,
   className = "",
   contentClassName = "",
-  asChild = true,
+  asChild = true, // We ignore this to avoid errors
 }) => {
   // If no content, just render children without tooltip
   if (!content || children == null) {
-    return <>{children}</>;
+    return <div className="inline-block">{children}</div>;
   }
 
   // If content is empty string, just render children
   if (typeof content === 'string' && content.trim() === '') {
-    return <>{children}</>;
+    return <div className="inline-block">{children}</div>;
   }
   
-  // Always render in the safest way possible
+  // Always render with our safe wrapper
   return (
-    <TooltipProvider>
-      <Tooltip delayDuration={delayDuration}>
+    <TooltipProvider delayDuration={delayDuration}>
+      <Tooltip>
         <TooltipWrapper className={className}>
           {children}
         </TooltipWrapper>

@@ -9,20 +9,29 @@ interface TooltipWrapperProps {
 }
 
 /**
- * A robust wrapper component for tooltip triggers that ensures compatibility
- * with Radix UI's TooltipTrigger component and its asChild prop.
+ * A bulletproof wrapper component for tooltip triggers that completely avoids
+ * React.Children.only errors by never using asChild and always wrapping content.
  */
 export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   children,
-  asChild = true,
+  asChild = false, // We ignore this prop to avoid errors
   className = "",
 }) => {
-  // Always use the safest approach - never use asChild to avoid React.Children.only errors
+  // Always render as a button wrapper to avoid any children issues
   return (
     <TooltipTrigger asChild={false} className={className}>
-      <div style={{ display: 'inline-block', width: 'fit-content' }}>
+      <button 
+        type="button"
+        className="inline-flex items-center justify-center w-full h-full bg-transparent border-0 p-0 m-0 cursor-pointer"
+        style={{ 
+          background: 'none',
+          outline: 'none',
+          font: 'inherit',
+          color: 'inherit'
+        }}
+      >
         {children}
-      </div>
+      </button>
     </TooltipTrigger>
   );
 };
