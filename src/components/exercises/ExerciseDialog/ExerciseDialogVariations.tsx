@@ -121,7 +121,7 @@ export const ExerciseDialogVariations = React.memo(function ExerciseDialogVariat
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div>
+                  <div className="block w-full">
                     <Select 
                       value={newVariationType} 
                       onValueChange={(value) => {
