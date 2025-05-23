@@ -17,8 +17,26 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   asChild = true,
   className = "",
 }) => {
-  // If asChild is false or children is null/undefined, wrap in a span
-  if (!asChild || children == null) {
+  // Helper function to safely check if we have exactly one valid React element
+  const isSingleReactElement = (children: React.ReactNode): children is React.ReactElement => {
+    // Must be a valid React element
+    if (!React.isValidElement(children)) {
+      return false;
+    }
+    
+    // Handle React fragments - check if fragment contains exactly one element
+    if (children.type === React.Fragment) {
+      const fragmentChildren = React.Children.toArray(children.props.children);
+      const validElements = fragmentChildren.filter(child => React.isValidElement(child));
+      return validElements.length === 1;
+    }
+    
+    // For regular elements, ensure it's not an array or other complex structure
+    return true;
+  };
+
+  // If asChild is false or we don't have a single React element, use wrapper approach
+  if (!asChild || !isSingleReactElement(children)) {
     return (
       <TooltipTrigger asChild={false} className={className}>
         <span style={{ display: 'contents' }}>{children}</span>
@@ -26,26 +44,39 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
     );
   }
 
-  // Handle single React element
-  if (React.isValidElement(children)) {
+  // We have exactly one React element - safe to use asChild={true}
+  const element = children as React.ReactElement;
+  
+  // Handle React fragments by extracting the single child
+  if (element.type === React.Fragment) {
+    const fragmentChildren = React.Children.toArray(element.props.children);
+    const validElement = fragmentChildren.find(child => React.isValidElement(child)) as React.ReactElement;
+    
     const mergedClassName = className 
-      ? `${(children.props?.className || '')} ${className}`.trim()
-      : children.props?.className || '';
+      ? `${validElement.props?.className || ''} ${className}`.trim()
+      : validElement.props?.className || '';
     
     return (
       <TooltipTrigger asChild={true}>
-        {React.cloneElement(children, {
-          ...children.props,
+        {React.cloneElement(validElement, {
+          ...validElement.props,
           className: mergedClassName || undefined
         })}
       </TooltipTrigger>
     );
   }
-
-  // Handle primitive values, arrays, or other non-element children by wrapping them in a span
+  
+  // Handle regular React elements
+  const mergedClassName = className 
+    ? `${element.props?.className || ''} ${className}`.trim()
+    : element.props?.className || '';
+  
   return (
-    <TooltipTrigger asChild={false} className={className}>
-      <span style={{ display: 'contents' }}>{children}</span>
+    <TooltipTrigger asChild={true}>
+      {React.cloneElement(element, {
+        ...element.props,
+        className: mergedClassName || undefined
+      })}
     </TooltipTrigger>
   );
 };
