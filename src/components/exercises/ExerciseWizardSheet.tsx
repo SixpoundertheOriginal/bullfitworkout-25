@@ -33,7 +33,8 @@ export function ExerciseWizardSheet({
     // The wizard's complete step has its own close button
   };
 
-  // Make sure we're providing a single child to the Sheet
+  // Return the EnhancedExerciseCreationSheet component directly
+  // This ensures we're passing a single child element to Sheet
   return (
     <EnhancedExerciseCreationSheet
       open={open}

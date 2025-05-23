@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { EnhancedExerciseEditor } from '@/components/exercises/enhanced/EnhancedExerciseEditor';
 import { PageHeader } from '@/components/navigation/PageHeader';
 
