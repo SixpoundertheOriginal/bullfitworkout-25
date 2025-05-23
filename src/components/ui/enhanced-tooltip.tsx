@@ -41,9 +41,21 @@ export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
     return <>{children}</>;
   }
   
-  // Ensure we have valid children before wrapping with tooltip
-  if (children == null) {
-    return null;
+  // Additional safety check for React.Children.only error
+  if (!React.isValidElement(children)) {
+    // If children is not a valid React element, wrap it in a span
+    return (
+      <TooltipProvider>
+        <Tooltip delayDuration={delayDuration}>
+          <TooltipWrapper asChild={false} className={className}>
+            <span>{children}</span>
+          </TooltipWrapper>
+          <TooltipContent side={side} align={align} className={contentClassName}>
+            {content}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
   }
   
   return (

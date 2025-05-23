@@ -17,6 +17,24 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   asChild = true,
   className = "",
 }) => {
+  // Always default to safest approach to prevent React.Children.only errors
+  const useDefaultWrapper = true;
+
+  // The safest approach is to never use asChild and always wrap in a span
+  if (useDefaultWrapper) {
+    return (
+      <TooltipTrigger asChild={false} className={className}>
+        <span style={{ display: 'inline-block' }}>
+          {children}
+        </span>
+      </TooltipTrigger>
+    );
+  }
+
+  // The code below is kept for reference but not used
+  // to ensure maximum stability
+  
+  /* 
   // Be extremely conservative - only use asChild for very specific cases
   const shouldUseAsChild = React.useMemo(() => {
     // If asChild is explicitly false, don't use it
@@ -72,4 +90,5 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
       })}
     </TooltipTrigger>
   );
+  */
 };
