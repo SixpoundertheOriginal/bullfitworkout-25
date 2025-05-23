@@ -31,11 +31,12 @@ export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
   contentClassName = "",
   asChild = true,
 }) => {
+  // If no tooltip content is provided, just render the children directly
   if (!content) {
-    // If no tooltip content is provided, just render the children directly
     return <>{children}</>;
   }
 
+  // Ensure we're not passing multiple children to components that expect a single child
   return (
     <TooltipProvider>
       <Tooltip delayDuration={delayDuration}>
