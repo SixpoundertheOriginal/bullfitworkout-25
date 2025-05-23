@@ -69,26 +69,26 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
     <>
       <header 
         className={cn(
-          // Base positioning
-          "fixed top-0 left-0 right-0 z-40",
+          // Base styling
+          "w-full z-40",
           // Height and alignment - standardized to 64px on mobile for better touch
           "h-16 md:h-[60px] flex items-center",
           // Padding with safe area support
           "px-4 md:px-6 safe-top",
-          // Visual styling with glass effect
-          transparent ? "bg-transparent" : "bg-gray-900/95 backdrop-blur-md",
-          // Border styling - adjusted to be more subtle
+          // Visual styling with glass effect - enhanced for sticky behavior
+          transparent ? "bg-transparent" : "bg-gray-900/98 backdrop-blur-md",
+          // Border styling - adjusted for sticky header
           !transparent && "border-b border-gray-800/50",
-          // Shadow for depth - more refined iOS-like shadow
-          !transparent && "shadow-sm shadow-black/10",
+          // Shadow for depth - more defined for sticky header
+          !transparent && "shadow-md shadow-black/15",
           // Transition for smooth scrolling effects
           "transition-all duration-300 ease-out",
           // Adjust height when using large title mode
           isLargeTitle && "h-24"
         )}
         style={{
-          // Apply subtle gradient for more dimension
-          background: transparent ? 'transparent' : 'linear-gradient(to bottom, rgba(17, 24, 39, 0.98), rgba(17, 24, 39, 0.94))'
+          // Enhanced gradient for better readability when sticky
+          background: transparent ? 'transparent' : 'linear-gradient(to bottom, rgba(17, 24, 39, 0.99), rgba(17, 24, 39, 0.97))'
         }}
       >
         <div className="flex-1 flex items-center min-w-0 gap-3">
@@ -145,8 +145,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         )}
       </header>
       
-      {/* Spacer element to push content below header */}
-      <div className={isLargeTitle ? "h-24" : "h-16"} />
+      {/* Remove the spacer element since the header is now sticky */}
       
       {/* Large title container that appears on scroll */}
       {largeTitleOnScroll && (

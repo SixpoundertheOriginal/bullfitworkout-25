@@ -72,61 +72,62 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
   console.log('MainLayout rendering, isFilterVisible:', isFilterVisible);
 
+  // Calculate content padding based on header and filter visibility
   const headerHeight = 64; // 16 * 4 = 64px (h-16)
-  const filterHeight = 56; // Typical height for filter section
+  const filterHeight = isFilterVisible ? 56 : 0; // Height for filter section when visible
+  const footerHeight = shouldShowGlobalNav ? 64 : 0; // Height for bottom nav when visible
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-900 will-change-transform">
+    <div className="flex flex-col min-h-screen bg-gray-900 will-change-transform relative">
       {!noHeader && (
         <>
-          {/* Fixed header section */}
-          <div className="fixed top-0 left-0 right-0 z-50">
+          {/* Header is now sticky at the top */}
+          <div className="sticky top-0 left-0 right-0 z-50">
             <PageHeader title={title} showBackButton={location.pathname !== '/' && location.pathname !== '/overview'}>
               <MainMenu />
             </PageHeader>
-          </div>
-          
-          {/* Fixed filter section with appropriate positioning */}
-          {isFilterVisible && (
-            <div 
-              className="fixed left-0 right-0 z-40 bg-gray-800 border-b border-gray-700 shadow-md"
-              style={{ top: `${headerHeight}px` }}
-            >
-              <div className="container mx-auto py-3 px-4">
-                <DateRangeFilter />
+            
+            {/* Filter section is also sticky, directly below the header */}
+            {isFilterVisible && (
+              <div className="bg-gray-800 border-b border-gray-700 shadow-md">
+                <div className="container mx-auto py-3 px-4">
+                  <DateRangeFilter />
+                </div>
               </div>
-            </div>
-          )}
-          
-          <WorkoutBanner />
+            )}
+            
+            <WorkoutBanner />
+          </div>
         </>
       )}
       
+      {/* Main content with appropriate padding for header and footer */}
       <main className={cn(
         "flex-grow overflow-y-auto will-change-transform",
-        "pt-16", // Standard padding for header
-        isFilterVisible ? "pt-32" : "", // Increased padding when filter is visible
-        shouldShowGlobalNav ? "pb-24" : "pb-6", // Extra padding when nav is shown
-        isOverviewPage ? "pb-40" : "", // Even more padding for overview page
-        "w-full h-full" // Full width and height
+        "w-full h-full",
+        // Add padding based on visibility of elements
+        noHeader ? "" : "pt-0", // No extra padding needed since header is sticky
+        shouldShowGlobalNav ? `pb-16` : "pb-6", // Padding for footer height
+        isOverviewPage ? "pb-24" : "" // Extra padding for overview page
       )}>
         <div className="content-container w-full h-full">
           {children}
         </div>
       </main>
       
+      {/* Global bottom nav is now fixed at the bottom */}
       {shouldShowGlobalNav && (
         <div className="fixed bottom-0 left-0 right-0 z-50">
           <BottomNav />
         </div>
       )}
       
-      {/* Adding the CSS as a style tag without the jsx attribute */}
+      {/* CSS styles updated for fixed positioning */}
       <style>
         {`
           .content-container {
-            min-height: calc(100vh - 128px); /* Account for header and footer */
-            padding-top: ${isFilterVisible ? '40px' : '0'};
+            min-height: calc(100vh - ${headerHeight + filterHeight + footerHeight}px);
+            padding-top: ${isFilterVisible ? '0' : '0'}; /* No extra padding needed with sticky header */
           }
           
           .force-no-transition * {

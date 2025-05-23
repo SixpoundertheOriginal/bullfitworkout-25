@@ -1,4 +1,3 @@
-
 import { Clock, User as UserIcon, Dumbbell, BarChart3, Zap } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { useWorkoutNavigation } from "@/context/WorkoutNavigationContext";
@@ -43,18 +42,16 @@ export const BottomNav = () => {
   return (
     <nav 
       className={cn(
-        // Base positioning
-        "fixed bottom-0 left-0 right-0 z-10",
-        // Visual styling with glass effect
-        "bg-gray-900/95 backdrop-blur-md",
-        // Border styling
-        "border-t border-gray-800/50",
-        // Shadow for depth
-        "shadow-md shadow-black/30",
+        // Base styling - enhanced for persistent visibility
+        "h-16 w-full",
+        // Visual styling with glass effect - strengthened for fixed positioning
+        "bg-gray-900/98 backdrop-blur-lg",
+        // Border styling - more visible top border for better separation
+        "border-t border-gray-800/70",
+        // Shadow for depth - upward shadow to separate from content
+        "shadow-lg shadow-black/40",
         // Safe area insets - improved safe-bottom handling
         "safe-bottom",
-        // Increased height for better touch targets
-        "h-16"
       )}
     >
       <div className="grid grid-cols-5 h-full">
