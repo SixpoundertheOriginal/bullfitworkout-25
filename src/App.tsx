@@ -9,7 +9,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@/context/RouterProvider';
 import { LayoutProvider } from '@/context/LayoutContext';
 import { WorkoutNavigationProvider } from '@/context/WorkoutNavigationContext';
-import { WeightUnitProvider } from '@/context/WeightUnitContext';
+import { WeightUnitContextProvider } from '@/context/WeightUnitContext';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -22,7 +22,7 @@ function App() {
           <Router>
             <LayoutProvider>
               <WorkoutNavigationProvider>
-                <WeightUnitProvider>
+                <WeightUnitContextProvider>
                   <div className="flex flex-col min-h-screen bg-gray-950 text-white">
                     <main className="flex-grow">
                       <RouterProvider />
@@ -30,7 +30,7 @@ function App() {
                     </main>
                     <Toaster />
                   </div>
-                </WeightUnitProvider>
+                </WeightUnitContextProvider>
               </WorkoutNavigationProvider>
             </LayoutProvider>
           </Router>
