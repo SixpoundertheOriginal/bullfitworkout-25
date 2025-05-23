@@ -19,7 +19,7 @@ interface EnhancedTooltipProps {
 }
 
 /**
- * An enhanced tooltip component that handles all edge cases for children
+ * An enhanced tooltip component that safely handles all types of children
  */
 export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
   content,
@@ -31,22 +31,16 @@ export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
   contentClassName = "",
   asChild = true,
 }) => {
-  // If no tooltip content is provided, just render the children directly
-  if (!content) {
+  // If no content or children, just render children
+  if (!content || children == null) {
     return <>{children}</>;
   }
 
-  // Handle the case where children might be undefined or null
-  if (!children) {
-    return null;
-  }
-
-  // Ensure we have valid content to show
+  // If content is empty string, just render children
   if (typeof content === 'string' && content.trim() === '') {
     return <>{children}</>;
   }
   
-  // Use TooltipProvider to ensure proper context
   return (
     <TooltipProvider>
       <Tooltip delayDuration={delayDuration}>
