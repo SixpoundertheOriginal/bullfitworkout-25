@@ -22,21 +22,23 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
     return <TooltipTrigger className={className}>{children}</TooltipTrigger>;
   }
 
-  // For asChild=true, we need to handle specially
+  // For asChild=true, we need to handle different scenarios
   
-  // Check if we have a single valid React element that can be cloned
-  const isValidElement = React.isValidElement(children);
+  // First, check if children is a single valid React element
+  const isSingleValidElement = 
+    React.isValidElement(children) && 
+    React.Children.count(children) === 1;
   
-  // If children is a valid React element, use it directly
-  if (isValidElement) {
+  // If it's a single valid element, pass it directly to TooltipTrigger
+  if (isSingleValidElement) {
     return <TooltipTrigger asChild>{children}</TooltipTrigger>;
   }
   
   // For all other cases (text nodes, multiple children, fragments, etc.),
-  // wrap in a span to ensure TooltipTrigger gets exactly one child element
+  // wrap everything in a span to ensure TooltipTrigger gets exactly one child element
   return (
     <TooltipTrigger asChild>
       <span className={className}>{children}</span>
     </TooltipTrigger>
   );
-}
+};
