@@ -28,47 +28,71 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   
   // For asChild=true, we need to be very careful about what we pass
   
-  // First, check if children is null, undefined, or empty
+  // Case 1: Handle null, undefined or empty children
   if (!children) {
+    return null;
+  }
+  
+  // Case 2: Handle text nodes, numbers, or other primitive values
+  if (typeof children === 'string' || typeof children === 'number' || typeof children === 'boolean') {
     return (
       <TooltipTrigger asChild>
-        <span className={className} />
+        <span className={className}>{children}</span>
       </TooltipTrigger>
     );
   }
   
-  // Convert children to array to handle all cases
-  const childrenArray = React.Children.toArray(children);
+  // Case 3: Handle arrays or fragments
+  const childArray = React.Children.toArray(children);
   
-  // If we have exactly one child and it's a valid React element
-  if (childrenArray.length === 1 && React.isValidElement(childrenArray[0])) {
-    const singleChild = childrenArray[0];
-    
-    // Only clone and merge className if the child has a className prop
-    // Use type assertion to tell TypeScript this element can have className
-    if (className && 'className' in singleChild.props) {
-      const existingClassName = singleChild.props.className as string || '';
+  // If there are multiple children or fragments, wrap in a span
+  if (childArray.length !== 1) {
+    return (
+      <TooltipTrigger asChild>
+        <span className={className}>{children}</span>
+      </TooltipTrigger>
+    );
+  }
+  
+  // Case 4: Handle a single React element
+  const singleChild = childArray[0];
+  
+  if (!React.isValidElement(singleChild)) {
+    // If it's not a valid React element, wrap it
+    return (
+      <TooltipTrigger asChild>
+        <span className={className}>{singleChild}</span>
+      </TooltipTrigger>
+    );
+  }
+  
+  // Case 5: It's a valid React element, merge the className if possible
+  try {
+    // Type guards to ensure we can safely clone the element
+    if (className && React.isValidElement(singleChild)) {
+      const existingClassName = (singleChild.props as any).className || '';
       const mergedClassName = existingClassName ? `${existingClassName} ${className}`.trim() : className;
       
       const clonedChild = React.cloneElement(
-        singleChild as React.ReactElement<{ className?: string }>,
+        singleChild,
         {
+          ...(singleChild.props || {}),
           className: mergedClassName,
         }
       );
       
       return <TooltipTrigger asChild>{clonedChild}</TooltipTrigger>;
     }
-    
-    // If no className to merge, just pass the child directly
-    return <TooltipTrigger asChild>{singleChild}</TooltipTrigger>;
+  } catch (error) {
+    // Fallback if cloning fails
+    console.error("Error in TooltipWrapper:", error);
+    return (
+      <TooltipTrigger asChild>
+        <span className={className}>{singleChild}</span>
+      </TooltipTrigger>
+    );
   }
   
-  // For all other cases (multiple children, text nodes, fragments, etc.)
-  // wrap everything in a span to ensure we have a single React element
-  return (
-    <TooltipTrigger asChild>
-      <span className={className}>{children}</span>
-    </TooltipTrigger>
-  );
+  // Default case: Just pass the single child directly
+  return <TooltipTrigger asChild>{singleChild}</TooltipTrigger>;
 };

@@ -36,6 +36,11 @@ export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
     return <>{children}</>;
   }
 
+  // Handle the case where children might be undefined or null
+  if (!children) {
+    return null;
+  }
+
   // Use TooltipProvider to ensure proper context
   return (
     <TooltipProvider>
