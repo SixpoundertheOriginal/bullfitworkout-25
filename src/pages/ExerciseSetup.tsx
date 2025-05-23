@@ -9,7 +9,7 @@ import { motion } from 'framer-motion';
 import { useWorkoutStore } from '@/store/workout';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Rotate, AlertTriangle } from 'lucide-react';
+import { RotateCcw, AlertTriangle } from 'lucide-react';
 
 export default function ExerciseSetupPage() {
   const navigate = useNavigate();
@@ -118,7 +118,7 @@ export default function ExerciseSetupPage() {
                 onClick={handleResetWorkout}
                 className="border-gray-600"
               >
-                <Rotate className="mr-1 h-3 w-3" />
+                <RotateCcw className="mr-1 h-3 w-3" />
                 Reset
               </Button>
             </div>
