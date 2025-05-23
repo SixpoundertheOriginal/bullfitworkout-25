@@ -18,7 +18,6 @@ export function ExerciseWizardSheet({
   trainingType = ""
 }: ExerciseWizardSheetProps) {
   const handleExerciseCreated = (exercise: Exercise) => {
-    // Extract the exercise name and pass it back to the parent component
     if (!exercise) {
       onOpenChange(false);
       return;
@@ -27,9 +26,6 @@ export function ExerciseWizardSheet({
     const exerciseName = getExerciseName(exercise);
     console.log('ExerciseWizardSheet: Exercise created with name:', exerciseName);
     onSelectExercise(exerciseName);
-    
-    // We don't close the sheet immediately because we want to show the completion screen
-    // The wizard's complete step has its own close button
   };
 
   return (
