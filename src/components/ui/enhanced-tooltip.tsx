@@ -41,6 +41,11 @@ export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
     return null;
   }
 
+  // Ensure we have valid content to show
+  if (typeof content === 'string' && content.trim() === '') {
+    return <>{children}</>;
+  }
+
   // Use TooltipProvider to ensure proper context
   return (
     <TooltipProvider>
