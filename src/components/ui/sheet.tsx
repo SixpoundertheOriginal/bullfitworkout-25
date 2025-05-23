@@ -127,13 +127,13 @@ SheetDescription.displayName = SheetPrimitive.Description.displayName
 
 export {
   Sheet, 
+  SheetTrigger, 
   SheetClose, 
   SheetContent, 
-  SheetDescription, 
-  SheetFooter, 
   SheetHeader, 
-  SheetOverlay, 
-  SheetPortal, 
+  SheetFooter, 
   SheetTitle, 
-  SheetTrigger
+  SheetDescription, 
+  SheetPortal, 
+  SheetOverlay
 }
