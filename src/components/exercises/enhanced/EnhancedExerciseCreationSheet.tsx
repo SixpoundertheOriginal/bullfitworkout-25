@@ -36,7 +36,6 @@ export function EnhancedExerciseCreationSheet({
               </SheetTitle>
             </SheetHeader>
             
-            {/* Wizard component */}
             <ExerciseCreationWizard
               onComplete={onExerciseCreated}
               onCancel={() => onOpenChange(false)}
