@@ -4,6 +4,7 @@
 export * from './store';
 export * from './hooks';
 export * from './actions';
+export * from './provider';
 
 // Export types carefully to avoid duplicate exports
 export type {
