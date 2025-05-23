@@ -32,7 +32,6 @@ export function ExerciseWizardSheet({
     // The wizard's complete step has its own close button
   };
 
-  // Return the EnhancedExerciseCreationSheet directly without any wrapping
   return (
     <EnhancedExerciseCreationSheet
       open={open}
