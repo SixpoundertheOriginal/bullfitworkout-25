@@ -17,25 +17,25 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   asChild = true,
   className = "",
 }) => {
-  // If asChild is false, just use the built-in TooltipTrigger behavior
+  // For the non-asChild case, we can just render the TooltipTrigger normally
   if (!asChild) {
     return <TooltipTrigger className={className}>{children}</TooltipTrigger>;
   }
-
-  // For asChild=true, we need to handle the children carefully
   
-  // Check if children is a single valid React element
-  const isSingleValidElement = 
+  // For asChild=true case, we need special handling
+  
+  // If we have a single valid React element, pass it directly to avoid wrapper elements
+  if (
     React.isValidElement(children) && 
     !Array.isArray(children) && 
-    React.Children.count(children) === 1;
-  
-  // If it's a single valid element, we can use asChild with it directly
-  if (isSingleValidElement) {
+    React.Children.count(children) === 1
+  ) {
+    // This is safe because we've verified that children is a single valid element
     return <TooltipTrigger asChild>{children}</TooltipTrigger>;
   }
   
-  // For any other case (text, multiple children, etc.), wrap in a span
+  // For any other case (text nodes, multiple children, etc.)
+  // we must wrap in a single element to satisfy React.Children.only()
   return (
     <TooltipTrigger asChild>
       <span className={className}>{children}</span>

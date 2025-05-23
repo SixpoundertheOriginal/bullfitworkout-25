@@ -36,7 +36,7 @@ export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
     return <>{children}</>;
   }
 
-  // Ensure we're not passing multiple children to components that expect a single child
+  // Use TooltipProvider to ensure proper context
   return (
     <TooltipProvider>
       <Tooltip delayDuration={delayDuration}>
