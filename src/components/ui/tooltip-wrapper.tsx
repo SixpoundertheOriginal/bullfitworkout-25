@@ -1,4 +1,3 @@
-
 import React from "react";
 import { TooltipTrigger } from "./tooltip";
 
@@ -9,16 +8,28 @@ interface TooltipWrapperProps {
 }
 
 /**
- * A bulletproof wrapper component for tooltip triggers that completely avoids
- * React.Children.only errors by never using asChild and always wrapping content
- * in a single element.
+ * A bulletproof wrapper component for tooltip triggers that handles both
+ * single React elements and other content safely.
  */
 export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   children,
-  asChild = false, // We ignore this prop to avoid errors
+  asChild = false, // We can use this now since we handle it properly
   className = "",
 }) => {
-  // Always render as a button wrapper to avoid any children issues
+  // Check if children is a single React element
+  const isSingleElement = React.isValidElement(children) && 
+    React.Children.count(children) === 1;
+  
+  // If we have a single valid React element, we can safely use asChild
+  if (isSingleElement) {
+    return (
+      <TooltipTrigger asChild={true} className={className}>
+        {children}
+      </TooltipTrigger>
+    );
+  }
+  
+  // Otherwise, wrap in our own button to ensure single child
   return (
     <TooltipTrigger asChild={false} className={className}>
       <button 
