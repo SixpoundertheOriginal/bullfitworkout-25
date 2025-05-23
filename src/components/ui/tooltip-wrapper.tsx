@@ -10,7 +10,8 @@ interface TooltipWrapperProps {
 
 /**
  * A bulletproof wrapper component for tooltip triggers that completely avoids
- * React.Children.only errors by never using asChild and always wrapping content.
+ * React.Children.only errors by never using asChild and always wrapping content
+ * in a single element.
  */
 export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   children,
@@ -27,7 +28,8 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
           background: 'none',
           outline: 'none',
           font: 'inherit',
-          color: 'inherit'
+          color: 'inherit',
+          textAlign: 'inherit'
         }}
       >
         {children}
