@@ -7,6 +7,7 @@ import { WorkoutProvider } from '@/store/workout';
 import { EmergencyWorkoutReset } from './components/training/EmergencyWorkoutReset';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@/context/RouterProvider';
+import { LayoutProvider } from '@/context/LayoutContext';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -17,13 +18,15 @@ function App() {
       <AuthProvider>
         <WorkoutProvider>
           <Router>
-            <div className="flex flex-col min-h-screen bg-gray-950 text-white">
-              <main className="flex-grow">
-                <RouterProvider />
-                <EmergencyWorkoutReset />
-              </main>
-              <Toaster />
-            </div>
+            <LayoutProvider>
+              <div className="flex flex-col min-h-screen bg-gray-950 text-white">
+                <main className="flex-grow">
+                  <RouterProvider />
+                  <EmergencyWorkoutReset />
+                </main>
+                <Toaster />
+              </div>
+            </LayoutProvider>
           </Router>
         </WorkoutProvider>
       </AuthProvider>
