@@ -4,6 +4,8 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useHaptics } from "@/hooks/use-haptics";
 import { typography } from "@/lib/typography";
+import { Tooltip, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipWrapper } from "@/components/ui/tooltip-wrapper";
 
 interface StatCardProps {
   icon: React.ReactNode;
@@ -19,6 +21,7 @@ interface StatCardProps {
   highlight?: boolean;
   size?: 'sm' | 'md' | 'lg';
   colorVariant?: 'default' | 'primary' | 'secondary' | 'accent';
+  tooltip?: string;
 }
 
 export function StatCard({ 
@@ -30,7 +33,8 @@ export function StatCard({
   trend,
   highlight = false,
   size = 'md',
-  colorVariant = 'default'
+  colorVariant = 'default',
+  tooltip
 }: StatCardProps) {
   const { triggerHaptic } = useHaptics();
   
@@ -101,27 +105,8 @@ export function StatCard({
     </div>
   ) : null;
   
-  const Component = onClick ? 'button' : 'div';
-  
-  return (
-    <Component
-      className={cn(
-        // Base styles
-        "relative flex flex-col items-center rounded-xl border transition-all duration-200",
-        // Card styling
-        colorVariants[colorVariant].container,
-        sizeClasses[size].container,
-        // Interactive states
-        onClick && "hover:bg-opacity-90 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 cursor-pointer",
-        // Highlight state
-        highlight && colorVariants[colorVariant].highlight,
-        // Additional animation
-        "motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.98]",
-        className
-      )}
-      onClick={handleClick}
-      aria-label={onClick ? `View more details about ${label}` : undefined}
-    >
+  const cardContent = (
+    <>
       {TrendIndicator}
       
       <div className={cn(
@@ -148,6 +133,54 @@ export function StatCard({
       )}>
         {label}
       </div>
+    </>
+  );
+  
+  const Component = onClick ? 'button' : 'div';
+  
+  const cardClasses = cn(
+    // Base styles
+    "relative flex flex-col items-center rounded-xl border transition-all duration-200 w-full",
+    // Card styling
+    colorVariants[colorVariant].container,
+    sizeClasses[size].container,
+    // Interactive states
+    onClick && "hover:bg-opacity-90 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 cursor-pointer",
+    // Highlight state
+    highlight && colorVariants[colorVariant].highlight,
+    // Additional animation
+    "motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.98]",
+    className
+  );
+  
+  if (tooltip) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipWrapper className="w-full">
+            <Component
+              className={cardClasses}
+              onClick={handleClick}
+              aria-label={onClick ? `View more details about ${label}` : undefined}
+            >
+              {cardContent}
+            </Component>
+          </TooltipWrapper>
+          <TooltipContent>
+            <p className="text-sm">{tooltip}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+  
+  return (
+    <Component
+      className={cardClasses}
+      onClick={handleClick}
+      aria-label={onClick ? `View more details about ${label}` : undefined}
+    >
+      {cardContent}
     </Component>
   );
 }

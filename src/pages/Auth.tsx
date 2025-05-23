@@ -8,6 +8,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Navigate, useNavigate } from "react-router-dom";
+import { TooltipWrapper } from "@/components/ui/tooltip-wrapper";
+import { Tooltip, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 
 // Form validation schemas
 const loginSchema = z.object({
@@ -118,13 +120,22 @@ const Auth = () => {
                   )}
                 />
                 
-                <Button 
-                  type="submit" 
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-500"
-                  disabled={loading}
-                >
-                  {loading ? "Signing in..." : "Sign In"}
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipWrapper>
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-gradient-to-r from-purple-600 to-pink-500"
+                        disabled={loading}
+                      >
+                        {loading ? "Signing in..." : "Sign In"}
+                      </Button>
+                    </TooltipWrapper>
+                    <TooltipContent>
+                      <p>Sign in with your account</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </form>
             </Form>
           ) : (
@@ -185,13 +196,22 @@ const Auth = () => {
                   )}
                 />
                 
-                <Button 
-                  type="submit" 
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-500"
-                  disabled={loading}
-                >
-                  {loading ? "Creating Account..." : "Create Account"}
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipWrapper>
+                      <Button 
+                        type="submit" 
+                        className="w-full bg-gradient-to-r from-purple-600 to-pink-500"
+                        disabled={loading}
+                      >
+                        {loading ? "Creating Account..." : "Create Account"}
+                      </Button>
+                    </TooltipWrapper>
+                    <TooltipContent>
+                      <p>Create a new account</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </form>
             </Form>
           )}

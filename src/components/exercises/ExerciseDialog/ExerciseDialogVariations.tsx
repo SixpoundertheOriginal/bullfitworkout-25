@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -8,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ExerciseFormState } from '@/hooks/useExerciseFormState';
 import { Variation, VariationType, VARIATION_TYPES, getVariationLabel, getDefaultValueForType, getVariationValueSuggestions, getVariationTypeDescriptions } from '@/types/exerciseVariation';
 import { X, Plus, HelpCircle } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipWrapper } from '@/components/ui/tooltip';
 import { Card } from '@/components/ui/card';
 
 interface ExerciseDialogVariationsProps {
@@ -120,28 +119,26 @@ export const ExerciseDialogVariations = React.memo(function ExerciseDialogVariat
             <Label htmlFor="variation-type">Variation Type</Label>
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="block w-full">
-                    <Select 
-                      value={newVariationType} 
-                      onValueChange={(value) => {
-                        setNewVariationType(value as VariationType);
-                        setNewVariationValue(getDefaultValueForType(value as VariationType));
-                      }}
-                    >
-                      <SelectTrigger id="variation-type">
-                        <SelectValue placeholder="Select variation type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {VARIATION_TYPES.map(type => (
-                          <SelectItem key={type} value={type}>
-                            {getVariationLabel(type)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </TooltipTrigger>
+                <TooltipWrapper className="block w-full">
+                  <Select 
+                    value={newVariationType} 
+                    onValueChange={(value) => {
+                      setNewVariationType(value as VariationType);
+                      setNewVariationValue(getDefaultValueForType(value as VariationType));
+                    }}
+                  >
+                    <SelectTrigger id="variation-type">
+                      <SelectValue placeholder="Select variation type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {VARIATION_TYPES.map(type => (
+                        <SelectItem key={type} value={type}>
+                          {getVariationLabel(type)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TooltipWrapper>
                 <TooltipContent>
                   <p className="max-w-xs text-sm">{typeDescriptions[newVariationType]}</p>
                 </TooltipContent>

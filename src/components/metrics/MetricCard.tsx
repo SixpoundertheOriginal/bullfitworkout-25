@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { BaseCard } from "@/components/ui/BaseCard";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { LucideIcon } from 'lucide-react';
+import { TooltipWrapper } from '@/components/ui/tooltip-wrapper';
 
 interface MetricCardProps {
   icon: LucideIcon;
@@ -55,13 +56,13 @@ export function MetricCard({
 
         <TooltipProvider>
           <Tooltip delayDuration={300}>
-            <TooltipTrigger asChild>
+            <TooltipWrapper className="w-full">
               <div>
                 <div className={`text-xl font-bold mb-1 ${valueClass}`}>{value}</div>
                 <div className={`text-xs text-white/60 ${labelClass}`}>{label}</div>
                 {description && <div className="text-[10px] text-white/40 mt-0.5">{description}</div>}
               </div>
-            </TooltipTrigger>
+            </TooltipWrapper>
             {tooltip && (
               <TooltipContent>
                 <p className="text-xs">{tooltip}</p>
