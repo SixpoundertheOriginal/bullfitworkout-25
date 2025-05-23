@@ -1,8 +1,8 @@
 
 import { useState, useEffect, useMemo } from 'react';
-import { Exercise, MuscleGroup, EquipmentType, MovementPattern, Difficulty } from '@/types/exercise';
-import { useExercises } from '@/hooks/useExercises';
+import { useExercises } from '@/hooks/exercise/useExerciseQueries';
 import { useWorkoutHistory } from '@/hooks/useWorkoutHistory';
+import { Exercise, MuscleGroup, EquipmentType, MovementPattern, Difficulty } from '@/types/exercise';
 
 interface FilterOptions {
   searchQuery: string;
@@ -14,26 +14,26 @@ interface FilterOptions {
 
 export function useExerciseList(
   tab: "suggested" | "recent" | "browse",
-  filterOptions: FilterOptions,
-  paginated: boolean = false
+  filters: FilterOptions,
+  enablePagination: boolean = false
 ) {
   const { exercises = [] } = useExercises();
   const { workouts = [] } = useWorkoutHistory();
+  
   const [currentPage, setCurrentPage] = useState(1);
   const exercisesPerPage = 8;
-  
-  // Reset pagination when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [
-    filterOptions.searchQuery,
-    filterOptions.selectedMuscleGroup,
-    filterOptions.selectedEquipment, 
-    filterOptions.selectedDifficulty,
-    filterOptions.selectedMovement
-  ]);
 
-  // Get recent exercises from workout history
+  // Extract filters
+  const { searchQuery, selectedMuscleGroup, selectedEquipment, selectedDifficulty, selectedMovement } = filters;
+
+  // Check if we're actively filtering
+  const isFiltering = searchQuery !== '' || 
+    selectedMuscleGroup !== 'all' || 
+    selectedEquipment !== 'all' || 
+    selectedDifficulty !== 'all' || 
+    selectedMovement !== 'all';
+
+  // Extract recently used exercises from workout history
   const recentExercises = useMemo(() => {
     if (!workouts?.length) return [];
     if (!Array.isArray(exercises) || exercises.length === 0) return [];
@@ -63,9 +63,9 @@ export function useExerciseList(
     return Array.from(exerciseMap.values());
   }, [workouts, exercises]);
 
-  // Filter exercises based on filters
+  // Filter exercises based on search query and filters
   const filterExercises = (exercisesList: Exercise[] = []) => {
-    if (!exercisesList || !Array.isArray(exercisesList) || exercisesList.length === 0) return [];
+    if (!exercisesList || !Array.isArray(exercisesList)) return [];
     
     return exercisesList.filter(exercise => {
       if (!exercise) return false;
@@ -80,79 +80,75 @@ export function useExerciseList(
         ...(Array.isArray(exercise.secondary_muscle_groups) ? exercise.secondary_muscle_groups : [])
       ].filter(Boolean).join(' ').toLowerCase();
       
-      const matchesSearch = filterOptions.searchQuery === "" || 
-        searchableText.includes(filterOptions.searchQuery.toLowerCase());
+      const matchesSearch = searchQuery === "" || searchableText.includes(searchQuery.toLowerCase());
 
       // Muscle group filter
-      const matchesMuscleGroup = filterOptions.selectedMuscleGroup === "all" || 
+      const matchesMuscleGroup = selectedMuscleGroup === "all" || 
         (exercise.primary_muscle_groups && Array.isArray(exercise.primary_muscle_groups) && 
-          exercise.primary_muscle_groups.includes(filterOptions.selectedMuscleGroup as MuscleGroup)) ||
+          exercise.primary_muscle_groups.includes(selectedMuscleGroup as MuscleGroup)) ||
         (exercise.secondary_muscle_groups && Array.isArray(exercise.secondary_muscle_groups) && 
-          exercise.secondary_muscle_groups.includes(filterOptions.selectedMuscleGroup as MuscleGroup));
+          exercise.secondary_muscle_groups.includes(selectedMuscleGroup as MuscleGroup));
 
       // Equipment filter
-      const matchesEquipment = filterOptions.selectedEquipment === "all" || 
+      const matchesEquipment = selectedEquipment === "all" || 
         (exercise.equipment_type && Array.isArray(exercise.equipment_type) && 
-          exercise.equipment_type.includes(filterOptions.selectedEquipment as EquipmentType));
+          exercise.equipment_type.includes(selectedEquipment as EquipmentType));
 
       // Difficulty filter
-      const matchesDifficulty = filterOptions.selectedDifficulty === "all" || 
-        exercise.difficulty === filterOptions.selectedDifficulty;
+      const matchesDifficulty = selectedDifficulty === "all" || 
+        exercise.difficulty === selectedDifficulty;
 
       // Movement pattern filter
-      const matchesMovement = filterOptions.selectedMovement === "all" || 
-        exercise.movement_pattern === filterOptions.selectedMovement;
+      const matchesMovement = selectedMovement === "all" || 
+        exercise.movement_pattern === selectedMovement;
 
       return matchesSearch && matchesMuscleGroup && matchesEquipment && 
             matchesDifficulty && matchesMovement;
     });
   };
 
-  // Get the base exercises (those without base_exercise_id)
-  const baseExercises = useMemo(() => {
-    return Array.isArray(exercises) 
-      ? exercises.filter(ex => ex && !ex.base_exercise_id) 
-      : [];
+  // Get base exercises for each tab
+  const getBaseExercises = useMemo(() => {
+    if (!Array.isArray(exercises)) return [];
+    
+    // Filter out only base exercises (those without base_exercise_id)
+    return exercises.filter(ex => ex && !ex.base_exercise_id);
   }, [exercises]);
 
-  // Get filtered exercises based on the active tab
+  // Apply tab specific logic and filters
   const filteredExercises = useMemo(() => {
-    switch(tab) {
-      case "suggested":
-        // Suggested shows the first 20 base exercises
-        return filterExercises(baseExercises.slice(0, 20));
-      case "recent":
-        // Recent shows exercises from workout history
+    switch (tab) {
+      case 'recent':
         return filterExercises(recentExercises);
-      case "browse":
+      case 'suggested':
+        // For suggested tab, we show a mix of recent and some popular exercises
+        return filterExercises(getBaseExercises.slice(0, 20)); // Just showing first 20 for now
+      case 'browse':
       default:
-        // Browse shows all base exercises
-        return filterExercises(baseExercises);
+        return filterExercises(getBaseExercises);
     }
-  }, [tab, baseExercises, recentExercises, filterOptions]);
+  }, [tab, getBaseExercises, recentExercises, filters]);
 
-  // Pagination logic for the browse tab
-  const { currentExercises, totalPages } = useMemo(() => {
-    if (!paginated) {
-      return { currentExercises: filteredExercises, totalPages: 1 };
-    }
-    
-    const indexOfLastExercise = currentPage * exercisesPerPage;
-    const indexOfFirstExercise = indexOfLastExercise - exercisesPerPage;
-    const slicedExercises = filteredExercises.slice(indexOfFirstExercise, indexOfLastExercise);
-    const total = Math.ceil(filteredExercises.length / exercisesPerPage);
-    
-    return { 
-      currentExercises: slicedExercises, 
-      totalPages: total 
-    };
-  }, [filteredExercises, currentPage, paginated]);
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [tab, searchQuery, selectedMuscleGroup, selectedEquipment, selectedDifficulty, selectedMovement]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredExercises.length / exercisesPerPage);
+  const currentExercises = enablePagination 
+    ? filteredExercises.slice(
+        (currentPage - 1) * exercisesPerPage, 
+        currentPage * exercisesPerPage
+      )
+    : filteredExercises;
 
   return {
     filteredExercises,
     currentExercises,
     totalPages,
     currentPage,
-    setCurrentPage
+    setCurrentPage,
+    isFiltering
   };
 }

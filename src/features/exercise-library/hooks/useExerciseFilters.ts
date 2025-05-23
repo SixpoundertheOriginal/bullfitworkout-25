@@ -13,6 +13,12 @@ export function useExerciseFilters() {
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | "all">("all");
   const [selectedMovement, setSelectedMovement] = useState<MovementPattern | "all">("all");
 
+  // Check if any filter is active
+  const hasActiveFilters = selectedMuscleGroup !== "all" || 
+    selectedEquipment !== "all" || 
+    selectedDifficulty !== "all" || 
+    selectedMovement !== "all";
+
   // Reset to page 1 when filters change
   useEffect(() => {
     // Reset pagination could be done here
@@ -33,6 +39,7 @@ export function useExerciseFilters() {
     setSearchQuery,
     showFilters, 
     setShowFilters,
+    hasActiveFilters,
     filterProps: {
       selectedMuscleGroup,
       selectedEquipment,

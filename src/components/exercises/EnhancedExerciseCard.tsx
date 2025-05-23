@@ -18,6 +18,7 @@ import {
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { useHaptics } from '@/hooks/use-haptics';
+import MuscleGroupVisualizer from './MuscleGroupVisualizer';
 
 interface EnhancedExerciseCardProps {
   exerciseName: string;
@@ -78,7 +79,8 @@ export const EnhancedExerciseCard: React.FC<EnhancedExerciseCardProps> = ({
   const description = exerciseData?.description;
   
   // Get muscle groups only if we have a full exercise object
-  const muscleGroups = exerciseData?.primary_muscle_groups;
+  const primaryMuscles = exerciseData?.primary_muscle_groups || [];
+  const secondaryMuscles = exerciseData?.secondary_muscle_groups || [];
   
   // Get equipment types
   const equipmentTypes = exerciseData?.equipment_type;
@@ -146,14 +148,14 @@ export const EnhancedExerciseCard: React.FC<EnhancedExerciseCardProps> = ({
                 <p className="text-sm text-gray-400 mt-1 line-clamp-2">{description}</p>
               )}
               
-              {muscleGroups && muscleGroups.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {renderMuscleGroups(muscleGroups)}
-                  {muscleGroups.length > 3 && (
-                    <span className="text-xs text-gray-500">+{muscleGroups.length - 3} more</span>
+              <div className="flex items-center justify-between mt-2">
+                <div className="flex flex-wrap gap-1.5">
+                  {primaryMuscles && primaryMuscles.length > 0 && renderMuscleGroups(primaryMuscles)}
+                  {primaryMuscles && primaryMuscles.length > 3 && (
+                    <span className="text-xs text-gray-500">+{primaryMuscles.length - 3} more</span>
                   )}
                 </div>
-              )}
+              </div>
               
               {equipmentTypes && equipmentTypes.length > 0 && (
                 <div className="flex items-center mt-2 text-xs text-gray-500">
@@ -167,6 +169,16 @@ export const EnhancedExerciseCard: React.FC<EnhancedExerciseCardProps> = ({
                 </div>
               )}
             </div>
+            
+            {(primaryMuscles?.length > 0 || secondaryMuscles?.length > 0) && (
+              <div className="hidden sm:block ml-2 mr-2">
+                <MuscleGroupVisualizer 
+                  primaryMuscles={primaryMuscles}
+                  secondaryMuscles={secondaryMuscles}
+                  size="sm"
+                />
+              </div>
+            )}
             
             <div className="flex shrink-0 space-x-1 ml-2">
               {onViewDetails && (

@@ -7,6 +7,8 @@ import { ExerciseVariationGroup } from "@/components/exercises/ExerciseVariation
 import { useExerciseList } from "../hooks/useExerciseList";
 import { ExercisePagination } from "./ExercisePagination";
 import { EnhancedExerciseVariationGroup } from "../components/EnhancedExerciseVariationGroup";
+import { motion, AnimatePresence } from "framer-motion";
+import { isIOS } from "@/utils/iosUtils";
 
 interface ExerciseTabContentProps {
   tab: "suggested" | "recent" | "browse";
@@ -14,6 +16,7 @@ interface ExerciseTabContentProps {
   onDelete: (exercise: Exercise) => void;
   onAddVariation: (exercise: Exercise) => void;
   onSelectExercise?: (exercise: Exercise) => void;
+  onViewDetails?: (exercise: Exercise) => void;
   standalone: boolean;
   showPagination?: boolean;
   filters: {
@@ -32,34 +35,49 @@ export function ExerciseTabContent({
   onDelete,
   onAddVariation,
   onSelectExercise,
+  onViewDetails,
   standalone,
   showPagination = false,
   filters,
   useEnhancedUI = true
 }: ExerciseTabContentProps) {
+  const isIOSDevice = isIOS();
+  
   const {
     filteredExercises,
     currentExercises,
     totalPages,
     currentPage,
-    setCurrentPage
+    setCurrentPage,
+    isFiltering
   } = useExerciseList(tab, filters, showPagination);
 
   // Render ExerciseVariationGroup component
-  const renderExerciseVariationGroup = (exercise: Exercise) => {
+  const renderExerciseVariationGroup = (exercise: Exercise, index: number) => {
     if (!exercise) return null;
     
     if (useEnhancedUI) {
       return (
-        <div key={exercise.id} className="mb-4">
+        <motion.div 
+          key={exercise.id} 
+          className="mb-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ 
+            duration: 0.3, 
+            delay: index * 0.05,
+            ease: isIOSDevice ? [0.23, 1, 0.32, 1] : 'easeOut'
+          }}
+        >
           <EnhancedExerciseVariationGroup
             baseExercise={exercise}
             onSelect={standalone ? undefined : onSelectExercise}
             onEdit={standalone ? onEdit : undefined}
             onDelete={standalone ? onDelete : undefined}
             onAddVariation={standalone ? onAddVariation : undefined}
+            onViewDetails={onViewDetails}
           />
-        </div>
+        </motion.div>
       );
     }
     
@@ -82,26 +100,46 @@ export function ExerciseTabContent({
     
     if (!exercisesToRender || !Array.isArray(exercisesToRender) || exercisesToRender.length === 0) {
       return (
-        <div className="text-center py-6 text-gray-400">
-          No exercises found
-        </div>
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="text-center py-12 text-gray-400"
+        >
+          <div className="mb-4">
+            <svg className="mx-auto h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
+          <p className="text-lg">No exercises found</p>
+          <p className="mt-1 text-sm">
+            {isFiltering ? 'Try adjusting your filters or search terms' : 'Get started by adding exercises to your library'}
+          </p>
+        </motion.div>
       );
     }
 
     return (
-      <div className="space-y-4">
-        {exercisesToRender.map(exercise => 
-          exercise ? renderExerciseVariationGroup(exercise) : null
-        )}
-        
-        {showPagination && totalPages > 1 && (
-          <ExercisePagination 
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        )}
-      </div>
+      <AnimatePresence>
+        <motion.div 
+          className="space-y-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          {exercisesToRender.map((exercise, index) => 
+            exercise ? renderExerciseVariationGroup(exercise, index) : null
+          )}
+          
+          {showPagination && totalPages > 1 && (
+            <ExercisePagination 
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
     );
   };
 

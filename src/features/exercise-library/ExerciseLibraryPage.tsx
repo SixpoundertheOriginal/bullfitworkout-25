@@ -15,6 +15,7 @@ import { EnhancedExerciseDetailView } from "./components/EnhancedExerciseDetailV
 import { Separator } from "@/components/ui/separator";
 import { motion, AnimatePresence } from "framer-motion";
 import { isIOS } from "@/utils/iosUtils";
+import { useToast } from "@/hooks/use-toast";
 
 interface ExerciseLibraryPageProps {
   onSelectExercise?: (exercise: string | Exercise) => void;
@@ -29,6 +30,7 @@ export default function ExerciseLibraryPage({
 }: ExerciseLibraryPageProps) {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const { toast } = useToast();
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [useNewDialog, setUseNewDialog] = useState(true);
   const [useEnhancedDetail, setUseEnhancedDetail] = useState(true);
@@ -62,6 +64,16 @@ export default function ExerciseLibraryPage({
 
   const handleCloseDetail = () => {
     setSelectedExercise(null);
+  };
+
+  const handleViewDetails = (exercise: Exercise) => {
+    if (isMobile) {
+      // On mobile, open detail view in full screen
+      setSelectedExercise(exercise);
+    } else {
+      // On desktop, show in side panel
+      setSelectedExercise(exercise);
+    }
   };
 
   const renderDetailView = () => {
@@ -127,6 +139,7 @@ export default function ExerciseLibraryPage({
                 onDelete={handleDelete}
                 onAddVariation={handleAddVariation}
                 onSelectExercise={handleSelectExercise}
+                onViewDetails={handleViewDetails}
                 deleteConfirmOpen={deleteConfirmOpen}
                 setDeleteConfirmOpen={setDeleteConfirmOpen}
                 exerciseToDelete={exerciseToDelete}
@@ -158,8 +171,21 @@ export default function ExerciseLibraryPage({
         </div>
       </div>
       
+      {/* Mobile detail view */}
+      {isMobile && selectedExercise && (
+        <motion.div 
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          exit={{ y: '100%' }}
+          transition={{ duration: 0.3, ease: isIOSDevice ? [0.23, 1, 0.32, 1] : 'easeOut' }}
+          className="fixed inset-0 bg-gray-950 z-50"
+        >
+          {renderDetailView()}
+        </motion.div>
+      )}
+      
       {/* Add Exercise FAB - for mobile */}
-      {standalone && isMobile && (
+      {standalone && isMobile && !selectedExercise && (
         <FloatingLibraryButton onClick={handleAdd} />
       )}
     </div>

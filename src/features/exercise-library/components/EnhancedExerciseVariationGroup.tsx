@@ -5,6 +5,8 @@ import { EnhancedExerciseCard } from '@/components/exercises/EnhancedExerciseCar
 import { AnimatePresence, motion } from 'framer-motion';
 import { useExercises } from '@/hooks/exercise/useExerciseQueries';
 import { useHaptics } from '@/hooks/use-haptics';
+import { Badge } from '@/components/ui/badge';
+import { isIOS } from '@/utils/iosUtils';
 
 interface EnhancedExerciseVariationGroupProps {
   baseExercise: Exercise;
@@ -12,6 +14,7 @@ interface EnhancedExerciseVariationGroupProps {
   onEdit?: (exercise: Exercise) => void;
   onDelete?: (exercise: Exercise) => void;
   onAddVariation?: (exercise: Exercise) => void;
+  onViewDetails?: (exercise: Exercise) => void;
 }
 
 export const EnhancedExerciseVariationGroup: React.FC<EnhancedExerciseVariationGroupProps> = ({
@@ -19,11 +22,13 @@ export const EnhancedExerciseVariationGroup: React.FC<EnhancedExerciseVariationG
   onSelect,
   onEdit,
   onDelete,
-  onAddVariation
+  onAddVariation,
+  onViewDetails
 }) => {
   const { exercises } = useExercises();
   const [expanded, setExpanded] = useState(false);
   const { triggerHaptic } = useHaptics();
+  const isIOSDevice = isIOS();
 
   // Find variations for this base exercise
   const variations = React.useMemo(() => {
@@ -40,6 +45,20 @@ export const EnhancedExerciseVariationGroup: React.FC<EnhancedExerciseVariationG
     setExpanded(prev => !prev);
   };
 
+  // Get variation badge based on count
+  const getVariationBadge = () => {
+    if (!variations.length) return null;
+    
+    return (
+      <Badge 
+        variant="outline" 
+        className={`text-xs ${expanded ? 'bg-purple-900/40 border-purple-500/50' : 'bg-gray-800/50 border-gray-700'}`}
+      >
+        {variations.length} {variations.length === 1 ? 'variation' : 'variations'}
+      </Badge>
+    );
+  };
+
   return (
     <div className="space-y-2">
       {/* Base exercise */}
@@ -50,8 +69,10 @@ export const EnhancedExerciseVariationGroup: React.FC<EnhancedExerciseVariationG
         onEdit={onEdit ? () => onEdit(baseExercise) : undefined}
         onDelete={onDelete ? () => onDelete(baseExercise) : undefined}
         onAddVariation={onAddVariation ? () => onAddVariation(baseExercise) : undefined}
+        onViewDetails={onViewDetails ? () => onViewDetails(baseExercise) : undefined}
         expanded={expanded}
         toggleExpand={variations.length > 0 ? toggleExpand : undefined}
+        className={expanded ? 'border-purple-600/30' : ''}
       />
       
       {/* Variations */}
@@ -62,15 +83,22 @@ export const EnhancedExerciseVariationGroup: React.FC<EnhancedExerciseVariationG
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
+              transition={{ 
+                duration: 0.3, 
+                ease: isIOSDevice ? [0.23, 1, 0.32, 1] : 'easeOut' 
+              }}
               className="pl-4 space-y-2 overflow-hidden"
             >
-              {variations.map(variation => (
+              {variations.map((variation, index) => (
                 <motion.div
                   key={variation.id}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.2 }}
+                  transition={{ 
+                    duration: 0.25,
+                    delay: index * 0.05,
+                    ease: isIOSDevice ? [0.23, 1, 0.32, 1] : 'easeOut'
+                  }}
                 >
                   <EnhancedExerciseCard
                     exerciseName={variation.name}
@@ -79,6 +107,7 @@ export const EnhancedExerciseVariationGroup: React.FC<EnhancedExerciseVariationG
                     onSelect={onSelect ? () => onSelect(variation) : undefined}
                     onEdit={onEdit ? () => onEdit(variation) : undefined}
                     onDelete={onDelete ? () => onDelete(variation) : undefined}
+                    onViewDetails={onViewDetails ? () => onViewDetails(variation) : undefined}
                   />
                 </motion.div>
               ))}

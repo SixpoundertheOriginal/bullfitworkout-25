@@ -9,6 +9,7 @@ import { ExerciseTabContent } from "./ExerciseTabContent";
 import { ExerciseFilters } from "./ExerciseFilters";
 import { DeleteExerciseDialog } from "./DeleteExerciseDialog";
 import { useExerciseFilters } from "../hooks/useExerciseFilters";
+import { Badge } from "@/components/ui/badge";
 
 interface ExerciseTabsProps {
   standalone: boolean;
@@ -18,6 +19,7 @@ interface ExerciseTabsProps {
   onDelete: (exercise: Exercise) => void;
   onAddVariation: (exercise: Exercise) => void;
   onSelectExercise?: (exercise: Exercise) => void;
+  onViewDetails?: (exercise: Exercise) => void;
   deleteConfirmOpen: boolean;
   setDeleteConfirmOpen: (open: boolean) => void;
   exerciseToDelete: Exercise | null;
@@ -32,6 +34,7 @@ export function ExerciseTabs({
   onDelete,
   onAddVariation,
   onSelectExercise,
+  onViewDetails,
   deleteConfirmOpen,
   setDeleteConfirmOpen,
   exerciseToDelete,
@@ -44,7 +47,8 @@ export function ExerciseTabs({
     setSearchQuery,
     showFilters,
     setShowFilters,
-    filterProps
+    filterProps,
+    hasActiveFilters
   } = useExerciseFilters();
 
   return (
@@ -120,6 +124,24 @@ export function ExerciseTabs({
         
         {/* Filters button - only show in browse tab */}
         {activeTab === 'browse' && (
+          <Button 
+            variant="outline"
+            size="sm" 
+            onClick={() => setShowFilters(!showFilters)}
+            className={`mb-4 flex items-center w-full justify-center ${showFilters ? 'bg-purple-900/50 border-purple-500' : ''}`}
+          >
+            <Filter className="w-4 h-4 mr-2" />
+            Filters
+            {hasActiveFilters && (
+              <Badge variant="secondary" className="ml-2 bg-purple-600 text-xs">
+                Active
+              </Badge>
+            )}
+          </Button>
+        )}
+        
+        {/* Filters */}
+        {activeTab === 'browse' && (
           <ExerciseFilters 
             showFilters={showFilters} 
             setShowFilters={setShowFilters} 
@@ -133,6 +155,7 @@ export function ExerciseTabs({
           onDelete={onDelete}
           onAddVariation={onAddVariation}
           onSelectExercise={onSelectExercise}
+          onViewDetails={onViewDetails}
           standalone={standalone}
           filters={{
             searchQuery,
@@ -146,6 +169,7 @@ export function ExerciseTabs({
           onDelete={onDelete}
           onAddVariation={onAddVariation}
           onSelectExercise={onSelectExercise}
+          onViewDetails={onViewDetails}
           standalone={standalone}
           filters={{
             searchQuery,
@@ -159,6 +183,7 @@ export function ExerciseTabs({
           onDelete={onDelete}
           onAddVariation={onAddVariation}
           onSelectExercise={onSelectExercise}
+          onViewDetails={onViewDetails}
           showPagination
           standalone={standalone}
           filters={{
