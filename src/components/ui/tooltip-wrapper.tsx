@@ -17,10 +17,7 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   asChild = true,
   className = "",
 }) => {
-  // IMPORTANT: The critical issue is that when asChild=true, Radix UI calls React.Children.only()
-  // on the children, which requires EXACTLY one React element (not string, array, etc.)
-
-  // If asChild is false, we can safely render normally without worry
+  // If asChild is false, we can safely render with a wrapper
   if (!asChild) {
     return (
       <TooltipTrigger className={className}>
@@ -29,80 +26,98 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
     );
   }
 
-  // For asChild=true, we need to handle all possible child types:
+  // For asChild=true, we need to be very careful about what we pass
   
-  // 1. Handle null/undefined/falsy children
+  // Handle null/undefined children
   if (!children) {
-    // Return a trigger with asChild=false and a fallback element
     return (
       <TooltipTrigger asChild={false} className={className}>
-        <span />
+        <span style={{ display: 'contents' }} />
       </TooltipTrigger>
     );
   }
 
-  // 2. Handle primitive value children (string, number, boolean)
+  // Handle primitive values (string, number, boolean)
   if (typeof children === 'string' || typeof children === 'number' || typeof children === 'boolean') {
-    // Wrap primitives in a span
     return (
       <TooltipTrigger asChild={false} className={className}>
-        <span>{String(children)}</span>
+        <span style={{ display: 'contents' }}>{String(children)}</span>
       </TooltipTrigger>
     );
   }
 
-  // 3. Process arrays or fragments by ensuring we have exactly one child element
-  // Convert to array and filter out falsy values
-  const childArray = React.Children.toArray(children).filter(Boolean);
+  // Try to get a single React element
+  let singleChild: React.ReactElement | null = null;
   
-  // If empty after filtering
-  if (childArray.length === 0) {
+  try {
+    // Convert children to array and filter valid elements
+    const childArray = React.Children.toArray(children);
+    const validElements = childArray.filter((child): child is React.ReactElement => 
+      React.isValidElement(child)
+    );
+    
+    if (validElements.length === 1) {
+      singleChild = validElements[0];
+    } else if (validElements.length > 1) {
+      // Multiple valid elements - wrap them
+      return (
+        <TooltipTrigger asChild={false} className={className}>
+          <span style={{ display: 'contents' }}>{validElements}</span>
+        </TooltipTrigger>
+      );
+    } else if (childArray.length > 0) {
+      // No valid elements but we have children - wrap everything
+      return (
+        <TooltipTrigger asChild={false} className={className}>
+          <span style={{ display: 'contents' }}>{children}</span>
+        </TooltipTrigger>
+      );
+    }
+  } catch (error) {
+    // If anything goes wrong, fall back to wrapper approach
+    console.warn('TooltipWrapper: Error processing children, falling back to wrapper', error);
     return (
       <TooltipTrigger asChild={false} className={className}>
-        <span />
+        <span style={{ display: 'contents' }}>{children}</span>
       </TooltipTrigger>
     );
   }
-  
-  // If multiple children, we need to wrap them
-  if (childArray.length > 1) {
+
+  // If we don't have a single valid element, use wrapper approach
+  if (!singleChild) {
     return (
       <TooltipTrigger asChild={false} className={className}>
-        <span>{childArray}</span>
+        <span style={{ display: 'contents' }}>{children}</span>
       </TooltipTrigger>
     );
   }
-  
-  // Now we have exactly one child, check if it's a valid React element
-  const singleChild = childArray[0];
-  
-  if (!React.isValidElement(singleChild)) {
-    // Not a valid element, wrap it
-    return (
-      <TooltipTrigger asChild={false} className={className}>
-        <span>{singleChild}</span>
-      </TooltipTrigger>
-    );
-  }
-  
-  // We have a valid React element - we can use asChild=true
-  
-  // If we need to add className, clone the element
+
+  // We have exactly one valid React element
+  // Merge className if needed
   if (className) {
-    const props = singleChild.props || {};
-    const existingClassName = props.className || '';
+    const existingClassName = singleChild.props?.className || '';
     const mergedClassName = existingClassName 
       ? `${existingClassName} ${className}`.trim() 
       : className;
     
-    const clonedChild = React.cloneElement(singleChild, {
-      ...props,
-      className: mergedClassName,
-    });
-    
-    return <TooltipTrigger asChild>{clonedChild}</TooltipTrigger>;
+    try {
+      const clonedChild = React.cloneElement(singleChild, {
+        ...singleChild.props,
+        className: mergedClassName,
+      });
+      
+      return <TooltipTrigger asChild>{clonedChild}</TooltipTrigger>;
+    } catch (error) {
+      // If cloning fails, fall back to wrapper
+      console.warn('TooltipWrapper: Error cloning element, falling back to wrapper', error);
+      return (
+        <TooltipTrigger asChild={false} className={className}>
+          <span style={{ display: 'contents' }}>{children}</span>
+        </TooltipTrigger>
+      );
+    }
   }
   
-  // Just pass the valid element directly
+  // Return the single child as-is with asChild=true
   return <TooltipTrigger asChild>{singleChild}</TooltipTrigger>;
 };
