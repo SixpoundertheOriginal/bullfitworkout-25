@@ -17,26 +17,26 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   asChild = true,
   className = "",
 }) => {
-  // If asChild is true, we need to ensure we're passing a single element to TooltipTrigger
-  if (asChild) {
-    // When using asChild, we must ensure children is a single React element
-    // React.Children.only will throw an error if children is not exactly one element
-    
-    // If children is an array or fragment, this will cause React.Children.only to throw
-    // So we need to make sure we're passing exactly one React element
-    if (React.Children.count(children) !== 1) {
-      // If we have multiple children or no children, wrap in a span
-      return (
-        <TooltipTrigger asChild>
-          <span className={className}>{children}</span>
-        </TooltipTrigger>
-      );
-    }
-    
-    // We have exactly one child, so we can safely use asChild
+  // If asChild is false, we use TooltipTrigger directly with className support
+  if (!asChild) {
+    return <TooltipTrigger className={className}>{children}</TooltipTrigger>;
+  }
+  
+  // For asChild=true, we need special handling to ensure a single child element
+  
+  // First, check if children is a valid single element that can be cloned
+  const childCount = React.Children.count(children);
+  
+  // If we have exactly one child that is a valid element, pass it directly
+  if (childCount === 1 && React.isValidElement(children)) {
     return <TooltipTrigger asChild>{children}</TooltipTrigger>;
   }
   
-  // If asChild is false, we just pass children directly
-  return <TooltipTrigger className={className}>{children}</TooltipTrigger>;
+  // For all other cases (multiple children, text nodes, etc.),
+  // wrap in a span to ensure we pass exactly one element to asChild
+  return (
+    <TooltipTrigger asChild>
+      <span className={className}>{children}</span>
+    </TooltipTrigger>
+  );
 }
