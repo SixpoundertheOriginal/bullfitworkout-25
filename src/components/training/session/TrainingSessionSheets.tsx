@@ -41,11 +41,10 @@ export const TrainingSessionSheets: React.FC<TrainingSessionSheetsProps> = ({
       <PostSetRatingSheet
         open={isRatingSheetOpen}
         onOpenChange={setIsRatingSheetOpen}
-        onSubmitRating={handleSubmitRating} // Changed from onSubmit to onSubmitRating to match component props
+        onSubmitRating={handleSubmitRating}
         exerciseName={lastCompletedExercise || ''}
         setNumber={lastCompletedSetIndex !== null ? lastCompletedSetIndex + 1 : 1}
       />
     </>
   );
 };
-
