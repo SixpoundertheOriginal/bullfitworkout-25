@@ -1,3 +1,4 @@
+
 import React from "react";
 import { TooltipTrigger } from "./tooltip";
 
@@ -17,7 +18,9 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   className = "",
 }) => {
   // Check if children is a single React element
+  // We need to be very careful here - only use asChild if we have exactly one React element
   const isSingleElement = React.isValidElement(children) && 
+    !Array.isArray(children) && 
     React.Children.count(children) === 1;
   
   // If we have a single valid React element, we can safely use asChild
