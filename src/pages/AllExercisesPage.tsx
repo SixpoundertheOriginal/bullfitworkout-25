@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from "react";
 import { useExercises } from "@/hooks/useExercises";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Filter, X, ChevronLeft } from "lucide-react";
+import { Plus, Search, Filter, X, ChevronLeft, Dumbbell, Sparkles, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ExerciseDialog } from "@/components/ExerciseDialog";
 import { MuscleGroup, EquipmentType, MovementPattern, Difficulty, Exercise } from "@/types/exercise";
@@ -537,9 +536,32 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
   }
 
   return (
-    <div className={`${standalone ? 'pt-16 pb-24' : ''} h-full overflow-hidden flex flex-col`}>
-      {standalone && <PageHeader title="Exercise Library" />}
-      
+    <div className="container mx-auto py-6 px-4">
+      {standalone ? (
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Dumbbell className="h-6 w-6 text-primary" />
+            Exercise Library
+          </h1>
+          <Button variant="outline" className="gap-2" asChild>
+            <a href="/enhanced-exercises">
+              <Sparkles className="h-4 w-4" />
+              Enhanced Editor
+            </a>
+          </Button>
+        </div>
+      ) : (
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Exercise Library</h1>
+          {onBack && (
+            <Button variant="outline" size="sm" onClick={onBack}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+          )}
+        </div>
+      )}
+
       {/* Main content container */}
       <div className={`flex-1 overflow-hidden flex flex-col mx-auto w-full max-w-4xl px-4 ${standalone ? 'py-4' : 'pt-0'}`}>
         <ExerciseDialog
