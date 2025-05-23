@@ -4,8 +4,8 @@ import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
+  TooltipTrigger,
 } from "./tooltip";
-import { TooltipWrapper } from "./tooltip-wrapper";
 
 interface EnhancedTooltipProps {
   content: React.ReactNode;
@@ -20,7 +20,7 @@ interface EnhancedTooltipProps {
 
 /**
  * A completely safe tooltip component that never triggers React.Children.only errors
- * by ensuring proper element nesting and avoiding asChild propagation issues.
+ * by wrapping content in a single div element instead of using asChild.
  */
 export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
   content,
@@ -30,22 +30,23 @@ export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
   delayDuration = 200,
   className = "",
   contentClassName = "",
-  asChild = true, // We ignore this to avoid errors
 }) => {
   // If no content or empty content, just render children without tooltip
   if (!content || 
       children == null || 
       (typeof content === 'string' && content.trim() === '')) {
-    return <div className="inline-block">{children}</div>;
+    return <>{children}</>;
   }
   
-  // Always render with our safe wrapper to guarantee we don't hit React.Children.only errors
+  // Always wrap in a single div to avoid React.Children.only errors
   return (
     <TooltipProvider delayDuration={delayDuration}>
       <Tooltip>
-        <TooltipWrapper className={className}>
-          {children}
-        </TooltipWrapper>
+        <TooltipTrigger asChild={false} className={className}>
+          <div className="inline-block w-full">
+            {children}
+          </div>
+        </TooltipTrigger>
         <TooltipContent side={side} align={align} className={contentClassName}>
           {content}
         </TooltipContent>
