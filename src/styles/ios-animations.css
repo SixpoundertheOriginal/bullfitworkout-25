@@ -71,3 +71,38 @@
   -webkit-user-select: none;
   user-select: none;
 }
+
+/* Card animations */
+.card-hover-effect {
+  transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.card-hover-effect:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Filter chip animations */
+.filter-chip {
+  transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.filter-chip:hover {
+  transform: translateY(-1px);
+}
+
+/* Variation tree visualization */
+.variation-tree-line {
+  position: relative;
+}
+
+.variation-tree-line::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  width: 10px;
+  height: 1px;
+  background-color: rgba(139, 92, 246, 0.5);
+  transform: translateY(-50%);
+}

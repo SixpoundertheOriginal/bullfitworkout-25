@@ -33,6 +33,8 @@ interface EnhancedExerciseCardProps {
   onViewDetails?: () => void;
   expanded?: boolean; 
   toggleExpand?: () => void;
+  showVariationCount?: boolean;
+  variationCount?: number;
 }
 
 export const EnhancedExerciseCard: React.FC<EnhancedExerciseCardProps> = ({
@@ -47,7 +49,9 @@ export const EnhancedExerciseCard: React.FC<EnhancedExerciseCardProps> = ({
   onAddVariation,
   onViewDetails,
   expanded,
-  toggleExpand
+  toggleExpand,
+  showVariationCount,
+  variationCount
 }) => {
   const { triggerHaptic } = useHaptics();
   
@@ -94,6 +98,19 @@ export const EnhancedExerciseCard: React.FC<EnhancedExerciseCardProps> = ({
     'expert': 'bg-red-900/20 text-red-500 border-red-700/20',
   }[difficulty as string] || 'bg-gray-800/50 border-gray-700';
 
+  const renderVariationCountBadge = () => {
+    if (!showVariationCount || !variationCount) return null;
+    
+    return (
+      <Badge 
+        variant="outline" 
+        className={`ml-2 text-xs ${expanded ? 'bg-purple-900/30 border-purple-500/30 text-purple-400' : 'bg-gray-800/50 border-gray-700 text-gray-400'}`}
+      >
+        {variationCount} {variationCount === 1 ? 'variation' : 'variations'}
+      </Badge>
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -108,7 +125,7 @@ export const EnhancedExerciseCard: React.FC<EnhancedExerciseCardProps> = ({
           "relative overflow-hidden transition-all border-gray-800 hover:border-gray-700 bg-gray-900/40",
           isVariation && "border-l-purple-700 border-l-2",
           onSelect && "cursor-pointer hover:bg-gray-800/40",
-          expanded && "ring-1 ring-purple-500/50",
+          expanded && "ring-1 ring-purple-500/50 bg-gray-900/60",
           "ios-press-animation",
           className
         )}
@@ -117,17 +134,20 @@ export const EnhancedExerciseCard: React.FC<EnhancedExerciseCardProps> = ({
         <CardContent className="p-4">
           <div className="flex justify-between items-start">
             <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <Dumbbell className="h-4 w-4 text-gray-400" />
-                <h3 className="font-medium text-white">{exerciseName}</h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Dumbbell className="h-4 w-4 text-gray-400 shrink-0" />
+                <h3 className="font-medium text-white mr-auto">{exerciseName}</h3>
+                
+                {/* Variation count badge */}
+                {renderVariationCountBadge()}
                 
                 {difficulty && (
-                  <Badge variant="outline" className={cn("text-xs ml-2", difficultyColor)}>
+                  <Badge variant="outline" className={cn("text-xs", difficultyColor)}>
                     {difficulty}
                   </Badge>
                 )}
                 
-                {expanded !== undefined && (
+                {expanded !== undefined && toggleExpand && (
                   <Button 
                     variant="ghost" 
                     size="sm"
@@ -135,8 +155,9 @@ export const EnhancedExerciseCard: React.FC<EnhancedExerciseCardProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       triggerHaptic('selection');
-                      if (toggleExpand) toggleExpand();
+                      toggleExpand();
                     }}
+                    aria-label={expanded ? "Collapse variations" : "Expand variations"}
                     haptic
                   >
                     {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -170,13 +191,19 @@ export const EnhancedExerciseCard: React.FC<EnhancedExerciseCardProps> = ({
               )}
             </div>
             
+            {/* Muscle visualization */}
             {(primaryMuscles?.length > 0 || secondaryMuscles?.length > 0) && (
               <div className="hidden sm:block ml-2 mr-2">
-                <MuscleGroupVisualizer 
-                  primaryMuscles={primaryMuscles}
-                  secondaryMuscles={secondaryMuscles}
-                  size="sm"
-                />
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <MuscleGroupVisualizer 
+                    primaryMuscles={primaryMuscles}
+                    secondaryMuscles={secondaryMuscles}
+                    size="sm"
+                  />
+                </motion.div>
               </div>
             )}
             

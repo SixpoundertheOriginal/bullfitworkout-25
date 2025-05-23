@@ -9,6 +9,8 @@ import { ExercisePagination } from "./ExercisePagination";
 import { EnhancedExerciseVariationGroup } from "../components/EnhancedExerciseVariationGroup";
 import { motion, AnimatePresence } from "framer-motion";
 import { isIOS } from "@/utils/iosUtils";
+import { Info, Filter, Dumbbell } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface ExerciseTabContentProps {
   tab: "suggested" | "recent" | "browse";
@@ -51,6 +53,62 @@ export function ExerciseTabContent({
     setCurrentPage,
     isFiltering
   } = useExerciseList(tab, filters, showPagination);
+
+  // Render active filter chips
+  const renderActiveFilters = () => {
+    const activeFilters = [];
+    
+    if (filters.selectedMuscleGroup !== "all") {
+      activeFilters.push(
+        <Badge key="muscle" className="bg-purple-700/70 hover:bg-purple-600 text-xs px-2 py-0.5 capitalize">
+          <Dumbbell className="h-3 w-3 mr-1" />
+          {filters.selectedMuscleGroup}
+        </Badge>
+      );
+    }
+    
+    if (filters.selectedEquipment !== "all") {
+      activeFilters.push(
+        <Badge key="equipment" className="bg-blue-700/70 hover:bg-blue-600 text-xs px-2 py-0.5 capitalize">
+          {filters.selectedEquipment}
+        </Badge>
+      );
+    }
+    
+    if (filters.selectedDifficulty !== "all") {
+      activeFilters.push(
+        <Badge key="difficulty" className="bg-orange-700/70 hover:bg-orange-600 text-xs px-2 py-0.5 capitalize">
+          {filters.selectedDifficulty}
+        </Badge>
+      );
+    }
+    
+    if (filters.selectedMovement !== "all") {
+      activeFilters.push(
+        <Badge key="movement" className="bg-green-700/70 hover:bg-green-600 text-xs px-2 py-0.5 capitalize">
+          {filters.selectedMovement}
+        </Badge>
+      );
+    }
+    
+    if (activeFilters.length === 0) return null;
+    
+    return (
+      <motion.div 
+        className="flex flex-wrap gap-2 mb-4"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+      >
+        <Badge className="bg-gray-700 text-xs px-2 py-0.5 mr-2 flex items-center">
+          <Filter className="h-3 w-3 mr-1" />
+          Filters:
+        </Badge>
+        {activeFilters}
+      </motion.div>
+    );
+  };
 
   // Render ExerciseVariationGroup component
   const renderExerciseVariationGroup = (exercise: Exercise, index: number) => {
@@ -115,6 +173,13 @@ export function ExerciseTabContent({
           <p className="mt-1 text-sm">
             {isFiltering ? 'Try adjusting your filters or search terms' : 'Get started by adding exercises to your library'}
           </p>
+          {isFiltering && (
+            <div className="mt-4">
+              <Badge variant="outline" className="bg-gray-800/50 border-gray-700 px-3 py-1 text-sm">
+                {filters.searchQuery ? `Search: "${filters.searchQuery}"` : 'No search term'}
+              </Badge>
+            </div>
+          )}
         </motion.div>
       );
     }
@@ -145,7 +210,8 @@ export function ExerciseTabContent({
 
   return (
     <TabsContent value={tab} className="mt-0 flex-1 overflow-auto">
-      <ScrollArea className="h-full">
+      <ScrollArea className="h-full px-0.5">
+        {filters && renderActiveFilters()}
         {renderExerciseList()}
       </ScrollArea>
     </TabsContent>

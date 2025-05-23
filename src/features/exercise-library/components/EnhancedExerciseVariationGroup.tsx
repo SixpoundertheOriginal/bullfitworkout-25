@@ -7,6 +7,7 @@ import { useExercises } from '@/hooks/exercise/useExerciseQueries';
 import { useHaptics } from '@/hooks/use-haptics';
 import { Badge } from '@/components/ui/badge';
 import { isIOS } from '@/utils/iosUtils';
+import { ChevronRight, ChevronDown } from 'lucide-react';
 
 interface EnhancedExerciseVariationGroupProps {
   baseExercise: Exercise;
@@ -59,21 +60,44 @@ export const EnhancedExerciseVariationGroup: React.FC<EnhancedExerciseVariationG
     );
   };
 
+  const renderVariationIndicator = () => {
+    if (!variations.length) return null;
+    
+    return (
+      <div className={`flex items-center gap-1.5 absolute -left-1 top-1/2 transform -translate-y-1/2 -translate-x-full ${expanded ? 'text-purple-500' : 'text-gray-500'}`}>
+        <motion.div
+          animate={{ rotate: expanded ? 90 : 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          {expanded ? 
+            <ChevronDown size={18} /> : 
+            <ChevronRight size={18} />
+          }
+        </motion.div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-2">
       {/* Base exercise */}
-      <EnhancedExerciseCard
-        exerciseName={baseExercise.name}
-        exerciseData={baseExercise}
-        onSelect={onSelect ? () => onSelect(baseExercise) : undefined}
-        onEdit={onEdit ? () => onEdit(baseExercise) : undefined}
-        onDelete={onDelete ? () => onDelete(baseExercise) : undefined}
-        onAddVariation={onAddVariation ? () => onAddVariation(baseExercise) : undefined}
-        onViewDetails={onViewDetails ? () => onViewDetails(baseExercise) : undefined}
-        expanded={expanded}
-        toggleExpand={variations.length > 0 ? toggleExpand : undefined}
-        className={expanded ? 'border-purple-600/30' : ''}
-      />
+      <div className="relative">
+        {renderVariationIndicator()}
+        <EnhancedExerciseCard
+          exerciseName={baseExercise.name}
+          exerciseData={baseExercise}
+          onSelect={onSelect ? () => onSelect(baseExercise) : undefined}
+          onEdit={onEdit ? () => onEdit(baseExercise) : undefined}
+          onDelete={onDelete ? () => onDelete(baseExercise) : undefined}
+          onAddVariation={onAddVariation ? () => onAddVariation(baseExercise) : undefined}
+          onViewDetails={onViewDetails ? () => onViewDetails(baseExercise) : undefined}
+          expanded={expanded}
+          toggleExpand={variations.length > 0 ? toggleExpand : undefined}
+          className={expanded ? 'border-purple-600/30 shadow-md shadow-purple-900/10' : ''}
+          showVariationCount={variations.length > 0}
+          variationCount={variations.length}
+        />
+      </div>
       
       {/* Variations */}
       {variations.length > 0 && (
@@ -87,7 +111,7 @@ export const EnhancedExerciseVariationGroup: React.FC<EnhancedExerciseVariationG
                 duration: 0.3, 
                 ease: isIOSDevice ? [0.23, 1, 0.32, 1] : 'easeOut' 
               }}
-              className="pl-4 space-y-2 overflow-hidden"
+              className="pl-6 space-y-2 overflow-hidden border-l-2 border-purple-700/30 ml-4"
             >
               {variations.map((variation, index) => (
                 <motion.div
