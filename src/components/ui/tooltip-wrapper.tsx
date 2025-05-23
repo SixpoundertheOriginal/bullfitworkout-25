@@ -19,8 +19,21 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
 }) => {
   // If asChild is true, we need to ensure we're passing a single element to TooltipTrigger
   if (asChild) {
-    // When asChild is true, we should pass the child directly to TooltipTrigger
-    // without wrapping it in a div, as this will cause the React.Children.only error
+    // When using asChild, we must ensure children is a single React element
+    // React.Children.only will throw an error if children is not exactly one element
+    
+    // If children is an array or fragment, this will cause React.Children.only to throw
+    // So we need to make sure we're passing exactly one React element
+    if (React.Children.count(children) !== 1) {
+      // If we have multiple children or no children, wrap in a span
+      return (
+        <TooltipTrigger asChild>
+          <span className={className}>{children}</span>
+        </TooltipTrigger>
+      );
+    }
+    
+    // We have exactly one child, so we can safely use asChild
     return <TooltipTrigger asChild>{children}</TooltipTrigger>;
   }
   
