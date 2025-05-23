@@ -157,7 +157,7 @@ export function StatCard({
     return (
       <TooltipProvider>
         <Tooltip>
-          <TooltipWrapper className="w-full">
+          <TooltipWrapper>
             <Component
               className={cardClasses}
               onClick={handleClick}

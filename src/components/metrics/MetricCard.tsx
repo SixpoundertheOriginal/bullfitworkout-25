@@ -13,12 +13,12 @@ interface MetricCardProps {
   description?: string;
   gradientClass?: string;
   valueClass?: string;
-  labelClass?: string; // Added labelClass prop
+  labelClass?: string;
   progressValue?: number;
   badgeText?: string;
   badgeColor?: string;
   onClick?: () => void;
-  className?: string; // Added className prop for better composition
+  className?: string;
 }
 
 export function MetricCard({
@@ -29,7 +29,7 @@ export function MetricCard({
   description,
   gradientClass = "from-primary/20 via-transparent to-primary/20",
   valueClass = "text-primary",
-  labelClass = "", // Default value for labelClass
+  labelClass = "",
   progressValue,
   badgeText,
   badgeColor = "text-green-400",
@@ -54,22 +54,28 @@ export function MetricCard({
           )}
         </div>
 
-        <TooltipProvider>
-          <Tooltip delayDuration={300}>
-            <TooltipWrapper className="w-full">
-              <div>
-                <div className={`text-xl font-bold mb-1 ${valueClass}`}>{value}</div>
-                <div className={`text-xs text-white/60 ${labelClass}`}>{label}</div>
-                {description && <div className="text-[10px] text-white/40 mt-0.5">{description}</div>}
-              </div>
-            </TooltipWrapper>
-            {tooltip && (
+        {tooltip ? (
+          <TooltipProvider>
+            <Tooltip delayDuration={300}>
+              <TooltipWrapper>
+                <div>
+                  <div className={`text-xl font-bold mb-1 ${valueClass}`}>{value}</div>
+                  <div className={`text-xs text-white/60 ${labelClass}`}>{label}</div>
+                  {description && <div className="text-[10px] text-white/40 mt-0.5">{description}</div>}
+                </div>
+              </TooltipWrapper>
               <TooltipContent>
                 <p className="text-xs">{tooltip}</p>
               </TooltipContent>
-            )}
-          </Tooltip>
-        </TooltipProvider>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          <div>
+            <div className={`text-xl font-bold mb-1 ${valueClass}`}>{value}</div>
+            <div className={`text-xs text-white/60 ${labelClass}`}>{label}</div>
+            {description && <div className="text-[10px] text-white/40 mt-0.5">{description}</div>}
+          </div>
+        )}
           
         {typeof progressValue === 'number' && (
           <div className="mt-3 h-1 w-full bg-gray-800 rounded-full overflow-hidden">

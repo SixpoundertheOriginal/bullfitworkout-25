@@ -17,10 +17,11 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   asChild = true,
   className = "",
 }) => {
-  // If asChild is true, we need to wrap the children in a div to ensure React.Children.only receives one child
+  // If asChild is true, we need to ensure we're passing a single element to TooltipTrigger
   if (asChild) {
     return (
       <TooltipTrigger asChild>
+        {/* Ensure we have exactly one child element by wrapping in a single div */}
         <div className={className}>
           {children}
         </div>
@@ -28,6 +29,6 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
     );
   }
   
-  // If asChild is false, we can pass the children directly
+  // If asChild is false, we just pass children directly (TooltipTrigger handles this case)
   return <TooltipTrigger className={className}>{children}</TooltipTrigger>;
 };
