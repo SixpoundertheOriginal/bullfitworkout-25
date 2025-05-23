@@ -3,7 +3,7 @@ import { toast } from "@/hooks/use-toast";
 import { WorkoutExercises, WorkoutError, WorkoutStatus, ExerciseSet } from "./types";
 import { getStore } from "./store";
 import { 
-  validateWorkoutState, 
+  validateWorkoutState as validateState, 
   isZombieWorkout, 
   repairExercises 
 } from "./validators";
@@ -103,7 +103,7 @@ export const deleteExercise = (exerciseName: string) => {
     }, 500);
 
     // Run validation after exercise deletion
-    setTimeout(() => validateWorkoutState(), 100);
+    setTimeout(() => runWorkoutValidation(), 100);
 
     return newState;
   });
@@ -315,13 +315,13 @@ export const applySetRecommendation = (
   });
 };
 
-// Centralized validation function
-export const validateWorkoutState = () => {
+// Centralized validation function - renamed to avoid conflict
+export const runWorkoutValidation = () => {
   const store = getStore();
   const state = store.getState();
   
   // Run comprehensive validation with repair capability
-  const validationResult = validateWorkoutState(state, { 
+  const validationResult = validateState(state, { 
     showToasts: true,
     attemptRepair: true
   });

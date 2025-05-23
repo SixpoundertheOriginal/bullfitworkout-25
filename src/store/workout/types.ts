@@ -53,3 +53,26 @@ export type PostSetFlowState =
   | 'resting'     // In rest period with enhanced timer
   | 'preparing';  // Preparing for next set
 
+// Add WorkoutState interface to fix import issues
+export interface WorkoutState {
+  exercises: WorkoutExercises;
+  activeExercise: string | null;
+  elapsedTime: number;
+  workoutId: string | null;
+  startTime: string | null;
+  workoutStatus: WorkoutStatus;
+  trainingConfig: TrainingConfig | null;
+  focusedExercise: string | null;
+  focusedSetIndex: number | null;
+  postSetFlow: PostSetFlowState;
+  lastCompletedExercise: string | null;
+  lastCompletedSetIndex: number | null;
+  restTimerActive: boolean;
+  currentRestTime: number;
+  isActive: boolean;
+  lastActiveRoute: string;
+  sessionId: string;
+  explicitlyEnded: boolean;
+  lastTabActivity: number;
+  savingErrors: WorkoutError[];
+}

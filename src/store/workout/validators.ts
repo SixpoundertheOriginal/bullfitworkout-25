@@ -1,5 +1,4 @@
-
-import { WorkoutExercises, WorkoutState } from './types';
+import { WorkoutExercises, WorkoutState, WorkoutError } from './types';
 import { toast } from '@/hooks/use-toast';
 
 /**

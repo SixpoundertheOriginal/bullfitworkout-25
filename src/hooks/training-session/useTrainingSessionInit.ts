@@ -15,8 +15,9 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
   const { storedConfig, saveConfig } = useTrainingSetupPersistence();
   const cleanupPerformedRef = useRef(false);
   
-  // Get workout store state at the top level of the hook
-  const { exercises, sessionId, isActive: storeIsActive, resetSession } = useWorkoutStore();
+  // Get workout store at the top level of the hook
+  const workoutStore = useWorkoutStore();
+  const { exercises, sessionId, isActive: storeIsActive, resetSession } = workoutStore;
   
   // Explicitly implement with the centralized type
   const loadTrainingConfig: LoadTrainingConfigFn = useCallback(() => {
@@ -50,7 +51,7 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
     if (cleanupPerformedRef.current) return;
     
     // Use the workout state obtained from the hook at the top level
-    const state = useWorkoutStore.getState();
+    const state = workoutStore;
     
     console.log('🔍 Checking for workout state validity on app boot:', {
       exerciseCount: Object.keys(exercises).length,
@@ -131,7 +132,7 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
     
     // Mark cleanup as performed
     cleanupPerformedRef.current = true;
-  }, [exercises, storeIsActive, hasExercises, sessionId, resetSession]);
+  }, [exercises, storeIsActive, hasExercises, sessionId, resetSession, workoutStore]);
   
   return {
     loadTrainingConfig,

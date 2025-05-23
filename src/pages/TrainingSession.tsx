@@ -13,7 +13,8 @@ import { resetSession } from '@/store/workout/actions';
 const TrainingSessionPage = () => {
   const { isLoading: loadingExercises } = useExercises();
   const navigate = useNavigate();
-  const { workoutStatus, isActive } = useWorkoutStore();
+  const workoutStore = useWorkoutStore();
+  const { workoutStatus, isActive } = workoutStore;
   
   // Initialize the workout timer
   useWorkoutTimer();
@@ -27,7 +28,7 @@ const TrainingSessionPage = () => {
     
     // Validate with slight delay to ensure store is hydrated
     const timer = setTimeout(() => {
-      const state = useWorkoutStore.getState();
+      const state = workoutStore;
       const { isValid, needsRepair } = validateWorkoutState(state, { 
         showToasts: false,
         attemptRepair: false
@@ -56,7 +57,7 @@ const TrainingSessionPage = () => {
     }, 800);
     
     return () => clearTimeout(timer);
-  }, [navigate, isActive, isTerminatedStatus]);
+  }, [navigate, isActive, isTerminatedStatus, workoutStore]);
 
   if (loadingExercises) {
     return <TrainingSessionLoading />;
