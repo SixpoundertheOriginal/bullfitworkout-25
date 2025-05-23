@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -120,24 +121,26 @@ export const ExerciseDialogVariations = React.memo(function ExerciseDialogVariat
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Select 
-                    value={newVariationType} 
-                    onValueChange={(value) => {
-                      setNewVariationType(value as VariationType);
-                      setNewVariationValue(getDefaultValueForType(value as VariationType));
-                    }}
-                  >
-                    <SelectTrigger id="variation-type">
-                      <SelectValue placeholder="Select variation type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {VARIATION_TYPES.map(type => (
-                        <SelectItem key={type} value={type}>
-                          {getVariationLabel(type)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div>
+                    <Select 
+                      value={newVariationType} 
+                      onValueChange={(value) => {
+                        setNewVariationType(value as VariationType);
+                        setNewVariationValue(getDefaultValueForType(value as VariationType));
+                      }}
+                    >
+                      <SelectTrigger id="variation-type">
+                        <SelectValue placeholder="Select variation type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {VARIATION_TYPES.map(type => (
+                          <SelectItem key={type} value={type}>
+                            {getVariationLabel(type)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="max-w-xs text-sm">{typeDescriptions[newVariationType]}</p>
