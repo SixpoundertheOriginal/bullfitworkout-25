@@ -3,7 +3,7 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
 import { Toaster } from '@/components/ui/toaster';
-import { WorkoutProvider } from './hooks/useWorkout';
+import { WorkoutProvider } from '@/store/workout';
 import { EmergencyWorkoutReset } from './components/training/EmergencyWorkoutReset';
 import EnhancedExercisesPage from './pages/EnhancedExercisesPage';
 import TrainingSessionPage from './pages/TrainingSession';
