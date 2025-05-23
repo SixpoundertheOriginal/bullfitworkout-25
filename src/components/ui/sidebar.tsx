@@ -544,8 +544,8 @@ const SidebarMenuButton = React.forwardRef<
     },
     ref
   ) => {
-    const Comp = asChild ? Slot : "button"
-    const { isMobile, state } = useSidebar()
+    const Comp = asChild ? Slot : "button";
+    const { isMobile, state } = useSidebar();
 
     const button = (
       <Comp
@@ -557,23 +557,19 @@ const SidebarMenuButton = React.forwardRef<
         {...props}
       />
     )
-
-    if (!tooltip) {
-      return button
+    
+    // Only show tooltip when collapsed and not on mobile
+    const shouldShowTooltip = tooltip && state === "collapsed" && !isMobile;
+    
+    if (!shouldShowTooltip) {
+      return button;
     }
-
+    
     // Convert string tooltip to proper format
     const tooltipProps = typeof tooltip === "string" 
       ? { content: tooltip }
-      : { content: tooltip.children, ...tooltip }
-
-    // Only show tooltip when collapsed and not on mobile
-    const shouldShowTooltip = state === "collapsed" && !isMobile
-
-    if (!shouldShowTooltip) {
-      return button
-    }
-
+      : { content: tooltip.content, ...tooltip };
+    
     return (
       <EnhancedTooltip
         content={tooltipProps.content}
@@ -583,10 +579,10 @@ const SidebarMenuButton = React.forwardRef<
       >
         {button}
       </EnhancedTooltip>
-    )
+    );
   }
 )
-SidebarMenuButton.displayName = "SidebarMenuButton"
+SidebarMenuButton.displayName = "SidebarMenuButton";
 
 const SidebarMenuAction = React.forwardRef<
   HTMLButtonElement,

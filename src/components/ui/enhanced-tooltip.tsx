@@ -4,8 +4,8 @@ import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
 } from "./tooltip";
+import { TooltipWrapper } from "./tooltip-wrapper";
 
 interface EnhancedTooltipProps {
   content: React.ReactNode;
@@ -20,7 +20,7 @@ interface EnhancedTooltipProps {
 
 /**
  * A completely safe tooltip component that never triggers React.Children.only errors
- * by always using a span wrapper and avoiding asChild entirely.
+ * by using a bulletproof TooltipWrapper component.
  */
 export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
   content,
@@ -38,15 +38,13 @@ export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
     return <>{children}</>;
   }
   
-  // Always use a span element with asChild=false to avoid React.Children.only errors
+  // Use our bulletproof TooltipWrapper component that ensures proper handling of children
   return (
     <TooltipProvider delayDuration={delayDuration}>
       <Tooltip>
-        <TooltipTrigger asChild={false}>
-          <span className={`inline-flex items-center justify-center ${className}`}>
-            {children}
-          </span>
-        </TooltipTrigger>
+        <TooltipWrapper className={className}>
+          {children}
+        </TooltipWrapper>
         <TooltipContent side={side} align={align} className={contentClassName}>
           {content}
         </TooltipContent>
