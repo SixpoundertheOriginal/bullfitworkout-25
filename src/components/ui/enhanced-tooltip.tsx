@@ -31,7 +31,7 @@ export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
   contentClassName = "",
   asChild = true,
 }) => {
-  // If no content or children, just render children without tooltip
+  // If no content, just render children without tooltip
   if (!content || children == null) {
     return <>{children}</>;
   }
@@ -41,27 +41,11 @@ export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
     return <>{children}</>;
   }
   
-  // Additional safety check for React.Children.only error
-  if (!React.isValidElement(children)) {
-    // If children is not a valid React element, wrap it in a span
-    return (
-      <TooltipProvider>
-        <Tooltip delayDuration={delayDuration}>
-          <TooltipWrapper asChild={false} className={className}>
-            <span>{children}</span>
-          </TooltipWrapper>
-          <TooltipContent side={side} align={align} className={contentClassName}>
-            {content}
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
-  }
-  
+  // Always render in the safest way possible
   return (
     <TooltipProvider>
       <Tooltip delayDuration={delayDuration}>
-        <TooltipWrapper asChild={asChild} className={className}>
+        <TooltipWrapper className={className}>
           {children}
         </TooltipWrapper>
         <TooltipContent side={side} align={align} className={contentClassName}>
