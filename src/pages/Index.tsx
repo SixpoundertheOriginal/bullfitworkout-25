@@ -78,50 +78,17 @@ const Index = () => {
     }
   }, [isActive]);
 
-  const handleStartTraining = ({ trainingType, tags, duration, rankedExercises }) => {
-    toast({
-      title: "Quest Started!",
-      description: 
-        <div className="flex flex-col">
-          <span>{`${trainingType} adventure for ${duration} minutes`}</span>
-          <div className="flex items-center mt-1 text-xs">
-            <div className="h-1.5 w-1.5 bg-yellow-400 rounded-full mr-1.5"></div>
-            <span className="text-yellow-400">+{Math.round(duration * 2)} XP will be awarded on completion</span>
-          </div>
-        </div>,
-    });
-    
-    const isFirstWorkoutToday = !stats?.lastWorkoutDate || 
-      new Date(stats.lastWorkoutDate).toDateString() !== new Date().toDateString();
-      
-    if (isFirstWorkoutToday) {
-      setShowLevelUp(true);
-      
-      setTimeout(() => {
-        setShowLevelUp(false);
-        navigateToTraining({ trainingType, tags, duration, rankedExercises });
-      }, 2500);
-    } else {
-      navigateToTraining({ trainingType, tags, duration, rankedExercises });
-    }
-  };
-
-  const navigateToTraining = ({ trainingType, tags, duration, rankedExercises }) => {
-    navigate('/training-session', { 
-      state: { 
-        trainingConfig: {
-          trainingType, 
-          tags, 
-          duration,
-          rankedExercises
-        }
-      } 
-    });
+  // Updated to use the unified flow through setup-workout
+  const handleStartTraining = () => {
+    navigate('/setup-workout');
   };
 
   const handleContinueWorkout = () => {
     if (isActive && lastActiveRoute) {
       navigate(lastActiveRoute);
+    } else {
+      // If no active workout, start setup flow
+      navigate('/setup-workout');
     }
   };
 
@@ -197,7 +164,7 @@ const Index = () => {
             </motion.div>
           )}
 
-          {/* Workout Start Section */}
+          {/* Workout Start Section - Modified to use unified flow */}
           <section ref={sectionRef} className="md:col-span-2 text-center flex flex-col justify-center">
             <motion.h2 
               initial={{ opacity: 0, y: 10 }}
@@ -210,7 +177,7 @@ const Index = () => {
             
             <div style={{ height: "12rem" }} className="relative">
               <ExerciseFAB 
-                onClick={() => setDialogOpen(true)}
+                onClick={handleStartTraining}
                 visible={stableFabVisibility}
                 className="!bottom-20"
               />
@@ -219,29 +186,12 @@ const Index = () => {
                 "absolute left-1/2 transform -translate-x-1/2 transition-all duration-300",
                 isSectionVisible ? "scale-100 opacity-100" : "scale-95 opacity-90"
               )}>
-                {isActive ? (
-                  <div className="flex flex-col items-center space-y-4">
-                    <TrainingStartButton
-                      onStartClick={handleContinueWorkout}
-                      className=""
-                      label="Resume"
-                      size={120}
-                    />
-                    <button 
-                      onClick={() => setDialogOpen(true)}
-                      className="text-sm text-white/70 hover:text-white/90 underline"
-                    >
-                      Start a new workout
-                    </button>
-                  </div>
-                ) : (
-                  <TrainingStartButton
-                    onStartClick={() => setDialogOpen(true)}
-                    className=""
-                    label="Start"
-                    size={120}
-                  />
-                )}
+                <TrainingStartButton
+                  onStartClick={handleContinueWorkout}
+                  className=""
+                  label={isActive ? "Resume" : "Start"}
+                  size={120}
+                />
               </div>
             </div>
           </section>
@@ -250,8 +200,8 @@ const Index = () => {
         {/* NEW: Achievement Showcase */}
         <AchievementShowcase />
 
-        {/* NEW: Enhanced Recommendations Section */}
-        <EnhancedRecommendations onStartWorkout={() => setDialogOpen(true)} />
+        {/* NEW: Enhanced Recommendations Section - Updated for unified flow */}
+        <EnhancedRecommendations onStartWorkout={handleStartTraining} />
 
         {/* Workout Log */}
         <WorkoutLogSection 
@@ -263,11 +213,7 @@ const Index = () => {
         <FeaturesSection onNavigate={navigate} />
       </main>
 
-      <ConfigureTrainingDialog 
-        open={dialogOpen} 
-        onOpenChange={setDialogOpen} 
-        onStartTraining={handleStartTraining} 
-      />
+      {/* We no longer need the ConfigureTrainingDialog as we're using the setup-workout page */}
       
       <AnimatedLevelUp show={showLevelUp} />
     </div>

@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Dumbbell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
-import { useWorkoutStore } from '@/store/workout/store';
+import { useWorkoutStore } from '@/store/workout';
 import { toast } from '@/hooks/use-toast';
 
 interface TrainingStartButtonProps {
@@ -15,14 +15,14 @@ interface TrainingStartButtonProps {
   altMode?: boolean;
 }
 
-export const TrainingStartButton: React.FC<TrainingStartButtonProps> = ({ 
+export const StartTrainingButton: React.FC<TrainingStartButtonProps> = ({ 
   trainingType = "strength",
   label = "Start Training",
   onClick,
   altMode = false
 }) => {
   const navigate = useNavigate();
-  const { startWorkout, updateLastActiveRoute } = useWorkoutStore();
+  const { isActive, lastActiveRoute } = useWorkoutStore();
   
   const handleStart = () => {
     console.log('StartTrainingButton: handleStart called');
@@ -36,41 +36,27 @@ export const TrainingStartButton: React.FC<TrainingStartButtonProps> = ({
     if (onClick) {
       console.log('StartTrainingButton: Calling provided onClick handler');
       onClick();
+      return;
     }
 
-    // If in alt mode, navigate to setup screen instead
-    if (altMode) {
-      console.log('StartTrainingButton: Using alt mode, navigating to setup-workout');
-      navigate('/setup-workout');
+    // Check if a workout is already active
+    if (isActive && lastActiveRoute) {
+      console.log('StartTrainingButton: Existing workout found, navigating to', lastActiveRoute);
+      navigate(lastActiveRoute);
+      toast({
+        title: "Resuming workout",
+        description: "Continuing your active workout session"
+      });
       return;
     }
     
-    try {
-      console.log('StartTrainingButton: Starting workout via store');
-      
-      // Start workout in the central store
-      startWorkout();
-      
-      // Update the last active route
-      updateLastActiveRoute('/training-session');
-      
-      console.log('StartTrainingButton: Navigating to training-session');
-      
-      // Navigate to the training session page
-      navigate('/training-session');
-      
-      // Notify the user
-      toast({
-        title: "Workout started! Add exercises to begin tracking"
-      });
-    } catch (error) {
-      console.error('StartTrainingButton: Error starting workout:', error);
-      toast({
-        title: "Error starting workout",
-        description: "Please try again",
-        variant: "destructive"
-      });
-    }
+    // Navigate to setup wizard for new workouts
+    console.log('StartTrainingButton: No active workout, navigating to setup-workout');
+    navigate('/setup-workout', {
+      state: {
+        suggestedType: trainingType
+      }
+    });
   };
 
   return (
@@ -95,10 +81,10 @@ export const TrainingStartButton: React.FC<TrainingStartButtonProps> = ({
           "active:scale-95",
           "tap-highlight-transparent"
         )}
-        aria-label="Start training"
+        aria-label={isActive ? "Resume training" : "Start training"}
       >
         <Dumbbell size={20} />
-        {label}
+        {isActive ? "Resume Workout" : label}
       </Button>
     </motion.div>
   );

@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Clock, Dumbbell, Activity, Target, ChevronRight, Trophy } from 'lucide-react';
+import { Clock, Dumbbell, Activity, Target, ChevronRight, Trophy, ArrowRight } from 'lucide-react';
 import { WorkoutStats } from '@/types/workoutStats';
 import { formatDuration, formatDurationHuman } from '@/utils/formatTime';
+import { useTrainingSetupPersistence } from '@/hooks/useTrainingSetupPersistence';
 
 interface QuickStartOptionProps {
   onSelect: (config: any) => void;
@@ -14,12 +15,39 @@ interface QuickStartOptionProps {
 }
 
 export default function QuickStartOption({ onSelect, onCustomize, stats }: QuickStartOptionProps) {
+  const { storedConfig, isConfigRecent } = useTrainingSetupPersistence();
+  const [hasRecentConfig, setHasRecentConfig] = useState(false);
+  const [recentWorkoutType, setRecentWorkoutType] = useState<string | null>(null);
+  const [recentWorkoutDuration, setRecentWorkoutDuration] = useState<number | null>(null);
+  
   // Generate quick start options based on user stats
   const recommendedType = stats?.recommendedType?.toLowerCase() || 'strength';
   const recommendedDuration = stats?.recommendedDuration || 30;
   
+  useEffect(() => {
+    // Check if there's a recent config to use
+    if (storedConfig && isConfigRecent()) {
+      setHasRecentConfig(true);
+      setRecentWorkoutType(storedConfig.trainingType);
+      setRecentWorkoutDuration(storedConfig.duration);
+    } else {
+      setHasRecentConfig(false);
+    }
+  }, [storedConfig, isConfigRecent]);
+  
   // Pre-defined quick workouts
   const quickOptions = [
+    // Add a recent workout option conditionally
+    ...(hasRecentConfig ? [{
+      id: 'recent',
+      name: `Recent ${recentWorkoutType?.charAt(0).toUpperCase()}${recentWorkoutType?.slice(1)} Workout`,
+      type: recentWorkoutType || recommendedType,
+      duration: recentWorkoutDuration || recommendedDuration,
+      focus: [],
+      description: 'Based on your recent activity',
+      color: 'from-green-500 to-emerald-700',
+      isPrimary: true
+    }] : []),
     {
       id: 'recommended',
       name: 'Recommended Workout',
@@ -27,8 +55,8 @@ export default function QuickStartOption({ onSelect, onCustomize, stats }: Quick
       duration: recommendedDuration,
       focus: [],
       description: 'Based on your workout history',
-      color: 'from-green-500 to-emerald-700',
-      isPrimary: true
+      color: 'from-blue-500 to-indigo-700',
+      isPrimary: !hasRecentConfig // Primary if no recent workout
     },
     {
       id: 'quick',
@@ -37,7 +65,7 @@ export default function QuickStartOption({ onSelect, onCustomize, stats }: Quick
       duration: 20,
       focus: ['Arms', 'Chest'],
       description: '20 min upper body workout',
-      color: 'from-blue-600 to-blue-800'
+      color: 'from-purple-600 to-blue-800'
     },
     {
       id: 'cardio',
@@ -75,6 +103,7 @@ export default function QuickStartOption({ onSelect, onCustomize, stats }: Quick
       bodyFocus: option.focus,
       duration: option.duration,
       tags: [],
+      quickStart: true // Add flag indicating this was a quick start
     });
   };
   
@@ -107,7 +136,7 @@ export default function QuickStartOption({ onSelect, onCustomize, stats }: Quick
                 {option.type === 'cardio' && <Activity className="h-6 w-6 text-white" />}
                 {option.type === 'hiit' && <span className="text-lg">⚡</span>}
                 {option.type === 'mobility' && <span className="text-lg">🧘</span>}
-                {!['strength', 'cardio', 'hiit', 'mobility'].includes(option.type) && (
+                {!['strength', 'cardio', 'hiit', 'mobility'].includes(option.type || '') && (
                   <Target className="h-6 w-6 text-white" />
                 )}
               </div>
@@ -159,10 +188,11 @@ export default function QuickStartOption({ onSelect, onCustomize, stats }: Quick
       <div className="mt-6 px-4">
         <Button 
           variant="outline"
-          className="w-full border-gray-800 text-purple-400 hover:text-purple-300"
+          className="w-full border-gray-800 text-purple-400 hover:text-purple-300 flex items-center justify-center gap-1.5"
           onClick={onCustomize}
         >
           Customize My Workout
+          <ArrowRight className="h-3.5 w-3.5" />
         </Button>
       </div>
     </div>

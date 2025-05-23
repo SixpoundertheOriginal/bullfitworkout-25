@@ -13,6 +13,7 @@ import AllExercisesPage from "@/pages/AllExercisesPage";
 import Overview from "@/pages/Overview";
 import { WorkoutManagementPage } from "@/pages/WorkoutManagementPage";
 import ExerciseEditorPage from "@/pages/ExerciseEditorPage";
+import ExerciseSetupPage from "@/pages/ExerciseSetup";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -61,6 +62,13 @@ export const RouterProvider = () => {
         <ProtectedRoute>
           <MainLayout>
             <WorkoutManagementPage />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/setup-workout" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <ExerciseSetupPage />
           </MainLayout>
         </ProtectedRoute>
       } />

@@ -6,12 +6,14 @@ import { useWorkoutStore } from '@/store/workout';
 import { toast } from '@/hooks/use-toast';
 import { validateWorkoutState, isZombieWorkout } from '@/store/workout/validators';
 import { resetSession } from '@/store/workout/actions';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * Hook for handling initialization logic for training sessions
- * with enhanced zombie state detection
+ * with enhanced zombie state detection and unified workflow
  */
 export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean, startWorkout: () => void) => {
+  const navigate = useNavigate();
   const { storedConfig, saveConfig } = useTrainingSetupPersistence();
   const cleanupPerformedRef = useRef(false);
   
@@ -39,21 +41,21 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
     } else if (!isActive && !hasExercises) {
       // Call with NO arguments as per the type definition
       const config = loadTrainingConfig();
+      
       if (config) {
         console.log('Found saved training config:', config);
+      } else {
+        console.log('No saved config found and no active session');
       }
     }
   }, [isActive, hasExercises, startWorkout, loadTrainingConfig]);
   
-  // Add centralized validation logic to detect and clean up zombie workouts
-  useEffect(() => {
-    // Only run this check once per component mount
-    if (cleanupPerformedRef.current) return;
-    
+  // Validate workout state and redirect if necessary
+  const validateAndRepair = useCallback(() => {
     // Use the workout state obtained from the hook at the top level
     const state = workoutStore;
     
-    console.log('🔍 Checking for workout state validity on app boot:', {
+    console.log('🔍 Checking for workout state validity:', {
       exerciseCount: Object.keys(exercises).length,
       isActive: storeIsActive,
       hasExercises
@@ -86,56 +88,31 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
         variant: "destructive"
       });
       
-      // Check if we have a session ID for remote cleanup
-      if (sessionId) {
-        // Handle remote cleanup if needed
-        try {
-          // Resolve TypeScript's excessive type instantiation depth issue
-          // by using a simpler approach with type assertions
-          const invalidateRemoteWorkout = async () => {
-            try {
-              // Use type assertion to help TypeScript with the import
-              const module = await import('@/integrations/supabase/client') as { supabase: any };
-              const { supabase } = module;
-              
-              if (!supabase) return;
-              
-              const result = await supabase
-                .from('workout_sessions')
-                .update({ 
-                  status: 'abandoned',
-                  metadata: { 
-                    zombie_detected: true, 
-                    cleaned_at: new Date().toISOString() 
-                  }
-                })
-                .eq('session_id', sessionId);
-                
-              if (result.error) {
-                console.warn("⚠️ Failed to invalidate remote workout:", result.error);
-              } else {
-                console.log("🔄 Invalidated remote workout session:", sessionId);
-              }
-            } catch (err) {
-              console.warn("⚠️ Error invalidating remote workout:", err);
-            }
-          };
-          
-          // Execute the function but don't await its result
-          void invalidateRemoteWorkout();
-        } catch (error) {
-          // Supabase might not be integrated, silently continue
-          console.log("ℹ️ Supabase not available for remote cleanup", error);
-        }
-      }
+      // Redirect to setup page
+      navigate('/setup-workout', { 
+        state: { errorReason: 'zombieWorkoutDetected' }
+      });
+      
+      return false;
     }
+    
+    return true;
+  }, [exercises, storeIsActive, hasExercises, resetSession, workoutStore, navigate]);
+  
+  // Add centralized validation logic to detect and clean up zombie workouts
+  useEffect(() => {
+    // Only run this check once per component mount
+    if (cleanupPerformedRef.current) return;
+    
+    validateAndRepair();
     
     // Mark cleanup as performed
     cleanupPerformedRef.current = true;
-  }, [exercises, storeIsActive, hasExercises, sessionId, resetSession, workoutStore]);
+  }, [validateAndRepair]);
   
   return {
     loadTrainingConfig,
-    saveTrainingPreferences
+    saveTrainingPreferences,
+    validateAndRepair
   };
 };

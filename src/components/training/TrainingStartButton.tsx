@@ -20,7 +20,7 @@ export const TrainingStartButton: React.FC<TrainingStartButtonProps> = ({
   label = "Start",
   size = 140, // Increased default size
 }) => {
-  const { isActive } = useWorkoutState();
+  const { isActive, lastActiveRoute } = useWorkoutState();
   const navigate = useNavigate();
   
   // Default handler if onStartClick is not provided
@@ -28,16 +28,10 @@ export const TrainingStartButton: React.FC<TrainingStartButtonProps> = ({
     if (onStartClick) {
       onStartClick();
     } else {
-      // Default behavior is to navigate to training session
-      navigate('/training-session');
+      // Always route to setup-workout for workout initialization
+      navigate('/setup-workout');
     }
   };
-  
-  // Don't render if a workout is already active (to avoid confusion)
-  if (isActive) {
-    console.info("TrainingStartButton: Not rendering - workout already active");
-    return null;
-  }
 
   return (
     <div className={cn("flex flex-col items-center", className)}>
@@ -56,7 +50,7 @@ export const TrainingStartButton: React.FC<TrainingStartButtonProps> = ({
           ariaLabel="Start training session"
           icon={<Trophy size={size * 0.35} className="text-white" />}
         >
-          {label}
+          {isActive ? "Resume" : label}
         </CircularGradientButton>
       </motion.div>
       
@@ -66,8 +60,19 @@ export const TrainingStartButton: React.FC<TrainingStartButtonProps> = ({
         transition={{ delay: 0.5 }}
         className="mt-4 text-sm text-white/70"
       >
-        Begin your fitness journey
+        {isActive ? "Continue your workout" : "Begin your fitness journey"}
       </motion.p>
+      
+      {isActive && (
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          className="mt-1 text-xs text-purple-400/80"
+        >
+          Session in progress
+        </motion.p>
+      )}
     </div>
   );
 };

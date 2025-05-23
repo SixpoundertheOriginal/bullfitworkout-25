@@ -1,10 +1,11 @@
 
 import React, { useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { TrainingConfig } from '@/hooks/useTrainingSetupPersistence';
 import { useWorkoutStore } from '@/store/workoutStore';
 import { toast } from "@/hooks/use-toast";
 import { usePageVisibility } from '@/hooks/usePageVisibility';
+import { validateWorkoutState } from '@/store/workout/validators';
 
 interface TrainingSessionProps {
   trainingConfig: TrainingConfig | null;
@@ -18,6 +19,7 @@ export const TrainingSession: React.FC<TrainingSessionProps> = ({
   onCancel
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isVisible } = usePageVisibility();
   const { 
     resetSession, 
@@ -27,7 +29,8 @@ export const TrainingSession: React.FC<TrainingSessionProps> = ({
     isActive, 
     exercises, 
     elapsedTime,
-    sessionId
+    sessionId,
+    workoutStatus
   } = useWorkoutStore();
   
   // Debug logging for component state
@@ -38,12 +41,42 @@ export const TrainingSession: React.FC<TrainingSessionProps> = ({
       exerciseCount: Object.keys(exercises || {}).length,
       elapsedTime,
       sessionId,
+      workoutStatus,
       isVisible 
     });
-  }, [trainingConfig, isActive, exercises, elapsedTime, sessionId, isVisible]);
+  }, [trainingConfig, isActive, exercises, elapsedTime, sessionId, isVisible, workoutStatus]);
+  
+  // Validate session state on mount
+  useEffect(() => {
+    const validateSession = async () => {
+      const state = { isActive, exercises, workoutStatus };
+      const { isValid, needsRepair } = validateWorkoutState(state, { 
+        showToasts: false,
+        attemptRepair: false
+      });
+      
+      if (!isValid || needsRepair) {
+        console.warn('TrainingSession: Invalid workout state detected, redirecting to setup');
+        toast({
+          title: "Session validation failed",
+          description: "Please set up your workout again",
+          variant: "destructive"
+        });
+        
+        // Reset session and redirect to setup
+        resetSession();
+        navigate('/setup-workout', { 
+          state: { errorReason: 'invalidState' } 
+        });
+      }
+    };
+    
+    validateSession();
+  }, [isActive, exercises, workoutStatus, resetSession, navigate]);
   
   // Session initialization logic - using useCallback to prevent multiple executions
   const initializeSession = useCallback(() => {
+    // Case 1: A new config is provided and no active session exists
     if (trainingConfig && !isActive) {
       console.log('Starting new workout session with config:', trainingConfig);
       
@@ -57,9 +90,6 @@ export const TrainingSession: React.FC<TrainingSessionProps> = ({
       updateLastActiveRoute('/training-session');
       startWorkout();
       
-      // Navigate to the training session page
-      navigate('/training-session');
-      
       // Show toast to confirm workout started
       toast({
         title: "Workout started",
@@ -70,8 +100,8 @@ export const TrainingSession: React.FC<TrainingSessionProps> = ({
     else if (isActive) {
       console.log('Navigating to existing active workout session');
       
-      // If there's an active workout, just navigate to the training session page
-      navigate('/training-session');
+      // Update route to ensure consistency
+      updateLastActiveRoute('/training-session');
       
       // Only show toast if we have exercises (not just a new session)
       if (exercises && Object.keys(exercises).length > 0) {
@@ -80,7 +110,13 @@ export const TrainingSession: React.FC<TrainingSessionProps> = ({
         });
       }
     }
-    // Case 3: No config, no active session - Do nothing, component will unmount
+    // Case 3: No config, no active session - Redirect to setup
+    else if (!trainingConfig && !isActive) {
+      console.log('No training config or active session, redirecting to setup');
+      navigate('/setup-workout', { 
+        state: { errorReason: 'missingConfig' } 
+      });
+    }
   }, [
     trainingConfig, 
     isActive, 

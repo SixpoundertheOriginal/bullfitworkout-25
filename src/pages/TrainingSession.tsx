@@ -45,14 +45,19 @@ const TrainingSessionPage = () => {
           resetSession();
         }
         
-        navigate('/');
+        // Redirect to setup-workout instead of home
+        navigate('/setup-workout', { 
+          state: { errorReason: 'invalidState' }
+        });
       } else if (!isActive && isTerminatedStatus) {
-        console.log("Training session: Workout is not active, redirecting");
+        console.log("Training session: Workout is not active, redirecting to setup");
         toast({
           title: "No active workout",
-          description: "Start a new workout to continue",
+          description: "Please set up a new workout to begin",
         });
-        navigate('/');
+        navigate('/setup-workout', { 
+          state: { errorReason: 'noActiveWorkout' }
+        });
       }
     }, 800);
     
