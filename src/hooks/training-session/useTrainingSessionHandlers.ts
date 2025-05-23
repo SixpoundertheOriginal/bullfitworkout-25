@@ -7,7 +7,7 @@ import { ExerciseSet } from '@/store/workout/types';
 import { AttemptRecoveryFn, HandleCompleteWorkoutFn } from '@/types/workout';
 import { useTrainingSetupPersistence } from '@/hooks/useTrainingSetupPersistence';
 import { getStore } from '@/store/workout/store';
-import { createDefaultSet, validateWorkoutState } from '@/store/workout/actions';
+import { createDefaultSet, runWorkoutValidation } from '@/store/workout/actions';
 
 /**
  * Hook that provides handler functions for the training session
@@ -108,7 +108,7 @@ export const useTrainingSessionHandlers = (
           );
           
           // Run validation to catch any issues immediately
-          validateWorkoutState();
+          runWorkoutValidation();
         }
       }, 50);
     }, 10);
@@ -237,7 +237,7 @@ export const useTrainingSessionHandlers = (
       }
       
       // Validate workout state before finishing
-      const isValid = validateWorkoutState();
+      const isValid = runWorkoutValidation();
       if (!isValid) {
         toast({
           title: "Workout data issues detected",

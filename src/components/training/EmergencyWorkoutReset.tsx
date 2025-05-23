@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
 import { useWorkoutStore } from '@/store/workout';
-import { resetSession, validateWorkoutState } from '@/store/workout/actions';
+import { resetSession, runWorkoutValidation } from '@/store/workout/actions';
 import { useNavigate } from 'react-router-dom';
 
 /**
@@ -54,7 +54,7 @@ export const EmergencyWorkoutReset: React.FC = () => {
   };
 
   const handleForceValidate = () => {
-    const isValid = validateWorkoutState();
+    const isValid = runWorkoutValidation();
     
     toast({
       title: isValid ? 'Workout validated' : 'Validation failed',
