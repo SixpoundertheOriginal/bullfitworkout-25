@@ -14,7 +14,7 @@ import { RotateCcw, AlertTriangle } from 'lucide-react';
 export default function ExerciseSetupPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { stats } = useWorkoutStats();
+  const { stats, loading: isLoadingStats } = useWorkoutStats();
   const { isActive, lastActiveRoute, resetSession } = useWorkoutStore();
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -128,6 +128,8 @@ export default function ExerciseSetupPage() {
         <ExerciseSetupWizard
           onComplete={handleComplete}
           onCancel={() => navigate('/')}
+          stats={stats}
+          isLoadingStats={isLoadingStats}
         />
       </motion.div>
     </MainLayout>

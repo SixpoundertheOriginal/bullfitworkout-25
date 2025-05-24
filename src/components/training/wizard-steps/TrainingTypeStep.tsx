@@ -104,12 +104,8 @@ export function TrainingTypeStep({ selectedType, onSelectType, stats }: Training
   };
 
   const handleTypeSelection = (typeId: string) => {
-    console.log('TrainingTypeStep: Selected type:', typeId);
     onSelectType(typeId);
   };
-
-  // Debug current selection
-  console.log('TrainingTypeStep: Current selectedType:', selectedType);
 
   return (
     <div className="space-y-6 pb-4">
