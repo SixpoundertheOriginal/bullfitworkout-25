@@ -4,8 +4,8 @@ import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
+  TooltipTrigger,
 } from "./tooltip";
-import { TooltipWrapper } from "./tooltip-wrapper";
 
 interface EnhancedTooltipProps {
   content: React.ReactNode;
@@ -18,8 +18,8 @@ interface EnhancedTooltipProps {
 }
 
 /**
- * A safe tooltip component that avoids React.Children.only errors
- * by never using asChild and always providing consistent wrapper structure.
+ * A completely safe tooltip component that never uses asChild
+ * and always wraps children in a single element.
  */
 export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
   content,
@@ -42,9 +42,11 @@ export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
   return (
     <TooltipProvider delayDuration={delayDuration}>
       <Tooltip>
-        <TooltipWrapper className={className}>
-          {children}
-        </TooltipWrapper>
+        <TooltipTrigger asChild={false} className={className}>
+          <div className="inline-block w-full h-full cursor-pointer">
+            {children}
+          </div>
+        </TooltipTrigger>
         <TooltipContent side={side} align={align} className={contentClassName}>
           {content}
         </TooltipContent>

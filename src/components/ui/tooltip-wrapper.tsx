@@ -8,8 +8,8 @@ interface TooltipWrapperProps {
 }
 
 /**
- * A simple wrapper that never uses asChild to avoid React.Children.only errors.
- * Always wraps content in a div to ensure consistent structure.
+ * A completely safe wrapper that never uses asChild and always provides
+ * a single React element to TooltipTrigger.
  */
 export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   children,
@@ -17,7 +17,7 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
 }) => {
   return (
     <TooltipTrigger asChild={false} className={className}>
-      <div className="inline-flex items-center justify-center w-full h-full cursor-pointer">
+      <div className="inline-block w-full h-full">
         {children}
       </div>
     </TooltipTrigger>

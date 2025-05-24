@@ -44,10 +44,7 @@ interface AllExercisesPageProps {
 }
 
 export default function AllExercisesPage({ onSelectExercise, standalone = true, onBack }: AllExercisesPageProps) {
-  // Add authentication
   const { user } = useAuth();
-  
-  // Ensure exercises is always an array, even if it's undefined
   const { exercises = [], isLoading, isError, createExercise, updateExercise, deleteExercise, isPending } = useExercises();
   const { workouts = [] } = useWorkoutHistory();
   const { toast } = useToast();
@@ -55,11 +52,9 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<string>("suggested");
   
-  // For delete confirmation
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [exerciseToDelete, setExerciseToDelete] = useState<Exercise | null>(null);
 
-  // Search and filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [selectedMuscleGroup, setSelectedMuscleGroup] = useState<MuscleGroup | "all">("all");
@@ -67,23 +62,19 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | "all">("all");
   const [selectedMovement, setSelectedMovement] = useState<MovementPattern | "all">("all");
 
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const exercisesPerPage = 8;
 
-  // For add/edit
   const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
   const [exerciseToEdit, setExerciseToEdit] = useState<Exercise | null>(null);
   const [baseExerciseForVariation, setBaseExerciseForVariation] = useState<Exercise | null>(null);
 
-  // Extract recently used exercises from workout history
   const recentExercises = React.useMemo(() => {
     if (!workouts?.length) return [];
     if (!Array.isArray(exercises) || exercises.length === 0) return [];
     
     const exerciseMap = new Map<string, Exercise>();
     
-    // Get unique exercise names from recent workouts
     workouts.slice(0, 8).forEach(workout => {
       const exerciseNames = new Set<string>();
       
@@ -106,14 +97,12 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
     return Array.from(exerciseMap.values());
   }, [workouts, exercises]);
 
-  // Filter exercises based on search query and filters
   const filterExercises = (exercisesList: Exercise[] = []) => {
     if (!exercisesList || !Array.isArray(exercisesList) || exercisesList.length === 0) return [];
     
     return exercisesList.filter(exercise => {
       if (!exercise) return false;
       
-      // Search filter - include both name and variation info in search
       const searchableText = [
         exercise.name,
         exercise.description,
@@ -125,23 +114,19 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
       
       const matchesSearch = searchQuery === "" || searchableText.includes(searchQuery.toLowerCase());
 
-      // Muscle group filter
       const matchesMuscleGroup = selectedMuscleGroup === "all" || 
         (exercise.primary_muscle_groups && Array.isArray(exercise.primary_muscle_groups) && 
           exercise.primary_muscle_groups.includes(selectedMuscleGroup as MuscleGroup)) ||
         (exercise.secondary_muscle_groups && Array.isArray(exercise.secondary_muscle_groups) && 
           exercise.secondary_muscle_groups.includes(selectedMuscleGroup as MuscleGroup));
 
-      // Equipment filter
       const matchesEquipment = selectedEquipment === "all" || 
         (exercise.equipment_type && Array.isArray(exercise.equipment_type) && 
           exercise.equipment_type.includes(selectedEquipment as EquipmentType));
 
-      // Difficulty filter
       const matchesDifficulty = selectedDifficulty === "all" || 
         exercise.difficulty === selectedDifficulty;
 
-      // Movement pattern filter
       const matchesMovement = selectedMovement === "all" || 
         exercise.movement_pattern === selectedMovement;
 
@@ -150,43 +135,37 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
     });
   };
 
-  // Filter exercises and get only base exercises (those without base_exercise_id)
   const filteredBaseExercises = filterExercises(
     Array.isArray(exercises) 
       ? exercises.filter(ex => ex && !ex.base_exercise_id) 
       : []
   );
 
-  // Define these variables to fix the missing references
   const suggestedExercises = filterExercises(
     Array.isArray(exercises) 
       ? exercises.filter(ex => ex && !ex.base_exercise_id).slice(0, 20) 
       : []
-  ); // Limit suggested to top 20 for better performance
+  );
   
   const filteredRecent = filterExercises(Array.isArray(recentExercises) ? recentExercises : []);
-  const filteredAll = filteredBaseExercises;  // Use the filtered base exercises for "all" exercises
+  const filteredAll = filteredBaseExercises;
 
-  // Pagination logic specifically for base exercises
   const indexOfLastExercise = currentPage * exercisesPerPage;
   const indexOfFirstExercise = indexOfLastExercise - exercisesPerPage;
   const currentBaseExercises = filteredBaseExercises.slice(indexOfFirstExercise, indexOfLastExercise);
   const totalPages = Math.ceil(filteredBaseExercises.length / exercisesPerPage);
 
-  // Pagination logic
   const paginate = (pageNumber: number) => {
     if (pageNumber > 0 && pageNumber <= totalPages) {
       setCurrentPage(pageNumber);
     }
   };
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, selectedMuscleGroup, selectedEquipment, selectedDifficulty, selectedMovement]);
 
   const handleAdd = () => {
-    // Check if user is authenticated
     if (!user || !user.id) {
       toast({
         title: "Authentication Required",
@@ -203,7 +182,6 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
   };
 
   const handleEdit = (exercise: Exercise) => {
-    // Check if user is authenticated
     if (!user || !user.id) {
       toast({
         title: "Authentication Required",
@@ -220,7 +198,6 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
   };
   
   const handleAddVariation = (baseExercise: Exercise) => {
-    // Check if user is authenticated
     if (!user || !user.id) {
       toast({
         title: "Authentication Required",
@@ -237,7 +214,6 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
   };
   
   const handleDelete = (exercise: Exercise) => {
-    // Check if user is authenticated
     if (!user || !user.id) {
       toast({
         title: "Authentication Required",
@@ -287,7 +263,6 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
     setSelectedMovement("all");
   };
 
-  // Add/Edit handler
   const handleDialogSubmit = async (exercise: {
     name: string;
     description: string;
@@ -308,7 +283,6 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
     variation_value?: string;
     variationList?: any[];
   }) => {
-    // Check if user is authenticated
     if (!user || !user.id) {
       toast({
         title: "Authentication Required",
@@ -322,7 +296,6 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
       if (dialogMode === "add") {
         await new Promise(resolve => setTimeout(resolve, 350));
         await new Promise<void>((resolve, reject) => {
-          // Ensure instructions.steps is an array
           const instructionsWithSteps = {
             steps: Array.isArray(exercise.instructions?.steps) 
               ? exercise.instructions.steps 
@@ -332,11 +305,10 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
           createExercise(
             {
               ...exercise,
-              user_id: user.id, // Use the authenticated user ID
-              is_compound: exercise.is_compound ?? false, // Ensure is_compound is defined
-              difficulty: exercise.difficulty || 'intermediate', // Ensure difficulty is defined
+              user_id: user.id,
+              is_compound: exercise.is_compound ?? false,
+              difficulty: exercise.difficulty || 'intermediate',
               instructions: instructionsWithSteps,
-              // Ensure these are properly cast to the expected types
               primary_muscle_groups: (Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : []) as MuscleGroup[],
               secondary_muscle_groups: (Array.isArray(exercise.secondary_muscle_groups) ? exercise.secondary_muscle_groups : []) as MuscleGroup[],
               equipment_type: (Array.isArray(exercise.equipment_type) ? exercise.equipment_type : []) as EquipmentType[]
@@ -357,7 +329,6 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
         
         setShowDialog(false);
       } else if (dialogMode === "edit" && exerciseToEdit) {
-        // Ensure instructions.steps is an array
         const instructionsWithSteps = {
           steps: Array.isArray(exercise.instructions?.steps) 
             ? exercise.instructions.steps 
@@ -367,11 +338,10 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
         await updateExercise({
           id: exerciseToEdit.id,
           ...exercise,
-          user_id: user.id, // Ensure user ID is included
-          is_compound: exercise.is_compound ?? false, // Ensure is_compound is defined
-          difficulty: exercise.difficulty || 'intermediate', // Ensure difficulty is defined
+          user_id: user.id,
+          is_compound: exercise.is_compound ?? false,
+          difficulty: exercise.difficulty || 'intermediate',
           instructions: instructionsWithSteps,
-          // Ensure these are properly cast to the expected types
           primary_muscle_groups: (Array.isArray(exercise.primary_muscle_groups) ? exercise.primary_muscle_groups : []) as MuscleGroup[],
           secondary_muscle_groups: (Array.isArray(exercise.secondary_muscle_groups) ? exercise.secondary_muscle_groups : []) as MuscleGroup[],
           equipment_type: (Array.isArray(exercise.equipment_type) ? exercise.equipment_type : []) as EquipmentType[]
@@ -394,7 +364,6 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
     }
   };
 
-  // Render ExerciseVariationGroup component
   const renderExerciseVariationGroup = (exercise: Exercise) => {
     if (!exercise) return null;
     
@@ -411,7 +380,6 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
     );
   };
 
-  // Render exercise list using ExerciseVariationGroup
   const renderExerciseList = (exercisesList: Exercise[], showPagination = false) => {
     if (!exercisesList || !Array.isArray(exercisesList) || exercisesList.length === 0) {
       return (
@@ -421,10 +389,8 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
       );
     }
 
-    // For base exercises, use ExerciseVariationGroup
     const listToRender = showPagination ? currentBaseExercises : exercisesList;
     
-    // Ensure listToRender is an array before mapping
     if (!Array.isArray(listToRender)) {
       console.error("Expected array but got:", listToRender);
       return (
@@ -450,21 +416,18 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
                 />
               </PaginationItem>
               
-              {/* First page */}
               {currentPage > 2 && (
                 <PaginationItem>
                   <PaginationLink onClick={() => paginate(1)}>1</PaginationLink>
                 </PaginationItem>
               )}
               
-              {/* Ellipsis */}
               {currentPage > 3 && (
                 <PaginationItem>
                   <span className="px-2">...</span>
                 </PaginationItem>
               )}
               
-              {/* Previous page */}
               {currentPage > 1 && (
                 <PaginationItem>
                   <PaginationLink onClick={() => paginate(currentPage - 1)}>
@@ -473,12 +436,10 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
                 </PaginationItem>
               )}
               
-              {/* Current page */}
               <PaginationItem>
                 <PaginationLink isActive>{currentPage}</PaginationLink>
               </PaginationItem>
               
-              {/* Next page */}
               {currentPage < totalPages && (
                 <PaginationItem>
                   <PaginationLink onClick={() => paginate(currentPage + 1)}>
@@ -487,14 +448,12 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
                 </PaginationItem>
               )}
               
-              {/* Ellipsis */}
               {currentPage < totalPages - 2 && (
                 <PaginationItem>
                   <span className="px-2">...</span>
                 </PaginationItem>
               )}
               
-              {/* Last page */}
               {currentPage < totalPages - 1 && (
                 <PaginationItem>
                   <PaginationLink onClick={() => paginate(totalPages)}>
@@ -516,7 +475,6 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
     );
   };
 
-  // Show loading state
   if (isLoading) {
     return (
       <div className={`${standalone ? 'pt-16 pb-24' : ''} h-full overflow-hidden flex flex-col`}>
@@ -562,7 +520,6 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
         </div>
       )}
 
-      {/* Main content container */}
       <div className={`flex-1 overflow-hidden flex flex-col mx-auto w-full max-w-4xl px-4 ${standalone ? 'py-4' : 'pt-0'}`}>
         <ExerciseDialog
           open={showDialog}
@@ -574,7 +531,6 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
           mode={dialogMode}
         />
         
-        {/* Delete confirmation */}
         <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -592,7 +548,6 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
           </AlertDialogContent>
         </AlertDialog>
         
-        {/* Header with back button if needed */}
         <div className="flex items-center justify-between mb-4">
           {onBack && (
             <Button 
@@ -625,7 +580,6 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
           )}
         </div>
         
-        {/* Search bar */}
         <div className="relative mb-4">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
           <Input
@@ -646,7 +600,6 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
           )}
         </div>
                 
-        {/* Tabs for navigation */}
         <Tabs className="flex-1 overflow-hidden flex flex-col" value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="suggested">Suggested</TabsTrigger>
@@ -654,7 +607,6 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
             <TabsTrigger value="browse">Browse All</TabsTrigger>
           </TabsList>
           
-          {/* Filters button - only show in browse tab */}
           {activeTab === 'browse' && (
             <div className="mb-4">
               <Button 
@@ -680,7 +632,6 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
             </div>
           )}
           
-          {/* Filter section */}
           {showFilters && activeTab === 'browse' && (
             <Card className="p-4 mb-4 bg-gray-800/50 border-gray-700">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -778,7 +729,6 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
             </Card>
           )}
           
-          {/* Tab contents */}
           <ScrollArea className="flex-1 overflow-auto">
             <TabsContent value="suggested" className="mt-0">
               {renderExerciseList(suggestedExercises)}
@@ -795,7 +745,6 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
         </Tabs>
       </div>
       
-      {/* Add Exercise FAB - for mobile */}
       {standalone && isMobile && (
         <ExerciseFAB onClick={handleAdd} />
       )}
