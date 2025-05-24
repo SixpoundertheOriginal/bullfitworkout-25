@@ -211,7 +211,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     }
   }, [step, handleComplete, trainingType, showQuickStart]);
 
-  // Handle training type selection with improved debouncing
+  // Handle training type selection - FIXED: removed trainingType from dependencies
   const handleTrainingTypeChange = useCallback((newType: string) => {
     console.log('🎯 Training type change requested:', { from: trainingType, to: newType });
     if (newType !== trainingType) {
@@ -220,7 +220,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     } else {
       console.log('⚠️ Training type unchanged, skipping update');
     }
-  }, []); // Remove trainingType from dependencies to prevent infinite loop
+  }, []); // FIXED: Remove trainingType from dependencies to prevent infinite loop
 
   // Memoize the next button disabled state to prevent re-calculation on every render
   const isNextDisabled = useMemo(() => {
@@ -241,7 +241,20 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     return disabled;
   }, [step, trainingType]);
 
-  // Show loading state while stats are loading
+  // Add DOM inspection
+  useEffect(() => {
+    setTimeout(() => {
+      const buttons = document.querySelectorAll('button');
+      console.log('🔍 ALL BUTTONS IN DOM:', Array.from(buttons).map(btn => ({
+        text: btn.textContent,
+        disabled: btn.disabled,
+        className: btn.className,
+        hasOnClick: !!btn.onclick
+      })));
+    }, 1000);
+  }, [step]);
+
+  // MOVED: Loading state check AFTER all hooks are called
   if (isLoadingStats) {
     console.log('⏳ Rendering loading state');
     return (
@@ -255,19 +268,6 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       </div>
     );
   }
-
-  // Add DOM inspection
-  useEffect(() => {
-    setTimeout(() => {
-      const buttons = document.querySelectorAll('button');
-      console.log('🔍 ALL BUTTONS IN DOM:', Array.from(buttons).map(btn => ({
-        text: btn.textContent,
-        disabled: btn.disabled,
-        className: btn.className,
-        hasOnClick: !!btn.onclick
-      })));
-    }, 1000);
-  }, [step]);
 
   // Render the appropriate step content
   const renderStepContent = () => {
