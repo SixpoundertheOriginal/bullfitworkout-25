@@ -216,16 +216,14 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     }
   }, [step, onCancel]);
   
-  // SIMPLIFIED Continue button with proper Button component
-  const handleNext = useCallback((event?: React.MouseEvent) => {
+  // FIXED: Continue button with proper dependencies and validation
+  const handleNext = useCallback(() => {
     console.log('🔥🔥🔥 CONTINUE BUTTON CLICKED!');
     console.log('📊 Continue Button Debug:', {
       step,
       trainingType,
       duration,
       showQuickStart,
-      event_type: event?.type,
-      event_target: event?.target,
       timestamp: new Date().toISOString()
     });
     
@@ -252,7 +250,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     }
   }, [step, handleComplete, trainingType, duration, showQuickStart]);
 
-  // Handle training type selection - FIXED: removed trainingType from dependencies
+  // Handle training type selection
   const handleTrainingTypeChange = useCallback((newType: string) => {
     console.log('🎯 Training type change requested:', { from: trainingType, to: newType });
     if (newType !== trainingType) {
@@ -261,7 +259,17 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     } else {
       console.log('⚠️ Training type unchanged, skipping update');
     }
-  }, []); // FIXED: Remove trainingType from dependencies to prevent infinite loop
+  }, [trainingType]);
+
+  // Handle duration updates with validation
+  const handleDurationChange = useCallback((newDuration: number) => {
+    console.log('⏱️ Duration change requested:', { from: duration, to: newDuration });
+    const validatedDuration = validateDuration(newDuration);
+    if (validatedDuration !== duration) {
+      console.log('✅ Duration actually changing to:', validatedDuration);
+      setDuration(validatedDuration);
+    }
+  }, [duration]);
 
   // Memoize the next button disabled state to prevent re-calculation on every render
   const isNextDisabled = useMemo(() => {
@@ -281,20 +289,6 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     console.log('🔘 Button disabled calculation:', { step, trainingType, disabled });
     return disabled;
   }, [step, trainingType]);
-
-  // Add DOM inspection
-  useEffect(() => {
-    setTimeout(() => {
-      const buttons = document.querySelectorAll('button');
-      console.log('🔍 ALL BUTTONS IN DOM:', Array.from(buttons).map(btn => ({
-        text: btn.textContent,
-        disabled: btn.disabled,
-        className: btn.className,
-        hasOnClick: !!btn.onclick,
-        boundEvents: btn.getEventListeners?.('click')?.length || 'unknown'
-      })));
-    }, 1000);
-  }, [step]);
 
   // MOVED: Loading state check AFTER all hooks are called
   if (isLoadingStats) {
@@ -338,7 +332,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
           duration={duration}
           trainingType={trainingType}
           onUpdateFocus={setBodyFocus}
-          onUpdateDuration={setDuration}
+          onUpdateDuration={handleDurationChange}
           onUpdateTags={setTags}
         />;
       case 2:
@@ -437,7 +431,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
               {getBackButtonLabel()}
             </Button>
             
-            {/* SIMPLIFIED Continue Button using Button component */}
+            {/* FIXED: Using Button component with proper onClick */}
             <Button 
               variant="gradient"
               onClick={handleNext}
