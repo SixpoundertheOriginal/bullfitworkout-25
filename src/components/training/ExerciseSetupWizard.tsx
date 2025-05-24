@@ -58,13 +58,27 @@ export function ExerciseSetupWizard({ onComplete, onCancel }: ExerciseSetupWizar
   // Start with quick start if first time or special condition
   useEffect(() => {
     const hasUsedSetupBefore = localStorage.getItem('has_used_setup');
+    console.log('ExerciseSetupWizard: hasUsedSetupBefore:', hasUsedSetupBefore);
+    
     if (!hasUsedSetupBefore) {
       setShowQuickStart(true);
-      localStorage.setItem('has_used_setup', 'true');
+      console.log('ExerciseSetupWizard: First time user, showing QuickStart');
     } else {
       setShowQuickStart(false);
+      console.log('ExerciseSetupWizard: Returning user, showing wizard');
     }
   }, []);
+
+  // Add debug logging for state changes
+  useEffect(() => {
+    console.log('ExerciseSetupWizard State:', {
+      step,
+      showQuickStart,
+      trainingType,
+      bodyFocus,
+      duration
+    });
+  }, [step, showQuickStart, trainingType, bodyFocus, duration]);
 
   // Prepare the configuration object to pass to the parent
   const handleComplete = () => {
@@ -76,16 +90,24 @@ export function ExerciseSetupWizard({ onComplete, onCancel }: ExerciseSetupWizar
       expectedXp
     };
     
+    console.log('ExerciseSetupWizard: Completing with config:', config);
     onComplete(config);
   };
 
-  // Skip the quick start screen
+  // Skip the quick start screen and enter wizard mode
   const handleSkipQuickStart = () => {
+    console.log('ExerciseSetupWizard: Skipping QuickStart, entering wizard mode');
     setShowQuickStart(false);
+    setStep(0);
+    
+    // Mark that user has used setup before
+    localStorage.setItem('has_used_setup', 'true');
   };
 
   // Use a quick start option
   const handleQuickStart = (config: Partial<TrainingConfig>) => {
+    console.log('ExerciseSetupWizard: Quick start selected:', config);
+    
     const fullConfig = {
       trainingType: config.trainingType || trainingType,
       bodyFocus: config.bodyFocus || [],
@@ -94,11 +116,16 @@ export function ExerciseSetupWizard({ onComplete, onCancel }: ExerciseSetupWizar
       expectedXp: Math.round((config.duration || duration) * 2)
     };
     
+    // Mark that user has used setup before
+    localStorage.setItem('has_used_setup', 'true');
+    
     onComplete(fullConfig);
   };
   
   // Navigate to previous step
   const handleBack = () => {
+    console.log('ExerciseSetupWizard: Back button clicked, current step:', step);
+    
     if (step > 0) {
       setStep(step - 1);
     } else {
@@ -108,6 +135,8 @@ export function ExerciseSetupWizard({ onComplete, onCancel }: ExerciseSetupWizar
   
   // Navigate to next step
   const handleNext = () => {
+    console.log('ExerciseSetupWizard: Next button clicked, current step:', step, 'trainingType:', trainingType);
+    
     if (step < 2) {
       setStep(step + 1);
     } else {
@@ -115,11 +144,19 @@ export function ExerciseSetupWizard({ onComplete, onCancel }: ExerciseSetupWizar
     }
   };
 
+  // Handle training type selection with debug logging
+  const handleTrainingTypeChange = (newType: string) => {
+    console.log('ExerciseSetupWizard: Training type changed:', newType);
+    setTrainingType(newType);
+  };
+
   // Check if the next button should be disabled
   const isNextDisabled = () => {
     switch (step) {
       case 0:
-        return !trainingType;
+        const disabled = !trainingType;
+        console.log('ExerciseSetupWizard: Next button disabled check (step 0):', disabled, 'trainingType:', trainingType);
+        return disabled;
       case 1:
         return false; // Focus and duration step always allows next
       case 2:
@@ -132,6 +169,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel }: ExerciseSetupWizar
   // Render the appropriate step content
   const renderStepContent = () => {
     if (showQuickStart) {
+      console.log('ExerciseSetupWizard: Rendering QuickStart');
       return (
         <QuickStartOption 
           onSelect={handleQuickStart} 
@@ -141,11 +179,13 @@ export function ExerciseSetupWizard({ onComplete, onCancel }: ExerciseSetupWizar
       );
     }
     
+    console.log('ExerciseSetupWizard: Rendering step:', step);
+    
     switch (step) {
       case 0:
         return <TrainingTypeStep 
           selectedType={trainingType} 
-          onSelectType={setTrainingType} 
+          onSelectType={handleTrainingTypeChange} 
           stats={stats}
         />;
       case 1:
@@ -184,6 +224,10 @@ export function ExerciseSetupWizard({ onComplete, onCancel }: ExerciseSetupWizar
     if (step === 0) return 'Cancel';
     return 'Back';
   };
+
+  // Debug: Log when footer should be visible
+  const shouldShowFooter = !showQuickStart;
+  console.log('ExerciseSetupWizard: Should show footer:', shouldShowFooter, 'showQuickStart:', showQuickStart);
   
   return (
     <div 
@@ -197,10 +241,10 @@ export function ExerciseSetupWizard({ onComplete, onCancel }: ExerciseSetupWizar
             variant="ghost" 
             size="sm" 
             className="text-gray-400"
-            onClick={handleBack}
+            onClick={showQuickStart ? onCancel : handleBack}
           >
             <ChevronLeft className="mr-1 h-5 w-5" />
-            {getBackButtonLabel()}
+            {showQuickStart ? 'Cancel' : getBackButtonLabel()}
           </Button>
           
           <h1 className="text-lg font-semibold text-center">
@@ -231,8 +275,8 @@ export function ExerciseSetupWizard({ onComplete, onCancel }: ExerciseSetupWizar
         {renderStepContent()}
       </div>
       
-      {/* Footer - Fixed at bottom */}
-      {!showQuickStart && (
+      {/* Footer - Fixed at bottom - Only show when not in QuickStart mode */}
+      {shouldShowFooter && (
         <div className="flex-shrink-0 p-4 bg-gray-900 border-t border-gray-800 z-10">
           <div className="flex justify-between gap-4">
             <Button
