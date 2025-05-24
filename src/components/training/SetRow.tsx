@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { ExerciseSet } from "@/types/exercise";
 import { Check, Clock, Edit, MinusCircle, PlusCircle, Save, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 
 interface SetRowProps {
   set: ExerciseSet;
@@ -152,27 +152,24 @@ export const SetRow: React.FC<SetRowProps> = ({
             />
           </div>
         ) : (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "h-6 w-full p-0 text-xs font-mono flex items-center justify-center",
-                    getRestTimeColor(set.restTime)
-                  )}
-                  onClick={onShowRestTimer}
-                >
-                  <Clock size={10} className="mr-1" /> 
-                  {set.restTime}s
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="bg-gray-900 border-gray-800">
-                <p className="text-xs">Start rest timer ({set.restTime}s)</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <EnhancedTooltip 
+            content={`Start rest timer (${set.restTime}s)`}
+            side="top"
+            contentClassName="bg-gray-900 border-gray-800"
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "h-6 w-full p-0 text-xs font-mono flex items-center justify-center",
+                getRestTimeColor(set.restTime)
+              )}
+              onClick={onShowRestTimer}
+            >
+              <Clock size={10} className="mr-1" /> 
+              {set.restTime}s
+            </Button>
+          </EnhancedTooltip>
         )}
       </div>
       

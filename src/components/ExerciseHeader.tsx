@@ -2,7 +2,7 @@
 import React from 'react';
 import { Dumbbell } from 'lucide-react';
 import { typography } from '@/lib/typography';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 
 interface ExerciseHeaderProps {
   exerciseName: string;
@@ -29,18 +29,11 @@ export const ExerciseHeader = ({ exerciseName, lastSession, weightUnit }: Exerci
         <div className="flex items-center gap-2">
           <Dumbbell className="h-6 w-6 text-purple-400" />
           {isLong ? (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <h2 className={typography.headings.h2 + " tracking-tight cursor-pointer max-w-xs"}>
-                    {displayName}
-                  </h2>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  {exerciseName}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <EnhancedTooltip content={exerciseName} side="top">
+              <h2 className={typography.headings.h2 + " tracking-tight cursor-pointer max-w-xs"}>
+                {displayName}
+              </h2>
+            </EnhancedTooltip>
           ) : (
             <h2 className={typography.headings.h2 + " tracking-tight"}>
               {exerciseName}

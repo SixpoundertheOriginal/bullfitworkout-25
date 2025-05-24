@@ -11,7 +11,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 
 interface ExerciseQuickSelectProps {
   onSelectExercise: (exercise: string | Exercise) => void;
@@ -147,53 +147,51 @@ function ExerciseCircle({
 }: ExerciseCircleProps) {
   const hasHighScore = matchData && matchData.score > 60;
   
+  const tooltipContent = matchData && matchData.reasons.length > 0 ? (
+    <div className="text-xs space-y-1">
+      <p className="font-semibold text-blue-300">
+        {isRecent ? "Recently used" : isRecommended ? "Recommended" : "Exercise"} 
+        {matchData.score > 0 ? ` (Score: ${Math.round(matchData.score)})` : ""}
+      </p>
+      {matchData.reasons.length > 0 && (
+        <>
+          <p className="font-medium text-gray-300">Reasons:</p>
+          <ul className="list-disc pl-4 text-gray-300">
+            {matchData.reasons.slice(0, 3).map((reason, i) => (
+              <li key={i}>{reason}</li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  ) : null;
+  
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <button
-            onClick={() => onSelectExercise(exercise)}
-            className={cn(
-              "flex flex-col items-center justify-center rounded-full w-16 h-16 mx-auto",
-              "border border-white/10 bg-gradient-to-br shadow-md",
-              "transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/20",
-              hasHighScore ? "ring-2 ring-green-500/50" : "",
-              "animate-pulse-slow",
-              CIRCLE_COLORS[idx % CIRCLE_COLORS.length]
-            )}
-            aria-label={exercise.name}
-          >
-            <Dumbbell className="w-5 h-5 mb-0.5 text-white" />
-            <span className={cn(typography.text.primary, "text-xs font-medium text-center px-1 max-w-full truncate")}>
-              {exercise.name}
-            </span>
-            {hasHighScore && (
-              <Star size={10} className="absolute top-1 right-1 text-yellow-300 fill-yellow-300" />
-            )}
-          </button>
-        </TooltipTrigger>
-        
-        {matchData && matchData.reasons.length > 0 && (
-          <TooltipContent side="top" className="max-w-xs bg-gray-900 border border-gray-700">
-            <div className="text-xs space-y-1">
-              <p className="font-semibold text-blue-300">
-                {isRecent ? "Recently used" : isRecommended ? "Recommended" : "Exercise"} 
-                {matchData.score > 0 ? ` (Score: ${Math.round(matchData.score)})` : ""}
-              </p>
-              {matchData.reasons.length > 0 && (
-                <>
-                  <p className="font-medium text-gray-300">Reasons:</p>
-                  <ul className="list-disc pl-4 text-gray-300">
-                    {matchData.reasons.slice(0, 3).map((reason, i) => (
-                      <li key={i}>{reason}</li>
-                    ))}
-                  </ul>
-                </>
-              )}
-            </div>
-          </TooltipContent>
+    <EnhancedTooltip 
+      content={tooltipContent} 
+      side="top" 
+      contentClassName="max-w-xs bg-gray-900 border border-gray-700"
+    >
+      <button
+        onClick={() => onSelectExercise(exercise)}
+        className={cn(
+          "flex flex-col items-center justify-center rounded-full w-16 h-16 mx-auto",
+          "border border-white/10 bg-gradient-to-br shadow-md",
+          "transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/20",
+          hasHighScore ? "ring-2 ring-green-500/50" : "",
+          "animate-pulse-slow",
+          CIRCLE_COLORS[idx % CIRCLE_COLORS.length]
         )}
-      </Tooltip>
-    </TooltipProvider>
+        aria-label={exercise.name}
+      >
+        <Dumbbell className="w-5 h-5 mb-0.5 text-white" />
+        <span className={cn(typography.text.primary, "text-xs font-medium text-center px-1 max-w-full truncate")}>
+          {exercise.name}
+        </span>
+        {hasHighScore && (
+          <Star size={10} className="absolute top-1 right-1 text-yellow-300 fill-yellow-300" />
+        )}
+      </button>
+    </EnhancedTooltip>
   );
 }

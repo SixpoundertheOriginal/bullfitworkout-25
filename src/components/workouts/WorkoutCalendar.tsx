@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,12 +7,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useWorkoutDates } from "@/hooks/useWorkoutHistory";
 import { Loader2, Plus } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 
@@ -89,26 +85,19 @@ export const WorkoutCalendar = ({ className = "", onDatePreview }: WorkoutCalend
       <div className={`relative group ${extraClass || ''}`}>
         <div>{format(date, 'd')}</div>
         {!hasWorkout && isInPast && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute inset-0 w-full h-full opacity-0 group-hover:opacity-100 hover:bg-purple-500/20 rounded-full"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSelectDate(date);
-                  }}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Log historical workout</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <EnhancedTooltip content="Log historical workout">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute inset-0 w-full h-full opacity-0 group-hover:opacity-100 hover:bg-purple-500/20 rounded-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSelectDate(date);
+              }}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </EnhancedTooltip>
         )}
       </div>
     );

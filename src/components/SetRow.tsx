@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ExerciseSet } from '@/types/exercise';
 import { Input } from "@/components/ui/input";
@@ -13,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useWeightUnit } from '@/context/WeightUnitContext';
 import { cn } from '@/lib/utils';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
 
 export interface SetRowProps {
   exerciseSet: ExerciseSet;
@@ -171,16 +170,9 @@ export function SetRow({
         {exerciseSet.set_number}
         {isAutoAdjusted && (
           <span className="ml-1">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <ThumbsUp className="inline-block h-3 w-3 text-green-500" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Auto-adjusted based on your feedback</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <EnhancedTooltip content="Auto-adjusted based on your feedback">
+              <ThumbsUp className="inline-block h-3 w-3 text-green-500" />
+            </EnhancedTooltip>
           </span>
         )}
       </td>
@@ -212,21 +204,14 @@ export function SetRow({
             
             {isAutoAdjusted && previousValues?.weight !== undefined && (
               <div className="absolute -right-2 -top-2">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className={cn(
-                        "text-xs font-medium px-1 rounded",
-                        getWeightDifference().startsWith('+') ? "text-green-400" : "text-amber-400"
-                      )}>
-                        {getWeightDifference()}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Changed from {previousValues.weight}{weightUnit}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <EnhancedTooltip content={`Changed from ${previousValues.weight}${weightUnit}`}>
+                  <span className={cn(
+                    "text-xs font-medium px-1 rounded",
+                    getWeightDifference().startsWith('+') ? "text-green-400" : "text-amber-400"
+                  )}>
+                    {getWeightDifference()}
+                  </span>
+                </EnhancedTooltip>
               </div>
             )}
           </div>
@@ -271,21 +256,14 @@ export function SetRow({
             
             {isAutoAdjusted && previousValues?.reps !== undefined && (
               <div className="absolute -right-2 -top-2">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className={cn(
-                        "text-xs font-medium px-1 rounded",
-                        getRepsDifference().startsWith('+') ? "text-green-400" : "text-amber-400"
-                      )}>
-                        {getRepsDifference()}
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Changed from {previousValues.reps} reps</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <EnhancedTooltip content={`Changed from ${previousValues.reps} reps`}>
+                  <span className={cn(
+                    "text-xs font-medium px-1 rounded",
+                    getRepsDifference().startsWith('+') ? "text-green-400" : "text-amber-400"
+                  )}>
+                    {getRepsDifference()}
+                  </span>
+                </EnhancedTooltip>
               </div>
             )}
           </div>

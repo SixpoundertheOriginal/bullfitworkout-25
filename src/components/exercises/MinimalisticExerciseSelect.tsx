@@ -7,7 +7,7 @@ import { typography } from "@/lib/typography";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 
 interface MinimalisticExerciseSelectProps {
   onSelectExercise: (exercise: string | Exercise) => void;
@@ -140,6 +140,17 @@ function ExerciseItem({
   const hasScore = matchData && matchData.score > 0;
   const scorePercentage = hasScore ? Math.min(100, Math.round(matchData.score * 1.25)) : 0;
   
+  const tooltipContent = hasScore && matchData?.reasons && Array.isArray(matchData.reasons) && matchData.reasons.length > 0 ? (
+    <div className="text-xs space-y-1">
+      <p className="font-semibold text-blue-300">Recommended because:</p>
+      <ul className="list-disc pl-4 text-gray-300">
+        {matchData.reasons.slice(0, 3).map((reason, i) => (
+          <li key={i}>{reason}</li>
+        ))}
+      </ul>
+    </div>
+  ) : null;
+  
   return (
     <Card 
       className={cn(
@@ -201,29 +212,16 @@ function ExerciseItem({
                 )}
 
                 {/* Match reasons tooltip */}
-                {hasScore && matchData?.reasons && Array.isArray(matchData.reasons) && matchData.reasons.length > 0 && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="cursor-help ml-auto">
-                          <Info size={14} className="text-blue-400" />
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent 
-                        side="top" 
-                        className="max-w-xs bg-gray-900 border border-gray-700"
-                      >
-                        <div className="text-xs space-y-1">
-                          <p className="font-semibold text-blue-300">Recommended because:</p>
-                          <ul className="list-disc pl-4 text-gray-300">
-                            {matchData.reasons.slice(0, 3).map((reason, i) => (
-                              <li key={i}>{reason}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                {tooltipContent && (
+                  <EnhancedTooltip 
+                    content={tooltipContent}
+                    side="top" 
+                    contentClassName="max-w-xs bg-gray-900 border border-gray-700"
+                  >
+                    <div className="cursor-help ml-auto">
+                      <Info size={14} className="text-blue-400" />
+                    </div>
+                  </EnhancedTooltip>
                 )}
               </div>
             </div>
