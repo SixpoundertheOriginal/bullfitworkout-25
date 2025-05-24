@@ -49,18 +49,31 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   const { isFilterVisible } = useLayout();
   const title = getPageTitle(location.pathname);
   
-  // Prevent layout shifts during route changes
+  // Enhanced layout effect for smooth transitions
   useLayoutEffect(() => {
     const mainContent = document.querySelector('.content-container');
     if (mainContent) {
       mainContent.classList.add('force-no-transition');
       setTimeout(() => mainContent.classList.remove('force-no-transition'), 100);
     }
+    
+    // Enhanced scroll behavior for iOS-like experience
     if (location.pathname === '/overview') {
       document.body.style.overflow = 'hidden';
-      setTimeout(() => { document.body.style.overflow = '' }, 50);
+      document.body.style.overscrollBehavior = 'none';
+      setTimeout(() => { 
+        document.body.style.overflow = '';
+        document.body.style.overscrollBehavior = '';
+      }, 50);
     }
-    return () => { document.body.style.overflow = '' };
+    
+    // Ensure proper scroll restoration
+    window.scrollTo(0, 0);
+    
+    return () => { 
+      document.body.style.overflow = '';
+      document.body.style.overscrollBehavior = '';
+    };
   }, [location.pathname]);
 
   // Hide global bottom nav only on workout complete page
@@ -72,70 +85,99 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
   console.log('MainLayout rendering, isFilterVisible:', isFilterVisible);
 
-  // Calculate content padding based on header and filter visibility
-  const headerHeight = 64; // 16 * 4 = 64px (h-16)
-  const filterHeight = isFilterVisible ? 56 : 0; // Height for filter section when visible
-  const footerHeight = shouldShowGlobalNav ? 64 : 0; // Height for bottom nav when visible
-
   return (
-    <div className="flex flex-col min-h-screen bg-gray-900 will-change-transform relative">
+    <div className="flex flex-col min-h-screen bg-gray-900 relative">
+      {/* Fixed Header Section */}
       {!noHeader && (
-        <>
-          {/* Header is now sticky at the top */}
-          <div className="sticky top-0 left-0 right-0 z-50">
-            <PageHeader title={title} showBackButton={location.pathname !== '/' && location.pathname !== '/overview'}>
-              <MainMenu />
-            </PageHeader>
-            
-            {/* Filter section is also sticky, directly below the header */}
-            {isFilterVisible && (
-              <div className="bg-gray-800 border-b border-gray-700 shadow-md">
-                <div className="container mx-auto py-3 px-4">
-                  <DateRangeFilter />
-                </div>
+        <div className="fixed top-0 left-0 right-0 z-50">
+          <PageHeader title={title} showBackButton={location.pathname !== '/' && location.pathname !== '/overview'}>
+            <MainMenu />
+          </PageHeader>
+          
+          {/* Filter section positioned directly below header */}
+          {isFilterVisible && (
+            <div 
+              className={cn(
+                "bg-gray-800/95 backdrop-blur-xl border-b border-gray-700/60",
+                "shadow-lg shadow-black/20"
+              )}
+              style={{
+                // Position it exactly below the header
+                top: '64px',
+                position: 'fixed',
+                left: 0,
+                right: 0,
+                zIndex: 40
+              }}
+            >
+              <div className="container mx-auto py-3 px-4">
+                <DateRangeFilter />
               </div>
-            )}
-            
-            <WorkoutBanner />
-          </div>
-        </>
+            </div>
+          )}
+          
+          <WorkoutBanner />
+        </div>
       )}
       
-      {/* Main content with appropriate padding for header and footer */}
-      <main className={cn(
-        "flex-grow overflow-y-auto will-change-transform",
-        "w-full h-full",
-        // Add padding based on visibility of elements
-        noHeader ? "" : "pt-0", // No extra padding needed since header is sticky
-        shouldShowGlobalNav ? `pb-16` : "pb-6", // Padding for footer height
-        isOverviewPage ? "pb-24" : "" // Extra padding for overview page
-      )}>
+      {/* Main content with proper spacing for fixed elements */}
+      <main 
+        className={cn(
+          "flex-grow w-full",
+          // Enhanced scroll behavior with iOS momentum
+          "overflow-y-auto overscroll-behavior-contain",
+          // GPU acceleration for smooth scrolling
+          "will-change-scroll",
+          // iOS-style momentum scrolling
+          "ios-momentum-scroll"
+        )}
+        style={{
+          // Dynamic top padding based on header and filter visibility
+          paddingTop: noHeader ? '0' : `${64 + (isFilterVisible ? 56 : 0)}px`,
+          // Dynamic bottom padding for footer
+          paddingBottom: shouldShowGlobalNav ? '80px' : '24px',
+          // Minimum height to ensure proper scrolling
+          minHeight: '100vh'
+        }}
+      >
         <div className="content-container w-full h-full">
           {children}
         </div>
       </main>
       
-      {/* Global bottom nav is now fixed at the bottom */}
-      {shouldShowGlobalNav && (
-        <div className="fixed bottom-0 left-0 right-0 z-50">
-          <BottomNav />
-        </div>
-      )}
+      {/* Fixed Footer */}
+      {shouldShowGlobalNav && <BottomNav />}
       
-      {/* CSS styles updated for fixed positioning */}
-      <style>
-        {`
-          .content-container {
-            min-height: calc(100vh - ${headerHeight + filterHeight + footerHeight}px);
-            padding-top: ${isFilterVisible ? '0' : '0'}; /* No extra padding needed with sticky header */
+      {/* Enhanced CSS for better performance and iOS-like behavior */}
+      <style jsx>{`
+        .content-container {
+          position: relative;
+          z-index: 1;
+        }
+        
+        .force-no-transition * {
+          transition: none !important;
+          animation: none !important;
+        }
+        
+        .ios-momentum-scroll {
+          -webkit-overflow-scrolling: touch;
+          scroll-behavior: smooth;
+        }
+        
+        /* Enhanced safe area support */
+        @supports (padding-top: env(safe-area-inset-top)) {
+          .safe-area-top {
+            padding-top: env(safe-area-inset-top);
           }
-          
-          .force-no-transition * {
-            transition: none !important;
-            animation: none !important;
+        }
+        
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+          .safe-area-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
           }
-        `}
-      </style>
+        }
+      `}</style>
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 @import "./colors.css";
 @tailwind base;
 @tailwind components;
@@ -21,6 +22,9 @@
     height: 100%;
     margin: 0;
     padding: 0;
+    /* Enhanced iOS-style scrolling */
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
   }
   h1, h2, h3, h4, h5, h6,
   .heading, .font-heading, .font-montserrat {
@@ -32,9 +36,9 @@
   .font-montserrat { font-family: 'Montserrat', sans-serif; }
 }
 
-/* Animation utilities */
+/* Enhanced iOS-style animations */
 .animate-fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
+  animation: fadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
 @keyframes fadeIn {
@@ -49,7 +53,7 @@
 }
 
 .animate-checkmark {
-  animation: checkmark 0.3s ease-out forwards;
+  animation: checkmark 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
 }
 
 @keyframes checkmark {
@@ -66,9 +70,12 @@
   @apply mx-auto px-4 md:px-8;
 }
 
-/* Touch interaction enhancements */
+/* Enhanced touch interaction for iOS */
 .tap-highlight-transparent {
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .touch-feedback {
@@ -81,16 +88,16 @@
   -webkit-user-select: none;
 }
 
-/* Improve card interactions */
+/* Enhanced card interactions with iOS-style feedback */
 .card-hover {
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .card-hover:active {
   transform: scale(0.98);
 }
 
-/* Custom scrollbar for a more polished look */
+/* Enhanced scrollbar for better aesthetics */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -101,21 +108,23 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.25);
 }
 
-/* Prevent pull-to-refresh on mobile */
+/* Prevent pull-to-refresh and enhance overscroll behavior */
 html, body {
   overscroll-behavior-y: contain;
+  overscroll-behavior-x: none;
 }
 
-/* Safe-area inset utility for bottom (home-indicator / gesture nav) */
+/* Enhanced safe-area utilities with iOS support */
 @layer utilities {
+  /* Safe area insets with enhanced support */
   .safe-bottom {
     padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 4px);
     height: calc(64px + env(safe-area-inset-bottom, 16px));
@@ -126,12 +135,36 @@ html, body {
     height: calc(64px + env(safe-area-inset-top, 0px));
   }
   
+  /* Enhanced safe area classes for more granular control */
+  .pt-safe-area-inset-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  
+  .pb-safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  
+  .pl-safe-area-inset-left {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+  
+  .pr-safe-area-inset-right {
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+  
   /* Enhanced touch targets for mobile */
   .touch-target {
     @apply min-h-[48px] min-w-[48px];
   }
   
-  /* Animate pulse but slower */
+  /* iOS-style momentum scrolling utility */
+  .ios-momentum-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scroll-behavior: smooth;
+  }
+  
+  /* Enhanced pulse animation */
   .animate-pulse-slow {
     animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
@@ -144,9 +177,20 @@ html, body {
       opacity: 0.6;
     }
   }
+  
+  /* iOS-style blur utilities */
+  .backdrop-blur-ios {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  
+  .backdrop-blur-ios-strong {
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+  }
 }
 
-/* Dark theme: Always ON */
+/* Dark theme: Always ON with enhanced iOS support */
 @layer base {
   :root {
     --background: 240 10% 3.9%;
@@ -179,13 +223,23 @@ html, body {
     @apply bg-background text-foreground antialiased;
   }
   
-  /* Set #root to full width/height with no padding for mobile */
+  /* Set #root to full width/height with enhanced mobile support */
   #root {
     width: 100%;
-    height: 100%;
+    height: 100vh;
+    /* Use viewport height units for better mobile support */
+    height: calc(var(--vh, 1vh) * 100);
     margin: 0;
     padding: 0;
     display: flex;
     flex-direction: column;
+    overscroll-behavior: none;
+  }
+}
+
+/* Enhanced viewport height fix for iOS */
+@supports (-webkit-touch-callout: none) {
+  #root {
+    height: -webkit-fill-available;
   }
 }

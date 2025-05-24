@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 import { fontFamily } from "tailwindcss/defaultTheme";
 
@@ -88,6 +89,24 @@ const config = {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.8' },
         },
+        // Enhanced iOS-style animations
+        "ios-spring": {
+          "0%": { transform: "scale(0.95)", opacity: 0 },
+          "50%": { transform: "scale(1.02)", opacity: 0.8 },
+          "100%": { transform: "scale(1)", opacity: 1 },
+        },
+        "ios-slide-up": {
+          "0%": { transform: "translateY(100%)", opacity: 0 },
+          "100%": { transform: "translateY(0)", opacity: 1 },
+        },
+        "ios-slide-down": {
+          "0%": { transform: "translateY(-100%)", opacity: 0 },
+          "100%": { transform: "translateY(0)", opacity: 1 },
+        },
+        "ios-scale-in": {
+          "0%": { transform: "scale(0.9)", opacity: 0 },
+          "100%": { transform: "scale(1)", opacity: 1 },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -95,6 +114,23 @@ const config = {
         "checkmark": "checkmark 0.32s cubic-bezier(0.39,0.58,0.57,1) forwards",
         "fade-in": "fadeIn 0.5s ease-out forwards",
         "pulse-slow": "pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        // Enhanced iOS-style animations
+        "ios-spring": "ios-spring 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards",
+        "ios-slide-up": "ios-slide-up 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards",
+        "ios-slide-down": "ios-slide-down 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards",
+        "ios-scale-in": "ios-scale-in 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards",
+      },
+      // Enhanced backdrop blur utilities
+      backdropBlur: {
+        'ios': '20px',
+        'ios-strong': '40px',
+      },
+      // Enhanced safe area spacing
+      spacing: {
+        'safe-top': 'env(safe-area-inset-top)',
+        'safe-bottom': 'env(safe-area-inset-bottom)',
+        'safe-left': 'env(safe-area-inset-left)',
+        'safe-right': 'env(safe-area-inset-right)',
       },
     },
   },
