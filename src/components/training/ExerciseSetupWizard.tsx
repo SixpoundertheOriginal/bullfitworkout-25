@@ -115,6 +115,20 @@ export function ExerciseSetupWizard({ onComplete, onCancel }: ExerciseSetupWizar
     }
   };
 
+  // Check if the next button should be disabled
+  const isNextDisabled = () => {
+    switch (step) {
+      case 0:
+        return !trainingType;
+      case 1:
+        return false; // Focus and duration step always allows next
+      case 2:
+        return false; // Review step always allows completion
+      default:
+        return false;
+    }
+  };
+
   // Render the appropriate step content
   const renderStepContent = () => {
     if (showQuickStart) {
@@ -173,11 +187,11 @@ export function ExerciseSetupWizard({ onComplete, onCancel }: ExerciseSetupWizar
   
   return (
     <div 
-      className="flex flex-col h-full w-full bg-gray-900 text-white"
+      className="flex flex-col h-screen w-full bg-gray-900 text-white relative overflow-hidden"
       ref={touchRef}
     >
       {/* Header */}
-      <div className="p-4 border-b border-gray-800">
+      <div className="flex-shrink-0 p-4 border-b border-gray-800 bg-gray-900 z-10">
         <div className="flex items-center justify-between mb-4">
           <Button 
             variant="ghost" 
@@ -212,28 +226,31 @@ export function ExerciseSetupWizard({ onComplete, onCancel }: ExerciseSetupWizar
         )}
       </div>
       
-      {/* Content area */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 pb-24">
+      {/* Content area - scrollable */}
+      <div className="flex-1 overflow-y-auto px-4 py-6">
         {renderStepContent()}
       </div>
       
       {/* Footer - Fixed at bottom */}
       {!showQuickStart && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gray-900 border-t border-gray-800">
-          <div className="flex justify-between">
+        <div className="flex-shrink-0 p-4 bg-gray-900 border-t border-gray-800 z-10">
+          <div className="flex justify-between gap-4">
             <Button
               variant="outline"
               onClick={handleBack}
-              className="border-gray-700"
+              className="border-gray-700 flex-1 sm:flex-none"
             >
               {getBackButtonLabel()}
             </Button>
             
             <Button 
               onClick={handleNext}
+              disabled={isNextDisabled()}
               className={cn(
                 "bg-gradient-to-r from-purple-600 to-pink-500",
-                "hover:from-purple-700 hover:to-pink-600"
+                "hover:from-purple-700 hover:to-pink-600",
+                "flex-1 sm:flex-none",
+                isNextDisabled() && "opacity-50 cursor-not-allowed"
               )}
             >
               {getNextButtonLabel()}

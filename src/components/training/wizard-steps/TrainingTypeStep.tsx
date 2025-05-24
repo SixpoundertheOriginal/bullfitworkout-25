@@ -103,6 +103,11 @@ export function TrainingTypeStep({ selectedType, onSelectType, stats }: Training
     return null;
   };
 
+  const handleTypeSelection = (typeId: string) => {
+    console.log('TrainingTypeStep: Selected type:', typeId);
+    onSelectType(typeId);
+  };
+
   return (
     <div className="space-y-6 pb-4">
       <div>
@@ -122,12 +127,12 @@ export function TrainingTypeStep({ selectedType, onSelectType, stats }: Training
             <motion.div
               key={type.id}
               whileTap={{ scale: 0.98 }}
-              onClick={() => onSelectType(type.id)}
+              onClick={() => handleTypeSelection(type.id)}
               className={cn(
-                "p-4 rounded-xl border cursor-pointer transform transition-all",
+                "p-4 rounded-xl border cursor-pointer transform transition-all duration-200",
                 isSelected 
-                  ? "bg-gray-800 border-purple-500 shadow-lg shadow-purple-900/20" 
-                  : "bg-gray-900/50 border-gray-800 hover:bg-gray-800/70",
+                  ? "bg-purple-900/30 border-purple-500 shadow-lg shadow-purple-900/20 ring-2 ring-purple-500/30" 
+                  : "bg-gray-900/50 border-gray-800 hover:bg-gray-800/70 hover:border-gray-700",
               )}
             >
               <div className="flex items-center">
@@ -175,13 +180,14 @@ export function TrainingTypeStep({ selectedType, onSelectType, stats }: Training
                   )}
                 </div>
                 
-                <div className="w-5 h-5 rounded-full border-2 ml-2 flex-shrink-0
-                              transition-colors duration-300 ease-in-out
-                              flex items-center justify-center"
-                    style={{ 
-                      borderColor: isSelected ? '#9b87f5' : '#374151',
-                      background: isSelected ? '#9b87f5' : 'transparent',
-                    }}>
+                <div className={cn(
+                  "w-6 h-6 rounded-full border-2 ml-2 flex-shrink-0",
+                  "transition-all duration-200 ease-in-out",
+                  "flex items-center justify-center",
+                  isSelected 
+                    ? "border-purple-500 bg-purple-500" 
+                    : "border-gray-600 bg-transparent"
+                )}>
                   {isSelected && (
                     <motion.div 
                       initial={{ scale: 0 }}

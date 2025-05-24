@@ -1,4 +1,3 @@
-
 import React, { useLayoutEffect } from "react";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { PageHeader } from "@/components/navigation/PageHeader";
@@ -26,6 +25,8 @@ const getPageTitle = (pathname: string): string => {
       return "All Exercises";
     case "/workouts":
       return "Workouts";
+    case "/setup-workout":
+      return "Setup Workout";
     default:
       if (pathname.startsWith("/workout-details")) {
         return "Workout Details";
