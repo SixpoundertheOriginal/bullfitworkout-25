@@ -94,13 +94,16 @@ export function ExerciseSelector({
 
   // Handle exercise selection, ensuring we always pass a string name
   const handleSelectExercise = (exercise: Exercise | string) => {
+    console.log('🏋️ Exercise selected in ExerciseSelector:', { exercise, type: typeof exercise });
     // Ensure we ALWAYS pass a string to parent component
     const exerciseName = getExerciseName(exercise);
+    console.log('🎯 Calling onSelectExercise with:', exerciseName);
     onSelectExercise(exerciseName);
   };
 
   // Handle start workout button click
   const handleStartWorkout = () => {
+    console.log('🚀 Start workout button clicked');
     navigate('/training-session');
   };
 
@@ -118,6 +121,12 @@ export function ExerciseSelector({
       </div>
     );
   }
+
+  console.log('🎮 ExerciseSelector rendering:', {
+    useLegacyDesign,
+    exerciseCount: rankedExercises.recommended?.length || 0,
+    trainingType
+  });
 
   if (useLegacyDesign) {
     return (

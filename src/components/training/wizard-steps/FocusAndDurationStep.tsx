@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -21,27 +22,37 @@ interface MuscleGroupButtonProps {
 
 const MuscleGroupButton = ({ muscle, isSelected, onToggle }: MuscleGroupButtonProps) => {
   return (
-    <motion.button
+    <motion.div
       key={muscle}
       whileTap={{ scale: 0.96 }}
-      onClick={() => onToggle(muscle)}
-      className={cn(
-        "px-3 py-2 rounded-lg text-sm font-medium transition-all",
-        "flex items-center justify-between",
-        isSelected
-          ? "bg-purple-900/50 border-purple-500/50 border text-white"
-          : "bg-gray-800/50 border-gray-700 border text-gray-400 hover:bg-gray-800"
-      )}
+      className="relative"
     >
-      <span className="truncate">{muscle}</span>
-      {isSelected && (
-        <motion.div 
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className="w-2 h-2 rounded-full bg-purple-400"
-        />
-      )}
-    </motion.button>
+      <button
+        type="button"
+        onClick={(e) => {
+          console.log('💪 Muscle group clicked:', { muscle, isSelected, event: e.type });
+          e.preventDefault();
+          e.stopPropagation();
+          onToggle(muscle);
+        }}
+        className={cn(
+          "w-full px-3 py-2 rounded-lg text-sm font-medium transition-all",
+          "flex items-center justify-between cursor-pointer",
+          isSelected
+            ? "bg-purple-900/50 border-purple-500/50 border text-white"
+            : "bg-gray-800/50 border-gray-700 border text-gray-400 hover:bg-gray-800"
+        )}
+      >
+        <span className="truncate">{muscle}</span>
+        {isSelected && (
+          <motion.div 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="w-2 h-2 rounded-full bg-purple-400"
+          />
+        )}
+      </button>
+    </motion.div>
   );
 };
 
@@ -75,6 +86,7 @@ export function FocusAndDurationStep({
   
   // Toggle a muscle group selection
   const toggleMuscleGroup = (muscleGroup: string) => {
+    console.log('🎯 Toggling muscle group:', { muscleGroup, current: selectedFocus });
     if (selectedFocus.includes(muscleGroup)) {
       onUpdateFocus(selectedFocus.filter(m => m !== muscleGroup));
     } else {
@@ -84,6 +96,7 @@ export function FocusAndDurationStep({
   
   // Toggle a tag selection
   const toggleTag = (tag: string) => {
+    console.log('🏷️ Toggling tag:', { tag, current: selectedTags });
     const newTags = selectedTags.includes(tag)
       ? selectedTags.filter(t => t !== tag)
       : [...selectedTags, tag];
@@ -107,24 +120,32 @@ export function FocusAndDurationStep({
       {/* Tab Navigation */}
       <div className="flex rounded-lg bg-gray-800/50 p-1 mb-6">
         <button
+          type="button"
           className={cn(
             "flex-1 py-2 px-4 rounded-md text-center text-sm font-medium transition-all",
             activeTab === 'areas' 
               ? "bg-gray-700 text-white shadow-sm" 
               : "text-gray-400 hover:text-gray-200"
           )}
-          onClick={() => setActiveTab('areas')}
+          onClick={() => {
+            console.log('📑 Tab clicked: areas');
+            setActiveTab('areas');
+          }}
         >
           Focus Areas
         </button>
         <button
+          type="button"
           className={cn(
             "flex-1 py-2 px-4 rounded-md text-center text-sm font-medium transition-all",
             activeTab === 'duration' 
               ? "bg-gray-700 text-white shadow-sm" 
               : "text-gray-400 hover:text-gray-200"
           )}
-          onClick={() => setActiveTab('duration')}
+          onClick={() => {
+            console.log('📑 Tab clicked: duration');
+            setActiveTab('duration');
+          }}
         >
           Duration & Tags
         </button>
@@ -196,19 +217,23 @@ export function FocusAndDurationStep({
               <h3 className="text-lg font-medium mb-3">Workout Tags</h3>
               <div className="flex flex-wrap gap-2">
                 {suggestedTags.map(tag => (
-                  <motion.button
+                  <button
                     key={tag}
-                    whileTap={{ scale: 0.96 }}
-                    onClick={() => toggleTag(tag)}
+                    type="button"
+                    onClick={(e) => {
+                      console.log('🏷️ Tag button clicked:', { tag, event: e.type });
+                      e.preventDefault();
+                      toggleTag(tag);
+                    }}
                     className={cn(
-                      "px-3 py-1 rounded-full text-sm transition-all",
+                      "px-3 py-1 rounded-full text-sm transition-all cursor-pointer",
                       selectedTags.includes(tag)
                         ? "bg-gray-700 text-white border border-gray-600"
                         : "bg-gray-800/50 text-gray-400 border border-gray-700 hover:bg-gray-800"
                     )}
                   >
                     #{tag}
-                  </motion.button>
+                  </button>
                 ))}
               </div>
             </div>

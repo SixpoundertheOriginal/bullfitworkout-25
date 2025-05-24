@@ -178,14 +178,16 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     }
   }, [step, onCancel]);
   
-  // Navigate to next step
-  const handleNext = useCallback(() => {
-    console.log('🔥🔥🔥 NEXT BUTTON CLICKED!');
-    console.log('📊 Current State:', {
+  // ENHANCED Continue button with explicit event handling
+  const handleNext = useCallback((event?: React.MouseEvent) => {
+    console.log('🔥🔥🔥 CONTINUE BUTTON CLICKED!');
+    console.log('📊 Continue Button Debug:', {
       step,
       trainingType,
       showQuickStart,
-      typeof_handleNext: typeof handleNext
+      event_type: event?.type,
+      event_target: event?.target,
+      timestamp: new Date().toISOString()
     });
     
     try {
@@ -386,20 +388,6 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       {/* Footer - Fixed at bottom - Only show when not in QuickStart mode */}
       {shouldShowFooter && (
         <div className="flex-shrink-0 p-4 bg-gray-900 border-t border-gray-800 z-10">
-          {/* 🧪 DEBUG BUTTON - TEMPORARY */}
-          <button 
-            onClick={() => {
-              console.log('🧪 DEBUG BUTTON CLICKED');
-              setStep(s => {
-                console.log('🧪 Debug step change:', s, '→', s + 1);
-                return s + 1;
-              });
-            }}
-            style={{background: 'red', color: 'white', padding: '10px', margin: '10px', display: 'block', width: '100%'}}
-          >
-            🧪 DEBUG: Force Next Step (Current: {step})
-          </button>
-          
           <div className="flex justify-between gap-4">
             <Button
               variant="outline"
@@ -409,27 +397,33 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
               {getBackButtonLabel()}
             </Button>
             
-            <Button 
+            {/* EXPLICIT Continue Button with Enhanced Debugging */}
+            <button 
+              type="button"
               onClick={(e) => {
-                console.log('🖱️ Button click event triggered!', e);
-                console.log('🔍 Function scope check:', {
-                  step_in_scope: step,
-                  setStep_type: typeof setStep,
-                  handleNext_type: typeof handleNext
+                console.log('🔥🔥🔥 EXPLICIT CONTINUE CLICKED!', {
+                  event: e.type,
+                  target: e.target,
+                  currentTarget: e.currentTarget,
+                  step,
+                  disabled: isNextDisabled
                 });
-                handleNext();
+                handleNext(e);
               }}
               disabled={isNextDisabled}
               className={cn(
+                "inline-flex items-center justify-center gap-2 whitespace-nowrap text-base font-montserrat font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none",
                 "bg-gradient-to-r from-purple-600 to-pink-500",
                 "hover:from-purple-700 hover:to-pink-600",
+                "rounded-md h-11 px-5 py-2",
                 "flex-1 sm:flex-none",
+                "active:scale-[0.98]",
                 isNextDisabled && "opacity-50 cursor-not-allowed"
               )}
             >
               {getNextButtonLabel()}
               {step !== 2 && <ChevronRight className="ml-1 h-5 w-5" />}
-            </Button>
+            </button>
           </div>
         </div>
       )}
