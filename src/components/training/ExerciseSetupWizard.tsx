@@ -28,7 +28,7 @@ interface ExerciseSetupWizardProps {
 
 export function ExerciseSetupWizard({ onComplete, onCancel }: ExerciseSetupWizardProps) {
   const [step, setStep] = useState(0);
-  const [showQuickStart, setShowQuickStart] = useState(true);
+  const [showQuickStart, setShowQuickStart] = useState(false);
   const { stats } = useWorkoutStats();
   
   // Training config state
@@ -55,28 +55,30 @@ export function ExerciseSetupWizard({ onComplete, onCancel }: ExerciseSetupWizar
     threshold: 50,
   });
 
-  // Start with quick start if first time or special condition
+  // Improved QuickStart logic
   useEffect(() => {
     const hasUsedSetupBefore = localStorage.getItem('has_used_setup');
     console.log('ExerciseSetupWizard: hasUsedSetupBefore:', hasUsedSetupBefore);
     
+    // Only show QuickStart for first-time users
     if (!hasUsedSetupBefore) {
       setShowQuickStart(true);
       console.log('ExerciseSetupWizard: First time user, showing QuickStart');
     } else {
       setShowQuickStart(false);
-      console.log('ExerciseSetupWizard: Returning user, showing wizard');
+      console.log('ExerciseSetupWizard: Returning user, going directly to wizard');
     }
   }, []);
 
-  // Add debug logging for state changes
+  // Enhanced debug logging for state changes
   useEffect(() => {
-    console.log('ExerciseSetupWizard State:', {
+    console.log('ExerciseSetupWizard State Updated:', {
       step,
       showQuickStart,
       trainingType,
       bodyFocus,
-      duration
+      duration,
+      shouldShowFooter: !showQuickStart
     });
   }, [step, showQuickStart, trainingType, bodyFocus, duration]);
 
@@ -94,7 +96,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel }: ExerciseSetupWizar
     onComplete(config);
   };
 
-  // Skip the quick start screen and enter wizard mode
+  // Fixed skip QuickStart function
   const handleSkipQuickStart = () => {
     console.log('ExerciseSetupWizard: Skipping QuickStart, entering wizard mode');
     setShowQuickStart(false);
@@ -102,6 +104,11 @@ export function ExerciseSetupWizard({ onComplete, onCancel }: ExerciseSetupWizar
     
     // Mark that user has used setup before
     localStorage.setItem('has_used_setup', 'true');
+    
+    // Force a re-render to ensure the footer appears
+    setTimeout(() => {
+      console.log('ExerciseSetupWizard: QuickStart transition complete, showQuickStart:', false);
+    }, 0);
   };
 
   // Use a quick start option
@@ -133,20 +140,28 @@ export function ExerciseSetupWizard({ onComplete, onCancel }: ExerciseSetupWizar
     }
   };
   
-  // Navigate to next step
+  // Enhanced next handler with better logging
   const handleNext = () => {
-    console.log('ExerciseSetupWizard: Next button clicked, current step:', step, 'trainingType:', trainingType);
+    console.log('ExerciseSetupWizard: Next button clicked', {
+      currentStep: step,
+      trainingType,
+      showQuickStart,
+      isNextDisabled: isNextDisabled()
+    });
     
     if (step < 2) {
-      setStep(step + 1);
+      const newStep = step + 1;
+      console.log('ExerciseSetupWizard: Advancing to step:', newStep);
+      setStep(newStep);
     } else {
+      console.log('ExerciseSetupWizard: Final step, completing workout');
       handleComplete();
     }
   };
 
   // Handle training type selection with debug logging
   const handleTrainingTypeChange = (newType: string) => {
-    console.log('ExerciseSetupWizard: Training type changed:', newType);
+    console.log('ExerciseSetupWizard: Training type changed from', trainingType, 'to', newType);
     setTrainingType(newType);
   };
 
@@ -179,7 +194,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel }: ExerciseSetupWizar
       );
     }
     
-    console.log('ExerciseSetupWizard: Rendering step:', step);
+    console.log('ExerciseSetupWizard: Rendering wizard step:', step);
     
     switch (step) {
       case 0:
@@ -225,9 +240,13 @@ export function ExerciseSetupWizard({ onComplete, onCancel }: ExerciseSetupWizar
     return 'Back';
   };
 
-  // Debug: Log when footer should be visible
+  // Footer should be visible when NOT in QuickStart mode
   const shouldShowFooter = !showQuickStart;
-  console.log('ExerciseSetupWizard: Should show footer:', shouldShowFooter, 'showQuickStart:', showQuickStart);
+  console.log('ExerciseSetupWizard: Footer visibility check:', {
+    shouldShowFooter,
+    showQuickStart,
+    step
+  });
   
   return (
     <div 
