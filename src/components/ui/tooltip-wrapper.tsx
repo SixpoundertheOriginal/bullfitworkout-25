@@ -1,4 +1,3 @@
-
 import React from "react";
 import { TooltipTrigger } from "./tooltip";
 
@@ -17,21 +16,27 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   asChild = false, // We can use this now since we handle it properly
   className = "",
 }) => {
-  // Be extremely conservative - only use asChild if we can guarantee it will work
-  // We need exactly one React element, not a fragment, not text, not an array
+  // Implement our own safe check without calling React.Children.only
+  // We need to be extremely conservative about when to use asChild
   let shouldUseAsChild = false;
   
-  try {
-    // First check if it's a valid React element
-    if (React.isValidElement(children)) {
-      // Then check if React.Children.only would succeed
-      // This is the most reliable way to know if asChild will work
-      React.Children.only(children);
-      shouldUseAsChild = true;
+  // Only use asChild if:
+  // 1. children is a valid React element (not string, number, null, undefined, array)
+  // 2. children is not a React fragment
+  // 3. children is not an array of elements
+  if (React.isValidElement(children)) {
+    // Additional safety checks
+    const isFragment = children.type === React.Fragment;
+    const isArray = Array.isArray(children);
+    
+    // Only use asChild for single, non-fragment React elements
+    if (!isFragment && !isArray) {
+      // Final check: ensure we don't have multiple children in a fragment-like structure
+      const childrenArray = React.Children.toArray(children);
+      if (childrenArray.length === 1) {
+        shouldUseAsChild = true;
+      }
     }
-  } catch (error) {
-    // If React.Children.only throws, we definitely can't use asChild
-    shouldUseAsChild = false;
   }
   
   // If we can safely use asChild, do so
