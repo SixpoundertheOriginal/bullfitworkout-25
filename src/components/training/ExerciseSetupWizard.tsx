@@ -28,6 +28,38 @@ interface ExerciseSetupWizardProps {
   isLoadingStats?: boolean;
 }
 
+// Helper function to validate and fix duration values
+const validateDuration = (duration: number): number => {
+  console.log('🔧 Validating duration:', { original: duration, type: typeof duration });
+  
+  // Handle invalid or extreme values
+  if (!duration || typeof duration !== 'number' || isNaN(duration)) {
+    console.warn('⚠️ Invalid duration, using default 45');
+    return 45;
+  }
+  
+  // If duration is in milliseconds (like 48014000), convert to minutes
+  if (duration > 1000) {
+    const minutesFromMs = Math.round(duration / 60000);
+    console.log('🔄 Converting from milliseconds:', { ms: duration, minutes: minutesFromMs });
+    duration = minutesFromMs;
+  }
+  
+  // Cap duration between reasonable values
+  if (duration < 15) {
+    console.log('🔄 Duration too low, setting to 15 minutes');
+    return 15;
+  }
+  
+  if (duration > 120) {
+    console.log('🔄 Duration too high, setting to 120 minutes');
+    return 120;
+  }
+  
+  console.log('✅ Duration validation passed:', duration);
+  return duration;
+};
+
 export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStats }: ExerciseSetupWizardProps) {
   const [step, setStep] = useState(0);
   const [showQuickStart, setShowQuickStart] = useState(false);
@@ -44,6 +76,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     step,
     showQuickStart,
     trainingType,
+    duration,
     isInitialized,
     statsLoading: isLoadingStats,
     statsExists: !!stats,
@@ -55,10 +88,11 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     console.log('📊 STATE CHANGE DETECTED:', {
       step: `${step} (type: ${typeof step})`,
       trainingType: `"${trainingType}" (type: ${typeof trainingType})`,
+      duration: `${duration} (type: ${typeof duration})`,
       showQuickStart: `${showQuickStart} (type: ${typeof showQuickStart})`,
       timestamp: new Date().toISOString()
     });
-  }, [step, trainingType, showQuickStart]);
+  }, [step, trainingType, duration, showQuickStart]);
 
   // Initialize training type from stats when available (only once)
   useEffect(() => {
@@ -73,10 +107,13 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
         console.log('🔄 Setting training type from stats:', newType);
         setTrainingType(newType);
       }
+      
       if (stats.recommendedDuration) {
-        console.log('🔄 Setting duration from stats:', stats.recommendedDuration);
-        setDuration(stats.recommendedDuration);
+        const validatedDuration = validateDuration(stats.recommendedDuration);
+        console.log('🔄 Setting validated duration from stats:', validatedDuration);
+        setDuration(validatedDuration);
       }
+      
       setIsInitialized(true);
     }
   }, [stats, isLoadingStats, isInitialized]);
@@ -152,12 +189,13 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
   // Use a quick start option
   const handleQuickStart = useCallback((config: Partial<TrainingConfig>) => {
     console.log('🚀 Quick start selected:', config);
+    const validatedDuration = validateDuration(config.duration || duration);
     const fullConfig = {
       trainingType: config.trainingType || trainingType,
       bodyFocus: config.bodyFocus || [],
-      duration: config.duration || duration,
+      duration: validatedDuration,
       tags: config.tags || [],
-      expectedXp: Math.round((config.duration || duration) * 2)
+      expectedXp: Math.round(validatedDuration * 2)
     };
     
     localStorage.setItem('has_used_setup', 'true');
@@ -178,12 +216,13 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     }
   }, [step, onCancel]);
   
-  // ENHANCED Continue button with explicit event handling
+  // SIMPLIFIED Continue button with proper Button component
   const handleNext = useCallback((event?: React.MouseEvent) => {
     console.log('🔥🔥🔥 CONTINUE BUTTON CLICKED!');
     console.log('📊 Continue Button Debug:', {
       step,
       trainingType,
+      duration,
       showQuickStart,
       event_type: event?.type,
       event_target: event?.target,
@@ -211,7 +250,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     } catch (error) {
       console.error('❌ ERROR in handleNext:', error);
     }
-  }, [step, handleComplete, trainingType, showQuickStart]);
+  }, [step, handleComplete, trainingType, duration, showQuickStart]);
 
   // Handle training type selection - FIXED: removed trainingType from dependencies
   const handleTrainingTypeChange = useCallback((newType: string) => {
@@ -251,7 +290,8 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
         text: btn.textContent,
         disabled: btn.disabled,
         className: btn.className,
-        hasOnClick: !!btn.onclick
+        hasOnClick: !!btn.onclick,
+        boundEvents: btn.getEventListeners?.('click')?.length || 'unknown'
       })));
     }, 1000);
   }, [step]);
@@ -397,33 +437,16 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
               {getBackButtonLabel()}
             </Button>
             
-            {/* EXPLICIT Continue Button with Enhanced Debugging */}
-            <button 
-              type="button"
-              onClick={(e) => {
-                console.log('🔥🔥🔥 EXPLICIT CONTINUE CLICKED!', {
-                  event: e.type,
-                  target: e.target,
-                  currentTarget: e.currentTarget,
-                  step,
-                  disabled: isNextDisabled
-                });
-                handleNext(e);
-              }}
+            {/* SIMPLIFIED Continue Button using Button component */}
+            <Button 
+              variant="gradient"
+              onClick={handleNext}
               disabled={isNextDisabled}
-              className={cn(
-                "inline-flex items-center justify-center gap-2 whitespace-nowrap text-base font-montserrat font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none",
-                "bg-gradient-to-r from-purple-600 to-pink-500",
-                "hover:from-purple-700 hover:to-pink-600",
-                "rounded-md h-11 px-5 py-2",
-                "flex-1 sm:flex-none",
-                "active:scale-[0.98]",
-                isNextDisabled && "opacity-50 cursor-not-allowed"
-              )}
+              className="flex-1 sm:flex-none"
             >
               {getNextButtonLabel()}
               {step !== 2 && <ChevronRight className="ml-1 h-5 w-5" />}
-            </button>
+            </Button>
           </div>
         </div>
       )}

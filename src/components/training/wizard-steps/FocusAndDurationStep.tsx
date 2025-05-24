@@ -21,6 +21,13 @@ interface MuscleGroupButtonProps {
 }
 
 const MuscleGroupButton = ({ muscle, isSelected, onToggle }: MuscleGroupButtonProps) => {
+  const handleClick = (e: React.MouseEvent) => {
+    console.log('💪 Muscle group clicked:', { muscle, isSelected, event: e.type });
+    e.preventDefault();
+    e.stopPropagation();
+    onToggle(muscle);
+  };
+
   return (
     <motion.div
       key={muscle}
@@ -29,15 +36,11 @@ const MuscleGroupButton = ({ muscle, isSelected, onToggle }: MuscleGroupButtonPr
     >
       <button
         type="button"
-        onClick={(e) => {
-          console.log('💪 Muscle group clicked:', { muscle, isSelected, event: e.type });
-          e.preventDefault();
-          e.stopPropagation();
-          onToggle(muscle);
-        }}
+        onClick={handleClick}
         className={cn(
           "w-full px-3 py-2 rounded-lg text-sm font-medium transition-all",
           "flex items-center justify-between cursor-pointer",
+          "focus:outline-none focus:ring-2 focus:ring-purple-500",
           isSelected
             ? "bg-purple-900/50 border-purple-500/50 border text-white"
             : "bg-gray-800/50 border-gray-700 border text-gray-400 hover:bg-gray-800"
@@ -115,6 +118,16 @@ export function FocusAndDurationStep({
     return 'Extended';
   };
 
+  const handleTabClick = (tab: 'areas' | 'duration') => {
+    console.log('📑 Tab clicked:', tab);
+    setActiveTab(tab);
+  };
+
+  const handleTagClick = (tag: string) => {
+    console.log('🏷️ Tag button clicked:', { tag });
+    toggleTag(tag);
+  };
+
   return (
     <div className="space-y-6 pb-20">
       {/* Tab Navigation */}
@@ -123,14 +136,12 @@ export function FocusAndDurationStep({
           type="button"
           className={cn(
             "flex-1 py-2 px-4 rounded-md text-center text-sm font-medium transition-all",
+            "focus:outline-none focus:ring-2 focus:ring-purple-500",
             activeTab === 'areas' 
               ? "bg-gray-700 text-white shadow-sm" 
               : "text-gray-400 hover:text-gray-200"
           )}
-          onClick={() => {
-            console.log('📑 Tab clicked: areas');
-            setActiveTab('areas');
-          }}
+          onClick={() => handleTabClick('areas')}
         >
           Focus Areas
         </button>
@@ -138,14 +149,12 @@ export function FocusAndDurationStep({
           type="button"
           className={cn(
             "flex-1 py-2 px-4 rounded-md text-center text-sm font-medium transition-all",
+            "focus:outline-none focus:ring-2 focus:ring-purple-500",
             activeTab === 'duration' 
               ? "bg-gray-700 text-white shadow-sm" 
               : "text-gray-400 hover:text-gray-200"
           )}
-          onClick={() => {
-            console.log('📑 Tab clicked: duration');
-            setActiveTab('duration');
-          }}
+          onClick={() => handleTabClick('duration')}
         >
           Duration & Tags
         </button>
@@ -220,13 +229,10 @@ export function FocusAndDurationStep({
                   <button
                     key={tag}
                     type="button"
-                    onClick={(e) => {
-                      console.log('🏷️ Tag button clicked:', { tag, event: e.type });
-                      e.preventDefault();
-                      toggleTag(tag);
-                    }}
+                    onClick={() => handleTagClick(tag)}
                     className={cn(
                       "px-3 py-1 rounded-full text-sm transition-all cursor-pointer",
+                      "focus:outline-none focus:ring-2 focus:ring-purple-500",
                       selectedTags.includes(tag)
                         ? "bg-gray-700 text-white border border-gray-600"
                         : "bg-gray-800/50 text-gray-400 border border-gray-700 hover:bg-gray-800"
