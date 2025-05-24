@@ -2,7 +2,8 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Popover, PopoverContent } from "@/components/ui/popover";
+import { SafePopoverTrigger } from "@/components/ui/safe-wrappers";
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from '@/components/ui/badge';
@@ -59,60 +60,55 @@ export function MultiSelect({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className={cn(
-            "min-h-[40px] h-auto flex-wrap justify-between",
-            disabled && "opacity-50 cursor-not-allowed",
-            className
+      <SafePopoverTrigger
+        variant="outline"
+        className={cn(
+          "min-h-[40px] h-auto flex-wrap justify-between",
+          disabled && "opacity-50 cursor-not-allowed",
+          className
+        )}
+        disabled={disabled}
+      >
+        <div className="flex flex-wrap gap-1 items-center">
+          {safeSelected.length === 0 && (
+            <span className="text-muted-foreground">{placeholder}</span>
           )}
-          onClick={() => !disabled && setOpen(!open)}
-          disabled={disabled}
-        >
-          <div className="flex flex-wrap gap-1 items-center">
-            {safeSelected.length === 0 && (
-              <span className="text-muted-foreground">{placeholder}</span>
-            )}
-            {safeSelected.length > 0 && 
-              safeSelected.map((value) => {
-                const label = selectedLabels[safeSelected.indexOf(value)];
-                return (
-                  <Badge
-                    key={value}
-                    className={cn(
-                      "px-1 py-0 mr-1 mb-1",
-                      badgeClassName
-                    )}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (!disabled) handleUnselect(value);
-                    }}
-                  >
-                    {label}
-                    {!disabled && (
-                      <X
-                        className="ml-1 h-3 w-3 cursor-pointer"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (!disabled) handleUnselect(value);
-                        }}
-                      />
-                    )}
-                  </Badge>
-                );
-              })
-            }
-          </div>
-          <div>
-            {!disabled && (
-              <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
-            )}
-          </div>
-        </Button>
-      </PopoverTrigger>
+          {safeSelected.length > 0 && 
+            safeSelected.map((value) => {
+              const label = selectedLabels[safeSelected.indexOf(value)];
+              return (
+                <Badge
+                  key={value}
+                  className={cn(
+                    "px-1 py-0 mr-1 mb-1",
+                    badgeClassName
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!disabled) handleUnselect(value);
+                  }}
+                >
+                  {label}
+                  {!disabled && (
+                    <X
+                      className="ml-1 h-3 w-3 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!disabled) handleUnselect(value);
+                      }}
+                    />
+                  )}
+                </Badge>
+              );
+            })
+          }
+        </div>
+        <div>
+          {!disabled && (
+            <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+          )}
+        </div>
+      </SafePopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
         <Command ref={commandRef}>
           <CommandInput 

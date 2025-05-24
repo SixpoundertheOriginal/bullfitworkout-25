@@ -501,11 +501,9 @@ export default function AllExercisesPage({ onSelectExercise, standalone = true, 
             <Dumbbell className="h-6 w-6 text-primary" />
             Exercise Library
           </h1>
-          <Button variant="outline" className="gap-2" asChild>
-            <a href="/enhanced-exercises">
-              <Sparkles className="h-4 w-4" />
-              Enhanced Editor
-            </a>
+          <Button variant="outline" className="gap-2" onClick={() => window.location.href = '/enhanced-exercises'}>
+            <Sparkles className="h-4 w-4" />
+            Enhanced Editor
           </Button>
         </div>
       ) : (
