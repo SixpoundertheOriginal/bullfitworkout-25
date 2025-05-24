@@ -1,4 +1,3 @@
-// src/components/ui/enhanced-tooltip.tsx
 
 import React from "react";
 import {
@@ -19,8 +18,8 @@ interface EnhancedTooltipProps {
 }
 
 /**
- * A completely safe tooltip component that avoids React.Children.only errors
- * by delegating to TooltipWrapper, which ensures safe children structure.
+ * A safe tooltip component that avoids React.Children.only errors
+ * by never using asChild and always providing consistent wrapper structure.
  */
 export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
   content,
@@ -31,7 +30,7 @@ export const EnhancedTooltip: React.FC<EnhancedTooltipProps> = ({
   className = "",
   contentClassName = "",
 }) => {
-  // If no tooltip content or children are nullish, render plain children
+  // If no tooltip content, render plain children
   if (
     !content ||
     children == null ||

@@ -1,4 +1,4 @@
-// src/components/ui/tooltip-wrapper.tsx
+
 import React from "react";
 import { TooltipTrigger } from "./tooltip";
 
@@ -8,27 +8,18 @@ interface TooltipWrapperProps {
 }
 
 /**
- * A bulletproof wrapper that prevents React.Children.only errors
- * and avoids invalid DOM structures like nested <button>s.
+ * A simple wrapper that never uses asChild to avoid React.Children.only errors.
+ * Always wraps content in a div to ensure consistent structure.
  */
 export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   children,
   className = "",
 }) => {
-  const isSafeSingleReactElement =
-    React.isValidElement(children) &&
-    typeof children.type !== "string" && // not <div>, <button>, etc.
-    !Array.isArray(children);
-
   return (
-    <TooltipTrigger asChild={isSafeSingleReactElement} className={className}>
-      {isSafeSingleReactElement ? (
-        children
-      ) : (
-        <span className="inline-flex items-center justify-center w-full h-full cursor-pointer">
-          {children}
-        </span>
-      )}
+    <TooltipTrigger asChild={false} className={className}>
+      <div className="inline-flex items-center justify-center w-full h-full cursor-pointer">
+        {children}
+      </div>
     </TooltipTrigger>
   );
 };
