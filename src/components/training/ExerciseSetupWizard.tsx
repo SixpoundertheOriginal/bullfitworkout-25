@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -39,13 +39,42 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
   const [duration, setDuration] = useState(45);
   const [tags, setTags] = useState<string[]>([]);
 
+  // 🚨 ESSENTIAL DEBUG LOGGING
+  console.log('🔄 ExerciseSetupWizard RENDER:', {
+    step,
+    showQuickStart,
+    trainingType,
+    isInitialized,
+    statsLoading: isLoadingStats,
+    statsExists: !!stats,
+    renderTimestamp: new Date().toISOString()
+  });
+
+  // Track state changes
+  useEffect(() => {
+    console.log('📊 STATE CHANGE DETECTED:', {
+      step: `${step} (type: ${typeof step})`,
+      trainingType: `"${trainingType}" (type: ${typeof trainingType})`,
+      showQuickStart: `${showQuickStart} (type: ${typeof showQuickStart})`,
+      timestamp: new Date().toISOString()
+    });
+  }, [step, trainingType, showQuickStart]);
+
   // Initialize training type from stats when available (only once)
   useEffect(() => {
     if (!isInitialized && stats && !isLoadingStats) {
+      console.log('🎯 Initializing from stats:', {
+        recommendedType: stats.recommendedType,
+        recommendedDuration: stats.recommendedDuration
+      });
+      
       if (stats.recommendedType) {
-        setTrainingType(stats.recommendedType.toLowerCase());
+        const newType = stats.recommendedType.toLowerCase();
+        console.log('🔄 Setting training type from stats:', newType);
+        setTrainingType(newType);
       }
       if (stats.recommendedDuration) {
+        console.log('🔄 Setting duration from stats:', stats.recommendedDuration);
         setDuration(stats.recommendedDuration);
       }
       setIsInitialized(true);
@@ -55,24 +84,42 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
   // Calculate expected XP based on duration
   const expectedXp = useMemo(() => Math.round(duration * 2), [duration]);
   
-  // Configure touch gestures for swipe navigation
+  // Use refs to stabilize touch gesture callbacks
+  const stepRef = useRef(step);
+  const showQuickStartRef = useRef(showQuickStart);
+  
+  useEffect(() => {
+    stepRef.current = step;
+    showQuickStartRef.current = showQuickStart;
+  }, [step, showQuickStart]);
+
+  // Configure touch gestures for swipe navigation with stable callbacks
+  const onSwipeLeft = useCallback(() => {
+    console.log('👆 Swipe left detected');
+    if (stepRef.current < 2 && !showQuickStartRef.current) {
+      console.log('🚀 Advancing step via swipe');
+      setStep(prev => prev + 1);
+    }
+  }, []);
+
+  const onSwipeRight = useCallback(() => {
+    console.log('👆 Swipe right detected');
+    if (stepRef.current > 0) {
+      console.log('🔙 Going back via swipe');
+      setStep(prev => prev - 1);
+    }
+  }, []);
+
   const { ref: touchRef } = useTouchGestures({
-    onSwipeLeft: useCallback(() => {
-      if (step < 2 && !showQuickStart) {
-        setStep(prev => prev + 1);
-      }
-    }, [step, showQuickStart]),
-    onSwipeRight: useCallback(() => {
-      if (step > 0) {
-        setStep(prev => prev - 1);
-      }
-    }, [step]),
+    onSwipeLeft,
+    onSwipeRight,
     threshold: 50,
   });
 
   // QuickStart logic - only run once on mount
   useEffect(() => {
     const hasUsedSetupBefore = localStorage.getItem('has_used_setup');
+    console.log('🚀 QuickStart check:', { hasUsedSetupBefore });
     
     if (!hasUsedSetupBefore) {
       setShowQuickStart(true);
@@ -81,6 +128,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
 
   // Prepare the configuration object to pass to the parent
   const handleComplete = useCallback(() => {
+    console.log('🏁 COMPLETING WORKOUT');
     const config: TrainingConfig = {
       trainingType,
       bodyFocus,
@@ -89,11 +137,13 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       expectedXp
     };
     
+    console.log('📋 Final config:', config);
     onComplete(config);
   }, [trainingType, bodyFocus, duration, tags, expectedXp, onComplete]);
 
   // Skip QuickStart function
   const handleSkipQuickStart = useCallback(() => {
+    console.log('⏭️ Skipping QuickStart');
     setShowQuickStart(false);
     setStep(0);
     localStorage.setItem('has_used_setup', 'true');
@@ -101,6 +151,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
 
   // Use a quick start option
   const handleQuickStart = useCallback((config: Partial<TrainingConfig>) => {
+    console.log('🚀 Quick start selected:', config);
     const fullConfig = {
       trainingType: config.trainingType || trainingType,
       bodyFocus: config.bodyFocus || [],
@@ -115,45 +166,84 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
   
   // Navigate to previous step
   const handleBack = useCallback(() => {
+    console.log('🔙 Back button clicked, current step:', step);
     if (step > 0) {
-      setStep(prev => prev - 1);
+      setStep(prev => {
+        console.log('📈 SetStep (back): prev =', prev, 'new =', prev - 1);
+        return prev - 1;
+      });
     } else {
+      console.log('🚪 Canceling workout setup');
       onCancel();
     }
   }, [step, onCancel]);
   
   // Navigate to next step
   const handleNext = useCallback(() => {
-    if (step < 2) {
-      setStep(prev => prev + 1);
-    } else {
-      handleComplete();
+    console.log('🔥🔥🔥 NEXT BUTTON CLICKED!');
+    console.log('📊 Current State:', {
+      step,
+      trainingType,
+      showQuickStart,
+      typeof_handleNext: typeof handleNext
+    });
+    
+    try {
+      if (step < 2) {
+        const newStep = step + 1;
+        console.log('🚀 ADVANCING: step', step, '→', newStep);
+        
+        setStep(prev => {
+          console.log('📈 SetStep called: prev =', prev, 'new =', prev + 1);
+          return prev + 1;
+        });
+        
+        // Verify step change after state update
+        setTimeout(() => {
+          console.log('✅ Step after update should be:', step + 1);
+        }, 100);
+      } else {
+        console.log('🏁 COMPLETING WORKOUT');
+        handleComplete();
+      }
+    } catch (error) {
+      console.error('❌ ERROR in handleNext:', error);
     }
-  }, [step, handleComplete]);
+  }, [step, handleComplete, trainingType, showQuickStart]);
 
-  // Handle training type selection with debouncing to prevent re-render loops
+  // Handle training type selection with improved debouncing
   const handleTrainingTypeChange = useCallback((newType: string) => {
+    console.log('🎯 Training type change requested:', { from: trainingType, to: newType });
     if (newType !== trainingType) {
+      console.log('✅ Training type actually changing');
       setTrainingType(newType);
+    } else {
+      console.log('⚠️ Training type unchanged, skipping update');
     }
-  }, [trainingType]);
+  }, []); // Remove trainingType from dependencies to prevent infinite loop
 
   // Memoize the next button disabled state to prevent re-calculation on every render
   const isNextDisabled = useMemo(() => {
-    switch (step) {
-      case 0:
-        return !trainingType;
-      case 1:
-        return false;
-      case 2:
-        return false;
-      default:
-        return false;
-    }
+    const disabled = (() => {
+      switch (step) {
+        case 0:
+          return !trainingType;
+        case 1:
+          return false;
+        case 2:
+          return false;
+        default:
+          return false;
+      }
+    })();
+    
+    console.log('🔘 Button disabled calculation:', { step, trainingType, disabled });
+    return disabled;
   }, [step, trainingType]);
 
   // Show loading state while stats are loading
   if (isLoadingStats) {
+    console.log('⏳ Rendering loading state');
     return (
       <div className="flex flex-col h-screen w-full bg-gray-900 text-white relative overflow-hidden">
         <div className="flex-1 flex items-center justify-center">
@@ -166,9 +256,23 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     );
   }
 
+  // Add DOM inspection
+  useEffect(() => {
+    setTimeout(() => {
+      const buttons = document.querySelectorAll('button');
+      console.log('🔍 ALL BUTTONS IN DOM:', Array.from(buttons).map(btn => ({
+        text: btn.textContent,
+        disabled: btn.disabled,
+        className: btn.className,
+        hasOnClick: !!btn.onclick
+      })));
+    }, 1000);
+  }, [step]);
+
   // Render the appropriate step content
   const renderStepContent = () => {
     if (showQuickStart) {
+      console.log('🎬 Rendering QuickStart');
       return (
         <QuickStartOption 
           onSelect={handleQuickStart} 
@@ -178,6 +282,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       );
     }
     
+    console.log('🎬 Rendering step:', step);
     switch (step) {
       case 0:
         return <TrainingTypeStep 
@@ -224,6 +329,14 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
 
   // Footer should be visible when NOT in QuickStart mode
   const shouldShowFooter = !showQuickStart;
+  
+  console.log('🔘 Button Props Check:', {
+    onClick: typeof handleNext,
+    disabled: isNextDisabled,
+    visible: shouldShowFooter,
+    step,
+    showQuickStart
+  });
   
   return (
     <div 
@@ -273,6 +386,20 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       {/* Footer - Fixed at bottom - Only show when not in QuickStart mode */}
       {shouldShowFooter && (
         <div className="flex-shrink-0 p-4 bg-gray-900 border-t border-gray-800 z-10">
+          {/* 🧪 DEBUG BUTTON - TEMPORARY */}
+          <button 
+            onClick={() => {
+              console.log('🧪 DEBUG BUTTON CLICKED');
+              setStep(s => {
+                console.log('🧪 Debug step change:', s, '→', s + 1);
+                return s + 1;
+              });
+            }}
+            style={{background: 'red', color: 'white', padding: '10px', margin: '10px', display: 'block', width: '100%'}}
+          >
+            🧪 DEBUG: Force Next Step (Current: {step})
+          </button>
+          
           <div className="flex justify-between gap-4">
             <Button
               variant="outline"
@@ -283,7 +410,15 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
             </Button>
             
             <Button 
-              onClick={handleNext}
+              onClick={(e) => {
+                console.log('🖱️ Button click event triggered!', e);
+                console.log('🔍 Function scope check:', {
+                  step_in_scope: step,
+                  setStep_type: typeof setStep,
+                  handleNext_type: typeof handleNext
+                });
+                handleNext();
+              }}
               disabled={isNextDisabled}
               className={cn(
                 "bg-gradient-to-r from-purple-600 to-pink-500",

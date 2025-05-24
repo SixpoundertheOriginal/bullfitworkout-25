@@ -25,6 +25,16 @@ interface TrainingTypeOption {
 }
 
 export function TrainingTypeStep({ selectedType, onSelectType, stats }: TrainingTypeStepProps) {
+  // Only log when there's an actual change
+  const handleTypeSelection = (typeId: string) => {
+    if (typeId !== selectedType) {
+      console.log('🎯 Training type selection changed:', { from: selectedType, to: typeId });
+      onSelectType(typeId);
+    } else {
+      console.log('⚠️ Training type selection unchanged:', typeId);
+    }
+  };
+
   // Define training type options
   const trainingTypes: TrainingTypeOption[] = [
     {
@@ -101,10 +111,6 @@ export function TrainingTypeStep({ selectedType, onSelectType, stats }: Training
     }
     
     return null;
-  };
-
-  const handleTypeSelection = (typeId: string) => {
-    onSelectType(typeId);
   };
 
   return (
