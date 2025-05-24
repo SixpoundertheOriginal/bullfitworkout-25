@@ -17,17 +17,25 @@ export const TooltipWrapper: React.FC<TooltipWrapperProps> = ({
   asChild = false, // We can use this now since we handle it properly
   className = "",
 }) => {
-  // Check if children is a single React element that can safely use asChild
-  // We need to be very careful here - only use asChild if we have exactly one React element
-  const isSingleReactElement = React.isValidElement(children) && 
-    !Array.isArray(children) && 
-    typeof children !== 'string' &&
-    typeof children !== 'number' &&
-    children !== null &&
-    children !== undefined;
+  // Be extremely conservative - only use asChild if we can guarantee it will work
+  // We need exactly one React element, not a fragment, not text, not an array
+  let shouldUseAsChild = false;
   
-  // If we have a single valid React element, we can safely use asChild
-  if (isSingleReactElement) {
+  try {
+    // First check if it's a valid React element
+    if (React.isValidElement(children)) {
+      // Then check if React.Children.only would succeed
+      // This is the most reliable way to know if asChild will work
+      React.Children.only(children);
+      shouldUseAsChild = true;
+    }
+  } catch (error) {
+    // If React.Children.only throws, we definitely can't use asChild
+    shouldUseAsChild = false;
+  }
+  
+  // If we can safely use asChild, do so
+  if (shouldUseAsChild) {
     return (
       <TooltipTrigger asChild={true} className={className}>
         {children}
