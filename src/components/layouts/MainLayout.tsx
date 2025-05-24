@@ -147,37 +147,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       
       {/* Fixed Footer */}
       {shouldShowGlobalNav && <BottomNav />}
-      
-      {/* Enhanced CSS for better performance and iOS-like behavior */}
-      <style jsx>{`
-        .content-container {
-          position: relative;
-          z-index: 1;
-        }
-        
-        .force-no-transition * {
-          transition: none !important;
-          animation: none !important;
-        }
-        
-        .ios-momentum-scroll {
-          -webkit-overflow-scrolling: touch;
-          scroll-behavior: smooth;
-        }
-        
-        /* Enhanced safe area support */
-        @supports (padding-top: env(safe-area-inset-top)) {
-          .safe-area-top {
-            padding-top: env(safe-area-inset-top);
-          }
-        }
-        
-        @supports (padding-bottom: env(safe-area-inset-bottom)) {
-          .safe-area-bottom {
-            padding-bottom: env(safe-area-inset-bottom);
-          }
-        }
-      `}</style>
     </div>
   );
 };

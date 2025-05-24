@@ -122,6 +122,22 @@ html, body {
   overscroll-behavior-x: none;
 }
 
+/* Layout-specific styles for MainLayout */
+.content-container {
+  position: relative;
+  z-index: 1;
+}
+
+.force-no-transition * {
+  transition: none !important;
+  animation: none !important;
+}
+
+.ios-momentum-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
 /* Enhanced safe-area utilities with iOS support */
 @layer utilities {
   /* Safe area insets with enhanced support */
