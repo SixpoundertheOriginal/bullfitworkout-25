@@ -1,8 +1,8 @@
+
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { MUSCLE_GROUP_CATEGORIES } from '@/constants/exerciseMetadata';
-import { User, Users, Target, Zap, Clock, Award, ChevronDown, ChevronUp } from 'lucide-react';
+import { User, Users, Target, Zap, Clock, Award } from 'lucide-react';
 import { MuscleGroupCard } from './MuscleGroupCard';
 import { WorkoutStyleCard } from './WorkoutStyleCard';
 
@@ -31,6 +31,31 @@ interface WorkoutStyleOption {
   color: string;
   difficulty?: 'Beginner' | 'Intermediate' | 'Advanced';
 }
+
+// Local muscle group categories for the wizard
+const muscleGroupCategories: MuscleGroupCategory[] = [
+  {
+    name: 'Upper Body',
+    muscles: ['Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps', 'Forearms'],
+    icon: User,
+    color: 'from-blue-600 to-blue-400',
+    description: 'Build upper body strength and definition'
+  },
+  {
+    name: 'Lower Body', 
+    muscles: ['Quadriceps', 'Hamstrings', 'Glutes', 'Calves'],
+    icon: Users,
+    color: 'from-green-600 to-green-400',
+    description: 'Develop powerful legs and glutes'
+  },
+  {
+    name: 'Core & Stability',
+    muscles: ['Abs', 'Lower Back', 'Obliques'],
+    icon: Target,
+    color: 'from-purple-600 to-purple-400',
+    description: 'Strengthen your core foundation'
+  }
+];
 
 export function FocusAndDurationStep({ 
   selectedFocus, 
@@ -231,7 +256,7 @@ export function FocusAndDurationStep({
         </h3>
         
         <div className="space-y-3">
-          {MUSCLE_GROUP_CATEGORIES.map(category => (
+          {muscleGroupCategories.map(category => (
             <MuscleGroupCard
               key={category.name}
               category={category}
