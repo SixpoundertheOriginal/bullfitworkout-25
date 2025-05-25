@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dumbbell, Plus } from "lucide-react";
@@ -18,13 +19,19 @@ export const WorkoutStarter: React.FC<WorkoutStarterProps> = ({
   onAddExerciseClick 
 }) => {
   const navigate = useNavigate();
-  const { isActive, exercises, startWorkout, updateLastActiveRoute } = useWorkoutStore();
+  const { isActive, exercises, startWorkout, updateLastActiveRoute, resetSession } = useWorkoutStore();
   const { suggestedExercises } = useExerciseSuggestions(trainingType);
   const hasExercises = Object.keys(exercises).length > 0;
   
-  // Handle starting a new workout and immediately navigating to add exercises
+  // Handle starting a new workout with validation
   const handleStartAndAddExercises = () => {
     console.log('WorkoutStarter: handleStartAndAddExercises called');
+    
+    // Clear any existing active state to prevent zombie workouts
+    if (isActive) {
+      console.log('Clearing existing active workout to prevent zombie state');
+      resetSession();
+    }
     
     // If there's a custom handler provided, use that instead
     if (onAddExerciseClick) {
@@ -33,9 +40,8 @@ export const WorkoutStarter: React.FC<WorkoutStarterProps> = ({
       return;
     }
     
-    // Otherwise, start a workout and navigate to the training session
-    console.log('WorkoutStarter: Starting workout and navigating to training session');
-    startWorkout();
+    // Start a workout but don't mark as active until exercises are added
+    console.log('WorkoutStarter: Starting workout setup flow');
     updateLastActiveRoute('/training-session');
     navigate('/training-session');
     
@@ -46,6 +52,22 @@ export const WorkoutStarter: React.FC<WorkoutStarterProps> = ({
         description: "Click the + button to start tracking your workout"
       });
     }, 300);
+  };
+  
+  // Enhanced start workout function with validation
+  const handleStartWorkout = () => {
+    console.log('WorkoutStarter: handleStartWorkout called');
+    
+    // Clear any existing state first
+    if (isActive && !hasExercises) {
+      console.log('Clearing zombie workout state before starting new workout');
+      resetSession();
+    }
+    
+    // Only start workout if we have a clean state
+    startWorkout();
+    updateLastActiveRoute('/training-session');
+    navigate('/training-session');
   };
   
   // Don't show this component if a workout is active and has exercises
@@ -92,12 +114,7 @@ export const WorkoutStarter: React.FC<WorkoutStarterProps> = ({
       <CardContent className="flex flex-col items-center justify-center p-10">
         <TrainingStartButton 
           label="Start Workout" 
-          onStartClick={() => {
-            console.log('WorkoutStarter: TrainingStartButton clicked');
-            startWorkout();
-            updateLastActiveRoute('/training-session');
-            navigate('/training-session');
-          }} 
+          onStartClick={handleStartWorkout} 
         />
         
         <div className="mt-8 text-center">

@@ -32,13 +32,13 @@ export function TrainingTypeStep({
   onSelectType, 
   onAutoAdvance, 
   stats,
-  enableAutoAdvance = true,
-  autoAdvanceDelay = 500
+  enableAutoAdvance = false, // Disabled by default to prevent infinite loops
+  autoAdvanceDelay = 1500 // Increased delay
 }: TrainingTypeStepProps) {
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [justSelected, setJustSelected] = useState<string | null>(null);
 
-  // Handle type selection with visual feedback and optional auto-advance
+  // Handle type selection with improved debouncing
   const handleTypeSelection = (typeId: string) => {
     if (typeId !== selectedType && !isAdvancing) {
       console.log('🎯 Training type selection changed:', { from: selectedType, to: typeId });
@@ -49,38 +49,25 @@ export function TrainingTypeStep({
       // Update the selection immediately
       onSelectType(typeId);
       
-      // Announce to screen readers
-      const announcement = enableAutoAdvance 
-        ? `${typeId} selected. Advancing to next step in ${autoAdvanceDelay / 1000} seconds.`
-        : `${typeId} selected.`;
-      
-      const ariaLive = document.createElement('div');
-      ariaLive.setAttribute('aria-live', 'polite');
-      ariaLive.setAttribute('aria-atomic', 'true');
-      ariaLive.textContent = announcement;
-      ariaLive.style.position = 'absolute';
-      ariaLive.style.left = '-10000px';
-      document.body.appendChild(ariaLive);
-      
-      if (enableAutoAdvance) {
+      // Only auto-advance if explicitly enabled
+      if (enableAutoAdvance && onAutoAdvance) {
         setIsAdvancing(true);
         
         // Trigger auto-advance after delay
-        setTimeout(() => {
-          onAutoAdvance?.();
+        const timer = setTimeout(() => {
+          onAutoAdvance();
           setIsAdvancing(false);
           setJustSelected(null);
-          document.body.removeChild(ariaLive);
         }, autoAdvanceDelay);
+        
+        // Cleanup function
+        return () => clearTimeout(timer);
       } else {
-        // Clean up immediately if no auto-advance
+        // Clean up visual feedback without auto-advance
         setTimeout(() => {
           setJustSelected(null);
-          document.body.removeChild(ariaLive);
-        }, 1000);
+        }, 800);
       }
-    } else {
-      console.log('⚠️ Training type selection unchanged or advancing:', typeId);
     }
   };
 
@@ -136,14 +123,13 @@ export function TrainingTypeStep({
     },
   ];
 
-  // Calculate metrics-based recommendations
-  const recommendedType = stats?.recommendedType || 'strength';
+  // Calculate metrics-based recommendations with memoization
+  const recommendedType = React.useMemo(() => stats?.recommendedType || 'strength', [stats]);
   
   // Type performance metrics from stats
   const typeMetrics = React.useMemo(() => {
     if (!stats) return {};
     
-    // Transform workout type stats into a more usable format
     const metrics: Record<string, { count: number, avgDuration: number, improvement: number }> = {};
     
     if (stats.workoutTypeDistribution) {
@@ -182,9 +168,7 @@ export function TrainingTypeStep({
         <p className="text-gray-400 text-sm">
           {isAdvancing 
             ? `Advancing to next step in ${autoAdvanceDelay / 1000} seconds... (Press ESC to cancel)`
-            : enableAutoAdvance 
-              ? 'Select the type of workout you\'d like to do - will advance automatically'
-              : 'Select the type of workout you\'d like to do'
+            : 'Select the type of workout you\'d like to do'
           }
         </p>
       </div>

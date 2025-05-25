@@ -23,6 +23,7 @@ export const useSupabaseConnection = () => {
   });
   
   const retryTimeoutRef = useRef<NodeJS.Timeout>();
+  const channelRef = useRef<any>(null);
   const maxRetries = 3;
   const baseRetryDelay = 1000; // 1 second
   
@@ -56,32 +57,20 @@ export const useSupabaseConnection = () => {
     try {
       console.log(`🔌 Attempting WebSocket connection (attempt ${retryCount + 1}/${maxRetries})`);
       
+      // Clean up existing channel
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+      
       // Test connection by subscribing to a simple channel
       const channel = supabase.channel('connection-test');
-      
-      // Set up connection handlers with correct arguments
-      channel.on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
-        console.log('🔌 WebSocket connection established via postgres_changes');
-        setConnectionState({
-          isConnected: true,
-          isConnecting: false,
-          retryCount: 0,
-          lastError: null
-        });
-      });
-      
-      channel.on('presence', { event: 'sync' }, () => {
-        console.log('✅ WebSocket connection established via presence');
-        setConnectionState({
-          isConnected: true,
-          isConnecting: false,
-          retryCount: 0,
-          lastError: null
-        });
-      });
+      channelRef.current = channel;
       
       // Subscribe to test the connection
-      channel.subscribe((status) => {
+      const subscriptionResult = channel.subscribe((status) => {
+        console.log('🔌 Connection status:', status);
+        
         if (status === 'SUBSCRIBED') {
           console.log('✅ WebSocket connection established');
           setConnectionState({
@@ -93,12 +82,20 @@ export const useSupabaseConnection = () => {
           
           // Clean up the test channel after a short delay
           setTimeout(() => {
-            supabase.removeChannel(channel);
+            if (channelRef.current) {
+              supabase.removeChannel(channelRef.current);
+              channelRef.current = null;
+            }
           }, 1000);
-        } else if (status === 'CHANNEL_ERROR') {
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
           throw new Error(`Subscription failed with status: ${status}`);
         }
       });
+      
+      // Handle subscription errors
+      if (!subscriptionResult) {
+        throw new Error('Failed to create subscription');
+      }
       
     } catch (error) {
       console.error('🔌 WebSocket connection failed:', error);
@@ -108,6 +105,16 @@ export const useSupabaseConnection = () => {
         isConnecting: false,
         lastError: error instanceof Error ? error.message : 'Unknown error'
       }));
+      
+      // Clean up failed channel
+      if (channelRef.current) {
+        try {
+          supabase.removeChannel(channelRef.current);
+        } catch (cleanupError) {
+          console.warn('Failed to cleanup failed channel:', cleanupError);
+        }
+        channelRef.current = null;
+      }
       
       // Retry with exponential backoff
       const delay = baseRetryDelay * Math.pow(2, retryCount);
@@ -125,6 +132,14 @@ export const useSupabaseConnection = () => {
     return () => {
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
+      }
+      if (channelRef.current) {
+        try {
+          supabase.removeChannel(channelRef.current);
+        } catch (error) {
+          console.warn('Failed to cleanup channel on unmount:', error);
+        }
+        channelRef.current = null;
       }
     };
   }, []);
