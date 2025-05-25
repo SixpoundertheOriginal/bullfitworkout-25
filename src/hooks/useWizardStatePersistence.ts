@@ -18,7 +18,7 @@ interface UseWizardStatePersistenceOptions {
 }
 
 export function useWizardStatePersistence({
-  throttleMs = 2000, // Increased from 1000ms to reduce save frequency
+  throttleMs = 2000, // Increased default throttling
   maxAge = 3600000,
   enableThrottling = true
 }: UseWizardStatePersistenceOptions = {}) {
@@ -28,12 +28,20 @@ export function useWizardStatePersistence({
   const lastSaveRef = useRef<number>(0);
   const sessionIdRef = useRef<string>(crypto.randomUUID());
   const isSavingRef = useRef<boolean>(false);
+  const lastSavedStateRef = useRef<string>(''); // Track last saved state to prevent duplicate saves
 
-  // Memoized save function to prevent re-creation on every render
+  // Memoized save function with duplicate prevention
   const saveWizardState = useCallback((state: Omit<WizardState, 'timestamp' | 'sessionId'>) => {
+    // Create state hash to prevent duplicate saves
+    const stateHash = JSON.stringify(state);
+    if (stateHash === lastSavedStateRef.current) {
+      console.log('💾 Skipping duplicate save');
+      return;
+    }
+
     // Prevent concurrent saves
     if (isSavingRef.current) {
-      console.log('Save already in progress, skipping');
+      console.log('💾 Save already in progress, skipping');
       return;
     }
 
@@ -62,9 +70,10 @@ export function useWizardStatePersistence({
         // Also save to a separate wizard-specific key for immediate recovery
         localStorage.setItem('workout_wizard_progress', JSON.stringify(fullState));
         lastSaveRef.current = now;
-        console.log('Wizard state saved successfully');
+        lastSavedStateRef.current = stateHash; // Update last saved state
+        console.log('💾 Wizard state saved successfully');
       } catch (error) {
-        console.error('Failed to save wizard state:', error);
+        console.error('❌ Failed to save wizard state:', error);
       } finally {
         isSavingRef.current = false;
       }

@@ -32,8 +32,8 @@ export function TrainingTypeStep({
   onSelectType, 
   onAutoAdvance, 
   stats,
-  enableAutoAdvance = false, // Disabled by default to prevent infinite loops
-  autoAdvanceDelay = 1500 // Increased delay
+  enableAutoAdvance = false, // Keep disabled by default
+  autoAdvanceDelay = 1500
 }: TrainingTypeStepProps) {
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [justSelected, setJustSelected] = useState<string | null>(null);

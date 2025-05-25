@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -33,36 +32,22 @@ interface ExerciseSetupWizardProps {
   isLoadingStats?: boolean;
 }
 
+// Emergency render count limiter
+const MAX_RENDER_COUNT = 50;
+let renderCount = 0;
+
 // Helper function to validate and fix duration values
 const validateDuration = (duration: number): number => {
-  console.log('🔧 Validating duration:', { original: duration, type: typeof duration });
-  
-  // Handle invalid or extreme values
   if (!duration || typeof duration !== 'number' || isNaN(duration)) {
-    console.warn('⚠️ Invalid duration, using default 45');
     return 45;
   }
   
-  // If duration is in milliseconds (like 48014000), convert to minutes
+  // If duration is in milliseconds, convert to minutes
   if (duration > 1000) {
-    const minutesFromMs = Math.round(duration / 60000);
-    console.log('🔄 Converting from milliseconds:', { ms: duration, minutes: minutesFromMs });
-    duration = minutesFromMs;
+    duration = Math.round(duration / 60000);
   }
   
-  // Cap duration between reasonable values
-  if (duration < 15) {
-    console.log('🔄 Duration too low, setting to 15 minutes');
-    return 15;
-  }
-  
-  if (duration > 120) {
-    console.log('🔄 Duration too high, setting to 120 minutes');
-    return 120;
-  }
-  
-  console.log('✅ Duration validation passed:', duration);
-  return duration;
+  return Math.max(15, Math.min(120, duration));
 };
 
 // Smart duration estimation based on training type and body focus
@@ -79,86 +64,155 @@ const estimateDuration = (trainingType: string, bodyFocus: string[]): number => 
   
   // Adjust based on body focus count
   if (bodyFocus.length > 3) {
-    duration += 15; // More focus areas = longer workout
+    duration += 15;
   } else if (bodyFocus.length === 0) {
-    duration -= 10; // No specific focus = shorter
+    duration -= 10;
   }
   
   return Math.max(15, Math.min(120, duration));
 };
 
 export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStats }: ExerciseSetupWizardProps) {
-  // Add error boundary state
-  const [hasError, setHasError] = useState(false);
-  
+  // Emergency render count check
+  renderCount++;
+  if (renderCount > MAX_RENDER_COUNT) {
+    console.error('🚨 Emergency render limit reached, preventing infinite loop');
+    return (
+      <div className="flex flex-col h-screen w-full bg-gray-900 text-white relative overflow-hidden">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-red-500 mb-4">⚠️</div>
+            <h2 className="text-xl font-semibold mb-2">Render Limit Reached</h2>
+            <p className="text-gray-400 mb-4">Please refresh the page to continue</p>
+            <Button onClick={() => window.location.reload()}>Refresh Page</Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Reset render count after successful render
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      renderCount = 0;
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Core state
   const [step, setStep] = useState(0);
   const [showQuickStart, setShowQuickStart] = useState(false);
   const [showRecovery, setShowRecovery] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [validationState, setValidationState] = useState(true);
   
-  // Training config state - initialize with defaults first
+  // Training config state with stable defaults
   const [trainingType, setTrainingType] = useState('strength');
   const [bodyFocus, setBodyFocus] = useState<string[]>([]);
   const [duration, setDuration] = useState(45);
   const [tags, setTags] = useState<string[]>([]);
 
-  // Workout store for state management
+  // Initialization flags to prevent multiple initializations
+  const initializationRef = useRef({
+    isInitialized: false,
+    hasCheckedQuickStart: false,
+    hasProcessedStats: false,
+    hasCheckedRecovery: false
+  });
+
+  // Workout store
   const { startWorkout, setTrainingConfig } = useWorkoutStore();
 
-  // State persistence and recovery with error handling
+  // State persistence with increased throttling
   const { saveWizardState, restoreWizardState, clearWizardState } = useWizardStatePersistence({
-    throttleMs: 1000,
+    throttleMs: 2000, // Increased from 1000ms
     enableThrottling: true
   });
 
-  // Auto-advance with configurable settings
+  // Auto-advance with fallback to manual
   const { triggerAutoAdvance, isAdvancing, canRollback, rollback, cleanup } = useAutoAdvance({
     delay: 500,
-    onAdvance: () => {
-      try {
-        setStep(1);
-      } catch (error) {
-        console.error('Error during auto-advance:', error);
-        setHasError(true);
-      }
-    },
+    onAdvance: () => setStep(1),
     fallbackToManual: true,
     enableRollback: true
   });
 
-  // Error boundary effect
+  // CRITICAL: Move all state initialization to a single effect with proper guards
   useEffect(() => {
-    const handleError = (event: ErrorEvent) => {
-      console.error('Wizard error caught:', event.error);
-      setHasError(true);
-    };
+    const init = initializationRef.current;
     
-    window.addEventListener('error', handleError);
-    return () => window.removeEventListener('error', handleError);
-  }, []);
+    // Only run if not already initialized and stats loading is complete
+    if (init.isInitialized || isLoadingStats) {
+      return;
+    }
 
-  // 🚨 ESSENTIAL DEBUG LOGGING
-  console.log('🔄 ExerciseSetupWizard RENDER:', {
-    step,
-    showQuickStart,
-    showRecovery,
-    trainingType,
-    duration,
-    bodyFocus,
-    isInitialized,
-    statsLoading: isLoadingStats,
-    statsExists: !!stats,
-    hasError,
-    isStarting,
-    validationState,
-    renderTimestamp: new Date().toISOString()
-  });
+    console.log('🚀 Running one-time initialization');
+    
+    // Check for session recovery first
+    if (!init.hasCheckedRecovery) {
+      try {
+        const recoveredState = restoreWizardState();
+        if (recoveredState && recoveredState.step > 0) {
+          console.log('🔄 Found recoverable session');
+          setShowRecovery(true);
+          init.hasCheckedRecovery = true;
+          init.isInitialized = true;
+          return;
+        }
+        init.hasCheckedRecovery = true;
+      } catch (error) {
+        console.error('Error checking recovery:', error);
+      }
+    }
 
-  // Save wizard state whenever key values change
+    // Check QuickStart only once
+    if (!init.hasCheckedQuickStart) {
+      try {
+        const hasUsedSetupBefore = localStorage.getItem('has_used_setup');
+        if (!hasUsedSetupBefore && !showRecovery) {
+          setShowQuickStart(true);
+        }
+        init.hasCheckedQuickStart = true;
+      } catch (error) {
+        console.error('Error checking QuickStart:', error);
+      }
+    }
+
+    // Process stats only once
+    if (stats && !init.hasProcessedStats) {
+      try {
+        if (stats.recommendedType) {
+          const newType = stats.recommendedType.toLowerCase();
+          setTrainingType(newType);
+        }
+        
+        const smartDuration = estimateDuration(stats.recommendedType || trainingType, []);
+        setDuration(smartDuration);
+        
+        init.hasProcessedStats = true;
+      } catch (error) {
+        console.error('Error processing stats:', error);
+      }
+    }
+
+    // Mark as initialized
+    init.isInitialized = true;
+    
+  }, [isLoadingStats, stats, restoreWizardState, showRecovery, trainingType]);
+
+  // Separate effect for saving state - runs only when necessary values change
+  const saveStateRef = useRef<NodeJS.Timeout>();
   useEffect(() => {
-    if (isInitialized && !hasError) {
+    if (!initializationRef.current.isInitialized) {
+      return;
+    }
+
+    // Debounce saves to prevent rapid successive calls
+    if (saveStateRef.current) {
+      clearTimeout(saveStateRef.current);
+    }
+
+    saveStateRef.current = setTimeout(() => {
       try {
         saveWizardState({
           step,
@@ -169,67 +223,16 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       } catch (error) {
         console.error('Error saving wizard state:', error);
       }
-    }
-  }, [step, trainingType, bodyFocus, isInitialized, saveWizardState, hasError]);
+    }, 500); // Debounce saves
 
-  // Initialize from stats or recovered state
-  useEffect(() => {
-    if (!isInitialized && !isLoadingStats && !hasError) {
-      try {
-        // First check for session recovery
-        const recoveredState = restoreWizardState();
-        
-        if (recoveredState && recoveredState.step > 0) {
-          console.log('🔄 Found recoverable session:', recoveredState);
-          setShowRecovery(true);
-          setIsInitialized(true);
-          return;
-        }
-        
-        // Initialize from stats if available
-        if (stats) {
-          console.log('🎯 Initializing from stats:', {
-            recommendedType: stats.recommendedType,
-            recommendedDuration: stats.recommendedDuration
-          });
-          
-          if (stats.recommendedType) {
-            const newType = stats.recommendedType.toLowerCase();
-            console.log('🔄 Setting training type from stats:', newType);
-            setTrainingType(newType);
-          }
-          
-          // Use smart duration estimation instead of raw stats
-          const smartDuration = estimateDuration(stats.recommendedType || trainingType, []);
-          console.log('🔄 Setting smart estimated duration:', smartDuration);
-          setDuration(smartDuration);
-        }
-        
-        setIsInitialized(true);
-      } catch (error) {
-        console.error('Error during initialization:', error);
-        setHasError(true);
+    return () => {
+      if (saveStateRef.current) {
+        clearTimeout(saveStateRef.current);
       }
-    }
-  }, [stats, isLoadingStats, isInitialized, restoreWizardState, trainingType, hasError]);
+    };
+  }, [step, trainingType, bodyFocus, saveWizardState]);
 
-  // QuickStart logic - only run once on mount
-  useEffect(() => {
-    if (!hasError) {
-      try {
-        const hasUsedSetupBefore = localStorage.getItem('has_used_setup');
-        console.log('🚀 QuickStart check:', { hasUsedSetupBefore });
-        
-        if (!hasUsedSetupBefore && !showRecovery) {
-          setShowQuickStart(true);
-        }
-      } catch (error) {
-        console.error('Error checking QuickStart:', error);
-      }
-    }
-  }, [showRecovery, hasError]);
-
-  // Handle session recovery
+  // Stable callback functions to prevent re-renders
   const handleResumeSetup = useCallback(() => {
     try {
       const recoveredState = restoreWizardState();
@@ -239,11 +242,9 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
         setBodyFocus(recoveredState.bodyFocus);
         setDuration(recoveredState.duration);
         setShowRecovery(false);
-        console.log('✅ Session recovered successfully');
       }
     } catch (error) {
       console.error('Error resuming setup:', error);
-      setHasError(true);
     }
   }, [restoreWizardState]);
 
@@ -251,56 +252,27 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     try {
       clearWizardState();
       setShowRecovery(false);
-      console.log('🆕 Starting fresh setup');
     } catch (error) {
       console.error('Error starting fresh:', error);
-      setHasError(true);
     }
   }, [clearWizardState]);
 
-  // Calculate expected XP based on smart duration estimation
-  const expectedXp = useMemo(() => {
-    const smartDuration = estimateDuration(trainingType, bodyFocus);
-    return Math.round(smartDuration * 2);
-  }, [trainingType, bodyFocus]);
-  
-  // Use refs to stabilize touch gesture callbacks
-  const stepRef = useRef(step);
-  const showQuickStartRef = useRef(showQuickStart);
-  
-  useEffect(() => {
-    stepRef.current = step;
-    showQuickStartRef.current = showQuickStart;
-  }, [step, showQuickStart]);
-
-  // Configure touch gestures for swipe navigation with stable callbacks
-  const onSwipeLeft = useCallback(() => {
-    if (!hasError) {
-      console.log('👆 Swipe left detected');
-      if (stepRef.current < 1 && !showQuickStartRef.current && !isAdvancing) {
-        console.log('🚀 Advancing step via swipe');
-        setStep(prev => prev + 1);
-      }
+  // Stable training type change handler
+  const handleTrainingTypeChange = useCallback((newType: string) => {
+    if (newType !== trainingType) {
+      setTrainingType(newType);
+      // Disable auto-advance by default - users need explicit navigation
     }
-  }, [isAdvancing, hasError]);
+  }, [trainingType]);
 
-  const onSwipeRight = useCallback(() => {
-    if (!hasError) {
-      console.log('👆 Swipe right detected');
-      if (stepRef.current > 0) {
-        console.log('🔙 Going back via swipe');
-        setStep(prev => prev - 1);
-      }
-    }
-  }, [hasError]);
+  const handleBodyFocusChange = useCallback((newFocus: string[]) => {
+    setBodyFocus(newFocus);
+  }, []);
 
-  const { ref: touchRef } = useTouchGestures({
-    onSwipeLeft,
-    onSwipeRight,
-    threshold: 50,
-  });
+  const handleValidationChange = useCallback((isValid: boolean) => {
+    setValidationState(isValid);
+  }, []);
 
-  // Enhanced workout completion with validation and state management
   const handleComplete = useCallback(async () => {
     console.log('🏁 Starting workout completion process');
     
@@ -353,7 +325,6 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       
     } catch (error) {
       console.error('❌ Error completing workout setup:', error);
-      setHasError(true);
       toast({
         title: "Setup Failed",
         description: "There was an error setting up your workout. Please try again.",
@@ -362,7 +333,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     } finally {
       setIsStarting(false);
     }
-  }, [trainingType, bodyFocus, duration, tags, clearWizardState, onComplete, setTrainingConfig, startWorkout]);
+  }, [trainingType, bodyFocus, clearWizardState, onComplete, setTrainingConfig, startWorkout]);
 
   // Skip QuickStart function
   const handleSkipQuickStart = useCallback(() => {
@@ -373,7 +344,6 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       localStorage.setItem('has_used_setup', 'true');
     } catch (error) {
       console.error('Error skipping QuickStart:', error);
-      setHasError(true);
     }
   }, []);
 
@@ -395,7 +365,6 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       onComplete(fullConfig);
     } catch (error) {
       console.error('Error with quick start:', error);
-      setHasError(true);
     }
   }, [trainingType, clearWizardState, onComplete]);
   
@@ -415,113 +384,119 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       }
     } catch (error) {
       console.error('Error going back:', error);
-      setHasError(true);
     }
   }, [step, clearWizardState, onCancel]);
 
-  // Handle training type selection with auto-advance trigger
-  const handleTrainingTypeChange = useCallback((newType: string) => {
-    try {
-      console.log('🎯 Training type change requested:', { from: trainingType, to: newType });
-      if (newType !== trainingType) {
-        console.log('✅ Training type actually changing');
-        setTrainingType(newType);
-        triggerAutoAdvance(`training-type-${newType}`);
-      } else {
-        console.log('⚠️ Training type unchanged, skipping update');
-      }
-    } catch (error) {
-      console.error('Error changing training type:', error);
-      setHasError(true);
-    }
-  }, [trainingType, triggerAutoAdvance]);
+  // Use refs to stabilize touch gesture callbacks
+  const stepRef = useRef(step);
+  const showQuickStartRef = useRef(showQuickStart);
+  
+  useEffect(() => {
+    stepRef.current = step;
+    showQuickStartRef.current = showQuickStart;
+  }, [step, showQuickStart]);
 
-  // Handle body focus changes
-  const handleBodyFocusChange = useCallback((newFocus: string[]) => {
-    try {
-      console.log('💪 Body focus change requested:', { from: bodyFocus, to: newFocus });
-      setBodyFocus(newFocus);
-    } catch (error) {
-      console.error('Error changing body focus:', error);
-      setHasError(true);
+  // Configure touch gestures for swipe navigation with stable callbacks
+  const onSwipeLeft = useCallback(() => {
+    if (!initializationRef.current.isInitialized) {
+      return;
     }
-  }, [bodyFocus]);
+    console.log('👆 Swipe left detected');
+    if (stepRef.current < 1 && !showQuickStartRef.current && !isAdvancing) {
+      console.log('🚀 Advancing step via swipe');
+      setStep(prev => prev + 1);
+    }
+  }, [isAdvancing]);
 
-  // Handle validation changes from FocusAndDurationStep
-  const handleValidationChange = useCallback((isValid: boolean) => {
-    console.log('🔍 Validation state changed:', isValid);
-    setValidationState(isValid);
+  const onSwipeRight = useCallback(() => {
+    if (!initializationRef.current.isInitialized) {
+      return;
+    }
+    console.log('👆 Swipe right detected');
+    if (stepRef.current > 0) {
+      console.log('🔙 Going back via swipe');
+      setStep(prev => prev - 1);
+    }
   }, []);
 
-  // Cleanup auto-advance on unmount
-  useEffect(() => {
-    return cleanup;
-  }, [cleanup]);
+  const { ref: touchRef } = useTouchGestures({
+    onSwipeLeft,
+    onSwipeRight,
+    threshold: 50,
+  });
 
   // Error boundary render
-  if (hasError) {
-    return (
-      <div className="flex flex-col h-screen w-full bg-gray-900 text-white relative overflow-hidden">
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-red-500 mb-4">
-              <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-              </svg>
-            </div>
-            <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
-            <p className="text-gray-400 mb-4">The workout setup encountered an error</p>
-            <div className="flex gap-2 justify-center">
-              <Button onClick={() => window.location.reload()} variant="outline">
-                Refresh Page
-              </Button>
-              <Button onClick={onCancel}>
-                Go Back
-              </Button>
-            </div>
+  const renderErrorBoundary = () => (
+    <div className="flex flex-col h-screen w-full bg-gray-900 text-white relative overflow-hidden">
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
+          <p className="text-gray-400 mb-4">The workout setup encountered an error</p>
+          <div className="flex gap-2 justify-center">
+            <Button onClick={() => window.location.reload()} variant="outline">
+              Refresh Page
+            </Button>
+            <Button onClick={onCancel}>
+              Go Back
+            </Button>
           </div>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+
+  // Loading state render
+  const renderLoadingState = () => (
+    <div className="flex flex-col h-screen w-full bg-gray-900 text-white relative overflow-hidden">
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading workout recommendations...</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Session recovery render
+  const renderSessionRecovery = () => (
+    <div className="flex flex-col h-screen w-full bg-gray-900 text-white">
+      <div className="flex-1 flex items-center justify-center">
+        <div className="max-w-md w-full">
+          <SessionRecoveryPrompt
+            onResumeSetup={handleResumeSetup}
+            onStartFresh={handleStartFresh}
+            timeAgo="recently"
+            trainingType={trainingType}
+          />
+        </div>
+      </div>
+    </div>
+  );
 
   // MOVED: Loading state check AFTER all hooks are called
   if (isLoadingStats) {
     console.log('⏳ Rendering loading state');
-    return (
-      <div className="flex flex-col h-screen w-full bg-gray-900 text-white relative overflow-hidden">
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-gray-400">Loading workout recommendations...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return renderLoadingState();
+  }
+
+  // Error boundary render
+  if (renderCount > MAX_RENDER_COUNT) {
+    return renderErrorBoundary();
   }
 
   // Render session recovery if needed
   if (showRecovery) {
-    return (
-      <div className="flex flex-col h-screen w-full bg-gray-900 text-white">
-        <div className="flex-1 flex items-center justify-center">
-          <div className="max-w-md w-full">
-            <SessionRecoveryPrompt
-              onResumeSetup={handleResumeSetup}
-              onStartFresh={handleStartFresh}
-              timeAgo="recently"
-              trainingType={trainingType}
-            />
-          </div>
-        </div>
-      </div>
-    );
+    return renderSessionRecovery();
   }
 
   // Render the appropriate step content
   const renderStepContent = () => {
     if (showQuickStart) {
-      console.log('🎬 Rendering QuickStart');
       return (
         <QuickStartOption 
           onSelect={handleQuickStart} 
@@ -531,16 +506,13 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       );
     }
     
-    console.log('🎬 Rendering step:', step);
     switch (step) {
       case 0:
         return <TrainingTypeStep 
           selectedType={trainingType} 
           onSelectType={handleTrainingTypeChange}
-          onAutoAdvance={() => setStep(1)}
           stats={stats}
-          enableAutoAdvance={!isAdvancing}
-          autoAdvanceDelay={500}
+          enableAutoAdvance={false} // Explicitly disable auto-advance
         />;
       case 1:
         return <FocusAndDurationStep 
@@ -556,9 +528,13 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
         return null;
     }
   };
+
+  // Footer visibility - FIXED: Show footer on step 0 as well
+  const shouldShowFooter = !showQuickStart && !showRecovery && (step === 0 || step === 1);
   
-  // Get the label for the next button based on current step and validation
+  // Get appropriate button labels
   const getNextButtonLabel = () => {
+    if (step === 0) return 'Continue';
     if (step === 1) {
       if (isStarting) return 'Starting...';
       if (!validationState) return 'Select Muscle Groups';
@@ -567,25 +543,37 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     return 'Continue';
   };
   
-  // Get back button label
   const getBackButtonLabel = () => {
     if (step === 0) return 'Cancel';
     return 'Back';
   };
 
-  // Footer should be visible when on Step 2 (index 1) - the customize workout step
-  const shouldShowFooter = !showQuickStart && step === 1 && !showRecovery;
-  
-  console.log('🔘 Footer Visibility Check:', {
-    step,
-    shouldShowFooter,
-    showQuickStart,
-    showRecovery,
-    validationState,
-    isStarting,
-    bodyFocusLength: bodyFocus.length
-  });
-  
+  // Navigation handlers
+  const handleNext = () => {
+    if (step === 0) {
+      if (!trainingType) {
+        toast({
+          title: "Selection Required",
+          description: "Please select a training type to continue",
+          variant: "destructive"
+        });
+        return;
+      }
+      setStep(1);
+    } else if (step === 1) {
+      handleComplete();
+    }
+  };
+
+  const handleBack = () => {
+    if (step > 0) {
+      setStep(prev => prev - 1);
+    } else {
+      clearWizardState();
+      onCancel();
+    }
+  };
+
   return (
     <div 
       className="flex flex-col h-screen w-full bg-gray-900 text-white relative overflow-hidden"
@@ -636,19 +624,19 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
         )}
       </div>
       
-      {/* Content area - scrollable with bottom padding for floating button */}
+      {/* Content area */}
       <div className={cn(
         "flex-1 overflow-y-auto px-4 py-6",
-        shouldShowFooter && "pb-24" // Add padding for floating button
+        shouldShowFooter && "pb-24"
       )}>
         {renderStepContent()}
       </div>
       
-      {/* Floating Start Workout Button - Only show for step 1 (customize workout) */}
+      {/* FIXED: Show footer on both step 0 and step 1 */}
       {shouldShowFooter && (
         <>
-          {/* Validation warning banner - appears above the button */}
-          {!validationState && (
+          {/* Validation warning */}
+          {step === 1 && !validationState && (
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -663,14 +651,13 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
             </motion.div>
           )}
 
-          {/* Floating Start Workout Button */}
+          {/* Footer with navigation buttons */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="fixed bottom-4 left-4 right-4 z-30"
           >
             <div className="flex gap-3">
-              {/* Back Button */}
               <Button
                 variant="outline"
                 onClick={handleBack}
@@ -682,16 +669,15 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
                 {getBackButtonLabel()}
               </Button>
               
-              {/* Start Workout Button */}
               <Button 
-                onClick={handleComplete}
-                disabled={!validationState || isStarting}
+                onClick={handleNext}
+                disabled={(step === 1 && !validationState) || isStarting || (step === 0 && !trainingType)}
                 size="lg"
                 className={cn(
                   "flex-1 font-semibold transition-all duration-300 min-h-12",
                   "shadow-lg backdrop-blur-sm",
-                  validationState && !isStarting
-                    ? "bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-[1.02]"
+                  (step === 0 && trainingType) || (step === 1 && validationState) && !isStarting
+                    ? "bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white shadow-purple-500/25"
                     : "bg-gray-700/90 text-gray-400 cursor-not-allowed border border-gray-600"
                 )}
               >
@@ -707,7 +693,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
                 ) : (
                   <>
                     {getNextButtonLabel()}
-                    {validationState && <ChevronRight className="ml-2 h-5 w-5" />}
+                    {((step === 0 && trainingType) || (step === 1 && validationState)) && <ChevronRight className="ml-2 h-5 w-5" />}
                   </>
                 )}
               </Button>
