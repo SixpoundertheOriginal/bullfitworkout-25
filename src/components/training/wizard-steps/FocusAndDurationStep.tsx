@@ -13,6 +13,7 @@ interface FocusAndDurationStepProps {
   onUpdateFocus: (focus: string[]) => void;
   onUpdateDuration: (duration: number) => void;
   onUpdateTags: (tags: string[]) => void;
+  onValidationChange?: (isValid: boolean) => void;
 }
 
 interface MuscleGroupCategory {
@@ -62,10 +63,22 @@ export function FocusAndDurationStep({
   duration, 
   trainingType,
   onUpdateFocus,
-  onUpdateTags
+  onUpdateTags,
+  onValidationChange
 }: FocusAndDurationStepProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['Upper Body']));
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  // Validation logic
+  const isValidSelection = useMemo(() => {
+    const hasMinimumMuscleGroups = selectedFocus.length >= 1;
+    return hasMinimumMuscleGroups;
+  }, [selectedFocus]);
+
+  // Notify parent of validation changes
+  React.useEffect(() => {
+    onValidationChange?.(isValidSelection);
+  }, [isValidSelection, onValidationChange]);
 
   // Get workout style options based on training type
   const workoutStyles = useMemo(() => {
@@ -142,6 +155,7 @@ export function FocusAndDurationStep({
   }, [trainingType]);
 
   const toggleMuscleGroup = (muscleGroup: string) => {
+    console.log(`🎯 Toggling muscle group: ${muscleGroup}`);
     if (selectedFocus.includes(muscleGroup)) {
       onUpdateFocus(selectedFocus.filter(m => m !== muscleGroup));
     } else {
@@ -150,6 +164,7 @@ export function FocusAndDurationStep({
   };
 
   const toggleWorkoutStyle = (styleId: string) => {
+    console.log(`💪 Toggling workout style: ${styleId}`);
     const newTags = selectedTags.includes(styleId)
       ? selectedTags.filter(t => t !== styleId)
       : [...selectedTags, styleId];
@@ -169,6 +184,7 @@ export function FocusAndDurationStep({
   };
 
   const handleQuickSelect = (preset: string) => {
+    console.log(`⚡ Quick select: ${preset}`);
     switch (preset) {
       case 'recommended':
         onUpdateFocus(recommendedMuscles);
@@ -253,6 +269,9 @@ export function FocusAndDurationStep({
         <h3 className="text-lg font-medium flex items-center gap-2">
           <User className="w-5 h-5 text-blue-400" />
           Target Muscle Groups
+          {selectedFocus.length === 0 && (
+            <span className="text-xs text-red-400 ml-2">* Required</span>
+          )}
         </h3>
         
         <div className="space-y-3">
@@ -277,6 +296,17 @@ export function FocusAndDurationStep({
             <strong>Selected:</strong> {selectedFocus.join(', ')}
           </motion.div>
         )}
+
+        {/* Validation Message */}
+        {selectedFocus.length === 0 && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-sm text-red-400 bg-red-900/20 border border-red-500/30 rounded-lg p-3"
+          >
+            Please select at least one muscle group to continue
+          </motion.div>
+        )}
       </div>
       
       {/* Enhanced Workout Style */}
@@ -284,6 +314,7 @@ export function FocusAndDurationStep({
         <h3 className="text-lg font-medium flex items-center gap-2">
           <Zap className="w-5 h-5 text-yellow-400" />
           Workout Style
+          <span className="text-xs text-gray-500 ml-2">(Optional)</span>
         </h3>
         <div className="space-y-3">
           {workoutStyles.map(style => (

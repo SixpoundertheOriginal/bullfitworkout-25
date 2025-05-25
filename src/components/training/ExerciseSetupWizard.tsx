@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 import { TrainingTypeStep } from './wizard-steps/TrainingTypeStep';
 import { FocusAndDurationStep } from './wizard-steps/FocusAndDurationStep';
 import { ReviewAndStartStep } from './wizard-steps/ReviewAndStartStep';
@@ -11,6 +10,8 @@ import { SessionRecoveryPrompt } from './wizard-steps/SessionRecoveryPrompt';
 import { useTouchGestures } from '@/hooks/useTouchGestures';
 import { useAutoAdvance } from '@/hooks/useAutoAdvance';
 import { useWizardStatePersistence } from '@/hooks/useWizardStatePersistence';
+import { useWorkoutStore } from '@/store/workout';
+import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import QuickStartOption from './wizard-steps/QuickStartOption';
 import { WorkoutStats } from '@/types/workoutStats';
@@ -93,12 +94,17 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
   const [showQuickStart, setShowQuickStart] = useState(false);
   const [showRecovery, setShowRecovery] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
+  const [validationState, setValidationState] = useState(true);
   
   // Training config state - initialize with defaults first
   const [trainingType, setTrainingType] = useState('strength');
   const [bodyFocus, setBodyFocus] = useState<string[]>([]);
   const [duration, setDuration] = useState(45);
   const [tags, setTags] = useState<string[]>([]);
+
+  // Workout store for state management
+  const { startWorkout, setTrainingConfig } = useWorkoutStore();
 
   // State persistence and recovery with error handling
   const { saveWizardState, restoreWizardState, clearWizardState } = useWizardStatePersistence({
@@ -139,10 +145,13 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     showRecovery,
     trainingType,
     duration,
+    bodyFocus,
     isInitialized,
     statsLoading: isLoadingStats,
     statsExists: !!stats,
     hasError,
+    isStarting,
+    validationState,
     renderTimestamp: new Date().toISOString()
   });
 
@@ -290,10 +299,30 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     threshold: 50,
   });
 
-  // Prepare the configuration object to pass to the parent
-  const handleComplete = useCallback(() => {
+  // Enhanced workout completion with validation and state management
+  const handleComplete = useCallback(async () => {
+    console.log('🏁 Starting workout completion process');
+    
+    // Validation check
+    if (bodyFocus.length === 0) {
+      console.warn('❌ Cannot start workout: No muscle groups selected');
+      toast({
+        title: "Selection Required",
+        description: "Please select at least one muscle group to continue",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
-      console.log('🏁 COMPLETING WORKOUT');
+      setIsStarting(true);
+      console.log('⏳ Setting starting state to true');
+      
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate([10, 50, 10]);
+      }
+
       const smartDuration = estimateDuration(trainingType, bodyFocus);
       const config: TrainingConfig = {
         trainingType,
@@ -303,14 +332,36 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
         expectedXp: Math.round(smartDuration * 2)
       };
       
-      console.log('📋 Final config:', config);
+      console.log('📋 Final workout config:', config);
+
+      // Update workout store state
+      setTrainingConfig(config);
+      startWorkout();
+      
+      // Show success feedback
+      toast({
+        title: "Workout Created!",
+        description: `Starting ${config.trainingType} workout for ${config.duration} minutes`
+      });
+      
+      // Small delay for user feedback
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       clearWizardState();
       onComplete(config);
+      
     } catch (error) {
-      console.error('Error completing workout:', error);
+      console.error('❌ Error completing workout setup:', error);
       setHasError(true);
+      toast({
+        title: "Setup Failed",
+        description: "There was an error setting up your workout. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsStarting(false);
     }
-  }, [trainingType, bodyFocus, tags, clearWizardState, onComplete]);
+  }, [trainingType, bodyFocus, duration, tags, clearWizardState, onComplete, setTrainingConfig, startWorkout]);
 
   // Skip QuickStart function
   const handleSkipQuickStart = useCallback(() => {
@@ -394,6 +445,12 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       setHasError(true);
     }
   }, [bodyFocus]);
+
+  // Handle validation changes from FocusAndDurationStep
+  const handleValidationChange = useCallback((isValid: boolean) => {
+    console.log('🔍 Validation state changed:', isValid);
+    setValidationState(isValid);
+  }, []);
 
   // Cleanup auto-advance on unmount
   useEffect(() => {
@@ -492,15 +549,20 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
           onUpdateFocus={handleBodyFocusChange}
           onUpdateDuration={() => {}}
           onUpdateTags={setTags}
+          onValidationChange={handleValidationChange}
         />;
       default:
         return null;
     }
   };
   
-  // Get the label for the next button based on current step
+  // Get the label for the next button based on current step and validation
   const getNextButtonLabel = () => {
-    if (step === 1) return 'Start Workout';
+    if (step === 1) {
+      if (isStarting) return 'Starting...';
+      if (!validationState) return 'Select Muscle Groups';
+      return 'Start Workout';
+    }
     return 'Continue';
   };
   
@@ -516,7 +578,10 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
   console.log('🔘 Button Props Check:', {
     step,
     shouldShowFooter,
-    showQuickStart
+    showQuickStart,
+    validationState,
+    isStarting,
+    bodyFocusLength: bodyFocus.length
   });
   
   return (
@@ -532,6 +597,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
             size="sm" 
             className="text-gray-400"
             onClick={showQuickStart ? onCancel : handleBack}
+            disabled={isStarting}
           >
             <ChevronLeft className="mr-1 h-5 w-5" />
             {showQuickStart ? 'Cancel' : getBackButtonLabel()}
@@ -547,7 +613,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
           </h1>
           
           <div className="w-16 flex justify-end">
-            {canRollback && (
+            {canRollback && !isStarting && (
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -573,24 +639,60 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
         {renderStepContent()}
       </div>
       
-      {/* Footer - Fixed at bottom - Only show for step 1 (customize workout) */}
+      {/* Enhanced Footer - Fixed at bottom - Only show for step 1 (customize workout) */}
       {shouldShowFooter && (
         <div className="flex-shrink-0 p-4 bg-gray-900 border-t border-gray-800 z-10">
+          {/* Validation warning banner */}
+          {!validationState && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-3 p-3 bg-red-900/20 border border-red-500/30 rounded-lg flex items-center gap-2"
+            >
+              <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+              <p className="text-sm text-red-400">
+                Please select at least one muscle group to start your workout
+              </p>
+            </motion.div>
+          )}
+          
           <div className="flex justify-between gap-4">
             <Button
               variant="outline"
               onClick={handleBack}
               className="border-gray-700 flex-1 sm:flex-none"
+              disabled={isStarting}
             >
               {getBackButtonLabel()}
             </Button>
             
             <Button 
               onClick={handleComplete}
-              className="flex-1 sm:flex-none bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-semibold"
+              disabled={!validationState || isStarting}
+              className={cn(
+                "flex-1 sm:flex-none font-semibold transition-all duration-200",
+                validationState && !isStarting
+                  ? "bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white"
+                  : "bg-gray-700 text-gray-400 cursor-not-allowed"
+              )}
+              haptic={validationState && !isStarting}
+              hapticPattern="heavy"
             >
-              Start Workout
-              <ChevronRight className="ml-1 h-5 w-5" />
+              {isStarting ? (
+                <>
+                  <motion.div 
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
+                  />
+                  Starting...
+                </>
+              ) : (
+                <>
+                  {getNextButtonLabel()}
+                  {validationState && <ChevronRight className="ml-1 h-5 w-5" />}
+                </>
+              )}
             </Button>
           </div>
         </div>
