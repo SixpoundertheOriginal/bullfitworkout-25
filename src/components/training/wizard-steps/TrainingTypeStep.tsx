@@ -15,6 +15,8 @@ interface TrainingTypeStepProps {
   onSelectType: (type: string) => void;
   onAutoAdvance?: () => void;
   stats?: WorkoutStats | null;
+  enableAutoAdvance?: boolean;
+  autoAdvanceDelay?: number;
 }
 
 interface TrainingTypeOption {
@@ -25,24 +27,33 @@ interface TrainingTypeOption {
   color: string;
 }
 
-export function TrainingTypeStep({ selectedType, onSelectType, onAutoAdvance, stats }: TrainingTypeStepProps) {
+export function TrainingTypeStep({ 
+  selectedType, 
+  onSelectType, 
+  onAutoAdvance, 
+  stats,
+  enableAutoAdvance = true,
+  autoAdvanceDelay = 500
+}: TrainingTypeStepProps) {
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [justSelected, setJustSelected] = useState<string | null>(null);
 
-  // Handle type selection with visual feedback and auto-advance
+  // Handle type selection with visual feedback and optional auto-advance
   const handleTypeSelection = (typeId: string) => {
     if (typeId !== selectedType && !isAdvancing) {
       console.log('🎯 Training type selection changed:', { from: selectedType, to: typeId });
       
       // Set visual feedback states
       setJustSelected(typeId);
-      setIsAdvancing(true);
       
-      // Update the selection
+      // Update the selection immediately
       onSelectType(typeId);
       
       // Announce to screen readers
-      const announcement = `${typeId} selected. Advancing to next step.`;
+      const announcement = enableAutoAdvance 
+        ? `${typeId} selected. Advancing to next step in ${autoAdvanceDelay / 1000} seconds.`
+        : `${typeId} selected.`;
+      
       const ariaLive = document.createElement('div');
       ariaLive.setAttribute('aria-live', 'polite');
       ariaLive.setAttribute('aria-atomic', 'true');
@@ -51,13 +62,23 @@ export function TrainingTypeStep({ selectedType, onSelectType, onAutoAdvance, st
       ariaLive.style.left = '-10000px';
       document.body.appendChild(ariaLive);
       
-      // Trigger auto-advance after delay
-      setTimeout(() => {
-        onAutoAdvance?.();
-        setIsAdvancing(false);
-        setJustSelected(null);
-        document.body.removeChild(ariaLive);
-      }, 500);
+      if (enableAutoAdvance) {
+        setIsAdvancing(true);
+        
+        // Trigger auto-advance after delay
+        setTimeout(() => {
+          onAutoAdvance?.();
+          setIsAdvancing(false);
+          setJustSelected(null);
+          document.body.removeChild(ariaLive);
+        }, autoAdvanceDelay);
+      } else {
+        // Clean up immediately if no auto-advance
+        setTimeout(() => {
+          setJustSelected(null);
+          document.body.removeChild(ariaLive);
+        }, 1000);
+      }
     } else {
       console.log('⚠️ Training type selection unchanged or advancing:', typeId);
     }
@@ -68,6 +89,11 @@ export function TrainingTypeStep({ selectedType, onSelectType, onAutoAdvance, st
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       handleTypeSelection(typeId);
+    }
+    // ESC key to cancel auto-advance
+    if (event.key === 'Escape' && isAdvancing) {
+      setIsAdvancing(false);
+      setJustSelected(null);
     }
   };
 
@@ -154,7 +180,12 @@ export function TrainingTypeStep({ selectedType, onSelectType, onAutoAdvance, st
       <div>
         <h2 className="text-xl font-semibold mb-1">Choose Training Type</h2>
         <p className="text-gray-400 text-sm">
-          {isAdvancing ? 'Advancing to next step...' : 'Select the type of workout you\'d like to do'}
+          {isAdvancing 
+            ? `Advancing to next step in ${autoAdvanceDelay / 1000} seconds... (Press ESC to cancel)`
+            : enableAutoAdvance 
+              ? 'Select the type of workout you\'d like to do - will advance automatically'
+              : 'Select the type of workout you\'d like to do'
+          }
         </p>
       </div>
 
@@ -197,6 +228,7 @@ export function TrainingTypeStep({ selectedType, onSelectType, onAutoAdvance, st
               tabIndex={0}
               role="button"
               aria-label={`Select ${type.name} training type`}
+              aria-pressed={isSelected}
               className={cn(
                 "p-4 rounded-xl border cursor-pointer transform transition-all duration-200",
                 "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900",

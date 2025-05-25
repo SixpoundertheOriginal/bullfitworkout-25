@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Slider } from '@/components/ui/slider';
 import { MUSCLE_GROUP_CATEGORIES } from '@/constants/exerciseMetadata';
 
 interface FocusAndDurationStepProps {
@@ -64,11 +63,8 @@ export function FocusAndDurationStep({
   duration, 
   trainingType,
   onUpdateFocus,
-  onUpdateDuration,
   onUpdateTags
 }: FocusAndDurationStepProps) {
-  const [activeTab, setActiveTab] = useState<'areas' | 'duration'>('areas');
-  
   // Get predefined tags based on training type
   const suggestedTags = React.useMemo(() => {
     switch (trainingType) {
@@ -108,21 +104,6 @@ export function FocusAndDurationStep({
     onUpdateTags(newTags);
   };
 
-  // Map duration value to a more readable format
-  const getDurationLabel = (value: number) => {
-    if (value < 15) return 'Quick';
-    if (value < 30) return 'Short';
-    if (value < 45) return 'Medium';
-    if (value < 60) return 'Standard';
-    if (value < 90) return 'Thorough';
-    return 'Extended';
-  };
-
-  const handleTabClick = (tab: 'areas' | 'duration') => {
-    console.log('📑 Tab clicked:', tab);
-    setActiveTab(tab);
-  };
-
   const handleTagClick = (tag: string) => {
     console.log('🏷️ Tag button clicked:', { tag });
     toggleTag(tag);
@@ -130,122 +111,73 @@ export function FocusAndDurationStep({
 
   return (
     <div className="space-y-6 pb-20">
-      {/* Tab Navigation */}
-      <div className="flex rounded-lg bg-gray-800/50 p-1 mb-6">
-        <button
-          type="button"
-          className={cn(
-            "flex-1 py-2 px-4 rounded-md text-center text-sm font-medium transition-all",
-            "focus:outline-none focus:ring-2 focus:ring-purple-500",
-            activeTab === 'areas' 
-              ? "bg-gray-700 text-white shadow-sm" 
-              : "text-gray-400 hover:text-gray-200"
+      <div>
+        <h2 className="text-xl font-semibold mb-1">Customize Your Workout</h2>
+        <p className="text-gray-400 text-sm mb-4">
+          Select muscle groups to focus on (optional)
+        </p>
+      </div>
+
+      {/* Smart Duration Display */}
+      <div className="bg-gray-800/30 rounded-lg p-4 mb-6">
+        <div className="text-center">
+          <div className="text-2xl font-bold text-white mb-1">
+            ~{duration} <span className="text-lg text-gray-400">minutes</span>
+          </div>
+          <div className="text-sm text-gray-500">
+            Estimated duration • ~{Math.round(duration * 2)} XP
+          </div>
+          <div className="text-xs text-gray-600 mt-1">
+            Automatically calculated based on your selections
+          </div>
+        </div>
+      </div>
+        
+      {/* Muscle Groups Selection */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Target Muscle Groups</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {MUSCLE_GROUP_CATEGORIES.flatMap(category => 
+            category.muscles.map(muscle => (
+              <MuscleGroupButton 
+                key={muscle}
+                muscle={muscle}
+                isSelected={selectedFocus.includes(muscle)}
+                onToggle={toggleMuscleGroup}
+              />
+            ))
           )}
-          onClick={() => handleTabClick('areas')}
-        >
-          Focus Areas
-        </button>
-        <button
-          type="button"
-          className={cn(
-            "flex-1 py-2 px-4 rounded-md text-center text-sm font-medium transition-all",
-            "focus:outline-none focus:ring-2 focus:ring-purple-500",
-            activeTab === 'duration' 
-              ? "bg-gray-700 text-white shadow-sm" 
-              : "text-gray-400 hover:text-gray-200"
-          )}
-          onClick={() => handleTabClick('duration')}
-        >
-          Duration & Tags
-        </button>
+        </div>
+        
+        {selectedFocus.length > 0 && (
+          <div className="text-sm text-gray-500 mt-2">
+            Selected: {selectedFocus.join(', ')}
+          </div>
+        )}
       </div>
       
-      {activeTab === 'areas' && (
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-xl font-semibold mb-1">Target Muscle Groups</h2>
-            <p className="text-gray-400 text-sm mb-4">
-              Select the muscle groups you want to focus on
-            </p>
-          </div>
-            
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
-            {MUSCLE_GROUP_CATEGORIES.flatMap(category => 
-              category.muscles.map(muscle => (
-                <MuscleGroupButton 
-                  key={muscle}
-                  muscle={muscle}
-                  isSelected={selectedFocus.includes(muscle)}
-                  onToggle={toggleMuscleGroup}
-                />
-              ))
-            )}
-          </div>
+      {/* Workout Tags */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Workout Style</h3>
+        <div className="flex flex-wrap gap-2">
+          {suggestedTags.map(tag => (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => handleTagClick(tag)}
+              className={cn(
+                "px-3 py-1 rounded-full text-sm transition-all cursor-pointer",
+                "focus:outline-none focus:ring-2 focus:ring-purple-500",
+                selectedTags.includes(tag)
+                  ? "bg-gray-700 text-white border border-gray-600"
+                  : "bg-gray-800/50 text-gray-400 border border-gray-700 hover:bg-gray-800"
+              )}
+            >
+              #{tag}
+            </button>
+          ))}
         </div>
-      )}
-      
-      {activeTab === 'duration' && (
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-xl font-semibold mb-1">Workout Duration</h2>
-            <p className="text-gray-400 text-sm">
-              How long do you want to work out?
-            </p>
-            
-            <div className="mt-8 px-4 mb-12">
-              <div className="flex justify-between mb-2 text-sm text-gray-400">
-                <span>15m</span>
-                <span>30m</span>
-                <span>45m</span>
-                <span>60m</span>
-                <span>90m+</span>
-              </div>
-              
-              <Slider
-                defaultValue={[duration]}
-                min={15}
-                max={90}
-                step={5}
-                onValueChange={(value) => onUpdateDuration(value[0])}
-              />
-              
-              <div className="mt-8 text-center">
-                <div className="text-3xl font-bold text-white">
-                  {duration} <span className="text-xl text-gray-400">min</span>
-                </div>
-                <div className="text-purple-400 mt-1 font-medium">
-                  {getDurationLabel(duration)}
-                </div>
-                <div className="text-sm text-gray-500 mt-1">
-                  ~{Math.round(duration * 2)} XP
-                </div>
-              </div>
-            </div>
-            
-            <div className="mt-8">
-              <h3 className="text-lg font-medium mb-3">Workout Tags</h3>
-              <div className="flex flex-wrap gap-2">
-                {suggestedTags.map(tag => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => handleTagClick(tag)}
-                    className={cn(
-                      "px-3 py-1 rounded-full text-sm transition-all cursor-pointer",
-                      "focus:outline-none focus:ring-2 focus:ring-purple-500",
-                      selectedTags.includes(tag)
-                        ? "bg-gray-700 text-white border border-gray-600"
-                        : "bg-gray-800/50 text-gray-400 border border-gray-700 hover:bg-gray-800"
-                    )}
-                  >
-                    #{tag}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
