@@ -2,11 +2,11 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useWorkoutStore } from '@/store/workout';
 import { getExerciseName } from '@/utils/exerciseAdapter';
-import { runWorkoutValidation } from '@/store/workout/actions';
+import { useSupabaseConnection } from '@/hooks/useSupabaseConnection';
 
 /**
- * Hook that provides access to all workout state and actions
- * Centralizes the state management for the training session
+ * Enhanced hook that provides access to all workout state and actions
+ * with comprehensive validation and connection monitoring
  */
 export const useTrainingSessionState = () => {
   // Local state for UI components
@@ -21,22 +21,45 @@ export const useTrainingSessionState = () => {
   // Get the workout store state and actions
   const workoutState = useWorkoutStore();
   
-  // Validate workout state on initialization to prevent zombie workouts
+  // Monitor Supabase connection status
+  const connectionState = useSupabaseConnection();
+  
+  // Enhanced validation on initialization
   useEffect(() => {
-    console.log("Running workout state validation on init");
-    // Add a short delay to ensure store is fully loaded
+    console.log("🔧 Initializing training session with enhanced validation");
+    
+    // Run validation after a short delay to ensure store is fully loaded
     const timer = setTimeout(() => {
-      runWorkoutValidation();
+      workoutState.runWorkoutValidation();
+      
+      // Log connection status for debugging
+      console.log('🔌 Connection status:', {
+        isConnected: connectionState.isConnected,
+        isConnecting: connectionState.isConnecting,
+        retryCount: connectionState.retryCount,
+        hasConnectivity: connectionState.hasConnectivity
+      });
     }, 300);
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [workoutState.runWorkoutValidation]);
   
-  // Use a memoized structure for improved performance
+  // Monitor for zombie workouts during the session
+  useEffect(() => {
+    if (workoutState.isActive && Object.keys(workoutState.exercises).length === 0) {
+      console.warn('🧟‍♂️ Zombie workout detected during session - cleaning up');
+      workoutState.detectAndCleanupZombieWorkout();
+    }
+  }, [workoutState.isActive, workoutState.exercises, workoutState.detectAndCleanupZombieWorkout]);
+  
+  // Enhanced state with connection monitoring
   const state = useMemo(() => {
     return {
       // Expose all workout store state
       ...workoutState,
+      
+      // Expose connection state
+      connectionState,
       
       // Expose local UI state
       isAddExerciseSheetOpen,
@@ -56,10 +79,17 @@ export const useTrainingSessionState = () => {
       restTimerResetSignal,
       
       // Helper function to trigger rest timer reset
-      triggerRestTimerReset: () => setRestTimerResetSignal(prev => prev + 1)
+      triggerRestTimerReset: () => setRestTimerResetSignal(prev => prev + 1),
+      
+      // Enhanced validation helper
+      validateWorkoutState: () => {
+        console.log('🔍 Manual workout state validation requested');
+        workoutState.runWorkoutValidation();
+      }
     };
   }, [
     workoutState, 
+    connectionState,
     isAddExerciseSheetOpen,
     isRatingSheetOpen,
     showRestTimerModal,

@@ -4,26 +4,22 @@ import { useTrainingSetupPersistence } from '@/hooks/useTrainingSetupPersistence
 import { LoadTrainingConfigFn } from '@/types/workout';
 import { useWorkoutStore } from '@/store/workout';
 import { toast } from '@/hooks/use-toast';
-import { validateWorkoutState, isZombieWorkout } from '@/store/workout/validators';
-import { resetSession } from '@/store/workout/actions';
 import { useNavigate } from 'react-router-dom';
 
 /**
- * Hook for handling initialization logic for training sessions
- * with enhanced zombie state detection and unified workflow
+ * Enhanced hook for handling initialization logic for training sessions
+ * with comprehensive zombie state detection and cleanup
  */
 export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean, startWorkout: () => void) => {
   const navigate = useNavigate();
   const { storedConfig, saveConfig } = useTrainingSetupPersistence();
   const cleanupPerformedRef = useRef(false);
   
-  // Get workout store at the top level of the hook
-  const workoutStore = useWorkoutStore();
-  const { exercises, sessionId, isActive: storeIsActive, resetSession } = workoutStore;
+  // Get workout store actions
+  const { runWorkoutValidation, detectAndCleanupZombieWorkout, resetSession } = useWorkoutStore();
   
-  // Explicitly implement with the centralized type
+  // Load training config function
   const loadTrainingConfig: LoadTrainingConfigFn = useCallback(() => {
-    // Return the stored config with no arguments
     return storedConfig;
   }, [storedConfig]);
   
@@ -32,87 +28,107 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
     return saveConfig(config);
   }, [saveConfig]);
   
-  // Initialize workout if coming from a setup flow
+  // Enhanced zombie detection and cleanup
+  const performZombieCleanup = useCallback(() => {
+    console.log('🔍 Performing comprehensive zombie workout cleanup');
+    
+    try {
+      // Run the store's zombie detection
+      const zombieDetected = detectAndCleanupZombieWorkout();
+      
+      if (zombieDetected) {
+        console.log('🧹 Zombie workout detected and cleaned up');
+        
+        // Navigate to setup if we're not already there
+        if (window.location.pathname !== '/setup-workout') {
+          navigate('/setup-workout', { 
+            state: { errorReason: 'zombieWorkoutDetected' }
+          });
+        }
+        
+        return true;
+      }
+      
+      // Also check for localStorage inconsistencies
+      try {
+        const storedData = localStorage.getItem('workout-storage');
+        if (storedData) {
+          const parsed = JSON.parse(storedData);
+          const state = parsed?.state;
+          
+          if (state?.isActive && (!state?.exercises || Object.keys(state.exercises).length === 0)) {
+            console.warn('🧟‍♂️ Found zombie state in localStorage - cleaning up');
+            localStorage.removeItem('workout-storage');
+            resetSession();
+            
+            toast({
+              title: "Workout Reset",
+              description: "Detected and cleared invalid workout data from storage",
+              variant: "destructive"
+            });
+            
+            return true;
+          }
+        }
+      } catch (storageError) {
+        console.error('Error checking localStorage for zombie state:', storageError);
+        // Clear potentially corrupted storage
+        localStorage.removeItem('workout-storage');
+      }
+      
+      console.log('✅ No zombie workouts detected');
+      return false;
+      
+    } catch (error) {
+      console.error('Error during zombie cleanup:', error);
+      // Fall back to reset if there's an error
+      resetSession();
+      return true;
+    }
+  }, [detectAndCleanupZombieWorkout, resetSession, navigate]);
+  
+  // Initialize workout if coming from setup flow
   useEffect(() => {
-    // Only start if not already active and has exercises
     if (!isActive && hasExercises) {
-      console.log('Starting new workout from existing exercises');
+      console.log('🚀 Starting new workout from existing exercises');
       startWorkout();
     } else if (!isActive && !hasExercises) {
-      // Call with NO arguments as per the type definition
       const config = loadTrainingConfig();
-      
       if (config) {
-        console.log('Found saved training config:', config);
+        console.log('📋 Found saved training config:', config);
       } else {
-        console.log('No saved config found and no active session');
+        console.log('ℹ️ No saved config found and no active session');
       }
     }
   }, [isActive, hasExercises, startWorkout, loadTrainingConfig]);
   
-  // Validate workout state and redirect if necessary
-  const validateAndRepair = useCallback(() => {
-    // Use the workout state obtained from the hook at the top level
-    const state = workoutStore;
-    
-    console.log('🔍 Checking for workout state validity:', {
-      exerciseCount: Object.keys(exercises).length,
-      isActive: storeIsActive,
-      hasExercises
-    });
-    
-    // Use our centralized validators
-    const { isValid, needsRepair } = validateWorkoutState(state, { 
-      showToasts: false, 
-      attemptRepair: false
-    });
-    
-    if (!isValid && needsRepair) {
-      console.warn("🧟‍♂️ Detected problematic workout state that needs to be repaired");
-      
-      // Reset workout state completely
-      resetSession();
-      
-      // Double-check by also manually removing from localStorage
-      try {
-        localStorage.removeItem("workout-storage");
-        console.log("🗑️ Manually removed workout-storage from localStorage");
-      } catch (e) {
-        console.error("⚠️ Failed to clear localStorage:", e);
-      }
-      
-      // Show toast notification to inform user
-      toast({
-        title: "Workout reset",
-        description: "Detected and cleared invalid workout data",
-        variant: "destructive"
-      });
-      
-      // Redirect to setup page
-      navigate('/setup-workout', { 
-        state: { errorReason: 'zombieWorkoutDetected' }
-      });
-      
-      return false;
-    }
-    
-    return true;
-  }, [exercises, storeIsActive, hasExercises, resetSession, workoutStore, navigate]);
-  
-  // Add centralized validation logic to detect and clean up zombie workouts
+  // Run comprehensive validation and cleanup on mount
   useEffect(() => {
-    // Only run this check once per component mount
     if (cleanupPerformedRef.current) return;
     
-    validateAndRepair();
+    console.log('🔧 Running initial workout validation and cleanup');
     
-    // Mark cleanup as performed
+    // Perform zombie cleanup first
+    const zombieFound = performZombieCleanup();
+    
+    if (!zombieFound) {
+      // Run additional validation if no zombies found
+      runWorkoutValidation();
+    }
+    
     cleanupPerformedRef.current = true;
-  }, [validateAndRepair]);
+  }, [performZombieCleanup, runWorkoutValidation]);
+  
+  // Validate and repair function for external use
+  const validateAndRepair = useCallback(() => {
+    console.log('🔍 Manual validation and repair requested');
+    return performZombieCleanup();
+  }, [performZombieCleanup]);
   
   return {
     loadTrainingConfig,
     saveTrainingPreferences,
-    validateAndRepair
+    validateAndRepair,
+    performZombieCleanup
   };
 };

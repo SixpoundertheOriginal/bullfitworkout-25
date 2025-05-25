@@ -1,366 +1,301 @@
-
-import { toast } from "@/hooks/use-toast";
-import { WorkoutExercises, WorkoutError, WorkoutStatus, ExerciseSet } from "./types";
-import { getStore } from "./store";
-import { 
-  validateWorkoutState as validateState, 
-  isZombieWorkout, 
-  repairExercises 
-} from "./validators";
-import {
-  startWorkoutSession,
-  endWorkoutSession,
-  resetWorkoutSession,
-  transitionToSaving,
-  transitionToSaved,
-  transitionToFailed,
-  transitionToPartial,
-  transitionToRecovering
-} from "./lifecycle";
+import { WorkoutState, WorkoutExercises, WorkoutError } from './types';
+import { toast } from '@/hooks/use-toast';
 
 // Generate a unique session ID
-export const generateSessionId = () =>
-  crypto.randomUUID ? crypto.randomUUID() : `session-${Date.now()}`;
+export const generateSessionId = (): string => {
+  return crypto.randomUUID ? crypto.randomUUID() : `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+};
 
-// Create a default set - making this function public so it can be used in other functions
-export const createDefaultSet = (exerciseName: string, setNumber: number = 1): ExerciseSet => ({
-  id: `temp-${exerciseName}-${setNumber}-${Date.now()}`,
-  workout_id: 'temp',
-  exercise_name: exerciseName,
-  weight: 0,
-  reps: 10,
-  restTime: 60,
-  completed: false,
-  set_number: setNumber,
-  isEditing: false,
-  metadata: {
-    autoAdjusted: true, 
-    exerciseName,
-    createdAt: new Date().toISOString()
+// Enhanced validation before starting workout
+export const canStartWorkout = (state: WorkoutState): boolean => {
+  // Can't start if already active
+  if (state.isActive) {
+    console.warn('Cannot start workout: Already active');
+    return false;
   }
-});
-
-// Exercise management actions
-export const handleCompleteSet = (exerciseName: string, setIndex: number) => {
-  const store = getStore();
-
-  store.setState(state => {
-    const newExercises = { ...state.exercises };
-    newExercises[exerciseName] = state.exercises[exerciseName].map((set, i) =>
-      i === setIndex ? { ...set, completed: true } : set
-    );
-
-    setTimeout(() => {
-      const store = getStore();
-      store.getState().startPostSetFlow(exerciseName, setIndex);
-    }, 10);
-
-    return {
-      exercises: newExercises,
-      lastTabActivity: Date.now(),
-      lastCompletedExercise: exerciseName,
-      lastCompletedSetIndex: setIndex,
-    };
-  });
-};
-
-export const deleteExercise = (exerciseName: string) => {
-  const store = getStore();
-
-  store.setState(state => {
-    const newExercises = { ...state.exercises };
-    delete newExercises[exerciseName];
-
-    toast.success(`Removed ${exerciseName} from workout`);
-
-    const newState: any = {
-      exercises: newExercises,
-      lastTabActivity: Date.now(),
-    };
-
-    if (state.focusedExercise === exerciseName) {
-      newState.focusedExercise = null;
-      newState.focusedSetIndex = null;
-    }
-
-    if (state.activeExercise === exerciseName) {
-      newState.activeExercise = null;
-    }
-
-    setTimeout(() => {
-      const exerciseCount = Object.keys(newExercises).length;
-      if (exerciseCount === 0) {
-        toast.info("No exercises left. Add exercises or end your workout.", {
-          action: {
-            label: "End Workout",
-            onClick: () => {
-              store.getState().endWorkout();
-              toast.success("Workout ended");
-            },
-          },
-        });
-      }
-    }, 500);
-
-    // Run validation after exercise deletion
-    setTimeout(() => runWorkoutValidation(), 100);
-
-    return newState;
-  });
-};
-
-// Workout lifecycle actions
-export const startWorkout = () => {
-  const store = getStore();
-  const currentState = store.getState();
   
-  store.setState(startWorkoutSession(currentState));
-
-  toast.success("Workout started", {
-    description: "Your workout session has begun",
-  });
-
-  console.log("Workout started with session ID:", store.getState().sessionId);
-};
-
-export const endWorkout = () => {
-  const store = getStore();
-  const currentState = store.getState();
+  // Can't start if explicitly ended
+  if (state.explicitlyEnded) {
+    console.warn('Cannot start workout: Session explicitly ended');
+    return false;
+  }
   
-  store.setState(endWorkoutSession(currentState));
-
-  console.log("Workout ended");
+  // Can't start if in saving state
+  if (state.workoutStatus === 'saving') {
+    console.warn('Cannot start workout: Currently saving');
+    return false;
+  }
+  
+  return true;
 };
 
-export const resetSession = () => {
-  const store = getStore();
-
-  const currentState = store.getState();
-  console.log("Resetting workout session. Current state:", {
-    exerciseCount: Object.keys(currentState.exercises).length,
-    exercises: Object.keys(currentState.exercises),
-    activeExercise: currentState.activeExercise,
-    focusedExercise: currentState.focusedExercise,
-    isActive: currentState.isActive,
-    workoutStatus: currentState.workoutStatus,
+// Enhanced start workout with validation
+export const startWorkout = () => (set: any, get: any) => {
+  const currentState = get();
+  
+  // Validate we can start
+  if (!canStartWorkout(currentState)) {
+    toast({
+      title: "Cannot start workout",
+      description: "Please complete or reset your current session first",
+      variant: "destructive"
+    });
+    return;
+  }
+  
+  const now = new Date();
+  const sessionId = generateSessionId();
+  
+  console.log('🚀 Starting new workout session:', { sessionId, timestamp: now });
+  
+  set({
+    isActive: true,
+    explicitlyEnded: false,
+    workoutStatus: 'active',
+    startTime: now.toISOString(),
+    elapsedTime: 0,
+    sessionId,
+    workoutId: `workout-${sessionId}`,
+    lastTabActivity: Date.now(),
+    savingErrors: [], // Clear any previous errors
   });
+};
 
-  // Clear all state completely to avoid any lingering issues
-  store.setState(resetWorkoutSession());
+// Enhanced end workout
+export const endWorkout = () => (set: any, get: any) => {
+  const currentState = get();
+  
+  console.log('🏁 Ending workout session:', { 
+    sessionId: currentState.sessionId,
+    wasActive: currentState.isActive 
+  });
+  
+  set({
+    isActive: false,
+    explicitlyEnded: true,
+    workoutStatus: 'idle',
+    lastTabActivity: Date.now(),
+  });
+};
 
+// Enhanced reset with zombie cleanup
+export const resetSession = () => (set: any, get: any) => {
+  const currentState = get();
+  
+  console.log('🔄 Resetting workout session:', { 
+    sessionId: currentState.sessionId,
+    hadExercises: Object.keys(currentState.exercises || {}).length > 0,
+    wasActive: currentState.isActive
+  });
+  
+  // Clear everything and start fresh
+  set({
+    exercises: {},
+    activeExercise: null,
+    elapsedTime: 0,
+    workoutId: null,
+    startTime: null,
+    workoutStatus: 'idle',
+    trainingConfig: null,
+    restTimerActive: false,
+    currentRestTime: 60,
+    isActive: false,
+    explicitlyEnded: true,
+    sessionId: generateSessionId(),
+    lastTabActivity: Date.now(),
+    savingErrors: [],
+    focusedExercise: null,
+    focusedSetIndex: null,
+    postSetFlow: 'idle',
+    lastCompletedExercise: null,
+    lastCompletedSetIndex: null,
+  });
+  
+  // Clear localStorage to prevent zombie state persistence
   try {
-    // Clear localStorage to ensure complete cleanup
-    localStorage.removeItem("workout-storage");
-    console.log("Workout storage cleared from localStorage");
-    
-    // Some browsers may need a delay to ensure state is consistent
-    setTimeout(() => {
-      // Verify the reset was successful
-      const postResetState = store.getState();
-      console.log("Post-reset check - workout is active?", postResetState.isActive);
-      console.log("Post-reset check - exercise count:", Object.keys(postResetState.exercises || {}).length);
-      
-      if (postResetState.isActive || Object.keys(postResetState.exercises || {}).length > 0) {
-        console.warn("Reset may not have fully cleared state, forcing reload");
-        // Last resort - hard reload the page if state persists
-        window.location.reload();
-      }
-    }, 100);
-  } catch (e) {
-    console.error("Failed to clear localStorage:", e);
+    localStorage.removeItem('workout-storage');
+    console.log('✅ Cleared workout storage');
+  } catch (error) {
+    console.error('❌ Failed to clear workout storage:', error);
   }
 };
 
-// Status management
-export const markAsSaving = () => {
-  const store = getStore();
-  const state = store.getState();
+// Zombie workout detection and cleanup
+export const detectAndCleanupZombieWorkout = () => (set: any, get: any) => {
+  const state = get();
   
-  store.setState(transitionToSaving(state));
-};
-
-export const markAsSaved = () => {
-  const store = getStore();
-  const state = store.getState();
-
-  store.setState(transitionToSaved(state));
-
-  // Schedule resetSession to run after state updates
-  setTimeout(() => {
-    resetSession();
-  }, 500);
-};
-
-export const markAsFailed = (error: WorkoutError) => {
-  const store = getStore();
-  const state = store.getState();
+  // Check for zombie workout: active but no exercises
+  if (state.isActive && (!state.exercises || Object.keys(state.exercises).length === 0)) {
+    console.warn('🧟‍♂️ Zombie workout detected - active but no exercises');
+    
+    // Reset the zombie workout
+    resetSession()(set, get);
+    
+    toast({
+      title: "Workout Reset",
+      description: "Detected and cleared an invalid workout state",
+      variant: "destructive"
+    });
+    
+    return true; // Zombie was detected and cleaned
+  }
   
-  store.setState(transitionToFailed(state, error));
-};
-
-export const startPostSetFlow = (exerciseName: string, setIndex: number) => {
-  getStore().setState(state => {
-    if (!state.exercises[exerciseName] || setIndex >= state.exercises[exerciseName].length) {
-      return {};
-    }
-
-    return {
-      postSetFlow: "rating",
-      lastCompletedExercise: exerciseName,
-      lastCompletedSetIndex: setIndex,
-      focusedExercise: exerciseName,
-      focusedSetIndex: setIndex,
-      lastTabActivity: Date.now(),
-    };
-  });
-};
-
-export const submitSetRating = (rpe: number) => {
-  const store = getStore();
-
-  store.setState(state => {
-    const { lastCompletedExercise, lastCompletedSetIndex } = state;
-
-    if (!lastCompletedExercise || lastCompletedSetIndex === null) {
-      return { postSetFlow: "idle" };
-    }
-
-    const newExercises = { ...state.exercises };
-
-    if (newExercises[lastCompletedExercise] && lastCompletedSetIndex < newExercises[lastCompletedExercise].length) {
-      newExercises[lastCompletedExercise] = newExercises[lastCompletedExercise].map((set, i) =>
-        i === lastCompletedSetIndex ? { ...set, rpe } : set
-      );
-
-      const nextSetIndex = lastCompletedSetIndex + 1;
-      const hasNextSet = nextSetIndex < newExercises[lastCompletedExercise].length;
-
-      if (hasNextSet) {
-        const currentSet = newExercises[lastCompletedExercise][lastCompletedSetIndex];
-
-        import("@/utils/setRecommendations").then(({ getNextSetRecommendation }) => {
-          const recommendation = getNextSetRecommendation(
-            currentSet,
-            rpe,
-            lastCompletedExercise,
-            []
-          );
-
-          applySetRecommendation(
-            lastCompletedExercise,
-            nextSetIndex,
-            recommendation.weight,
-            recommendation.reps,
-            recommendation.restTime
-          );
-        });
-      }
-    }
-
-    return {
-      exercises: newExercises,
-      postSetFlow: "resting",
-      restTimerActive: true,
-      currentRestTime: newExercises[lastCompletedExercise]?.[lastCompletedSetIndex]?.restTime || 60,
-      lastTabActivity: Date.now(),
-    };
-  });
-};
-
-export const applySetRecommendation = (
-  exerciseName: string,
-  setIndex: number,
-  weight: number,
-  reps: number,
-  restTime: number
-) => {
-  getStore().setState(state => {
-    if (!state.exercises[exerciseName] || setIndex >= state.exercises[exerciseName].length) {
-      return {};
-    }
-
-    const newExercises = { ...state.exercises };
-    const currentSet = newExercises[exerciseName][setIndex];
-
-    if (
-      currentSet.weight !== weight ||
-      currentSet.reps !== reps ||
-      currentSet.restTime !== restTime
-    ) {
-      const previousValues = {
-        weight: currentSet.weight,
-        reps: currentSet.reps,
-        restTime: currentSet.restTime,
-      };
-
-      newExercises[exerciseName][setIndex] = {
-        ...currentSet,
-        weight,
-        reps,
-        restTime,
-        metadata: {
-          ...currentSet.metadata,
-          autoAdjusted: true,
-          previousValues,
-        },
-      };
-
-      return {
-        exercises: newExercises,
-        lastTabActivity: Date.now(),
-      };
-    }
-
-    return {};
-  });
-};
-
-// Centralized validation function - renamed to avoid conflict
-export const runWorkoutValidation = () => {
-  const store = getStore();
-  const state = store.getState();
-  
-  // Run comprehensive validation with repair capability
-  const validationResult = validateState(state, { 
-    showToasts: true,
-    attemptRepair: true
-  });
-  
-  console.log("Workout validation result:", validationResult);
-  
-  if (validationResult.isValid) {
+  // Check for other zombie conditions
+  if (state.workoutStatus === 'saved' && state.isActive) {
+    console.warn('🧟‍♂️ Zombie workout detected - saved but still active');
+    resetSession()(set, get);
     return true;
   }
   
-  // Perform repairs if needed
-  if (validationResult.needsRepair) {
-    if (isZombieWorkout(state)) {
-      console.warn("Detected zombie workout - resetting session");
-      resetSession();
-      return false;
-    }
-    
-    // Attempt to repair exercise data
-    const repairedExercises = repairExercises(state.exercises);
-    store.setState({
-      exercises: repairedExercises,
-      lastTabActivity: Date.now(),
-    });
-    
-    const exerciseCountAfterRepair = Object.keys(repairedExercises).length;
-    if (exerciseCountAfterRepair === 0 && state.isActive) {
-      console.warn("No valid exercises after repair, resetting session");
-      resetSession();
-      return false;
-    }
-    
-    if (exerciseCountAfterRepair > 0) {
-      toast({
-        title: "Workout data repaired",
-        description: `Fixed issues with ${Object.keys(state.exercises).length - exerciseCountAfterRepair} exercises`,
-      });
-    }
+  if (state.explicitlyEnded && state.isActive) {
+    console.warn('🧟‍♂️ Zombie workout detected - ended but still active');
+    resetSession()(set, get);
+    return true;
   }
   
-  return validationResult.isValid;
+  return false; // No zombie detected
+};
+
+// Comprehensive workout validation
+export const runWorkoutValidation = () => (set: any, get: any) => {
+  const state = get();
+  
+  console.log('🔍 Running workout validation:', {
+    isActive: state.isActive,
+    exerciseCount: Object.keys(state.exercises || {}).length,
+    workoutStatus: state.workoutStatus,
+    sessionId: state.sessionId
+  });
+  
+  // First check for and cleanup zombie workouts
+  const zombieDetected = detectAndCleanupZombieWorkout()(set, get);
+  
+  if (zombieDetected) {
+    console.log('✅ Zombie workout cleaned up');
+    return;
+  }
+  
+  console.log('✅ Workout validation passed');
+};
+
+// Status management functions
+export const markAsSaving = () => (set: any) => {
+  set({
+    workoutStatus: 'saving',
+    lastTabActivity: Date.now(),
+  });
+};
+
+export const markAsSaved = () => (set: any) => {
+  set({
+    workoutStatus: 'saved',
+    isActive: false,
+    explicitlyEnded: true,
+    lastTabActivity: Date.now(),
+  });
+  
+  toast({
+    title: "Workout Saved",
+    description: "Your workout has been saved successfully",
+  });
+};
+
+export const markAsFailed = (error: WorkoutError) => (set: any, get: any) => {
+  const currentErrors = get().savingErrors || [];
+  
+  set({
+    workoutStatus: 'failed',
+    savingErrors: [...currentErrors, error],
+    lastTabActivity: Date.now(),
+  });
+};
+
+export const handleCompleteSet = (exerciseName: string, setIndex: number) => (set: any, get: any) => {
+  const currentExercises = get().exercises;
+  
+  if (!currentExercises[exerciseName] || !currentExercises[exerciseName][setIndex]) {
+    console.error('Cannot complete set: Exercise or set not found');
+    return;
+  }
+  
+  const updatedExercises = {
+    ...currentExercises,
+    [exerciseName]: currentExercises[exerciseName].map((set, i) => 
+      i === setIndex ? { ...set, completed: true } : set
+    )
+  };
+  
+  set({
+    exercises: updatedExercises,
+    lastCompletedExercise: exerciseName,
+    lastCompletedSetIndex: setIndex,
+    lastTabActivity: Date.now(),
+  });
+};
+
+export const deleteExercise = (exerciseName: string) => (set: any, get: any) => {
+  const currentExercises = get().exercises;
+  const { [exerciseName]: deleted, ...remainingExercises } = currentExercises;
+  
+  set({
+    exercises: remainingExercises,
+    activeExercise: get().activeExercise === exerciseName ? null : get().activeExercise,
+    focusedExercise: get().focusedExercise === exerciseName ? null : get().focusedExercise,
+    lastTabActivity: Date.now(),
+  });
+  
+  toast({
+    title: "Exercise Removed",
+    description: `Removed ${exerciseName} from workout`,
+  });
+};
+
+export const startPostSetFlow = (exerciseName: string, setIndex: number) => (set: any) => {
+  set({
+    postSetFlow: 'rating',
+    lastCompletedExercise: exerciseName,
+    lastCompletedSetIndex: setIndex,
+    lastTabActivity: Date.now(),
+  });
+};
+
+export const submitSetRating = (rpe: number) => (set: any) => {
+  set({
+    postSetFlow: 'recommendation',
+    lastTabActivity: Date.now(),
+  });
+};
+
+export const applySetRecommendation = (exerciseName: string, setIndex: number, weight: number, reps: number, restTime: number) => (set: any, get: any) => {
+  const currentExercises = get().exercises;
+  
+  if (!currentExercises[exerciseName]) {
+    console.error('Cannot apply recommendation: Exercise not found');
+    return;
+  }
+  
+  // Add a new set with the recommended values
+  const updatedExercises = {
+    ...currentExercises,
+    [exerciseName]: [
+      ...currentExercises[exerciseName],
+      {
+        id: `temp-${exerciseName}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        exercise_name: exerciseName,
+        weight,
+        reps,
+        restTime,
+        completed: false,
+        set_number: currentExercises[exerciseName].length,
+        isEditing: false
+      }
+    ]
+  };
+  
+  set({
+    exercises: updatedExercises,
+    postSetFlow: 'idle',
+    currentRestTime: restTime,
+    lastTabActivity: Date.now(),
+  });
 };

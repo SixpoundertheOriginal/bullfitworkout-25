@@ -53,10 +53,12 @@ export interface WorkoutState {
   setWorkoutStatus: (status: WorkoutStatus) => void;
   setPostSetFlow: (state: PostSetFlowState) => void;
   
-  // Workout lifecycle actions
+  // Enhanced workflow actions
   startWorkout: () => void;
   endWorkout: () => void;
   resetSession: () => void;
+  detectAndCleanupZombieWorkout: () => boolean;
+  runWorkoutValidation: () => void;
   
   // Status management
   markAsSaving: () => void;
@@ -73,18 +75,6 @@ export interface WorkoutState {
   applySetRecommendation: (exerciseName: string, setIndex: number, weight: number, reps: number, restTime: number) => void;
 }
 
-// Create a global variable to track if storage was already initialized
-let store: ReturnType<typeof createStore> | null = null;
-
-// Helper function to access the store
-export const getStore = () => {
-  if (!store) {
-    console.log('workout/store: Creating new store instance');
-    store = createStore();
-  }
-  return store;
-}
-
 // Helper function to validate workout data structure
 const validateExercises = (exercises: WorkoutExercises): WorkoutExercises => {
   if (!exercises || typeof exercises !== 'object') {
@@ -97,7 +87,6 @@ const validateExercises = (exercises: WorkoutExercises): WorkoutExercises => {
   
   Object.keys(exercises).forEach(key => {
     const sets = exercises[key];
-    // Check if sets exists and is an array with at least one item
     if (sets && Array.isArray(sets) && sets.length > 0) {
       validExercises[key] = sets;
     } else {
@@ -113,7 +102,19 @@ const validateExercises = (exercises: WorkoutExercises): WorkoutExercises => {
   return validExercises;
 }
 
-// Create the store with all the logic
+// Create a global variable to track if storage was already initialized
+let store: ReturnType<typeof createStore> | null = null;
+
+// Helper function to access the store
+export const getStore = () => {
+  if (!store) {
+    console.log('workout/store: Creating new store instance');
+    store = createStore();
+  }
+  return store;
+}
+
+// Create the store with enhanced logic
 const createStore = () => create<WorkoutState>()(
   persist(
     (set, get) => ({
@@ -151,37 +152,23 @@ const createStore = () => create<WorkoutState>()(
       // Error handling
       savingErrors: [],
       
-      // Action setters with enhanced logging
+      // Basic setters
       setExercises: (exercises) => {
         console.log('workout/store: setExercises called');
-        console.log('workout/store: Type of exercises param:', typeof exercises);
         
         if (typeof exercises === 'function') {
-          console.log('workout/store: Using exercise updater function');
           const prevExercises = get().exercises;
-          console.log('workout/store: Previous exercises:', Object.keys(prevExercises));
           const newExercises = exercises(prevExercises);
-          console.log('workout/store: New exercises after function:', Object.keys(newExercises));
-          
           set({ 
             exercises: newExercises,
             lastTabActivity: Date.now(),
           });
         } else {
-          console.log('workout/store: Using direct exercise object');
-          console.log('workout/store: New exercises direct:', Object.keys(exercises));
-          
           set({ 
             exercises: exercises,
             lastTabActivity: Date.now(),
           });
         }
-        
-        // Log the result after update
-        setTimeout(() => {
-          console.log('workout/store: Exercises after update (timeout check):', 
-            Object.keys(get().exercises));
-        }, 100);
       },
       
       setActiveExercise: (exerciseName) => set({ 
@@ -191,7 +178,7 @@ const createStore = () => create<WorkoutState>()(
       
       setFocusedExercise: (exerciseName) => set({ 
         focusedExercise: exerciseName,
-        focusedSetIndex: exerciseName ? 0 : null, // Reset set index when changing focus
+        focusedSetIndex: exerciseName ? 0 : null,
         lastTabActivity: Date.now(),
       }),
       
@@ -220,7 +207,6 @@ const createStore = () => create<WorkoutState>()(
         lastTabActivity: Date.now(),
       }),
       
-      // Only update if the route has actually changed to prevent loops
       updateLastActiveRoute: (route) => set((state) => {
         if (state.lastActiveRoute !== route) {
           return { 
@@ -241,24 +227,26 @@ const createStore = () => create<WorkoutState>()(
         lastTabActivity: Date.now(),
       }),
       
-      // Connect the core action functions
-      startWorkout: actions.startWorkout,
-      endWorkout: actions.endWorkout,
-      resetSession: actions.resetSession,
-      markAsSaving: actions.markAsSaving,
-      markAsSaved: actions.markAsSaved,
-      markAsFailed: actions.markAsFailed,
-      handleCompleteSet: actions.handleCompleteSet,
-      deleteExercise: actions.deleteExercise,
-      startPostSetFlow: actions.startPostSetFlow,
-      submitSetRating: actions.submitSetRating,
-      applySetRecommendation: actions.applySetRecommendation,
+      // Enhanced action functions with proper binding
+      startWorkout: () => actions.startWorkout()(set, get),
+      endWorkout: () => actions.endWorkout()(set, get),
+      resetSession: () => actions.resetSession()(set, get),
+      detectAndCleanupZombieWorkout: () => actions.detectAndCleanupZombieWorkout()(set, get),
+      runWorkoutValidation: () => actions.runWorkoutValidation()(set, get),
+      markAsSaving: () => actions.markAsSaving()(set, get),
+      markAsSaved: () => actions.markAsSaved()(set, get),
+      markAsFailed: (error) => actions.markAsFailed(error)(set, get),
+      handleCompleteSet: (exerciseName, setIndex) => actions.handleCompleteSet(exerciseName, setIndex)(set, get),
+      deleteExercise: (exerciseName) => actions.deleteExercise(exerciseName)(set, get),
+      startPostSetFlow: (exerciseName, setIndex) => actions.startPostSetFlow(exerciseName, setIndex)(set, get),
+      submitSetRating: (rpe) => actions.submitSetRating(rpe)(set, get),
+      applySetRecommendation: (exerciseName, setIndex, weight, reps, restTime) => 
+        actions.applySetRecommendation(exerciseName, setIndex, weight, reps, restTime)(set, get),
     }),
     {
       name: 'workout-storage',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        // Only persist these specific parts of the state
         exercises: validateExercises(state.exercises),
         activeExercise: state.activeExercise,
         elapsedTime: state.elapsedTime,
@@ -292,53 +280,26 @@ const createStore = () => create<WorkoutState>()(
             const validatedExercises = validateExercises(rehydratedState.exercises || {});
             const exerciseKeys = Object.keys(validatedExercises);
             
-            // Detect zombie state: workout active but no exercises
-            if (rehydratedState.isActive && exerciseKeys.length === 0) {
-              console.warn('Detected zombie workout state - active but no exercises');
-              
-              // Reset the workout in the next event loop
-              setTimeout(() => {
-                actions.resetSession();
-              }, 100);
-              
-              return;
-            }
+            // Auto-detect and cleanup zombie workouts on load
+            setTimeout(() => {
+              const store = getStore();
+              store.getState().runWorkoutValidation();
+            }, 100);
             
-            // If activeExercise is set but doesn't exist in exercises, clear it
-            if (rehydratedState.activeExercise && !exerciseKeys.includes(rehydratedState.activeExercise)) {
-              console.warn('Active exercise does not exist in loaded exercises, clearing');
-              
-              setTimeout(() => {
-                const store = getStore();
-                store.setState({ activeExercise: null });
-              }, 100);
-            }
-            
-            // If focusedExercise is set but doesn't exist in exercises, clear it
-            if (rehydratedState.focusedExercise && !exerciseKeys.includes(rehydratedState.focusedExercise)) {
-              console.warn('Focused exercise does not exist in loaded exercises, clearing');
-              
-              setTimeout(() => {
-                const store = getStore();
-                store.setState({ focusedExercise: null });
-              }, 100);
-            }
-            
-            // Update elapsed time based on stored start time for active workouts
-            if (rehydratedState.isActive && rehydratedState.startTime) {
+            // Update elapsed time for active workouts
+            if (rehydratedState.isActive && rehydratedState.startTime && exerciseKeys.length > 0) {
               const storedStartTime = new Date(rehydratedState.startTime);
               const currentTime = new Date();
               const calculatedElapsedTime = Math.floor(
                 (currentTime.getTime() - storedStartTime.getTime()) / 1000
               );
               
-              // Only update if calculated time is greater than stored time
               if (calculatedElapsedTime > (rehydratedState.elapsedTime || 0)) {
                 setTimeout(() => {
                   const store = getStore();
                   store.getState().setElapsedTime(calculatedElapsedTime);
                   console.log(`Restored elapsed time: ${calculatedElapsedTime}s`);
-                }, 100);
+                }, 150);
               }
             }
           }
