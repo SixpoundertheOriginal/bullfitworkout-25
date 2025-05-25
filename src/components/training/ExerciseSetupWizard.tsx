@@ -573,12 +573,13 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
   };
 
   // Footer should be visible when on Step 2 (index 1) - the customize workout step
-  const shouldShowFooter = !showQuickStart && step === 1;
+  const shouldShowFooter = !showQuickStart && step === 1 && !showRecovery;
   
-  console.log('🔘 Button Props Check:', {
+  console.log('🔘 Footer Visibility Check:', {
     step,
     shouldShowFooter,
     showQuickStart,
+    showRecovery,
     validationState,
     isStarting,
     bodyFocusLength: bodyFocus.length
@@ -626,7 +627,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
           </div>
         </div>
         
-        {!showQuickStart && (
+        {!showQuickStart && !showRecovery && (
           <WizardProgressBar 
             currentStep={step} 
             totalSteps={2}
@@ -634,14 +635,17 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
         )}
       </div>
       
-      {/* Content area - scrollable */}
-      <div className="flex-1 overflow-y-auto px-4 py-6">
+      {/* Content area - scrollable with bottom padding for footer */}
+      <div className={cn(
+        "flex-1 overflow-y-auto px-4 py-6",
+        shouldShowFooter && "pb-32" // Add extra padding when footer is visible
+      )}>
         {renderStepContent()}
       </div>
       
-      {/* Enhanced Footer - Fixed at bottom - Only show for step 1 (customize workout) */}
+      {/* Enhanced Footer - Fixed at bottom - Show for step 1 (customize workout) */}
       {shouldShowFooter && (
-        <div className="flex-shrink-0 p-4 bg-gray-900 border-t border-gray-800 z-10">
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gray-900/95 backdrop-blur-sm border-t border-gray-800 z-20">
           {/* Validation warning banner */}
           {!validationState && (
             <motion.div 
@@ -670,13 +674,11 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
               onClick={handleComplete}
               disabled={!validationState || isStarting}
               className={cn(
-                "flex-1 sm:flex-none font-semibold transition-all duration-200",
+                "flex-1 sm:flex-none font-semibold transition-all duration-200 min-w-32",
                 validationState && !isStarting
-                  ? "bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white"
+                  ? "bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white shadow-lg"
                   : "bg-gray-700 text-gray-400 cursor-not-allowed"
               )}
-              haptic={validationState && !isStarting}
-              hapticPattern="heavy"
             >
               {isStarting ? (
                 <>
