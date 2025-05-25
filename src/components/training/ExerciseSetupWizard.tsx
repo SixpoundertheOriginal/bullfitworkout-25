@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -635,69 +636,84 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
         )}
       </div>
       
-      {/* Content area - scrollable with bottom padding for footer */}
+      {/* Content area - scrollable with bottom padding for floating button */}
       <div className={cn(
         "flex-1 overflow-y-auto px-4 py-6",
-        shouldShowFooter && "pb-32" // Add extra padding when footer is visible
+        shouldShowFooter && "pb-24" // Add padding for floating button
       )}>
         {renderStepContent()}
       </div>
       
-      {/* Enhanced Footer - Fixed at bottom - Show for step 1 (customize workout) */}
+      {/* Floating Start Workout Button - Only show for step 1 (customize workout) */}
       {shouldShowFooter && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gray-900/95 backdrop-blur-sm border-t border-gray-800 z-20">
-          {/* Validation warning banner */}
+        <>
+          {/* Validation warning banner - appears above the button */}
           {!validationState && (
             <motion.div 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-3 p-3 bg-red-900/20 border border-red-500/30 rounded-lg flex items-center gap-2"
+              className="fixed bottom-20 left-4 right-4 z-30"
             >
-              <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
-              <p className="text-sm text-red-400">
-                Please select at least one muscle group to start your workout
-              </p>
+              <div className="p-3 bg-red-900/90 backdrop-blur-sm border border-red-500/50 rounded-lg flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                <p className="text-sm text-red-400">
+                  Please select at least one muscle group to start your workout
+                </p>
+              </div>
             </motion.div>
           )}
-          
-          <div className="flex justify-between gap-4">
-            <Button
-              variant="outline"
-              onClick={handleBack}
-              className="border-gray-700 flex-1 sm:flex-none"
-              disabled={isStarting}
-            >
-              {getBackButtonLabel()}
-            </Button>
-            
-            <Button 
-              onClick={handleComplete}
-              disabled={!validationState || isStarting}
-              className={cn(
-                "flex-1 sm:flex-none font-semibold transition-all duration-200 min-w-32",
-                validationState && !isStarting
-                  ? "bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white shadow-lg"
-                  : "bg-gray-700 text-gray-400 cursor-not-allowed"
-              )}
-            >
-              {isStarting ? (
-                <>
-                  <motion.div 
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
-                  />
-                  Starting...
-                </>
-              ) : (
-                <>
-                  {getNextButtonLabel()}
-                  {validationState && <ChevronRight className="ml-1 h-5 w-5" />}
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
+
+          {/* Floating Start Workout Button */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="fixed bottom-4 left-4 right-4 z-30"
+          >
+            <div className="flex gap-3">
+              {/* Back Button */}
+              <Button
+                variant="outline"
+                onClick={handleBack}
+                className="border-gray-700 bg-gray-800/90 backdrop-blur-sm hover:bg-gray-700"
+                disabled={isStarting}
+                size="lg"
+              >
+                <ChevronLeft className="mr-1 h-5 w-5" />
+                {getBackButtonLabel()}
+              </Button>
+              
+              {/* Start Workout Button */}
+              <Button 
+                onClick={handleComplete}
+                disabled={!validationState || isStarting}
+                size="lg"
+                className={cn(
+                  "flex-1 font-semibold transition-all duration-300 min-h-12",
+                  "shadow-lg backdrop-blur-sm",
+                  validationState && !isStarting
+                    ? "bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white shadow-purple-500/25 hover:shadow-purple-500/40 hover:scale-[1.02]"
+                    : "bg-gray-700/90 text-gray-400 cursor-not-allowed border border-gray-600"
+                )}
+              >
+                {isStarting ? (
+                  <>
+                    <motion.div 
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2"
+                    />
+                    Starting Workout...
+                  </>
+                ) : (
+                  <>
+                    {getNextButtonLabel()}
+                    {validationState && <ChevronRight className="ml-2 h-5 w-5" />}
+                  </>
+                )}
+              </Button>
+            </div>
+          </motion.div>
+        </>
       )}
     </div>
   );
