@@ -6,7 +6,7 @@ import { ExerciseSet } from '@/store/workout/types';
 import { AttemptRecoveryFn, HandleCompleteWorkoutFn } from '@/types/workout';
 import { useTrainingSetupPersistence } from '@/hooks/useTrainingSetupPersistence';
 import { getStore } from '@/store/workout/store';
-import { createDefaultSet, runWorkoutValidation } from '@/store/workout/actions';
+import { createDefaultSet } from '@/store/workout/actions';
 
 /**
  * Hook that provides handler functions for the training session
@@ -61,10 +61,14 @@ export const useTrainingSessionHandlers = (
       return;
     }
     
+    // Get current workout ID from store
+    const store = getStore();
+    const workoutId = store.getState().workoutId;
+    
     // Add new exercise with default 3 sets - ensure they're valid
     console.log('useTrainingSessionHandlers: Creating new valid sets for exercise:', exerciseName);
     const newSets: ExerciseSet[] = Array.from({ length: 3 }, (_, i) => 
-      createDefaultSet(exerciseName, i + 1)
+      createDefaultSet(exerciseName, i + 1, workoutId || undefined)
     );
     
     console.log('useTrainingSessionHandlers: Generated valid sets:', newSets);
@@ -138,8 +142,12 @@ export const useTrainingSessionHandlers = (
         nextSetNumber = (lastSet.set_number || 0) + 1;
       }
       
+      // Get current workout ID from store
+      const store = getStore();
+      const workoutId = store.getState().workoutId;
+      
       // Create a new valid set using the imported function
-      const newSet = createDefaultSet(exerciseName, nextSetNumber);
+      const newSet = createDefaultSet(exerciseName, nextSetNumber, workoutId || undefined);
       newSet.weight = weight;
       newSet.reps = reps;
       

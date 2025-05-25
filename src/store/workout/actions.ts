@@ -8,9 +8,10 @@ export const generateSessionId = (): string => {
 };
 
 // Create a default set for an exercise
-export const createDefaultSet = (exerciseName: string, setNumber: number) => {
+export const createDefaultSet = (exerciseName: string, setNumber: number, workoutId?: string) => {
   return {
     id: `temp-${exerciseName}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    workout_id: workoutId || 'temp-workout-id',
     exercise_name: exerciseName,
     weight: 0,
     reps: 10,
@@ -45,7 +46,7 @@ export const canStartWorkout = (state: WorkoutState): boolean => {
 };
 
 // Enhanced start workout with validation
-export const startWorkout = () => (set: any, get: any) => {
+export const startWorkout = (set: any, get: any) => {
   const currentState = get();
   
   // Validate we can start
@@ -77,7 +78,7 @@ export const startWorkout = () => (set: any, get: any) => {
 };
 
 // Enhanced end workout
-export const endWorkout = () => (set: any, get: any) => {
+export const endWorkout = (set: any, get: any) => {
   const currentState = get();
   
   console.log('🏁 Ending workout session:', { 
@@ -94,7 +95,7 @@ export const endWorkout = () => (set: any, get: any) => {
 };
 
 // Enhanced reset with zombie cleanup
-export const resetSession = () => (set: any, get: any) => {
+export const resetSession = (set: any, get: any) => {
   const currentState = get();
   
   console.log('🔄 Resetting workout session:', { 
@@ -136,7 +137,7 @@ export const resetSession = () => (set: any, get: any) => {
 };
 
 // Zombie workout detection and cleanup
-export const detectAndCleanupZombieWorkout = () => (set: any, get: any) => {
+export const detectAndCleanupZombieWorkout = (set: any, get: any) => {
   const state = get();
   
   // Check for zombie workout: active but no exercises
@@ -144,7 +145,7 @@ export const detectAndCleanupZombieWorkout = () => (set: any, get: any) => {
     console.warn('🧟‍♂️ Zombie workout detected - active but no exercises');
     
     // Reset the zombie workout
-    resetSession()(set, get);
+    resetSession(set, get);
     
     toast({
       title: "Workout Reset",
@@ -158,13 +159,13 @@ export const detectAndCleanupZombieWorkout = () => (set: any, get: any) => {
   // Check for other zombie conditions
   if (state.workoutStatus === 'saved' && state.isActive) {
     console.warn('🧟‍♂️ Zombie workout detected - saved but still active');
-    resetSession()(set, get);
+    resetSession(set, get);
     return true;
   }
   
   if (state.explicitlyEnded && state.isActive) {
     console.warn('🧟‍♂️ Zombie workout detected - ended but still active');
-    resetSession()(set, get);
+    resetSession(set, get);
     return true;
   }
   
@@ -172,7 +173,7 @@ export const detectAndCleanupZombieWorkout = () => (set: any, get: any) => {
 };
 
 // Comprehensive workout validation
-export const runWorkoutValidation = () => (set: any, get: any) => {
+export const runWorkoutValidation = (set: any, get: any) => {
   const state = get();
   
   console.log('🔍 Running workout validation:', {
@@ -183,7 +184,7 @@ export const runWorkoutValidation = () => (set: any, get: any) => {
   });
   
   // First check for and cleanup zombie workouts
-  const zombieDetected = detectAndCleanupZombieWorkout()(set, get);
+  const zombieDetected = detectAndCleanupZombieWorkout(set, get);
   
   if (zombieDetected) {
     console.log('✅ Zombie workout cleaned up');
@@ -194,14 +195,14 @@ export const runWorkoutValidation = () => (set: any, get: any) => {
 };
 
 // Status management functions
-export const markAsSaving = () => (set: any) => {
+export const markAsSaving = (set: any, get: any) => {
   set({
     workoutStatus: 'saving',
     lastTabActivity: Date.now(),
   });
 };
 
-export const markAsSaved = () => (set: any) => {
+export const markAsSaved = (set: any, get: any) => {
   set({
     workoutStatus: 'saved',
     isActive: false,
@@ -215,7 +216,7 @@ export const markAsSaved = () => (set: any) => {
   });
 };
 
-export const markAsFailed = (error: WorkoutError) => (set: any, get: any) => {
+export const markAsFailed = (error: WorkoutError, set: any, get: any) => {
   const currentErrors = get().savingErrors || [];
   
   set({
@@ -225,7 +226,7 @@ export const markAsFailed = (error: WorkoutError) => (set: any, get: any) => {
   });
 };
 
-export const handleCompleteSet = (exerciseName: string, setIndex: number) => (set: any, get: any) => {
+export const handleCompleteSet = (exerciseName: string, setIndex: number, set: any, get: any) => {
   const currentExercises = get().exercises;
   
   if (!currentExercises[exerciseName] || !currentExercises[exerciseName][setIndex]) {
@@ -248,7 +249,7 @@ export const handleCompleteSet = (exerciseName: string, setIndex: number) => (se
   });
 };
 
-export const deleteExercise = (exerciseName: string) => (set: any, get: any) => {
+export const deleteExercise = (exerciseName: string, set: any, get: any) => {
   const currentExercises = get().exercises;
   const { [exerciseName]: deleted, ...remainingExercises } = currentExercises;
   
@@ -265,7 +266,7 @@ export const deleteExercise = (exerciseName: string) => (set: any, get: any) => 
   });
 };
 
-export const startPostSetFlow = (exerciseName: string, setIndex: number) => (set: any) => {
+export const startPostSetFlow = (exerciseName: string, setIndex: number, set: any, get: any) => {
   set({
     postSetFlow: 'rating',
     lastCompletedExercise: exerciseName,
@@ -274,20 +275,23 @@ export const startPostSetFlow = (exerciseName: string, setIndex: number) => (set
   });
 };
 
-export const submitSetRating = (rpe: number) => (set: any) => {
+export const submitSetRating = (rpe: number, set: any, get: any) => {
   set({
     postSetFlow: 'recommendation',
     lastTabActivity: Date.now(),
   });
 };
 
-export const applySetRecommendation = (exerciseName: string, setIndex: number, weight: number, reps: number, restTime: number) => (set: any, get: any) => {
+export const applySetRecommendation = (exerciseName: string, setIndex: number, weight: number, reps: number, restTime: number, set: any, get: any) => {
   const currentExercises = get().exercises;
   
   if (!currentExercises[exerciseName]) {
     console.error('Cannot apply recommendation: Exercise not found');
     return;
   }
+  
+  // Get current workout ID
+  const workoutId = get().workoutId;
   
   // Add a new set with the recommended values
   const updatedExercises = {
@@ -296,6 +300,7 @@ export const applySetRecommendation = (exerciseName: string, setIndex: number, w
       ...currentExercises[exerciseName],
       {
         id: `temp-${exerciseName}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        workout_id: workoutId || 'temp-workout-id',
         exercise_name: exerciseName,
         weight,
         reps,

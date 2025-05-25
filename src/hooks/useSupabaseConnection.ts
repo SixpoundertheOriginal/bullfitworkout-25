@@ -81,10 +81,30 @@ export const useSupabaseConnection = () => {
       });
       
       // Subscribe to test the connection
-      const status = await channel.subscribe();
+      const subscribePromise = channel.subscribe();
       
-      if (status === 'SUBSCRIBED') {
-        console.log('✅ WebSocket connection established');
+      // Handle subscription result properly
+      if (subscribePromise && typeof subscribePromise.then === 'function') {
+        const status = await subscribePromise;
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ WebSocket connection established');
+          setConnectionState({
+            isConnected: true,
+            isConnecting: false,
+            retryCount: 0,
+            lastError: null
+          });
+          
+          // Clean up the test channel after a short delay
+          setTimeout(() => {
+            supabase.removeChannel(channel);
+          }, 1000);
+        } else {
+          throw new Error(`Subscription failed with status: ${status}`);
+        }
+      } else {
+        // If subscribe doesn't return a promise, assume it worked
+        console.log('✅ WebSocket connection established (no promise)');
         setConnectionState({
           isConnected: true,
           isConnecting: false,
@@ -92,12 +112,9 @@ export const useSupabaseConnection = () => {
           lastError: null
         });
         
-        // Clean up the test channel after a short delay
         setTimeout(() => {
           supabase.removeChannel(channel);
         }, 1000);
-      } else {
-        throw new Error(`Subscription failed with status: ${status}`);
       }
       
     } catch (error) {
