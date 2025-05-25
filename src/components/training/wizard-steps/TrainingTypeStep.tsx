@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Dumbbell, Activity, Compass, Sun } from 'lucide-react';
@@ -13,6 +13,7 @@ const Yoga = () => (
 interface TrainingTypeStepProps {
   selectedType: string;
   onSelectType: (type: string) => void;
+  onAutoAdvance?: () => void;
   stats?: WorkoutStats | null;
 }
 
@@ -24,14 +25,49 @@ interface TrainingTypeOption {
   color: string;
 }
 
-export function TrainingTypeStep({ selectedType, onSelectType, stats }: TrainingTypeStepProps) {
-  // Only log when there's an actual change
+export function TrainingTypeStep({ selectedType, onSelectType, onAutoAdvance, stats }: TrainingTypeStepProps) {
+  const [isAdvancing, setIsAdvancing] = useState(false);
+  const [justSelected, setJustSelected] = useState<string | null>(null);
+
+  // Handle type selection with visual feedback and auto-advance
   const handleTypeSelection = (typeId: string) => {
-    if (typeId !== selectedType) {
+    if (typeId !== selectedType && !isAdvancing) {
       console.log('🎯 Training type selection changed:', { from: selectedType, to: typeId });
+      
+      // Set visual feedback states
+      setJustSelected(typeId);
+      setIsAdvancing(true);
+      
+      // Update the selection
       onSelectType(typeId);
+      
+      // Announce to screen readers
+      const announcement = `${typeId} selected. Advancing to next step.`;
+      const ariaLive = document.createElement('div');
+      ariaLive.setAttribute('aria-live', 'polite');
+      ariaLive.setAttribute('aria-atomic', 'true');
+      ariaLive.textContent = announcement;
+      ariaLive.style.position = 'absolute';
+      ariaLive.style.left = '-10000px';
+      document.body.appendChild(ariaLive);
+      
+      // Trigger auto-advance after delay
+      setTimeout(() => {
+        onAutoAdvance?.();
+        setIsAdvancing(false);
+        setJustSelected(null);
+        document.body.removeChild(ariaLive);
+      }, 500);
     } else {
-      console.log('⚠️ Training type selection unchanged:', typeId);
+      console.log('⚠️ Training type selection unchanged or advancing:', typeId);
+    }
+  };
+
+  // Handle keyboard navigation
+  const handleKeyDown = (event: React.KeyboardEvent, typeId: string) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleTypeSelection(typeId);
     }
   };
 
@@ -118,13 +154,28 @@ export function TrainingTypeStep({ selectedType, onSelectType, stats }: Training
       <div>
         <h2 className="text-xl font-semibold mb-1">Choose Training Type</h2>
         <p className="text-gray-400 text-sm">
-          Select the type of workout you'd like to do
+          {isAdvancing ? 'Advancing to next step...' : 'Select the type of workout you\'d like to do'}
         </p>
       </div>
+
+      {/* Loading overlay when advancing */}
+      {isAdvancing && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center"
+        >
+          <div className="bg-gray-800 rounded-lg p-4 flex items-center space-x-3">
+            <div className="animate-spin w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full"></div>
+            <span className="text-white">Setting up your workout...</span>
+          </div>
+        </motion.div>
+      )}
 
       <div className="space-y-3">
         {trainingTypes.map((type) => {
           const isSelected = selectedType === type.id;
+          const isJustSelected = justSelected === type.id;
           const recommendationTag = getRecommendationTag(type.id);
           const hasMetrics = typeMetrics[type.id];
           
@@ -132,12 +183,27 @@ export function TrainingTypeStep({ selectedType, onSelectType, stats }: Training
             <motion.div
               key={type.id}
               whileTap={{ scale: 0.98 }}
+              animate={isJustSelected ? {
+                scale: [1, 1.02, 1],
+                boxShadow: [
+                  "0 0 0 0 rgba(147, 51, 234, 0)",
+                  "0 0 0 8px rgba(147, 51, 234, 0.2)",
+                  "0 0 0 0 rgba(147, 51, 234, 0)"
+                ]
+              } : {}}
+              transition={{ duration: 0.5 }}
               onClick={() => handleTypeSelection(type.id)}
+              onKeyDown={(e) => handleKeyDown(e, type.id)}
+              tabIndex={0}
+              role="button"
+              aria-label={`Select ${type.name} training type`}
               className={cn(
                 "p-4 rounded-xl border cursor-pointer transform transition-all duration-200",
+                "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900",
                 isSelected 
                   ? "bg-purple-900/30 border-purple-500 shadow-lg shadow-purple-900/20 ring-2 ring-purple-500/30" 
                   : "bg-gray-900/50 border-gray-800 hover:bg-gray-800/70 hover:border-gray-700",
+                isAdvancing && !isJustSelected && "opacity-50 pointer-events-none"
               )}
             >
               <div className="flex items-center">
