@@ -1,9 +1,24 @@
+
 import { WorkoutState, WorkoutExercises, WorkoutError } from './types';
 import { toast } from '@/hooks/use-toast';
 
 // Generate a unique session ID
 export const generateSessionId = (): string => {
   return crypto.randomUUID ? crypto.randomUUID() : `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+};
+
+// Create a default set for an exercise
+export const createDefaultSet = (exerciseName: string, setNumber: number) => {
+  return {
+    id: `temp-${exerciseName}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    exercise_name: exerciseName,
+    weight: 0,
+    reps: 10,
+    restTime: 60,
+    completed: false,
+    set_number: setNumber,
+    isEditing: false
+  };
 };
 
 // Enhanced validation before starting workout

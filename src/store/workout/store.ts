@@ -227,7 +227,7 @@ const createStore = () => create<WorkoutState>()(
         lastTabActivity: Date.now(),
       }),
       
-      // Enhanced action functions with proper binding
+      // Enhanced action functions with proper binding - fixed argument count
       startWorkout: () => actions.startWorkout()(set, get),
       endWorkout: () => actions.endWorkout()(set, get),
       resetSession: () => actions.resetSession()(set, get),

@@ -59,24 +59,31 @@ export const useSupabaseConnection = () => {
       // Test connection by subscribing to a simple channel
       const channel = supabase.channel('connection-test');
       
-      // Set up connection handlers
-      channel.on('error', (error) => {
-        console.error('🔌 WebSocket connection error:', error);
-        setConnectionState(prev => ({
-          ...prev,
-          isConnected: false,
+      // Set up connection handlers with correct arguments
+      channel.on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
+        console.log('🔌 WebSocket connection established via postgres_changes');
+        setConnectionState({
+          isConnected: true,
           isConnecting: false,
-          lastError: error.message || 'Connection error'
-        }));
-        
-        // Retry with exponential backoff
-        const delay = baseRetryDelay * Math.pow(2, retryCount);
-        retryTimeoutRef.current = setTimeout(() => {
-          connectWithRetry(retryCount + 1);
-        }, delay);
+          retryCount: 0,
+          lastError: null
+        });
       });
       
-      channel.on('connected', () => {
+      channel.on('presence', { event: 'sync' }, () => {
+        console.log('✅ WebSocket connection established via presence');
+        setConnectionState({
+          isConnected: true,
+          isConnecting: false,
+          retryCount: 0,
+          lastError: null
+        });
+      });
+      
+      // Subscribe to test the connection
+      const status = await channel.subscribe();
+      
+      if (status === 'SUBSCRIBED') {
         console.log('✅ WebSocket connection established');
         setConnectionState({
           isConnected: true,
@@ -85,12 +92,13 @@ export const useSupabaseConnection = () => {
           lastError: null
         });
         
-        // Clean up the test channel
-        supabase.removeChannel(channel);
-      });
-      
-      // Subscribe to test the connection
-      await channel.subscribe();
+        // Clean up the test channel after a short delay
+        setTimeout(() => {
+          supabase.removeChannel(channel);
+        }, 1000);
+      } else {
+        throw new Error(`Subscription failed with status: ${status}`);
+      }
       
     } catch (error) {
       console.error('🔌 WebSocket connection failed:', error);
