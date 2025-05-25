@@ -366,31 +366,6 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       setHasError(true);
     }
   }, [step, clearWizardState, onCancel]);
-  
-  // Continue button for manual progression with error handling
-  const handleNext = useCallback(() => {
-    try {
-      console.log('🔥🔥🔥 CONTINUE BUTTON CLICKED!');
-      console.log('📊 Continue Button Debug:', {
-        step,
-        trainingType,
-        duration,
-        timestamp: new Date().toISOString()
-      });
-      
-      if (step < 1) {
-        const newStep = step + 1;
-        console.log('🚀 ADVANCING: step', step, '→', newStep);
-        setStep(prev => prev + 1);
-      } else {
-        console.log('🏁 COMPLETING WORKOUT');
-        handleComplete();
-      }
-    } catch (error) {
-      console.error('❌ ERROR in handleNext:', error);
-      setHasError(true);
-    }
-  }, [step, handleComplete]);
 
   // Handle training type selection with auto-advance trigger
   const handleTrainingTypeChange = useCallback((newType: string) => {
@@ -419,23 +394,6 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       setHasError(true);
     }
   }, [bodyFocus]);
-
-  // Memoize the next button disabled state
-  const isNextDisabled = useMemo(() => {
-    const disabled = (() => {
-      switch (step) {
-        case 0:
-          return !trainingType;
-        case 1:
-          return false;
-        default:
-          return false;
-      }
-    })();
-    
-    console.log('🔘 Button disabled calculation:', { step, trainingType, disabled });
-    return disabled;
-  }, [step, trainingType]);
 
   // Cleanup auto-advance on unmount
   useEffect(() => {
@@ -552,14 +510,12 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     return 'Back';
   };
 
-  // Footer should be visible when NOT in QuickStart mode AND not on Step 0 (auto-advance)
-  const shouldShowFooter = !showQuickStart && step > 0;
+  // Footer should be visible when on Step 2 (index 1) - the customize workout step
+  const shouldShowFooter = !showQuickStart && step === 1;
   
   console.log('🔘 Button Props Check:', {
-    onClick: typeof handleNext,
-    disabled: isNextDisabled,
-    visible: shouldShowFooter,
     step,
+    shouldShowFooter,
     showQuickStart
   });
   
@@ -617,7 +573,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
         {renderStepContent()}
       </div>
       
-      {/* Footer - Fixed at bottom - Only show for manual progression step (1) */}
+      {/* Footer - Fixed at bottom - Only show for step 1 (customize workout) */}
       {shouldShowFooter && (
         <div className="flex-shrink-0 p-4 bg-gray-900 border-t border-gray-800 z-10">
           <div className="flex justify-between gap-4">
@@ -630,12 +586,10 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
             </Button>
             
             <Button 
-              variant="gradient"
-              onClick={handleNext}
-              disabled={isNextDisabled}
-              className="flex-1 sm:flex-none"
+              onClick={handleComplete}
+              className="flex-1 sm:flex-none bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-semibold"
             >
-              {getNextButtonLabel()}
+              Start Workout
               <ChevronRight className="ml-1 h-5 w-5" />
             </Button>
           </div>
