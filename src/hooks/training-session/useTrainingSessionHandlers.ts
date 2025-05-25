@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -111,7 +112,8 @@ export const useTrainingSessionHandlers = (
           );
           
           // Run validation to catch any issues immediately
-          runWorkoutValidation();
+          const store = getStore();
+          store.getState().runWorkoutValidation();
         }
       }, 50);
     }, 10);
@@ -244,18 +246,10 @@ export const useTrainingSessionHandlers = (
       }
       
       // Validate workout state before finishing
-      const isValid = runWorkoutValidation();
-      if (!isValid) {
-        toast({
-          title: "Workout data issues detected",
-          description: "There were problems with your workout data that needed to be fixed. Please check your exercises.",
-          variant: "destructive"
-        });
-        // Continue anyway since validateWorkoutState should have fixed issues
-      }
+      const store = getStore();
+      store.getState().runWorkoutValidation();
       
       // Make sure workoutId exists
-      const store = getStore();
       const { workoutId } = store.getState();
       
       if (!workoutId) {

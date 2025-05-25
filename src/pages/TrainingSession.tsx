@@ -8,13 +8,12 @@ import { SimplifiedTrainingContent } from "@/components/training/SimplifiedTrain
 import { validateWorkoutState } from '@/store/workout/validators';
 import { toast } from '@/hooks/use-toast';
 import { useWorkoutStore } from '@/store/workout';
-import { resetSession } from '@/store/workout/actions';
 
 const TrainingSessionPage = () => {
   const { isLoading: loadingExercises } = useExercises();
   const navigate = useNavigate();
   const workoutStore = useWorkoutStore();
-  const { workoutStatus, isActive } = workoutStore;
+  const { workoutStatus, isActive, resetSession } = workoutStore;
   
   // Initialize the workout timer
   useWorkoutTimer();
@@ -62,7 +61,7 @@ const TrainingSessionPage = () => {
     }, 800);
     
     return () => clearTimeout(timer);
-  }, [navigate, isActive, isTerminatedStatus, workoutStore]);
+  }, [navigate, isActive, isTerminatedStatus, workoutStore, resetSession]);
 
   if (loadingExercises) {
     return <TrainingSessionLoading />;

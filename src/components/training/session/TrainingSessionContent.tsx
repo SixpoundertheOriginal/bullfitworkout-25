@@ -12,7 +12,6 @@ import { EmergencyWorkoutReset } from '../EmergencyWorkoutReset';
 import { useTrainingSessionState } from '@/hooks/training-session/useTrainingSessionState';
 import { useWorkoutStore } from '@/store/workout';
 import { useTrainingSessionData } from '@/hooks/training-session/useTrainingSessionData';
-import { submitSetRating } from '@/store/workout/actions';
 import { useAddExercise } from '@/store/workout/hooks';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -41,7 +40,8 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     lastCompletedSetIndex,
     elapsedTime,
     activeExercise,
-    focusedExercise
+    focusedExercise,
+    submitSetRating
   } = useTrainingSessionState();
   
   // Use the hook to get computed data from exercises

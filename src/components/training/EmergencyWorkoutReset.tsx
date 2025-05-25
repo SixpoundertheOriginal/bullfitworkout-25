@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "@/hooks/use-toast";
 import { useWorkoutStore } from '@/store/workout';
-import { resetSession, runWorkoutValidation } from '@/store/workout/actions';
 import { useNavigate } from 'react-router-dom';
 
 /**
@@ -14,8 +13,17 @@ import { useNavigate } from 'react-router-dom';
  */
 export const EmergencyWorkoutReset: React.FC = () => {
   const [expanded, setExpanded] = useState(false);
-  const { exercises, workoutStatus, isActive, workoutId } = useWorkoutStore();
   const navigate = useNavigate();
+  
+  // Get all the store state and actions
+  const { 
+    exercises, 
+    workoutStatus, 
+    isActive, 
+    workoutId,
+    resetSession,
+    runWorkoutValidation
+  } = useWorkoutStore();
   
   const exerciseCount = Object.keys(exercises).length;
   const hasPotentialIssue = isActive && exerciseCount === 0;
@@ -35,7 +43,8 @@ export const EmergencyWorkoutReset: React.FC = () => {
     if (window.confirm('⚠️ EMERGENCY RESET: This will completely reset your workout. Continue?')) {
       console.log('Emergency workout reset triggered');
       resetSession();
-      toast.success('Workout completely reset', {
+      toast({
+        title: 'Workout completely reset',
         description: 'All workout data has been cleared. Start a new workout.',
       });
     }
@@ -45,7 +54,8 @@ export const EmergencyWorkoutReset: React.FC = () => {
     if (window.confirm('⚠️ FORCE FULL RESET: This will purge ALL local storage and reload the page. Continue?')) {
       console.log('Force full reset triggered - clearing localStorage and reloading');
       localStorage.removeItem("workout-storage");
-      toast.success('Local storage cleared', {
+      toast({
+        title: 'Local storage cleared',
         description: 'Reloading page to start fresh.',
       });
       // Give toast time to display before reload
@@ -54,12 +64,11 @@ export const EmergencyWorkoutReset: React.FC = () => {
   };
 
   const handleForceValidate = () => {
-    const isValid = runWorkoutValidation();
+    runWorkoutValidation();
     
     toast({
-      title: isValid ? 'Workout validated' : 'Validation failed',
-      description: `Validation result: ${isValid ? 'OK' : 'Issues detected and fixed'}`,
-      variant: isValid ? 'default' : 'destructive',
+      title: 'Validation completed',
+      description: 'Workout validation has been executed',
     });
   };
   
@@ -73,7 +82,8 @@ export const EmergencyWorkoutReset: React.FC = () => {
       // Then navigate to home page
       navigate('/');
       
-      toast.success('Stuck workout fix attempted', {
+      toast({
+        title: 'Stuck workout fix attempted',
         description: 'Session reset and redirected to home page.',
       });
     }
