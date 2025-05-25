@@ -407,15 +407,6 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     }
   }, [bodyFocus]);
 
-  // Use refs to stabilize touch gesture callbacks
-  const stepRef = useRef(step);
-  const showQuickStartRef = useRef(showQuickStart);
-  
-  useEffect(() => {
-    stepRef.current = step;
-    showQuickStartRef.current = showQuickStart;
-  }, [step, showQuickStart]);
-
   // Cleanup auto-advance on unmount
   useEffect(() => {
     return cleanup;
@@ -531,7 +522,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     return 'Back';
   };
 
-  // NEW: Footer should be visible when NOT in QuickStart mode AND we're on Step 1 (final step)
+  // Footer should be visible when NOT in QuickStart mode AND we're on Step 1 (final step)
   const shouldShowFooter = !showQuickStart && step === 1;
   
   console.log('🔘 Button Props Check:', {
