@@ -86,6 +86,9 @@ const estimateDuration = (trainingType: string, bodyFocus: string[]): number => 
 };
 
 export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStats }: ExerciseSetupWizardProps) {
+  // Add error boundary state
+  const [hasError, setHasError] = useState(false);
+  
   const [step, setStep] = useState(0);
   const [showQuickStart, setShowQuickStart] = useState(false);
   const [showRecovery, setShowRecovery] = useState(false);
@@ -97,19 +100,37 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
   const [duration, setDuration] = useState(45);
   const [tags, setTags] = useState<string[]>([]);
 
-  // State persistence and recovery
+  // State persistence and recovery with error handling
   const { saveWizardState, restoreWizardState, clearWizardState } = useWizardStatePersistence({
-    throttleMs: 1000, // Save at most once per second
+    throttleMs: 1000,
     enableThrottling: true
   });
 
   // Auto-advance with configurable settings
   const { triggerAutoAdvance, isAdvancing, canRollback, rollback, cleanup } = useAutoAdvance({
-    delay: 500, // Default delay, could be A/B tested
-    onAdvance: () => setStep(1),
+    delay: 500,
+    onAdvance: () => {
+      try {
+        setStep(1);
+      } catch (error) {
+        console.error('Error during auto-advance:', error);
+        setHasError(true);
+      }
+    },
     fallbackToManual: true,
     enableRollback: true
   });
+
+  // Error boundary effect
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      console.error('Wizard error caught:', event.error);
+      setHasError(true);
+    };
+    
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
 
   // 🚨 ESSENTIAL DEBUG LOGGING
   console.log('🔄 ExerciseSetupWizard RENDER:', {
@@ -121,84 +142,110 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     isInitialized,
     statsLoading: isLoadingStats,
     statsExists: !!stats,
+    hasError,
     renderTimestamp: new Date().toISOString()
   });
 
   // Save wizard state whenever key values change
   useEffect(() => {
-    if (isInitialized) {
-      saveWizardState({
-        step,
-        trainingType,
-        bodyFocus,
-        duration: estimateDuration(trainingType, bodyFocus) // Use smart estimation
-      });
+    if (isInitialized && !hasError) {
+      try {
+        saveWizardState({
+          step,
+          trainingType,
+          bodyFocus,
+          duration: estimateDuration(trainingType, bodyFocus)
+        });
+      } catch (error) {
+        console.error('Error saving wizard state:', error);
+      }
     }
-  }, [step, trainingType, bodyFocus, isInitialized, saveWizardState]);
+  }, [step, trainingType, bodyFocus, isInitialized, saveWizardState, hasError]);
 
   // Initialize from stats or recovered state
   useEffect(() => {
-    if (!isInitialized && !isLoadingStats) {
-      // First check for session recovery
-      const recoveredState = restoreWizardState();
-      
-      if (recoveredState && recoveredState.step > 0) {
-        console.log('🔄 Found recoverable session:', recoveredState);
-        setShowRecovery(true);
-        setIsInitialized(true);
-        return;
-      }
-      
-      // Initialize from stats if available
-      if (stats) {
-        console.log('🎯 Initializing from stats:', {
-          recommendedType: stats.recommendedType,
-          recommendedDuration: stats.recommendedDuration
-        });
+    if (!isInitialized && !isLoadingStats && !hasError) {
+      try {
+        // First check for session recovery
+        const recoveredState = restoreWizardState();
         
-        if (stats.recommendedType) {
-          const newType = stats.recommendedType.toLowerCase();
-          console.log('🔄 Setting training type from stats:', newType);
-          setTrainingType(newType);
+        if (recoveredState && recoveredState.step > 0) {
+          console.log('🔄 Found recoverable session:', recoveredState);
+          setShowRecovery(true);
+          setIsInitialized(true);
+          return;
         }
         
-        // Use smart duration estimation instead of raw stats
-        const smartDuration = estimateDuration(stats.recommendedType || trainingType, []);
-        console.log('🔄 Setting smart estimated duration:', smartDuration);
-        setDuration(smartDuration);
+        // Initialize from stats if available
+        if (stats) {
+          console.log('🎯 Initializing from stats:', {
+            recommendedType: stats.recommendedType,
+            recommendedDuration: stats.recommendedDuration
+          });
+          
+          if (stats.recommendedType) {
+            const newType = stats.recommendedType.toLowerCase();
+            console.log('🔄 Setting training type from stats:', newType);
+            setTrainingType(newType);
+          }
+          
+          // Use smart duration estimation instead of raw stats
+          const smartDuration = estimateDuration(stats.recommendedType || trainingType, []);
+          console.log('🔄 Setting smart estimated duration:', smartDuration);
+          setDuration(smartDuration);
+        }
+        
+        setIsInitialized(true);
+      } catch (error) {
+        console.error('Error during initialization:', error);
+        setHasError(true);
       }
-      
-      setIsInitialized(true);
     }
-  }, [stats, isLoadingStats, isInitialized, restoreWizardState, trainingType]);
+  }, [stats, isLoadingStats, isInitialized, restoreWizardState, trainingType, hasError]);
 
   // QuickStart logic - only run once on mount
   useEffect(() => {
-    const hasUsedSetupBefore = localStorage.getItem('has_used_setup');
-    console.log('🚀 QuickStart check:', { hasUsedSetupBefore });
-    
-    if (!hasUsedSetupBefore && !showRecovery) {
-      setShowQuickStart(true);
+    if (!hasError) {
+      try {
+        const hasUsedSetupBefore = localStorage.getItem('has_used_setup');
+        console.log('🚀 QuickStart check:', { hasUsedSetupBefore });
+        
+        if (!hasUsedSetupBefore && !showRecovery) {
+          setShowQuickStart(true);
+        }
+      } catch (error) {
+        console.error('Error checking QuickStart:', error);
+      }
     }
-  }, [showRecovery]);
+  }, [showRecovery, hasError]);
 
   // Handle session recovery
   const handleResumeSetup = useCallback(() => {
-    const recoveredState = restoreWizardState();
-    if (recoveredState) {
-      setStep(recoveredState.step);
-      setTrainingType(recoveredState.trainingType);
-      setBodyFocus(recoveredState.bodyFocus);
-      setDuration(recoveredState.duration);
-      setShowRecovery(false);
-      console.log('✅ Session recovered successfully');
+    try {
+      const recoveredState = restoreWizardState();
+      if (recoveredState) {
+        setStep(recoveredState.step);
+        setTrainingType(recoveredState.trainingType);
+        setBodyFocus(recoveredState.bodyFocus);
+        setDuration(recoveredState.duration);
+        setShowRecovery(false);
+        console.log('✅ Session recovered successfully');
+      }
+    } catch (error) {
+      console.error('Error resuming setup:', error);
+      setHasError(true);
     }
   }, [restoreWizardState]);
 
   const handleStartFresh = useCallback(() => {
-    clearWizardState();
-    setShowRecovery(false);
-    console.log('🆕 Starting fresh setup');
+    try {
+      clearWizardState();
+      setShowRecovery(false);
+      console.log('🆕 Starting fresh setup');
+    } catch (error) {
+      console.error('Error starting fresh:', error);
+      setHasError(true);
+    }
   }, [clearWizardState]);
 
   // Calculate expected XP based on smart duration estimation
@@ -218,20 +265,24 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
 
   // Configure touch gestures for swipe navigation with stable callbacks
   const onSwipeLeft = useCallback(() => {
-    console.log('👆 Swipe left detected');
-    if (stepRef.current < 1 && !showQuickStartRef.current && !isAdvancing) { // Only 2 steps now
-      console.log('🚀 Advancing step via swipe');
-      setStep(prev => prev + 1);
+    if (!hasError) {
+      console.log('👆 Swipe left detected');
+      if (stepRef.current < 1 && !showQuickStartRef.current && !isAdvancing) {
+        console.log('🚀 Advancing step via swipe');
+        setStep(prev => prev + 1);
+      }
     }
-  }, [isAdvancing]);
+  }, [isAdvancing, hasError]);
 
   const onSwipeRight = useCallback(() => {
-    console.log('👆 Swipe right detected');
-    if (stepRef.current > 0) {
-      console.log('🔙 Going back via swipe');
-      setStep(prev => prev - 1);
+    if (!hasError) {
+      console.log('👆 Swipe right detected');
+      if (stepRef.current > 0) {
+        console.log('🔙 Going back via swipe');
+        setStep(prev => prev - 1);
+      }
     }
-  }, []);
+  }, [hasError]);
 
   const { ref: touchRef } = useTouchGestures({
     onSwipeLeft,
@@ -241,73 +292,93 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
 
   // Prepare the configuration object to pass to the parent
   const handleComplete = useCallback(() => {
-    console.log('🏁 COMPLETING WORKOUT');
-    const smartDuration = estimateDuration(trainingType, bodyFocus);
-    const config: TrainingConfig = {
-      trainingType,
-      bodyFocus,
-      duration: smartDuration, // Use smart estimation
-      tags,
-      expectedXp: Math.round(smartDuration * 2)
-    };
-    
-    console.log('📋 Final config:', config);
-    clearWizardState(); // Clean up after completion
-    onComplete(config);
+    try {
+      console.log('🏁 COMPLETING WORKOUT');
+      const smartDuration = estimateDuration(trainingType, bodyFocus);
+      const config: TrainingConfig = {
+        trainingType,
+        bodyFocus,
+        duration: smartDuration,
+        tags,
+        expectedXp: Math.round(smartDuration * 2)
+      };
+      
+      console.log('📋 Final config:', config);
+      clearWizardState();
+      onComplete(config);
+    } catch (error) {
+      console.error('Error completing workout:', error);
+      setHasError(true);
+    }
   }, [trainingType, bodyFocus, tags, clearWizardState, onComplete]);
 
   // Skip QuickStart function
   const handleSkipQuickStart = useCallback(() => {
-    console.log('⏭️ Skipping QuickStart');
-    setShowQuickStart(false);
-    setStep(0);
-    localStorage.setItem('has_used_setup', 'true');
+    try {
+      console.log('⏭️ Skipping QuickStart');
+      setShowQuickStart(false);
+      setStep(0);
+      localStorage.setItem('has_used_setup', 'true');
+    } catch (error) {
+      console.error('Error skipping QuickStart:', error);
+      setHasError(true);
+    }
   }, []);
 
   // Use a quick start option
   const handleQuickStart = useCallback((config: Partial<TrainingConfig>) => {
-    console.log('🚀 Quick start selected:', config);
-    const smartDuration = estimateDuration(config.trainingType || trainingType, config.bodyFocus || []);
-    const fullConfig = {
-      trainingType: config.trainingType || trainingType,
-      bodyFocus: config.bodyFocus || [],
-      duration: smartDuration,
-      tags: config.tags || [],
-      expectedXp: Math.round(smartDuration * 2)
-    };
-    
-    localStorage.setItem('has_used_setup', 'true');
-    clearWizardState();
-    onComplete(fullConfig);
+    try {
+      console.log('🚀 Quick start selected:', config);
+      const smartDuration = estimateDuration(config.trainingType || trainingType, config.bodyFocus || []);
+      const fullConfig = {
+        trainingType: config.trainingType || trainingType,
+        bodyFocus: config.bodyFocus || [],
+        duration: smartDuration,
+        tags: config.tags || [],
+        expectedXp: Math.round(smartDuration * 2)
+      };
+      
+      localStorage.setItem('has_used_setup', 'true');
+      clearWizardState();
+      onComplete(fullConfig);
+    } catch (error) {
+      console.error('Error with quick start:', error);
+      setHasError(true);
+    }
   }, [trainingType, clearWizardState, onComplete]);
   
-  // Navigate to previous step
+  // Navigate to previous step with error handling
   const handleBack = useCallback(() => {
-    console.log('🔙 Back button clicked, current step:', step);
-    if (step > 0) {
-      setStep(prev => {
-        console.log('📈 SetStep (back): prev =', prev, 'new =', prev - 1);
-        return prev - 1;
-      });
-    } else {
-      console.log('🚪 Canceling workout setup');
-      clearWizardState();
-      onCancel();
+    try {
+      console.log('🔙 Back button clicked, current step:', step);
+      if (step > 0) {
+        setStep(prev => {
+          console.log('📈 SetStep (back): prev =', prev, 'new =', prev - 1);
+          return prev - 1;
+        });
+      } else {
+        console.log('🚪 Canceling workout setup');
+        clearWizardState();
+        onCancel();
+      }
+    } catch (error) {
+      console.error('Error going back:', error);
+      setHasError(true);
     }
   }, [step, clearWizardState, onCancel]);
   
-  // Continue button for manual progression (Step 1 → Complete)
+  // Continue button for manual progression with error handling
   const handleNext = useCallback(() => {
-    console.log('🔥🔥🔥 CONTINUE BUTTON CLICKED!');
-    console.log('📊 Continue Button Debug:', {
-      step,
-      trainingType,
-      duration,
-      timestamp: new Date().toISOString()
-    });
-    
     try {
-      if (step < 1) { // Only 2 steps now: 0 (auto) and 1 (manual)
+      console.log('🔥🔥🔥 CONTINUE BUTTON CLICKED!');
+      console.log('📊 Continue Button Debug:', {
+        step,
+        trainingType,
+        duration,
+        timestamp: new Date().toISOString()
+      });
+      
+      if (step < 1) {
         const newStep = step + 1;
         console.log('🚀 ADVANCING: step', step, '→', newStep);
         setStep(prev => prev + 1);
@@ -317,26 +388,36 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       }
     } catch (error) {
       console.error('❌ ERROR in handleNext:', error);
+      setHasError(true);
     }
   }, [step, handleComplete]);
 
   // Handle training type selection with auto-advance trigger
   const handleTrainingTypeChange = useCallback((newType: string) => {
-    console.log('🎯 Training type change requested:', { from: trainingType, to: newType });
-    if (newType !== trainingType) {
-      console.log('✅ Training type actually changing');
-      setTrainingType(newType);
-      // Trigger auto-advance after selection
-      triggerAutoAdvance(`training-type-${newType}`);
-    } else {
-      console.log('⚠️ Training type unchanged, skipping update');
+    try {
+      console.log('🎯 Training type change requested:', { from: trainingType, to: newType });
+      if (newType !== trainingType) {
+        console.log('✅ Training type actually changing');
+        setTrainingType(newType);
+        triggerAutoAdvance(`training-type-${newType}`);
+      } else {
+        console.log('⚠️ Training type unchanged, skipping update');
+      }
+    } catch (error) {
+      console.error('Error changing training type:', error);
+      setHasError(true);
     }
   }, [trainingType, triggerAutoAdvance]);
 
   // Handle body focus changes
   const handleBodyFocusChange = useCallback((newFocus: string[]) => {
-    console.log('💪 Body focus change requested:', { from: bodyFocus, to: newFocus });
-    setBodyFocus(newFocus);
+    try {
+      console.log('💪 Body focus change requested:', { from: bodyFocus, to: newFocus });
+      setBodyFocus(newFocus);
+    } catch (error) {
+      console.error('Error changing body focus:', error);
+      setHasError(true);
+    }
   }, [bodyFocus]);
 
   // Memoize the next button disabled state
@@ -344,9 +425,9 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     const disabled = (() => {
       switch (step) {
         case 0:
-          return !trainingType; // Step 0 uses auto-advance, but keep for safety
+          return !trainingType;
         case 1:
-          return false; // Body focus is optional
+          return false;
         default:
           return false;
       }
@@ -360,6 +441,33 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
   useEffect(() => {
     return cleanup;
   }, [cleanup]);
+
+  // Error boundary render
+  if (hasError) {
+    return (
+      <div className="flex flex-col h-screen w-full bg-gray-900 text-white relative overflow-hidden">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-red-500 mb-4">
+              <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
+            <p className="text-gray-400 mb-4">The workout setup encountered an error</p>
+            <div className="flex gap-2 justify-center">
+              <Button onClick={() => window.location.reload()} variant="outline">
+                Refresh Page
+              </Button>
+              <Button onClick={onCancel}>
+                Go Back
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // MOVED: Loading state check AFTER all hooks are called
   if (isLoadingStats) {
@@ -415,16 +523,16 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
           onSelectType={handleTrainingTypeChange}
           onAutoAdvance={() => setStep(1)}
           stats={stats}
-          enableAutoAdvance={!isAdvancing} // Disable if already advancing
+          enableAutoAdvance={!isAdvancing}
           autoAdvanceDelay={500}
         />;
       case 1:
         return <FocusAndDurationStep 
           selectedFocus={bodyFocus}
-          duration={estimateDuration(trainingType, bodyFocus)} // Use smart estimation
+          duration={estimateDuration(trainingType, bodyFocus)}
           trainingType={trainingType}
           onUpdateFocus={handleBodyFocusChange}
-          onUpdateDuration={() => {}} // Duration is now auto-calculated
+          onUpdateDuration={() => {}}
           onUpdateTags={setTags}
         />;
       default:
@@ -499,7 +607,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
         {!showQuickStart && (
           <WizardProgressBar 
             currentStep={step} 
-            totalSteps={2} // Reduced to 2 steps
+            totalSteps={2}
           />
         )}
       </div>

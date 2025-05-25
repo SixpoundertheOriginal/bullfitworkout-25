@@ -1,3 +1,3 @@
 
-// Re-export the useAuth hook and AuthProvider from AuthContext to maintain proper import paths
+// Clean re-export of auth functionality
 export { useAuth, AuthProvider } from '@/context/AuthContext';

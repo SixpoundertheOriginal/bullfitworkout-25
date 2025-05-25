@@ -16,6 +16,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  // Initialize state with proper error handling
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -47,10 +48,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Then check for existing session
     const fetchSession = async () => {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      setLoading(false);
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching session:', error);
+        setLoading(false);
+      }
     };
     
     fetchSession();
