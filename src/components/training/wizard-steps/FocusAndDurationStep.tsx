@@ -273,7 +273,7 @@ export function FocusAndDurationStep({
         description: 'Focus on muscle growth and size',
         icon: User,
         color: 'from-blue-600 to-blue-400',
-        difficulty: 'Intermediate'
+        difficulty: 'Intermediate' as const
       },
       {
         id: 'strength',
@@ -281,7 +281,7 @@ export function FocusAndDurationStep({
         description: 'Build maximum power and strength',
         icon: Zap,
         color: 'from-red-600 to-red-400',
-        difficulty: 'Advanced'
+        difficulty: 'Advanced' as const
       },
       {
         id: 'endurance',
@@ -289,7 +289,7 @@ export function FocusAndDurationStep({
         description: 'Improve muscular endurance',
         icon: Clock,
         color: 'from-green-600 to-green-400',
-        difficulty: 'Beginner'
+        difficulty: 'Beginner' as const
       }
     ];
 
@@ -304,7 +304,7 @@ export function FocusAndDurationStep({
             description: '20 seconds on, 10 seconds off',
             icon: Target,
             color: 'from-yellow-600 to-yellow-400',
-            difficulty: 'Advanced'
+            difficulty: 'Advanced' as const
           }
         ];
       case 'cardio':
@@ -316,7 +316,7 @@ export function FocusAndDurationStep({
             description: 'Consistent moderate intensity',
             icon: Target,
             color: 'from-purple-600 to-purple-400',
-            difficulty: 'Beginner'
+            difficulty: 'Beginner' as const
           }
         ];
       default:
@@ -472,7 +472,7 @@ export function FocusAndDurationStep({
             className="text-sm text-gray-500 bg-gray-800/30 rounded-lg p-3"
           >
             <strong>Selected:</strong> {selectedFocus.join(', ')}
-          </motion.div>
+          </div>
         )}
       </div>
       
