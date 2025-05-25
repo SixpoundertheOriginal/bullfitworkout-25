@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { TrainingTypeStep } from './wizard-steps/TrainingTypeStep';
 import { FocusAndDurationStep } from './wizard-steps/FocusAndDurationStep';
+import { ReviewAndStartStep } from './wizard-steps/ReviewAndStartStep';
 import { WizardProgressBar } from './wizard-steps/WizardProgressBar';
 import { SessionRecoveryPrompt } from './wizard-steps/SessionRecoveryPrompt';
 import { useTouchGestures } from '@/hooks/useTouchGestures';
@@ -105,12 +106,11 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     enableThrottling: true
   });
 
-  // Auto-advance with configurable settings - FIX: Only advance on actual user clicks
+  // Auto-advance with configurable settings
   const { triggerAutoAdvance, isAdvancing, canRollback, rollback, cleanup } = useAutoAdvance({
     delay: 500,
     onAdvance: () => {
       try {
-        console.log('🚀 Auto-advance triggered, moving to step 1');
         setStep(1);
       } catch (error) {
         console.error('Error during auto-advance:', error);
@@ -366,27 +366,40 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       setHasError(true);
     }
   }, [step, clearWizardState, onCancel]);
-
-  // FIX: Handle training type selection with auto-advance trigger - only on user clicks
-  const handleTrainingTypeChange = useCallback((newType: string, userTriggered: boolean = true) => {
+  
+  // Continue button for manual progression with error handling
+  const handleNext = useCallback(() => {
     try {
-      console.log('🎯 Training type change requested:', { 
-        from: trainingType, 
-        to: newType, 
-        userTriggered 
+      console.log('🔥🔥🔥 CONTINUE BUTTON CLICKED!');
+      console.log('📊 Continue Button Debug:', {
+        step,
+        trainingType,
+        duration,
+        timestamp: new Date().toISOString()
       });
       
+      if (step < 1) {
+        const newStep = step + 1;
+        console.log('🚀 ADVANCING: step', step, '→', newStep);
+        setStep(prev => prev + 1);
+      } else {
+        console.log('🏁 COMPLETING WORKOUT');
+        handleComplete();
+      }
+    } catch (error) {
+      console.error('❌ ERROR in handleNext:', error);
+      setHasError(true);
+    }
+  }, [step, handleComplete]);
+
+  // Handle training type selection with auto-advance trigger
+  const handleTrainingTypeChange = useCallback((newType: string) => {
+    try {
+      console.log('🎯 Training type change requested:', { from: trainingType, to: newType });
       if (newType !== trainingType) {
         console.log('✅ Training type actually changing');
         setTrainingType(newType);
-        
-        // FIX: Only trigger auto-advance if this was a user-initiated change
-        if (userTriggered && isInitialized) {
-          console.log('🚀 User-triggered change, starting auto-advance');
-          triggerAutoAdvance(`training-type-${newType}`);
-        } else {
-          console.log('⚠️ Initial setup or non-user change, skipping auto-advance');
-        }
+        triggerAutoAdvance(`training-type-${newType}`);
       } else {
         console.log('⚠️ Training type unchanged, skipping update');
       }
@@ -394,7 +407,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       console.error('Error changing training type:', error);
       setHasError(true);
     }
-  }, [trainingType, triggerAutoAdvance, isInitialized]);
+  }, [trainingType, triggerAutoAdvance]);
 
   // Handle body focus changes
   const handleBodyFocusChange = useCallback((newFocus: string[]) => {
@@ -406,6 +419,23 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       setHasError(true);
     }
   }, [bodyFocus]);
+
+  // Memoize the next button disabled state
+  const isNextDisabled = useMemo(() => {
+    const disabled = (() => {
+      switch (step) {
+        case 0:
+          return !trainingType;
+        case 1:
+          return false;
+        default:
+          return false;
+      }
+    })();
+    
+    console.log('🔘 Button disabled calculation:', { step, trainingType, disabled });
+    return disabled;
+  }, [step, trainingType]);
 
   // Cleanup auto-advance on unmount
   useEffect(() => {
@@ -490,7 +520,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       case 0:
         return <TrainingTypeStep 
           selectedType={trainingType} 
-          onSelectType={(type) => handleTrainingTypeChange(type, true)}
+          onSelectType={handleTrainingTypeChange}
           onAutoAdvance={() => setStep(1)}
           stats={stats}
           enableAutoAdvance={!isAdvancing}
@@ -510,7 +540,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     }
   };
   
-  // Get the label for buttons based on current step
+  // Get the label for the next button based on current step
   const getNextButtonLabel = () => {
     if (step === 1) return 'Start Workout';
     return 'Continue';
@@ -522,11 +552,13 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     return 'Back';
   };
 
-  // Footer should be visible when NOT in QuickStart mode AND we're on Step 1 (final step)
-  const shouldShowFooter = !showQuickStart && step === 1;
+  // Footer should be visible when NOT in QuickStart mode AND not on Step 0 (auto-advance)
+  const shouldShowFooter = !showQuickStart && step > 0;
   
   console.log('🔘 Button Props Check:', {
-    shouldShowFooter,
+    onClick: typeof handleNext,
+    disabled: isNextDisabled,
+    visible: shouldShowFooter,
     step,
     showQuickStart
   });
@@ -585,7 +617,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
         {renderStepContent()}
       </div>
       
-      {/* Footer - Fixed at bottom - Show for Step 1 (final step) */}
+      {/* Footer - Fixed at bottom - Only show for manual progression step (1) */}
       {shouldShowFooter && (
         <div className="flex-shrink-0 p-4 bg-gray-900 border-t border-gray-800 z-10">
           <div className="flex justify-between gap-4">
@@ -598,10 +630,12 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
             </Button>
             
             <Button 
-              className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 flex-1 sm:flex-none"
-              onClick={handleComplete}
+              variant="gradient"
+              onClick={handleNext}
+              disabled={isNextDisabled}
+              className="flex-1 sm:flex-none"
             >
-              Start Workout
+              {getNextButtonLabel()}
               <ChevronRight className="ml-1 h-5 w-5" />
             </Button>
           </div>
