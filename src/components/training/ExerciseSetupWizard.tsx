@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -333,7 +334,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     } finally {
       setIsStarting(false);
     }
-  }, [trainingType, bodyFocus, clearWizardState, onComplete, setTrainingConfig, startWorkout]);
+  }, [trainingType, bodyFocus, clearWizardState, onComplete, setTrainingConfig, startWorkout, tags]);
 
   // Skip QuickStart function
   const handleSkipQuickStart = useCallback(() => {
@@ -562,15 +563,6 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       setStep(1);
     } else if (step === 1) {
       handleComplete();
-    }
-  };
-
-  const handleBack = () => {
-    if (step > 0) {
-      setStep(prev => prev - 1);
-    } else {
-      clearWizardState();
-      onCancel();
     }
   };
 
