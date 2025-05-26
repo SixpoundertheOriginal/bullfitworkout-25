@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { ExerciseSet } from "@/types/exercise";
+import { ExerciseSet } from "@/store/workout/types";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, ArrowRight, Pencil, Trash2, CheckCircle2, MoreVertical } from "lucide-react";
 import { motion } from "framer-motion";

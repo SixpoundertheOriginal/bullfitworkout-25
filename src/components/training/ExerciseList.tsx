@@ -1,7 +1,6 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { ExerciseSet } from "@/types/exercise";
+import { ExerciseSet, WorkoutExercises } from "@/store/workout/types";
 import ExerciseCard from './ExerciseCard';
 import { PlusCircle, Dumbbell } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,7 @@ import { WorkoutSessionFooter } from "./WorkoutSessionFooter";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ExerciseListProps {
-  exercises: Record<string, ExerciseSet[]>;
+  exercises: WorkoutExercises;
   activeExercise: string | null;
   focusedExercise?: string | null;
   onAddSet: (exerciseName: string) => void;
@@ -33,7 +32,7 @@ interface ExerciseListProps {
   isSaving: boolean;
   onNextExercise?: () => void;
   hasMoreExercises?: boolean;
-  setExercises: (exercises: Record<string, ExerciseSet[]> | ((prev: Record<string, ExerciseSet[]>) => Record<string, ExerciseSet[]>)) => void;
+  setExercises: (exercises: WorkoutExercises | ((prev: WorkoutExercises) => WorkoutExercises)) => void;
 }
 
 export const ExerciseList: React.FC<ExerciseListProps> = ({
