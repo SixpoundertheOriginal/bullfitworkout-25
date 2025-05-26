@@ -1,11 +1,11 @@
 
 import { useMemo } from 'react';
-import { WorkoutExercises } from '@/store/workout/types';
+import { ExerciseSet } from '@/types/exercise';
 
 /**
  * Hook that provides computed/derived properties for the training session
  */
-export const useTrainingSessionData = (exercises: WorkoutExercises, focusedExercise: string | null) => {
+export const useTrainingSessionData = (exercises: Record<string, ExerciseSet[]>, focusedExercise: string | null) => {
   // Derived state
   const hasExercises = useMemo(() => Object.keys(exercises).length > 0, [exercises]);
   const exerciseCount = useMemo(() => Object.keys(exercises).length, [exercises]);
@@ -37,62 +37,8 @@ export const useTrainingSessionData = (exercises: WorkoutExercises, focusedExerc
   const getNextSetDetails = () => {
     const exerciseNames = Object.keys(exercises);
     
-    // Safely access lastCompletedExercise and lastCompletedSetIndex
-    // Access as properties from metadata instead of directly from exercises
-    const lastCompletedExercise = (exercises as any).lastCompletedExercise as string | undefined;
-    const lastCompletedSetIndex = (exercises as any).lastCompletedSetIndex as number | undefined;
-
-    if (!lastCompletedExercise || lastCompletedSetIndex === undefined) {
-      return null;
-    }
-    
-    // Check if the exercise exists in our exercises object
-    if (!exercises[lastCompletedExercise]) {
-      return null;
-    }
-    
-    // Get the sets for the completed exercise
-    const exerciseSets = exercises[lastCompletedExercise];
-    
-    // Check if there is a next set for this exercise
-    const nextSetIndex = lastCompletedSetIndex + 1;
-    if (nextSetIndex < exerciseSets.length) {
-      const nextSet = exerciseSets[nextSetIndex];
-      // Access set number through index instead of metadata
-      const setNumber = nextSetIndex + 1;
-      
-      return {
-        exerciseName: lastCompletedExercise,
-        setNumber: setNumber,
-        weight: nextSet.weight,
-        reps: nextSet.reps,
-        isLastSet: nextSetIndex === exerciseSets.length - 1
-      };
-    }
-    
-    // If no next set in current exercise, find the next exercise
-    const currentExerciseIndex = exerciseNames.indexOf(lastCompletedExercise);
-    const nextExerciseIndex = currentExerciseIndex + 1;
-    
-    if (nextExerciseIndex < exerciseNames.length) {
-      const nextExercise = exerciseNames[nextExerciseIndex];
-      const nextExerciseSets = exercises[nextExercise];
-      
-      if (nextExerciseSets && nextExerciseSets.length > 0) {
-        const nextSet = nextExerciseSets[0];
-        // Use index + 1 for set number
-        const setNumber = 1;
-        
-        return {
-          exerciseName: nextExercise,
-          setNumber: setNumber,
-          weight: nextSet.weight,
-          reps: nextSet.reps,
-          isNewExercise: true
-        };
-      }
-    }
-    
+    // For now, return null since we don't have access to lastCompletedExercise metadata
+    // This would need to be passed from the store separately
     return null;
   };
 

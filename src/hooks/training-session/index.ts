@@ -7,6 +7,7 @@ import { useTrainingSessionHandlers } from './useTrainingSessionHandlers';
 import { useTrainingSessionInit } from './useTrainingSessionInit';
 import { useTrainingSessionTimers } from './useTrainingSessionTimers';
 import { WorkoutExercises } from '@/store/workout/types';
+import { adaptExerciseSets } from '@/utils/exerciseAdapter';
 
 /**
  * Main hook that composes all training session sub-hooks together
@@ -16,8 +17,11 @@ export const useTrainingSession = () => {
   // Get state from the store and local state
   const state = useTrainingSessionState();
   
+  // Convert store exercises to the format expected by useTrainingSessionData
+  const adaptedExercises = adaptExerciseSets(state.exercises as WorkoutExercises);
+  
   // Get computed/derived data
-  const data = useTrainingSessionData(state.exercises as WorkoutExercises, state.focusedExercise);
+  const data = useTrainingSessionData(adaptedExercises, state.focusedExercise);
   
   // Get workout save logic
   const {
@@ -58,7 +62,7 @@ export const useTrainingSession = () => {
   useEffect(() => {
     if (state.postSetFlow === 'rating') {
       state.setIsRatingSheetOpen(true);
-    } else if (state.postSetFlow === 'resting') {
+    } else if (state.postSetFlow === 'rest') { // Fixed: changed from 'resting' to 'rest'
       state.setShowEnhancedRestTimer(true);
     }
   }, [state.postSetFlow, state.setIsRatingSheetOpen, state.setShowEnhancedRestTimer]);
@@ -68,18 +72,15 @@ export const useTrainingSession = () => {
     handlers.handleNextExercise(data.nextExerciseName, handlers.handleFinishWorkout);
   };
   
-  // Construct a handler for rating submission
   const handleSubmitRating = (rpe: number) => {
     state.submitSetRating(rpe);
     state.setIsRatingSheetOpen(false);
   };
   
-  // Handle setting rest timer active state
   const setRestTimerActiveState = (active: boolean) => {
     state.setRestTimerActive(active);
   };
 
-  // Check if we're saving
   const isSaving = state.workoutStatus === 'saving';
 
   return {
@@ -92,7 +93,7 @@ export const useTrainingSession = () => {
     completedSets: data.completedSets,
     totalSets: data.totalSets,
     workoutStatus: state.workoutStatus,
-    workoutId: state.workoutId || savedWorkoutId, // Use saved workoutId as fallback
+    workoutId: state.workoutId || savedWorkoutId,
     restTimerActive: state.restTimerActive,
     isSaving,
     saveStatus,
@@ -130,7 +131,7 @@ export const useTrainingSession = () => {
     setFocusedExercise: state.setFocusedExercise,
     triggerRestTimerReset: state.triggerRestTimerReset,
     getNextSetDetails: data.getNextSetDetails,
-    resetSession: state.resetSession,  // Expose resetSession
+    resetSession: state.resetSession,
     
     // UI state setters
     setShowCompletionConfirmation: state.setShowCompletionConfirmation,
