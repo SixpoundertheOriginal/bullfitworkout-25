@@ -53,207 +53,209 @@ const createInitialState = (): WorkoutState => ({
 
 export const useWorkoutStore = create<WorkoutStore>()(
   persist(
-    immer((set, get) => ({
-      ...createInitialState(),
+    subscribeWithSelector(
+      immer((set, get) => ({
+        ...createInitialState(),
 
-      setExercises: (exercises) => {
-        set((state) => {
-          if (typeof exercises === 'function') {
-            state.exercises = exercises(state.exercises);
-          } else {
-            state.exercises = exercises;
-          }
-          state.lastTabActivity = Date.now();
-        });
-      },
-
-      setElapsedTime: (time) => {
-        set((state) => {
-          if (typeof time === 'function') {
-            state.elapsedTime = time(state.elapsedTime);
-          } else {
-            state.elapsedTime = time;
-          }
-          state.lastTabActivity = Date.now();
-        });
-      },
-
-      addExercise: (exerciseName) => {
-        set((state) => {
-          if (!state.exercises[exerciseName]) {
-            state.exercises[exerciseName] = [];
-            state.lastTabActivity = Date.now();
-          }
-        });
-      },
-
-      deleteExercise: (exerciseName) => {
-        set((state) => {
-          delete state.exercises[exerciseName];
-          if (state.activeExercise === exerciseName) {
-            state.activeExercise = null;
-          }
-          if (state.focusedExercise === exerciseName) {
-            state.focusedExercise = null;
-          }
-          state.lastTabActivity = Date.now();
-        });
-      },
-
-      updateLastActiveRoute: (route) => {
-        set((state) => {
-          state.lastActiveRoute = route;
-          state.lastTabActivity = Date.now();
-        });
-      },
-
-      setActiveExercise: (exerciseName) => {
-        set((state) => {
-          state.activeExercise = exerciseName;
-          state.lastTabActivity = Date.now();
-        });
-      },
-
-      setFocusedExercise: (exerciseName) => {
-        set((state) => {
-          state.focusedExercise = exerciseName;
-          state.lastTabActivity = Date.now();
-        });
-      },
-
-      handleCompleteSet: (exerciseName, setIndex, rpe) => {
-        set((state) => {
-          const exerciseSets = state.exercises[exerciseName];
-          if (exerciseSets && exerciseSets[setIndex]) {
-            exerciseSets[setIndex].completed = true;
-            state.lastCompletedExercise = exerciseName;
-            state.lastCompletedSetIndex = setIndex;
-            
-            if (rpe !== undefined) {
-              exerciseSets[setIndex].rpe = rpe;
+        setExercises: (exercises) => {
+          set((state) => {
+            if (typeof exercises === 'function') {
+              state.exercises = exercises(state.exercises);
+            } else {
+              state.exercises = exercises;
             }
-            
             state.lastTabActivity = Date.now();
-          }
-        });
-      },
+          });
+        },
 
-      submitSetRating: (rpe) => {
-        set((state) => {
-          if (state.lastCompletedExercise && state.lastCompletedSetIndex !== null) {
-            const exerciseSets = state.exercises[state.lastCompletedExercise];
-            if (exerciseSets && exerciseSets[state.lastCompletedSetIndex]) {
-              exerciseSets[state.lastCompletedSetIndex].rpe = rpe;
-              state.postSetFlow = 'idle';
+        setElapsedTime: (time) => {
+          set((state) => {
+            if (typeof time === 'function') {
+              state.elapsedTime = time(state.elapsedTime);
+            } else {
+              state.elapsedTime = time;
+            }
+            state.lastTabActivity = Date.now();
+          });
+        },
+
+        addExercise: (exerciseName) => {
+          set((state) => {
+            if (!state.exercises[exerciseName]) {
+              state.exercises[exerciseName] = [];
               state.lastTabActivity = Date.now();
             }
-          }
-        });
-      },
+          });
+        },
 
-      triggerRestTimerReset: () => {
-        set((state) => {
-          state.restTimerResetSignal += 1;
-          state.lastTabActivity = Date.now();
-        });
-      },
+        deleteExercise: (exerciseName) => {
+          set((state) => {
+            delete state.exercises[exerciseName];
+            if (state.activeExercise === exerciseName) {
+              state.activeExercise = null;
+            }
+            if (state.focusedExercise === exerciseName) {
+              state.focusedExercise = null;
+            }
+            state.lastTabActivity = Date.now();
+          });
+        },
 
-      setRestTimerActive: (active) => {
-        set((state) => {
-          state.restTimerActive = active;
-          state.lastTabActivity = Date.now();
-        });
-      },
+        updateLastActiveRoute: (route) => {
+          set((state) => {
+            state.lastActiveRoute = route;
+            state.lastTabActivity = Date.now();
+          });
+        },
 
-      setPostSetFlow: (flow) => {
-        set((state) => {
-          state.postSetFlow = flow;
-          state.lastTabActivity = Date.now();
-        });
-      },
+        setActiveExercise: (exerciseName) => {
+          set((state) => {
+            state.activeExercise = exerciseName;
+            state.lastTabActivity = Date.now();
+          });
+        },
 
-      startWorkout: () => {
-        set((state) => {
-          console.log('🚀 Starting new workout with timestamp');
-          state.isActive = true;
-          state.workoutStatus = 'active';
-          state.workoutId = crypto.randomUUID();
-          state.sessionId = crypto.randomUUID();
-          state.startTime = Date.now();
-          state.explicitlyEnded = false;
-          state.isRecoveryMode = false;
-          state.lastTabActivity = Date.now();
-          state.elapsedTime = 0;
-        });
-      },
+        setFocusedExercise: (exerciseName) => {
+          set((state) => {
+            state.focusedExercise = exerciseName;
+            state.lastTabActivity = Date.now();
+          });
+        },
 
-      resetSession: () => {
-        set((state) => {
-          console.log('🔄 Resetting workout session');
-          Object.assign(state, createInitialState());
-          state.lastTabActivity = Date.now();
-        });
-      },
+        handleCompleteSet: (exerciseName, setIndex, rpe) => {
+          set((state) => {
+            const exerciseSets = state.exercises[exerciseName];
+            if (exerciseSets && exerciseSets[setIndex]) {
+              exerciseSets[setIndex].completed = true;
+              state.lastCompletedExercise = exerciseName;
+              state.lastCompletedSetIndex = setIndex;
+              
+              if (rpe !== undefined) {
+                exerciseSets[setIndex].rpe = rpe;
+              }
+              
+              state.lastTabActivity = Date.now();
+            }
+          });
+        },
 
-      setWorkoutStatus: (status) => {
-        set((state) => {
-          state.workoutStatus = status;
-          state.lastTabActivity = Date.now();
-        });
-      },
+        submitSetRating: (rpe) => {
+          set((state) => {
+            if (state.lastCompletedExercise && state.lastCompletedSetIndex !== null) {
+              const exerciseSets = state.exercises[state.lastCompletedExercise];
+              if (exerciseSets && exerciseSets[state.lastCompletedSetIndex]) {
+                exerciseSets[state.lastCompletedSetIndex].rpe = rpe;
+                state.postSetFlow = 'idle';
+                state.lastTabActivity = Date.now();
+              }
+            }
+          });
+        },
 
-      setTrainingConfig: (config) => {
-        set((state) => {
-          console.log('📋 Setting training config:', config);
-          state.trainingConfig = config;
-          state.lastTabActivity = Date.now();
-        });
-      },
+        triggerRestTimerReset: () => {
+          set((state) => {
+            state.restTimerResetSignal += 1;
+            state.lastTabActivity = Date.now();
+          });
+        },
 
-      runWorkoutValidation: () => {
-        const state = get();
-        console.log('🔍 Running workout validation');
-        
-        const { isValid, issues, needsRepair } = validateWorkoutState(state, {
-          showToasts: true,
-          attemptRepair: true
-        });
-        
-        if (!isValid && needsRepair) {
-          console.warn('Workout validation failed, attempting repair');
+        setRestTimerActive: (active) => {
+          set((state) => {
+            state.restTimerActive = active;
+            state.lastTabActivity = Date.now();
+          });
+        },
+
+        setPostSetFlow: (flow) => {
+          set((state) => {
+            state.postSetFlow = flow;
+            state.lastTabActivity = Date.now();
+          });
+        },
+
+        startWorkout: () => {
+          set((state) => {
+            console.log('🚀 Starting new workout with timestamp');
+            state.isActive = true;
+            state.workoutStatus = 'active';
+            state.workoutId = crypto.randomUUID();
+            state.sessionId = crypto.randomUUID();
+            state.startTime = Date.now();
+            state.explicitlyEnded = false;
+            state.isRecoveryMode = false;
+            state.lastTabActivity = Date.now();
+            state.elapsedTime = 0;
+          });
+        },
+
+        resetSession: () => {
+          set((state) => {
+            console.log('🔄 Resetting workout session');
+            Object.assign(state, createInitialState());
+            state.lastTabActivity = Date.now();
+          });
+        },
+
+        setWorkoutStatus: (status) => {
+          set((state) => {
+            state.workoutStatus = status;
+            state.lastTabActivity = Date.now();
+          });
+        },
+
+        setTrainingConfig: (config) => {
+          set((state) => {
+            console.log('📋 Setting training config:', config);
+            state.trainingConfig = config;
+            state.lastTabActivity = Date.now();
+          });
+        },
+
+        runWorkoutValidation: () => {
+          const state = get();
+          console.log('🔍 Running workout validation');
           
-          if (state.exercises && Object.keys(state.exercises).length > 0) {
-            const repairedExercises = repairExercises(state.exercises);
-            set((draft) => {
-              draft.exercises = repairedExercises;
-              draft.lastTabActivity = Date.now();
-            });
-          }
-        }
-        
-        return { isValid, issues, needsRepair };
-      },
-
-      detectAndCleanupZombieWorkout: () => {
-        const state = get();
-        const isZombie = isZombieWorkout(state);
-        
-        if (isZombie) {
-          console.log('🧟‍♂️ Zombie workout detected, cleaning up');
-          get().resetSession();
-          
-          toast({
-            title: "Workout Reset",
-            description: "Detected and cleaned up an abandoned workout session",
-            variant: "destructive"
+          const { isValid, issues, needsRepair } = validateWorkoutState(state, {
+            showToasts: true,
+            attemptRepair: true
           });
           
-          return true;
-        }
-        
-        return false;
-      },
-    })),
+          if (!isValid && needsRepair) {
+            console.warn('Workout validation failed, attempting repair');
+          
+            if (state.exercises && Object.keys(state.exercises).length > 0) {
+              const repairedExercises = repairExercises(state.exercises);
+              set((draft) => {
+                draft.exercises = repairedExercises;
+                draft.lastTabActivity = Date.now();
+              });
+            }
+          }
+          
+          return { isValid, issues, needsRepair };
+        },
+
+        detectAndCleanupZombieWorkout: () => {
+          const state = get();
+          const isZombie = isZombieWorkout(state);
+          
+          if (isZombie) {
+            console.log('🧟‍♂️ Zombie workout detected, cleaning up');
+            get().resetSession();
+            
+            toast({
+              title: "Workout Reset",
+              description: "Detected and cleaned up an abandoned workout session",
+              variant: "destructive"
+            });
+            
+            return true;
+          }
+          
+          return false;
+        },
+      }))
+    ),
     {
       name: 'workout-storage',
       version: 1,
