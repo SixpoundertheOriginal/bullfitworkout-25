@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -5,7 +6,7 @@ import { WorkoutExercises } from '@/store/workout/types';
 import { ExerciseSet } from '@/store/workout/types';
 import { AttemptRecoveryFn, HandleCompleteWorkoutFn } from '@/types/workout';
 import { useTrainingSetupPersistence } from '@/hooks/useTrainingSetupPersistence';
-import { getStore } from '@/store/workout/store';
+import { useWorkoutStore } from '@/store/workout/store';
 import { createDefaultSet } from '@/store/workout/actions';
 
 /**
@@ -24,6 +25,7 @@ export const useTrainingSessionHandlers = (
 ) => {
   const navigate = useNavigate();
   const { saveConfig } = useTrainingSetupPersistence();
+  const workoutStore = useWorkoutStore();
   
   console.log('useTrainingSessionHandlers: Hook initialized');
   console.log('useTrainingSessionHandlers: Current exercises:', Object.keys(exercises));
@@ -62,8 +64,7 @@ export const useTrainingSessionHandlers = (
     }
     
     // Get current workout ID from store
-    const store = getStore();
-    const workoutId = store.getState().workoutId;
+    const workoutId = workoutStore.workoutId;
     
     // Add new exercise with default 3 sets - ensure they're valid
     console.log('useTrainingSessionHandlers: Creating new valid sets for exercise:', exerciseName);
@@ -86,12 +87,11 @@ export const useTrainingSessionHandlers = (
     
     // Direct store update as a fallback (ensuring it's properly batched)
     setTimeout(() => {
-      const store = getStore();
-      const currentExercises = store.getState().exercises;
+      const currentExercises = workoutStore.exercises;
       
       // Only update if the exercise wasn't already added
       if (!currentExercises[exerciseName]) {
-        store.getState().setExercises({
+        workoutStore.setExercises({
           ...currentExercises,
           [exerciseName]: newSets
         });
@@ -100,7 +100,7 @@ export const useTrainingSessionHandlers = (
       
       // Verify the exercise was properly added
       setTimeout(() => {
-        const storeExercises = getStore().getState().exercises;
+        const storeExercises = workoutStore.exercises;
         const wasAdded = !!storeExercises[exerciseName];
         console.log(`useTrainingSessionHandlers: Exercise "${exerciseName}" added successfully: ${wasAdded}`);
         if (wasAdded) {
@@ -111,8 +111,7 @@ export const useTrainingSessionHandlers = (
           );
           
           // Run validation to catch any issues immediately
-          const store = getStore();
-          store.getState().runWorkoutValidation();
+          workoutStore.runWorkoutValidation();
         }
       }, 50);
     }, 10);
@@ -125,7 +124,7 @@ export const useTrainingSessionHandlers = (
       title: `${exerciseName} added to workout`,
       variant: "default"
     });
-  }, [exercises, setExercises, setFocusedExercise]);
+  }, [exercises, setExercises, setFocusedExercise, workoutStore]);
   
   const handleAddSet = useCallback((exerciseName: string) => {
     setExercises(prev => {
@@ -144,8 +143,7 @@ export const useTrainingSessionHandlers = (
       }
       
       // Get current workout ID from store
-      const store = getStore();
-      const workoutId = store.getState().workoutId;
+      const workoutId = workoutStore.workoutId;
       
       // Create a new valid set using the imported function
       const newSet = createDefaultSet(exerciseName, nextSetNumber, workoutId || undefined);
@@ -157,7 +155,7 @@ export const useTrainingSessionHandlers = (
         [exerciseName]: [...currentSets, newSet]
       };
     });
-  }, [setExercises]);
+  }, [setExercises, workoutStore.workoutId]);
   
   // Enhanced handleNextExercise with better logging and ability to handle no-next-exercise scenario
   const handleNextExercise = useCallback((
@@ -245,17 +243,16 @@ export const useTrainingSessionHandlers = (
       }
       
       // Validate workout state before finishing
-      const store = getStore();
-      store.getState().runWorkoutValidation();
+      workoutStore.runWorkoutValidation();
       
       // Make sure workoutId exists
-      const { workoutId } = store.getState();
+      const { workoutId } = workoutStore;
       
       if (!workoutId) {
         console.warn("❌ Missing workout ID. Generating temporary ID");
         // Generate and set temporary ID
         const tempId = `temp-${Date.now()}`;
-        store.setState({ workoutId: tempId });
+        workoutStore.setWorkoutId?.(tempId);
         toast({
           title: "Workout ID missing", 
           description: "Generated temporary ID to complete workout",

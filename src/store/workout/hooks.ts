@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { useWorkoutStore, getStore } from './store';
+import { useWorkoutStore } from './store';
 import { toast } from '@/hooks/use-toast';
 import { ExerciseSet } from './types';
 import { v4 as uuidv4 } from 'uuid';
@@ -58,14 +58,15 @@ export const useAddExercise = () => {
     setActiveExercise, 
     setFocusedExercise, 
     workoutStatus, 
-    startWorkout 
+    startWorkout,
+    exercises,
+    workoutId
   } = useWorkoutStore();
 
   const addExercise = (exercise: string | { name: string }) => {
     const name = typeof exercise === 'string' ? exercise : exercise.name;
     
     // Check if exercise already exists
-    const exercises = getStore().getState().exercises;
     if (exercises[name]) {
       toast({ 
         title: "Exercise already added", 
@@ -79,7 +80,7 @@ export const useAddExercise = () => {
       ...prev, 
       [name]: [{
         id: uuidv4(),
-        workout_id: 'current-workout', // Default value 
+        workout_id: workoutId || 'current-workout', // Use actual workoutId
         exercise_name: name,
         set_number: 1,
         weight: 0, 
