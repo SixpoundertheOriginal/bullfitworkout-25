@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist, subscribeWithSelector } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
@@ -31,7 +30,7 @@ const createInitialState = (): WorkoutState => ({
   exercises: {},
   activeExercise: null,
   focusedExercise: null,
-  focusedSetIndex: null, // Add missing property
+  focusedSetIndex: null,
   elapsedTime: 0,
   isActive: false,
   workoutStatus: 'idle',
