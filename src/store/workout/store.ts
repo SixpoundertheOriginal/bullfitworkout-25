@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist, subscribeWithSelector } from 'zustand/middleware';
 import { produce } from 'immer';
@@ -50,6 +49,7 @@ const createInitialState = (): WorkoutState => ({
   lastCompletedSetIndex: null,
   trainingConfig: null,
   startTime: null,
+  createdAt: null, // NEW: Track when workout was created
 });
 
 export const useWorkoutStore = create<WorkoutStore>()(
@@ -201,15 +201,17 @@ export const useWorkoutStore = create<WorkoutStore>()(
         startWorkout: () => {
           set(
             produce((state) => {
+              const now = Date.now();
               console.log('🚀 Starting new workout with timestamp');
               state.isActive = true;
               state.workoutStatus = 'active';
               state.workoutId = crypto.randomUUID();
               state.sessionId = crypto.randomUUID();
-              state.startTime = Date.now();
+              state.startTime = now;
+              state.createdAt = now; // NEW: Set creation timestamp
               state.explicitlyEnded = false;
               state.isRecoveryMode = false;
-              state.lastTabActivity = Date.now();
+              state.lastTabActivity = now;
               state.elapsedTime = 0;
             })
           );

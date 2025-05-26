@@ -30,7 +30,7 @@ const TrainingSessionPage = () => {
     const timer = setTimeout(() => {
       const state = workoutStore;
       
-      // Special handling for newly created workouts
+      // UPDATED: Special handling for newly created workouts
       if (isActive && !hasExercises) {
         const isRecent = isRecentlyCreatedWorkout(state);
         

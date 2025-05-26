@@ -62,18 +62,26 @@ export const hasValidExerciseStructure = (exercises: WorkoutExercises): boolean 
 
 // Check if workout was recently created (within grace period)
 export const isRecentlyCreatedWorkout = (state: Partial<WorkoutState>, gracePeriodMs: number = 30000): boolean => {
-  if (!state.startTime) return false;
+  // Use createdAt if available (new implementation), fall back to startTime for backward compatibility
+  const creationTime = state.createdAt || state.startTime;
+  if (!creationTime) return false;
   
-  const startTime = typeof state.startTime === 'string' ? new Date(state.startTime).getTime() : state.startTime;
+  const createdAt = typeof creationTime === 'string' ? new Date(creationTime).getTime() : creationTime;
   const now = Date.now();
-  const timeSinceCreation = now - startTime;
+  const timeSinceCreation = now - createdAt;
   
-  return timeSinceCreation <= gracePeriodMs;
+  const isRecent = timeSinceCreation <= gracePeriodMs;
+  
+  if (isRecent) {
+    console.log(`✅ Workout is recently created: ${timeSinceCreation}ms ago (within ${gracePeriodMs}ms grace period)`);
+  }
+  
+  return isRecent;
 };
 
-// Check if workout state is consistent
+// Check if workout state is consistent - UPDATED to handle newly created workouts
 export const isWorkoutStateConsistent = (state: Partial<WorkoutState>): boolean => {
-  // NEW: Allow active workouts with no exercises if they were recently created
+  // UPDATED: Allow active workouts with no exercises if they were recently created
   if (state.isActive && (!state.exercises || Object.keys(state.exercises || {}).length === 0)) {
     const isRecent = isRecentlyCreatedWorkout(state);
     if (isRecent) {
@@ -129,7 +137,7 @@ export const canWorkoutBeSaved = (state: Partial<WorkoutState>): boolean => {
   return true;
 };
 
-// Validate if a workout is "zombie" - in an inconsistent state that needs to be reset
+// Validate if a workout is "zombie" - UPDATED to handle newly created workouts
 export const isZombieWorkout = (state: Partial<WorkoutState>): boolean => {
   // UPDATED: Don't consider recently created workouts as zombies
   if (state.isActive && (!state.exercises || Object.keys(state.exercises).length === 0)) {
@@ -139,6 +147,7 @@ export const isZombieWorkout = (state: Partial<WorkoutState>): boolean => {
       return true;
     }
     // If recent, it's not a zombie - it's a fresh workout
+    console.log('✅ Active workout with 0 exercises is not a zombie - recently created');
     return false;
   }
   
@@ -165,7 +174,7 @@ export const isZombieWorkout = (state: Partial<WorkoutState>): boolean => {
   return false;
 };
 
-// Main validation function that runs comprehensive checks
+// Main validation function that runs comprehensive checks - UPDATED
 export const validateWorkoutState = (
   state: Partial<WorkoutState>, 
   options: { showToasts?: boolean; attemptRepair?: boolean } = {}
@@ -215,6 +224,15 @@ export const validateWorkoutState = (
   if (!isWorkoutStateConsistent(state)) {
     issues.push("Workout state is inconsistent");
     return { isValid: false, issues, needsRepair: true };
+  }
+  
+  // UPDATED: Special handling for newly created active workouts
+  if (state.isActive && (!state.exercises || Object.keys(state.exercises).length === 0)) {
+    const isRecent = isRecentlyCreatedWorkout(state);
+    if (isRecent) {
+      console.log('✅ Validation passed: Recently created active workout with 0 exercises is valid');
+      return { isValid: true, issues: [], needsRepair: false };
+    }
   }
   
   // If we reached this point, the workout state is valid

@@ -1,34 +1,4 @@
 
-import { TrainingConfig } from '@/hooks/useTrainingSetupPersistence';
-
-export interface ExerciseSet {
-  id: string;
-  workout_id: string; 
-  exercise_name: string;
-  weight: number;
-  reps: number;
-  set_number: number;
-  completed: boolean;
-  isEditing: boolean;
-  restTime: number;
-  rpe?: number;
-  metadata?: {
-    autoAdjusted?: boolean;
-    autoCreated?: boolean;
-    exerciseName?: string;
-    createdAt?: string;
-    previousValues?: {
-      weight?: number;
-      reps?: number;
-      restTime?: number;
-    };
-  };
-}
-
-export interface WorkoutExercises {
-  [key: string]: ExerciseSet[];
-}
-
 export type WorkoutStatus = 
   | 'idle'        // Initial state
   | 'active'      // Workout in progress
@@ -38,43 +8,55 @@ export type WorkoutStatus =
   | 'partial'     // Partially saved
   | 'recovering'; // Attempting recovery
 
+export type PostSetFlowState = 'idle' | 'rating' | 'rest';
+
+export interface ExerciseSet {
+  id: string;
+  exercise_name: string;
+  weight: number;
+  reps: number;
+  restTime: number;
+  completed: boolean;
+  set_number: number;
+  isEditing?: boolean;
+  rpe?: number;
+  workout_id?: string;
+}
+
+export interface WorkoutExercises {
+  [exerciseName: string]: ExerciseSet[];
+}
+
 export interface WorkoutError {
   type: 'network' | 'database' | 'validation' | 'unknown';
   message: string;
+  details?: any;
   timestamp: string;
   recoverable: boolean;
-  details?: any;
 }
 
-// Post-set flow state management
-export type PostSetFlowState =
-  | 'idle'        // No active post-set flow
-  | 'rating'      // Showing RPE rating UI
-  | 'resting'     // In rest period with enhanced timer
-  | 'preparing';  // Preparing for next set
-
-// Add WorkoutState interface to fix import issues
 export interface WorkoutState {
   exercises: WorkoutExercises;
   activeExercise: string | null;
-  elapsedTime: number;
-  workoutId: string | null;
-  startTime: number | null;
-  workoutStatus: WorkoutStatus;
-  trainingConfig: TrainingConfig | null;
   focusedExercise: string | null;
   focusedSetIndex: number | null;
-  postSetFlow: PostSetFlowState;
-  lastCompletedExercise: string | null;
-  lastCompletedSetIndex: number | null;
+  elapsedTime: number;
+  isActive: boolean;
+  workoutStatus: WorkoutStatus;
   restTimerActive: boolean;
   restTimerResetSignal: number;
   currentRestTime: number;
-  isActive: boolean;
-  lastActiveRoute: string | null;
+  workoutId: string | null;
   sessionId: string | null;
-  explicitlyEnded: boolean;
-  lastTabActivity: number;
-  savingErrors: WorkoutError[];
   isRecoveryMode: boolean;
+  explicitlyEnded: boolean;
+  savingErrors: WorkoutError[];
+  lastActiveRoute: string | null;
+  lastTabActivity: number;
+  postSetFlow: PostSetFlowState;
+  lastCompletedExercise: string | null;
+  lastCompletedSetIndex: number | null;
+  trainingConfig: any;
+  startTime: number | null;
+  createdAt: number | null; // NEW: Track when workout was created
 }

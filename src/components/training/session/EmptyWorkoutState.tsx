@@ -50,9 +50,9 @@ export const EmptyWorkoutState: React.FC<EmptyWorkoutStateProps> = ({
           </motion.div>
         </div>
         
-        <h3 className="text-xl font-medium mb-2 text-white">Start Your Workout</h3>
+        <h3 className="text-xl font-medium mb-2 text-white">Add Your First Exercise</h3>
         <p className="text-gray-400 mb-6 max-w-xs mx-auto">
-          Track your progress, set personal records, and achieve your fitness goals faster.
+          Your workout is ready! Add exercises to start tracking your progress and building strength.
         </p>
         
         <Button
