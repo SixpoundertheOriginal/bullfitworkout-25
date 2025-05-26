@@ -31,7 +31,7 @@ export const isValidStatusTransition = (
 export const startWorkoutSession = (
   prevState: WorkoutState
 ): Partial<WorkoutState> => {
-  const now = new Date();
+  const now = Date.now(); // Use timestamp instead of Date object
   const sessionId = generateSessionId();
   
   console.log("Starting new workout session:", { 
@@ -43,7 +43,7 @@ export const startWorkoutSession = (
     isActive: true,
     explicitlyEnded: false,
     workoutStatus: 'active',
-    startTime: now.toISOString(),
+    startTime: now, // Now correctly a number
     elapsedTime: 0,
     sessionId,
     workoutId: `temp-${sessionId}`, // Generate temporary ID until saved

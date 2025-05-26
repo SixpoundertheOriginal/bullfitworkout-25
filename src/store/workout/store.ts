@@ -31,6 +31,7 @@ const createInitialState = (): WorkoutState => ({
   exercises: {},
   activeExercise: null,
   focusedExercise: null,
+  focusedSetIndex: null, // Add missing property
   elapsedTime: 0,
   isActive: false,
   workoutStatus: 'idle',
@@ -262,4 +263,4 @@ export const useWorkoutStore = create<WorkoutStore>()(
 );
 
 // Export getStore function for external access
-export const getStore = () => useWorkoutStore;
+export const getStore = () => useWorkoutStore.getState;
