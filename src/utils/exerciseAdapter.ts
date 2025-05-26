@@ -1,3 +1,4 @@
+
 import { ExerciseSet as TypesExerciseSet } from '@/types/exercise';
 import { ExerciseSet as StoreExerciseSet } from '@/store/workout/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -36,8 +37,9 @@ export function adaptExerciseSets(
       // Ensure restTime is always provided and not undefined
       restTime: set.restTime || 60,
       completed: set.completed,
-      isEditing: set.isEditing || false, // Provide default value for optional property
-      // Remove metadata reference since it doesn't exist on the store type
+      isEditing: set.isEditing ?? false, // Provide default value for required property
+      // Don't include rpe if it's undefined to match the component type
+      ...(set.rpe !== undefined && { rpe: set.rpe })
     }));
   });
   
@@ -78,8 +80,9 @@ export function adaptToStoreFormat(
       // Ensure restTime is always provided and not undefined
       restTime: set.restTime || 60, 
       completed: set.completed,
-      isEditing: set.isEditing || false,
-      // Don't add metadata since it's not part of the store type
+      isEditing: set.isEditing,
+      // Only include rpe if it exists
+      ...(set.rpe !== undefined && { rpe: set.rpe })
     }));
   });
   

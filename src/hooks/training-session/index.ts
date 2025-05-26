@@ -62,7 +62,7 @@ export const useTrainingSession = () => {
   useEffect(() => {
     if (state.postSetFlow === 'rating') {
       state.setIsRatingSheetOpen(true);
-    } else if (state.postSetFlow === 'rest') { // Fixed: changed from 'resting' to 'rest'
+    } else if (state.postSetFlow === 'rest') {
       state.setShowEnhancedRestTimer(true);
     }
   }, [state.postSetFlow, state.setIsRatingSheetOpen, state.setShowEnhancedRestTimer]);
@@ -84,8 +84,8 @@ export const useTrainingSession = () => {
   const isSaving = state.workoutStatus === 'saving';
 
   return {
-    // State
-    exercises: state.exercises,
+    // State - Use adapted exercises for external consumption
+    exercises: adaptedExercises,
     activeExercise: state.activeExercise,
     elapsedTime: state.elapsedTime,
     hasExercises: data.hasExercises,

@@ -16,6 +16,7 @@ import { useAddExercise } from '@/store/workout/hooks';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle } from 'lucide-react';
+import { adaptExerciseSets } from '@/utils/exerciseAdapter';
 
 interface TrainingSessionContentProps {
   onFinishWorkoutClick: () => void;
@@ -29,7 +30,7 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
   onOpenAddExercise,
 }) => {
   const {
-    exercises,
+    exercises: storeExercises,
     setIsAddExerciseSheetOpen,
     isAddExerciseSheetOpen,
     isRatingSheetOpen,
@@ -44,25 +45,23 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     submitSetRating
   } = useTrainingSessionState();
   
-  // Use the hook to get computed data from exercises
+  // Convert store exercises to component format
+  const adaptedExercises = adaptExerciseSets(storeExercises);
+  
+  // Use the hook to get computed data from adapted exercises
   const {
     hasExercises,
     exerciseCount,
     totalSets,
     completedSets,
     nextExerciseName
-  } = useTrainingSessionData(exercises, focusedExercise);
+  } = useTrainingSessionData(adaptedExercises, focusedExercise);
 
   // Get additional workout state info to determine if we should show empty state
   const { isActive, workoutId } = useWorkoutStore();
 
   // Get the addExercise function from the hook
   const { addExercise } = useAddExercise();
-
-  // Need to convert exercises to adaptedExercises
-  const adaptedExercises = React.useMemo(() => {
-    return exercises;
-  }, [exercises]);
   
   // Show warning if workout is active but has no workoutId (only in development)
   useEffect(() => {
