@@ -22,7 +22,7 @@ const TrainingSessionPage = () => {
   const isTerminatedStatus = workoutStatus === 'saved' || workoutStatus === 'idle';
   const hasExercises = Object.keys(exercises || {}).length > 0;
   
-  // Enhanced validation for newly created workouts
+  // Enhanced validation for newly created workouts - FIXED: Only run when specific values change
   useEffect(() => {
     console.log("TrainingSessionPage: Running enhanced state validation");
     
@@ -80,7 +80,7 @@ const TrainingSessionPage = () => {
     }, 800);
     
     return () => clearTimeout(timer);
-  }, [navigate, isActive, isTerminatedStatus, hasExercises, workoutStore, resetSession]);
+  }, [navigate, isActive, isTerminatedStatus, hasExercises, resetSession]); // FIXED: Only watch specific values, not entire store
 
   if (loadingExercises) {
     return <TrainingSessionLoading />;

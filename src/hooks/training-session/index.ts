@@ -15,7 +15,7 @@ export const useTrainingSession = () => {
   // Get state from the store and local state
   const state = useTrainingSessionState();
   
-  // Get computed/derived data - using raw exercises for now to avoid type conflicts
+  // Get computed/derived data - FIXED: Pass store exercises directly without type conversion
   const data = useTrainingSessionData(state.exercises, state.focusedExercise);
   
   // Get workout save logic
