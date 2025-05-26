@@ -1,7 +1,7 @@
 
 import { create } from 'zustand';
 import { persist, subscribeWithSelector } from 'zustand/middleware';
-import { immer } from 'immer';
+import { produce } from 'immer';
 import { WorkoutState, WorkoutExercises, ExerciseSet, WorkoutStatus, PostSetFlowState } from './types';
 import { validateWorkoutState, isZombieWorkout, repairExercises } from './validators';
 import { toast } from '@/hooks/use-toast';
@@ -60,7 +60,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
 
         setExercises: (exercises) => {
           set(
-            immer((state) => {
+            produce((state) => {
               if (typeof exercises === 'function') {
                 state.exercises = exercises(state.exercises);
               } else {
@@ -73,7 +73,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
 
         setElapsedTime: (time) => {
           set(
-            immer((state) => {
+            produce((state) => {
               if (typeof time === 'function') {
                 state.elapsedTime = time(state.elapsedTime);
               } else {
@@ -86,7 +86,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
 
         addExercise: (exerciseName) => {
           set(
-            immer((state) => {
+            produce((state) => {
               if (!state.exercises[exerciseName]) {
                 state.exercises[exerciseName] = [];
                 state.lastTabActivity = Date.now();
@@ -97,7 +97,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
 
         deleteExercise: (exerciseName) => {
           set(
-            immer((state) => {
+            produce((state) => {
               delete state.exercises[exerciseName];
               if (state.activeExercise === exerciseName) {
                 state.activeExercise = null;
@@ -112,7 +112,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
 
         updateLastActiveRoute: (route) => {
           set(
-            immer((state) => {
+            produce((state) => {
               state.lastActiveRoute = route;
               state.lastTabActivity = Date.now();
             })
@@ -121,7 +121,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
 
         setActiveExercise: (exerciseName) => {
           set(
-            immer((state) => {
+            produce((state) => {
               state.activeExercise = exerciseName;
               state.lastTabActivity = Date.now();
             })
@@ -130,7 +130,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
 
         setFocusedExercise: (exerciseName) => {
           set(
-            immer((state) => {
+            produce((state) => {
               state.focusedExercise = exerciseName;
               state.lastTabActivity = Date.now();
             })
@@ -139,7 +139,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
 
         handleCompleteSet: (exerciseName, setIndex, rpe) => {
           set(
-            immer((state) => {
+            produce((state) => {
               const exerciseSets = state.exercises[exerciseName];
               if (exerciseSets && exerciseSets[setIndex]) {
                 exerciseSets[setIndex].completed = true;
@@ -158,7 +158,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
 
         submitSetRating: (rpe) => {
           set(
-            immer((state) => {
+            produce((state) => {
               if (state.lastCompletedExercise && state.lastCompletedSetIndex !== null) {
                 const exerciseSets = state.exercises[state.lastCompletedExercise];
                 if (exerciseSets && exerciseSets[state.lastCompletedSetIndex]) {
@@ -173,7 +173,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
 
         triggerRestTimerReset: () => {
           set(
-            immer((state) => {
+            produce((state) => {
               state.restTimerResetSignal += 1;
               state.lastTabActivity = Date.now();
             })
@@ -182,7 +182,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
 
         setRestTimerActive: (active) => {
           set(
-            immer((state) => {
+            produce((state) => {
               state.restTimerActive = active;
               state.lastTabActivity = Date.now();
             })
@@ -191,7 +191,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
 
         setPostSetFlow: (flow) => {
           set(
-            immer((state) => {
+            produce((state) => {
               state.postSetFlow = flow;
               state.lastTabActivity = Date.now();
             })
@@ -200,7 +200,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
 
         startWorkout: () => {
           set(
-            immer((state) => {
+            produce((state) => {
               console.log('🚀 Starting new workout with timestamp');
               state.isActive = true;
               state.workoutStatus = 'active';
@@ -217,7 +217,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
 
         resetSession: () => {
           set(
-            immer((state) => {
+            produce((state) => {
               console.log('🔄 Resetting workout session');
               Object.assign(state, createInitialState());
               state.lastTabActivity = Date.now();
@@ -227,7 +227,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
 
         setWorkoutStatus: (status) => {
           set(
-            immer((state) => {
+            produce((state) => {
               state.workoutStatus = status;
               state.lastTabActivity = Date.now();
             })
@@ -236,7 +236,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
 
         setTrainingConfig: (config) => {
           set(
-            immer((state) => {
+            produce((state) => {
               console.log('📋 Setting training config:', config);
               state.trainingConfig = config;
               state.lastTabActivity = Date.now();
@@ -259,7 +259,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
             if (state.exercises && Object.keys(state.exercises).length > 0) {
               const repairedExercises = repairExercises(state.exercises);
               set(
-                immer((draft) => {
+                produce((draft) => {
                   draft.exercises = repairedExercises;
                   draft.lastTabActivity = Date.now();
                 })
