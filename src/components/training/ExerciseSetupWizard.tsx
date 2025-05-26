@@ -100,6 +100,12 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     return () => clearTimeout(timer);
   }, []);
 
+  // Simplified initialization flags instead of complex ref pattern
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [hasCheckedQuickStart, setHasCheckedQuickStart] = useState(false);
+  const [hasCheckedRecovery, setHasCheckedRecovery] = useState(false);
+  const [hasProcessedStats, setHasProcessedStats] = useState(false);
+
   // Core state
   const [step, setStep] = useState(0);
   const [showQuickStart, setShowQuickStart] = useState(false);
@@ -113,20 +119,12 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
   const [duration, setDuration] = useState(45);
   const [tags, setTags] = useState<string[]>([]);
 
-  // Initialization flags to prevent multiple initializations
-  const initializationRef = useRef({
-    isInitialized: false,
-    hasCheckedQuickStart: false,
-    hasProcessedStats: false,
-    hasCheckedRecovery: false
-  });
-
   // Workout store
   const { startWorkout, setTrainingConfig } = useWorkoutStore();
 
   // State persistence with increased throttling
   const { saveWizardState, restoreWizardState, clearWizardState } = useWizardStatePersistence({
-    throttleMs: 2000, // Increased from 1000ms
+    throttleMs: 2000,
     enableThrottling: true
   });
 
@@ -138,75 +136,76 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     enableRollback: true
   });
 
-  // CRITICAL: Move all state initialization to a single effect with proper guards
+  // STEP 1: Check for session recovery (only once)
   useEffect(() => {
-    const init = initializationRef.current;
-    
-    // Only run if not already initialized and stats loading is complete
-    if (init.isInitialized || isLoadingStats) {
-      return;
-    }
-
-    console.log('🚀 Running one-time initialization');
-    
-    // Check for session recovery first
-    if (!init.hasCheckedRecovery) {
+    if (!hasCheckedRecovery && !isLoadingStats) {
+      console.log('🔄 Checking for recoverable session');
       try {
         const recoveredState = restoreWizardState();
         if (recoveredState && recoveredState.step > 0) {
-          console.log('🔄 Found recoverable session');
+          console.log('📦 Found recoverable session:', recoveredState);
           setShowRecovery(true);
-          init.hasCheckedRecovery = true;
-          init.isInitialized = true;
+          setHasCheckedRecovery(true);
           return;
         }
-        init.hasCheckedRecovery = true;
       } catch (error) {
-        console.error('Error checking recovery:', error);
+        console.error('❌ Error checking recovery:', error);
       }
+      setHasCheckedRecovery(true);
     }
+  }, [hasCheckedRecovery, isLoadingStats, restoreWizardState]);
 
-    // Check QuickStart only once
-    if (!init.hasCheckedQuickStart) {
+  // STEP 2: Check QuickStart (only once, after recovery check)
+  useEffect(() => {
+    if (hasCheckedRecovery && !hasCheckedQuickStart && !showRecovery && !isLoadingStats) {
+      console.log('🚀 Checking QuickStart eligibility');
       try {
         const hasUsedSetupBefore = localStorage.getItem('has_used_setup');
-        if (!hasUsedSetupBefore && !showRecovery) {
+        if (!hasUsedSetupBefore) {
           setShowQuickStart(true);
         }
-        init.hasCheckedQuickStart = true;
       } catch (error) {
-        console.error('Error checking QuickStart:', error);
+        console.error('❌ Error checking QuickStart:', error);
       }
+      setHasCheckedQuickStart(true);
     }
+  }, [hasCheckedRecovery, hasCheckedQuickStart, showRecovery, isLoadingStats]);
 
-    // Process stats only once
-    if (stats && !init.hasProcessedStats) {
+  // STEP 3: Process stats (only once, when stats are available)
+  useEffect(() => {
+    if (stats && !hasProcessedStats && hasCheckedRecovery && hasCheckedQuickStart) {
+      console.log('📊 Processing workout stats:', stats);
       try {
         if (stats.recommendedType) {
           const newType = stats.recommendedType.toLowerCase();
           setTrainingType(newType);
         }
         
-        const smartDuration = estimateDuration(stats.recommendedType || trainingType, []);
+        const smartDuration = estimateDuration(stats.recommendedType || 'strength', []);
         setDuration(smartDuration);
         
-        init.hasProcessedStats = true;
+        setHasProcessedStats(true);
       } catch (error) {
-        console.error('Error processing stats:', error);
+        console.error('❌ Error processing stats:', error);
+        setHasProcessedStats(true); // Still mark as processed to prevent retries
       }
     }
+  }, [stats, hasProcessedStats, hasCheckedRecovery, hasCheckedQuickStart]);
 
-    // Mark as initialized
-    init.isInitialized = true;
-    
-  }, [isLoadingStats, stats, restoreWizardState, showRecovery, trainingType]);
+  // STEP 4: Mark initialization complete
+  useEffect(() => {
+    if (hasCheckedRecovery && hasCheckedQuickStart && (!stats || hasProcessedStats) && !isLoadingStats) {
+      if (isInitializing) {
+        console.log('✅ Wizard initialization complete');
+        setIsInitializing(false);
+      }
+    }
+  }, [hasCheckedRecovery, hasCheckedQuickStart, hasProcessedStats, stats, isLoadingStats, isInitializing]);
 
-  // Separate effect for saving state - runs only when necessary values change
+  // Save state changes (debounced)
   const saveStateRef = useRef<NodeJS.Timeout>();
   useEffect(() => {
-    if (!initializationRef.current.isInitialized) {
-      return;
-    }
+    if (isInitializing) return;
 
     // Debounce saves to prevent rapid successive calls
     if (saveStateRef.current) {
@@ -222,16 +221,16 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
           duration: estimateDuration(trainingType, bodyFocus)
         });
       } catch (error) {
-        console.error('Error saving wizard state:', error);
+        console.error('❌ Error saving wizard state:', error);
       }
-    }, 500); // Debounce saves
+    }, 1000);
 
     return () => {
       if (saveStateRef.current) {
         clearTimeout(saveStateRef.current);
       }
     };
-  }, [step, trainingType, bodyFocus, saveWizardState]);
+  }, [step, trainingType, bodyFocus, saveWizardState, isInitializing]);
 
   // Stable callback functions to prevent re-renders
   const handleResumeSetup = useCallback(() => {
@@ -245,7 +244,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
         setShowRecovery(false);
       }
     } catch (error) {
-      console.error('Error resuming setup:', error);
+      console.error('❌ Error resuming setup:', error);
     }
   }, [restoreWizardState]);
 
@@ -254,7 +253,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       clearWizardState();
       setShowRecovery(false);
     } catch (error) {
-      console.error('Error starting fresh:', error);
+      console.error('❌ Error starting fresh:', error);
     }
   }, [clearWizardState]);
 
@@ -262,7 +261,6 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
   const handleTrainingTypeChange = useCallback((newType: string) => {
     if (newType !== trainingType) {
       setTrainingType(newType);
-      // Disable auto-advance by default - users need explicit navigation
     }
   }, [trainingType]);
 
@@ -344,7 +342,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       setStep(0);
       localStorage.setItem('has_used_setup', 'true');
     } catch (error) {
-      console.error('Error skipping QuickStart:', error);
+      console.error('❌ Error skipping QuickStart:', error);
     }
   }, []);
 
@@ -365,7 +363,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
       clearWizardState();
       onComplete(fullConfig);
     } catch (error) {
-      console.error('Error with quick start:', error);
+      console.error('❌ Error with quick start:', error);
     }
   }, [trainingType, clearWizardState, onComplete]);
   
@@ -384,7 +382,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
         onCancel();
       }
     } catch (error) {
-      console.error('Error going back:', error);
+      console.error('❌ Error going back:', error);
     }
   }, [step, clearWizardState, onCancel]);
 
@@ -399,57 +397,30 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
 
   // Configure touch gestures for swipe navigation with stable callbacks
   const onSwipeLeft = useCallback(() => {
-    if (!initializationRef.current.isInitialized) {
-      return;
-    }
+    if (isInitializing) return;
+    
     console.log('👆 Swipe left detected');
     if (stepRef.current < 1 && !showQuickStartRef.current && !isAdvancing) {
       console.log('🚀 Advancing step via swipe');
       setStep(prev => prev + 1);
     }
-  }, [isAdvancing]);
+  }, [isAdvancing, isInitializing]);
 
   const onSwipeRight = useCallback(() => {
-    if (!initializationRef.current.isInitialized) {
-      return;
-    }
+    if (isInitializing) return;
+    
     console.log('👆 Swipe right detected');
     if (stepRef.current > 0) {
       console.log('🔙 Going back via swipe');
       setStep(prev => prev - 1);
     }
-  }, []);
+  }, [isInitializing]);
 
   const { ref: touchRef } = useTouchGestures({
     onSwipeLeft,
     onSwipeRight,
     threshold: 50,
   });
-
-  // Error boundary render
-  const renderErrorBoundary = () => (
-    <div className="flex flex-col h-screen w-full bg-gray-900 text-white relative overflow-hidden">
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-500 mb-4">
-            <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-            </svg>
-          </div>
-          <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
-          <p className="text-gray-400 mb-4">The workout setup encountered an error</p>
-          <div className="flex gap-2 justify-center">
-            <Button onClick={() => window.location.reload()} variant="outline">
-              Refresh Page
-            </Button>
-            <Button onClick={onCancel}>
-              Go Back
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 
   // Loading state render
   const renderLoadingState = () => (
@@ -458,6 +429,18 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"></div>
           <p className="text-gray-400">Loading workout recommendations...</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Initializing state render
+  const renderInitializingState = () => (
+    <div className="flex flex-col h-screen w-full bg-gray-900 text-white relative overflow-hidden">
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-pulse w-8 h-8 bg-purple-500 rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-400">Setting up your workout...</p>
         </div>
       </div>
     </div>
@@ -479,15 +462,16 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     </div>
   );
 
-  // MOVED: Loading state check AFTER all hooks are called
+  // Show loading state while stats are loading
   if (isLoadingStats) {
     console.log('⏳ Rendering loading state');
     return renderLoadingState();
   }
 
-  // Error boundary render
-  if (renderCount > MAX_RENDER_COUNT) {
-    return renderErrorBoundary();
+  // Show initializing state while setting up
+  if (isInitializing) {
+    console.log('🔄 Rendering initializing state');
+    return renderInitializingState();
   }
 
   // Render session recovery if needed
@@ -530,7 +514,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
     }
   };
 
-  // Footer visibility - FIXED: Show footer on step 0 as well
+  // Footer visibility - Show footer on step 0 and step 1
   const shouldShowFooter = !showQuickStart && !showRecovery && (step === 0 || step === 1);
   
   // Get appropriate button labels
@@ -624,7 +608,7 @@ export function ExerciseSetupWizard({ onComplete, onCancel, stats, isLoadingStat
         {renderStepContent()}
       </div>
       
-      {/* FIXED: Show footer on both step 0 and step 1 */}
+      {/* Show footer on both step 0 and step 1 */}
       {shouldShowFooter && (
         <>
           {/* Validation warning */}
