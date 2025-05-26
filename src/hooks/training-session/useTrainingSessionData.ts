@@ -1,6 +1,6 @@
 
 import { useMemo } from 'react';
-import { ExerciseSet, WorkoutExercises } from '@/store/workout/types';
+import { WorkoutExercises } from '@/store/workout/types';
 
 /**
  * Hook that provides computed/derived data from training session state

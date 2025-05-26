@@ -8,7 +8,9 @@ import { useWorkoutStore } from '@/store/workout';
  */
 export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean, startWorkout: () => void) => {
   const initializedRef = useRef(false);
-  const { setTrainingConfig } = useWorkoutStore();
+  
+  // Get only what we need from the store to avoid hook dependency issues
+  const setTrainingConfig = useWorkoutStore((state) => state.setTrainingConfig);
   
   // Simple load function that doesn't use hooks
   const loadTrainingConfig = useCallback(() => {
@@ -64,7 +66,7 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
     }
     
     initializedRef.current = true;
-  }, []); // Run only once on mount
+  }, [isActive, hasExercises, startWorkout, loadTrainingConfig, setTrainingConfig]);
   
   return {
     loadTrainingConfig,
