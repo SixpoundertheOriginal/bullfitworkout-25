@@ -9,22 +9,28 @@ import { useTrainingSessionTimers } from './useTrainingSessionTimers';
 
 /**
  * Main hook that composes all training session sub-hooks together
- * FIXED: Proper memoization to prevent infinite re-renders
+ * PHASE 1: Simplified and properly memoized to prevent infinite loops
  */
 export const useTrainingSession = () => {
   // Get state from the store and local state
   const state = useTrainingSessionState();
   
-  // Get computed/derived data - FIXED: Using store types directly
-  const data = useTrainingSessionData(state.exercises, state.focusedExercise);
+  // Get computed/derived data - memoized with proper dependencies
+  const data = useMemo(() => {
+    return useTrainingSessionData(state.exercises, state.focusedExercise);
+  }, [state.exercises, state.focusedExercise]);
   
-  // Get workout save logic - memoized to prevent re-creation
+  // Get workout save logic - memoized with stable dependencies
+  const workoutSaveData = useMemo(() => {
+    return useWorkoutSave(state.exercises, state.elapsedTime, state.resetSession);
+  }, [state.exercises, state.elapsedTime, state.resetSession]);
+  
   const {
     saveStatus,
     handleCompleteWorkout: rawHandleCompleteWorkout,
     attemptRecovery: rawAttemptRecovery,
     workoutId: savedWorkoutId
-  } = useWorkoutSave(state.exercises, state.elapsedTime, state.resetSession);
+  } = workoutSaveData;
   
   // Get initialization logic
   const init = useTrainingSessionInit(
@@ -63,7 +69,7 @@ export const useTrainingSession = () => {
     rawAttemptRecovery
   ]);
   
-  // Get handler functions - FIXED: Only recreate when dependencies actually change
+  // Get handler functions - properly memoized
   const handlers = useTrainingSessionHandlers(
     handlerDependencies.exercises,
     handlerDependencies.completedSets,
