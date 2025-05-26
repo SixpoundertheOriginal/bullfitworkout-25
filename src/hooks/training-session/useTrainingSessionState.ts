@@ -1,5 +1,5 @@
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useWorkoutStore } from '@/store/workout';
 import { getExerciseName } from '@/utils/exerciseAdapter';
 import { useSupabaseConnection } from '@/hooks/useSupabaseConnection';
@@ -24,9 +24,15 @@ export const useTrainingSessionState = () => {
   // Monitor Supabase connection status
   const connectionState = useSupabaseConnection();
   
-  // Enhanced validation on initialization
+  // Ref to track if initial validation has run
+  const initialValidationRef = useRef(false);
+  const zombieCleanupRef = useRef(false);
+  
+  // Enhanced validation on initialization - FIXED: Run only once with proper dependencies
   useEffect(() => {
-    console.log("🔧 Initializing training session with enhanced validation");
+    if (initialValidationRef.current) return;
+    
+    console.log("🔧 Running initial training session validation");
     
     // Run validation after a short delay to ensure store is fully loaded
     const timer = setTimeout(() => {
@@ -39,18 +45,32 @@ export const useTrainingSessionState = () => {
         retryCount: connectionState.retryCount,
         hasConnectivity: connectionState.hasConnectivity
       });
+      
+      initialValidationRef.current = true;
     }, 300);
     
     return () => clearTimeout(timer);
-  }, [workoutState.runWorkoutValidation]);
+  }, []); // Run only once on mount
   
-  // Monitor for zombie workouts during the session
+  // Monitor for zombie workouts - FIXED: Only run when specific conditions change
   useEffect(() => {
-    if (workoutState.isActive && Object.keys(workoutState.exercises).length === 0) {
-      console.warn('🧟‍♂️ Zombie workout detected during session - cleaning up');
-      workoutState.detectAndCleanupZombieWorkout();
+    const isActiveWithNoExercises = workoutState.isActive && Object.keys(workoutState.exercises).length === 0;
+    
+    if (isActiveWithNoExercises && !zombieCleanupRef.current) {
+      console.warn('🧟‍♂️ Potential zombie workout detected during session - checking');
+      
+      // Set flag to prevent repeated runs
+      zombieCleanupRef.current = true;
+      
+      // Run cleanup after a delay to avoid running during initial session setup
+      const timer = setTimeout(() => {
+        workoutState.detectAndCleanupZombieWorkout();
+        zombieCleanupRef.current = false; // Reset for future checks
+      }, 1000);
+      
+      return () => clearTimeout(timer);
     }
-  }, [workoutState.isActive, workoutState.exercises, workoutState.detectAndCleanupZombieWorkout]);
+  }, [workoutState.isActive, Object.keys(workoutState.exercises).length]); // Only run when these specific values change
   
   // Enhanced state with connection monitoring
   const state = useMemo(() => {
@@ -81,7 +101,7 @@ export const useTrainingSessionState = () => {
       // Helper function to trigger rest timer reset
       triggerRestTimerReset: () => setRestTimerResetSignal(prev => prev + 1),
       
-      // Enhanced validation helper
+      // Enhanced validation helper - FIXED: Manual trigger only
       validateWorkoutState: () => {
         console.log('🔍 Manual workout state validation requested');
         workoutState.runWorkoutValidation();
