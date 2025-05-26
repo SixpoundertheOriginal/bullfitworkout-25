@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useMemo, useCallback } from 'react';
 import { useWorkoutSave } from '@/hooks/useWorkoutSave';
 import { useTrainingSessionState } from './useTrainingSessionState';
 import { useTrainingSessionData } from './useTrainingSessionData';
@@ -9,16 +9,16 @@ import { useTrainingSessionTimers } from './useTrainingSessionTimers';
 
 /**
  * Main hook that composes all training session sub-hooks together
- * This maintains the same API as the original useTrainingSession
+ * FIXED: Proper memoization to prevent infinite re-renders
  */
 export const useTrainingSession = () => {
   // Get state from the store and local state
   const state = useTrainingSessionState();
   
-  // Get computed/derived data - FIXED: Pass store exercises directly without type conversion
+  // Get computed/derived data - FIXED: Using store types directly
   const data = useTrainingSessionData(state.exercises, state.focusedExercise);
   
-  // Get workout save logic
+  // Get workout save logic - memoized to prevent re-creation
   const {
     saveStatus,
     handleCompleteWorkout: rawHandleCompleteWorkout,
@@ -33,15 +33,25 @@ export const useTrainingSession = () => {
     state.startWorkout
   );
   
-  // Get timer management functions
+  // Get timer management functions - memoized
   const timers = useTrainingSessionTimers(
     state.setShowRestTimerModal,
     state.setShowEnhancedRestTimer,
     state.setPostSetFlow
   );
   
-  // Get handler functions
-  const handlers = useTrainingSessionHandlers(
+  // Memoize handler dependencies to prevent re-creation
+  const handlerDependencies = useMemo(() => ({
+    exercises: state.exercises,
+    completedSets: data.completedSets,
+    trainingConfig: state.trainingConfig,
+    setExercises: state.setExercises,
+    setFocusedExercise: state.setFocusedExercise,
+    setCompletedExerciseName: state.setCompletedExerciseName,
+    setShowCompletionConfirmation: state.setShowCompletionConfirmation,
+    rawHandleCompleteWorkout,
+    rawAttemptRecovery
+  }), [
     state.exercises,
     data.completedSets,
     state.trainingConfig,
@@ -51,6 +61,19 @@ export const useTrainingSession = () => {
     state.setShowCompletionConfirmation,
     rawHandleCompleteWorkout,
     rawAttemptRecovery
+  ]);
+  
+  // Get handler functions - FIXED: Only recreate when dependencies actually change
+  const handlers = useTrainingSessionHandlers(
+    handlerDependencies.exercises,
+    handlerDependencies.completedSets,
+    handlerDependencies.trainingConfig,
+    handlerDependencies.setExercises,
+    handlerDependencies.setFocusedExercise,
+    handlerDependencies.setCompletedExerciseName,
+    handlerDependencies.setShowCompletionConfirmation,
+    handlerDependencies.rawHandleCompleteWorkout,
+    handlerDependencies.rawAttemptRecovery
   );
   
   // Update UI state when post-set flow changes
@@ -62,23 +85,24 @@ export const useTrainingSession = () => {
     }
   }, [state.postSetFlow, state.setIsRatingSheetOpen, state.setShowEnhancedRestTimer]);
   
-  // Construct a handler that needs internal handlers
-  const handleNextExercise = () => {
+  // Memoize frequently used handlers to prevent re-creation
+  const handleNextExercise = useCallback(() => {
     handlers.handleNextExercise(data.nextExerciseName, handlers.handleFinishWorkout);
-  };
-  
-  const handleSubmitRating = (rpe: number) => {
+  }, [handlers.handleNextExercise, data.nextExerciseName, handlers.handleFinishWorkout]);
+
+  const handleSubmitRating = useCallback((rpe: number) => {
     state.submitSetRating(rpe);
     state.setIsRatingSheetOpen(false);
-  };
+  }, [state.submitSetRating, state.setIsRatingSheetOpen]);
   
-  const setRestTimerActiveState = (active: boolean) => {
+  const setRestTimerActiveState = useCallback((active: boolean) => {
     state.setRestTimerActive(active);
-  };
+  }, [state.setRestTimerActive]);
 
   const isSaving = state.workoutStatus === 'saving';
 
-  return {
+  // Memoize the return object to prevent unnecessary re-renders
+  return useMemo(() => ({
     // State - using raw exercises from store
     exercises: state.exercises,
     activeExercise: state.activeExercise,
@@ -134,7 +158,18 @@ export const useTrainingSession = () => {
     setRestTimerActive: setRestTimerActiveState,
     setShowEnhancedRestTimer: state.setShowEnhancedRestTimer,
     setShowRestTimerModal: state.setShowRestTimerModal
-  };
+  }), [
+    state,
+    data,
+    savedWorkoutId,
+    isSaving,
+    saveStatus,
+    handlers,
+    timers,
+    handleNextExercise,
+    handleSubmitRating,
+    setRestTimerActiveState
+  ]);
 };
 
 export * from './useTrainingSessionState';

@@ -1,12 +1,12 @@
 
 import { useMemo } from 'react';
-import { ExerciseSet } from '@/store/workout/types';
+import { WorkoutExercises } from '@/store/workout/types';
 
 /**
  * Hook that provides computed/derived properties for the training session
- * Using store types directly to avoid type conflicts
+ * FIXED: Using store types directly to resolve type conflicts
  */
-export const useTrainingSessionData = (exercises: Record<string, ExerciseSet[]>, focusedExercise: string | null) => {
+export const useTrainingSessionData = (exercises: WorkoutExercises, focusedExercise: string | null) => {
   // Derived state
   const hasExercises = useMemo(() => Object.keys(exercises).length > 0, [exercises]);
   const exerciseCount = useMemo(() => Object.keys(exercises).length, [exercises]);
@@ -35,13 +35,15 @@ export const useTrainingSessionData = (exercises: Record<string, ExerciseSet[]>,
   }, [exercises, focusedExercise]);
 
   // Get next set details for display in rest timer
-  const getNextSetDetails = () => {
-    const exerciseNames = Object.keys(exercises);
-    
-    // For now, return null since we don't have access to lastCompletedExercise metadata
-    // This would need to be passed from the store separately
-    return null;
-  };
+  const getNextSetDetails = useMemo(() => {
+    return () => {
+      const exerciseNames = Object.keys(exercises);
+      
+      // For now, return null since we don't have access to lastCompletedExercise metadata
+      // This would need to be passed from the store separately
+      return null;
+    };
+  }, [exercises]);
 
   return {
     hasExercises,
