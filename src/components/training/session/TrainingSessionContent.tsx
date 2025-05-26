@@ -16,7 +16,6 @@ import { useAddExercise } from '@/store/workout/hooks';
 import { toast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle } from 'lucide-react';
-import { adaptExerciseSets } from '@/utils/exerciseAdapter';
 
 interface TrainingSessionContentProps {
   onFinishWorkoutClick: () => void;
@@ -45,17 +44,14 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
     submitSetRating
   } = useTrainingSessionState();
   
-  // Convert store exercises to component format
-  const adaptedExercises = adaptExerciseSets(storeExercises);
-  
-  // Use the hook to get computed data from adapted exercises
+  // Use the hook to get computed data from store exercises directly
   const {
     hasExercises,
     exerciseCount,
     totalSets,
     completedSets,
     nextExerciseName
-  } = useTrainingSessionData(adaptedExercises, focusedExercise);
+  } = useTrainingSessionData(storeExercises, focusedExercise);
 
   // Get additional workout state info to determine if we should show empty state
   const { isActive, workoutId } = useWorkoutStore();
@@ -123,7 +119,7 @@ export const TrainingSessionContent: React.FC<TrainingSessionContentProps> = ({
       
       {hasExercises ? (
         <ExerciseListWrapper 
-          adaptedExercises={adaptedExercises}
+          adaptedExercises={storeExercises}
           safeActiveExercise={activeExercise}
           safeFocusedExercise={focusedExercise}
           nextExerciseName={nextExerciseName || ""}

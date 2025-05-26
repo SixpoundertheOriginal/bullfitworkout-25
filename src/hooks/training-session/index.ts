@@ -6,8 +6,6 @@ import { useTrainingSessionData } from './useTrainingSessionData';
 import { useTrainingSessionHandlers } from './useTrainingSessionHandlers';
 import { useTrainingSessionInit } from './useTrainingSessionInit';
 import { useTrainingSessionTimers } from './useTrainingSessionTimers';
-import { WorkoutExercises } from '@/store/workout/types';
-import { adaptExerciseSets } from '@/utils/exerciseAdapter';
 
 /**
  * Main hook that composes all training session sub-hooks together
@@ -17,11 +15,8 @@ export const useTrainingSession = () => {
   // Get state from the store and local state
   const state = useTrainingSessionState();
   
-  // Convert store exercises to the format expected by useTrainingSessionData
-  const adaptedExercises = adaptExerciseSets(state.exercises as WorkoutExercises);
-  
-  // Get computed/derived data - pass adapted exercises, not raw store exercises
-  const data = useTrainingSessionData(adaptedExercises, state.focusedExercise);
+  // Get computed/derived data - using raw exercises for now to avoid type conflicts
+  const data = useTrainingSessionData(state.exercises, state.focusedExercise);
   
   // Get workout save logic
   const {
@@ -45,12 +40,12 @@ export const useTrainingSession = () => {
     state.setPostSetFlow
   );
   
-  // Get handler functions that use the centralized types
+  // Get handler functions
   const handlers = useTrainingSessionHandlers(
-    state.exercises as WorkoutExercises,
+    state.exercises,
     data.completedSets,
     state.trainingConfig,
-    state.setExercises as (exercises: WorkoutExercises | ((prev: WorkoutExercises) => WorkoutExercises)) => void,
+    state.setExercises,
     state.setFocusedExercise,
     state.setCompletedExerciseName,
     state.setShowCompletionConfirmation,
@@ -84,8 +79,8 @@ export const useTrainingSession = () => {
   const isSaving = state.workoutStatus === 'saving';
 
   return {
-    // State - Use adapted exercises for external consumption
-    exercises: adaptedExercises,
+    // State - using raw exercises from store
+    exercises: state.exercises,
     activeExercise: state.activeExercise,
     elapsedTime: state.elapsedTime,
     hasExercises: data.hasExercises,

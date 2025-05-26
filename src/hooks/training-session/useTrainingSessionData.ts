@@ -1,9 +1,10 @@
 
 import { useMemo } from 'react';
-import { ExerciseSet } from '@/types/exercise';
+import { ExerciseSet } from '@/store/workout/types';
 
 /**
  * Hook that provides computed/derived properties for the training session
+ * Using store types directly to avoid type conflicts
  */
 export const useTrainingSessionData = (exercises: Record<string, ExerciseSet[]>, focusedExercise: string | null) => {
   // Derived state
