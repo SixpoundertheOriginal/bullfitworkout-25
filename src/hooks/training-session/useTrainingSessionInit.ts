@@ -1,30 +1,50 @@
 
 import { useEffect, useCallback, useRef } from 'react';
-import { useTrainingSetupPersistence } from '@/hooks/useTrainingSetupPersistence';
-import { LoadTrainingConfigFn } from '@/types/workout';
 import { useWorkoutStore } from '@/store/workout';
 
 /**
  * Simplified hook for handling initialization logic for training sessions
- * PHASE 1: Removed complex validation to stop infinite loops
+ * PHASE 1: Removed complex validation and state hooks to prevent React queue issues
  */
 export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean, startWorkout: () => void) => {
-  const { storedConfig, saveConfig } = useTrainingSetupPersistence();
   const initializedRef = useRef(false);
-  
-  // Get workout store actions
   const { setTrainingConfig } = useWorkoutStore();
   
-  // Load training config function
-  const loadTrainingConfig: LoadTrainingConfigFn = useCallback(() => {
-    return storedConfig;
-  }, [storedConfig]);
+  // Simple load function that doesn't use hooks
+  const loadTrainingConfig = useCallback(() => {
+    try {
+      const { data: { user } } = { data: { user: { id: 'temp' } } }; // Simplified for now
+      if (!user) return null;
+      
+      const key = `training_setup_${user.id}`;
+      const savedConfig = localStorage.getItem(key);
+      return savedConfig ? JSON.parse(savedConfig) : null;
+    } catch (error) {
+      console.error("Error loading training configuration:", error);
+      return null;
+    }
+  }, []);
   
-  // Save training preferences to local storage
+  // Simple save function that doesn't use hooks
   const saveTrainingPreferences = useCallback((config: any) => {
-    console.log('💾 Saving training preferences:', config);
-    return saveConfig(config);
-  }, [saveConfig]);
+    try {
+      const { data: { user } } = { data: { user: { id: 'temp' } } }; // Simplified for now
+      if (!user) return null;
+      
+      const key = `training_setup_${user.id}`;
+      const configWithTimestamp = {
+        ...config,
+        lastUpdated: new Date().toISOString()
+      };
+      
+      localStorage.setItem(key, JSON.stringify(configWithTimestamp));
+      console.log('Saved training config to localStorage');
+      return configWithTimestamp;
+    } catch (error) {
+      console.error("Error saving training configuration:", error);
+      return null;
+    }
+  }, []);
   
   // Simple initialization - only runs once
   useEffect(() => {

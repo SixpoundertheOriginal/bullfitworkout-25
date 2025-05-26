@@ -9,16 +9,14 @@ import { useTrainingSessionTimers } from './useTrainingSessionTimers';
 
 /**
  * Main hook that composes all training session sub-hooks together
- * PHASE 1: Simplified and properly memoized to prevent infinite loops
+ * PHASE 1: Simplified to prevent React queue issues
  */
 export const useTrainingSession = () => {
   // Get state from the store and local state
   const state = useTrainingSessionState();
   
-  // Get computed/derived data - memoized with proper dependencies
-  const data = useMemo(() => {
-    return useTrainingSessionData(state.exercises, state.focusedExercise);
-  }, [state.exercises, state.focusedExercise]);
+  // Get computed/derived data - using store types directly
+  const data = useTrainingSessionData(state.exercises, state.focusedExercise);
   
   // Get workout save logic - memoized with stable dependencies
   const workoutSaveData = useMemo(() => {
@@ -32,7 +30,7 @@ export const useTrainingSession = () => {
     workoutId: savedWorkoutId
   } = workoutSaveData;
   
-  // Get initialization logic
+  // Get initialization logic - simplified to prevent hook queue issues
   const init = useTrainingSessionInit(
     state.isActive, 
     data.hasExercises, 

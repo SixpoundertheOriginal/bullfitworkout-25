@@ -1,56 +1,57 @@
 
 import { useMemo } from 'react';
-import { WorkoutExercises } from '@/store/workout/types';
+import { ExerciseSet, WorkoutExercises } from '@/store/workout/types';
 
 /**
- * Hook that provides computed/derived properties for the training session
- * FIXED: Using store types directly to resolve type conflicts
+ * Hook that provides computed/derived data from training session state
+ * PHASE 1: Simplified to prevent render issues
  */
-export const useTrainingSessionData = (exercises: WorkoutExercises, focusedExercise: string | null) => {
-  // Derived state
-  const hasExercises = useMemo(() => Object.keys(exercises).length > 0, [exercises]);
-  const exerciseCount = useMemo(() => Object.keys(exercises).length, [exercises]);
-  
-  const totalSets = useMemo(() => {
-    return Object.values(exercises).reduce((total, sets) => total + sets.length, 0);
-  }, [exercises]);
-  
-  const completedSets = useMemo(() => {
-    return Object.values(exercises).reduce((total, sets) => {
-      return total + sets.filter(set => set.completed).length;
-    }, 0);
-  }, [exercises]);
-  
-  const nextExerciseName = useMemo(() => {
-    if (!focusedExercise) return null;
+export const useTrainingSessionData = (exercises: WorkoutExercises, focusedExercise?: string | null) => {
+  // Memoize computed values to prevent unnecessary recalculations
+  const computedData = useMemo(() => {
+    const exerciseList = Object.keys(exercises);
+    const hasExercises = exerciseList.length > 0;
+    const exerciseCount = exerciseList.length;
     
-    const exerciseKeys = Object.keys(exercises);
-    const currentIndex = exerciseKeys.indexOf(focusedExercise);
+    // Calculate total and completed sets
+    let totalSets = 0;
+    let completedSets = 0;
     
-    if (currentIndex >= 0 && currentIndex < exerciseKeys.length - 1) {
-      return exerciseKeys[currentIndex + 1];
+    Object.values(exercises).forEach(sets => {
+      totalSets += sets.length;
+      completedSets += sets.filter(set => set.completed).length;
+    });
+    
+    // Find next exercise name
+    let nextExerciseName: string | null = null;
+    if (focusedExercise) {
+      const currentIndex = exerciseList.indexOf(focusedExercise);
+      if (currentIndex >= 0 && currentIndex < exerciseList.length - 1) {
+        nextExerciseName = exerciseList[currentIndex + 1];
+      }
     }
     
-    return null;
+    return {
+      hasExercises,
+      exerciseCount,
+      totalSets,
+      completedSets,
+      nextExerciseName,
+      exerciseList
+    };
   }, [exercises, focusedExercise]);
-
-  // Get next set details for display in rest timer
+  
+  // Simple function to get next set details
   const getNextSetDetails = useMemo(() => {
-    return () => {
-      const exerciseNames = Object.keys(exercises);
-      
-      // For now, return null since we don't have access to lastCompletedExercise metadata
-      // This would need to be passed from the store separately
-      return null;
+    return (exerciseName: string) => {
+      const sets = exercises[exerciseName] || [];
+      const nextIncompleteSet = sets.find(set => !set.completed);
+      return nextIncompleteSet || null;
     };
   }, [exercises]);
-
+  
   return {
-    hasExercises,
-    exerciseCount,
-    totalSets,
-    completedSets,
-    nextExerciseName,
+    ...computedData,
     getNextSetDetails
   };
 };
