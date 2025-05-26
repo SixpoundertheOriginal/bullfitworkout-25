@@ -20,7 +20,7 @@ export const useTrainingSession = () => {
   // Convert store exercises to the format expected by useTrainingSessionData
   const adaptedExercises = adaptExerciseSets(state.exercises as WorkoutExercises);
   
-  // Get computed/derived data
+  // Get computed/derived data - pass adapted exercises, not raw store exercises
   const data = useTrainingSessionData(adaptedExercises, state.focusedExercise);
   
   // Get workout save logic
