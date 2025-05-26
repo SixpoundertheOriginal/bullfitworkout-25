@@ -14,10 +14,10 @@ export {
   useWorkoutPageVisibility
 };
 
-// Re-export types
+// Re-export types from the correct location
 export type {
   WorkoutState,
-} from './workout/store';
+} from './workout/types';
 
 export type {
   ExerciseSet,

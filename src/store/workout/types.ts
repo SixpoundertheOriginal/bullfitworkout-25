@@ -14,7 +14,7 @@ export interface ExerciseSet {
   rpe?: number;
   metadata?: {
     autoAdjusted?: boolean;
-    autoCreated?: boolean; // Added this property to match usage in actions.ts
+    autoCreated?: boolean;
     exerciseName?: string;
     createdAt?: string;
     previousValues?: {
@@ -59,7 +59,7 @@ export interface WorkoutState {
   activeExercise: string | null;
   elapsedTime: number;
   workoutId: string | null;
-  startTime: string | null;
+  startTime: number | null;
   workoutStatus: WorkoutStatus;
   trainingConfig: TrainingConfig | null;
   focusedExercise: string | null;
@@ -68,11 +68,13 @@ export interface WorkoutState {
   lastCompletedExercise: string | null;
   lastCompletedSetIndex: number | null;
   restTimerActive: boolean;
+  restTimerResetSignal: number;
   currentRestTime: number;
   isActive: boolean;
-  lastActiveRoute: string;
-  sessionId: string;
+  lastActiveRoute: string | null;
+  sessionId: string | null;
   explicitlyEnded: boolean;
   lastTabActivity: number;
   savingErrors: WorkoutError[];
+  isRecoveryMode: boolean;
 }

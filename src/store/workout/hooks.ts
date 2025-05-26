@@ -1,7 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { useWorkoutStore } from './store';
-import { getStore } from './store';
+import { useWorkoutStore, getStore } from './store';
 import { toast } from '@/hooks/use-toast';
 import { ExerciseSet } from './types';
 import { v4 as uuidv4 } from 'uuid';
@@ -66,7 +65,6 @@ export const useAddExercise = () => {
     const name = typeof exercise === 'string' ? exercise : exercise.name;
     
     // Check if exercise already exists
-    // Use getStore() instead of useWorkoutStore.getState()
     const exercises = getStore().getState().exercises;
     if (exercises[name]) {
       toast({ 

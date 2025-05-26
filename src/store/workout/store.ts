@@ -1,5 +1,6 @@
+
 import { create } from 'zustand';
-import { persist, subscriptWithSelector } from 'zustand/middleware';
+import { persist, subscribeWithSelector } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { WorkoutState, WorkoutExercises, ExerciseSet, WorkoutStatus, PostSetFlowState } from './types';
 import { validateWorkoutState, isZombieWorkout, repairExercises } from './validators';
@@ -23,6 +24,7 @@ interface WorkoutStore extends WorkoutState {
   setTrainingConfig: (config: any) => void;
   runWorkoutValidation: () => void;
   detectAndCleanupZombieWorkout: () => boolean;
+  setElapsedTime: (time: number | ((prev: number) => number)) => void;
 }
 
 const createInitialState = (): WorkoutState => ({
@@ -42,11 +44,11 @@ const createInitialState = (): WorkoutState => ({
   savingErrors: [],
   lastActiveRoute: null,
   lastTabActivity: Date.now(),
-  postSetFlow: 'none',
+  postSetFlow: 'idle',
   lastCompletedExercise: null,
   lastCompletedSetIndex: null,
   trainingConfig: null,
-  startTime: null, // NEW: Track when workout was started
+  startTime: null,
 });
 
 export const useWorkoutStore = create<WorkoutStore>()(
@@ -60,6 +62,17 @@ export const useWorkoutStore = create<WorkoutStore>()(
             state.exercises = exercises(state.exercises);
           } else {
             state.exercises = exercises;
+          }
+          state.lastTabActivity = Date.now();
+        });
+      },
+
+      setElapsedTime: (time) => {
+        set((state) => {
+          if (typeof time === 'function') {
+            state.elapsedTime = time(state.elapsedTime);
+          } else {
+            state.elapsedTime = time;
           }
           state.lastTabActivity = Date.now();
         });
@@ -131,7 +144,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
             const exerciseSets = state.exercises[state.lastCompletedExercise];
             if (exerciseSets && exerciseSets[state.lastCompletedSetIndex]) {
               exerciseSets[state.lastCompletedSetIndex].rpe = rpe;
-              state.postSetFlow = 'none';
+              state.postSetFlow = 'idle';
               state.lastTabActivity = Date.now();
             }
           }
@@ -166,7 +179,7 @@ export const useWorkoutStore = create<WorkoutStore>()(
           state.workoutStatus = 'active';
           state.workoutId = crypto.randomUUID();
           state.sessionId = crypto.randomUUID();
-          state.startTime = Date.now(); // NEW: Set start time for validation
+          state.startTime = Date.now();
           state.explicitlyEnded = false;
           state.isRecoveryMode = false;
           state.lastTabActivity = Date.now();
@@ -247,3 +260,6 @@ export const useWorkoutStore = create<WorkoutStore>()(
     }
   )
 );
+
+// Export getStore function for external access
+export const getStore = () => useWorkoutStore;
