@@ -1,239 +1,82 @@
 
-import React, { useState } from 'react';
-import { TrainingSessionLayout } from './session/layout/TrainingSessionLayout';
-import { ExerciseListWrapper } from './session/ExerciseListWrapper';
-import { WorkoutMetricsPanel } from './session/metrics/WorkoutMetricsPanel';
-import { EmptyWorkoutState } from './session/EmptyWorkoutState';
-import { TrainingSessionSheets } from './session/TrainingSessionSheets';
-import { WorkoutCompletion } from './WorkoutCompletion';
+import React from 'react';
 import { useTrainingSession } from '@/hooks/training-session';
-import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { TrainingSessionContent } from './session/TrainingSessionContent';
+import { WorkoutBanner } from './WorkoutBanner';
+import { isRecentlyCreatedWorkout } from '@/store/workout/validators';
 import { useWorkoutStore } from '@/store/workout';
-import { AnimatePresence, motion } from 'framer-motion';
-import { toast } from '@/hooks/use-toast';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dumbbell, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 
-export const SimplifiedTrainingContent: React.FC = () => {
-  const [showCompletion, setShowCompletion] = useState(false);
-  const [completionInitiated, setCompletionInitiated] = useState(false);
-  
-  // Get all the training session data and functions
+export const SimplifiedTrainingContent = () => {
   const {
-    exercises,
-    elapsedTime,
     hasExercises,
-    exerciseCount,
-    completedSets,
-    totalSets,
-    workoutStatus,
-    workoutId,
-    activeExercise,
-    focusedExercise,
-    nextExerciseName,
-    isAddExerciseSheetOpen,
-    setIsAddExerciseSheetOpen,
-    isRatingSheetOpen,
-    setIsRatingSheetOpen,
-    postSetFlow,
-    trainingConfig,
-    lastCompletedExercise,
-    lastCompletedSetIndex,
-    handleAddExercise,
     handleFinishWorkout,
     isSaving,
-    handleSubmitRating,
+    setIsAddExerciseSheetOpen
   } = useTrainingSession();
   
-  // Get store state
-  const { isActive } = useWorkoutStore();
+  const workoutState = useWorkoutStore();
+  const { isActive } = workoutState;
   
-  // Handle opening the add exercise sheet
-  const handleOpenAddExerciseSheet = () => {
-    console.log('SimplifiedTrainingContent: Opening add exercise sheet');
+  // Check if this is a newly created workout
+  const isNewlyCreated = isActive && !hasExercises && isRecentlyCreatedWorkout(workoutState);
+
+  const handleOpenAddExercise = () => {
     setIsAddExerciseSheetOpen(true);
   };
-  
-  // Handle workout finish
-  const handleFinishWorkoutClick = async () => {
-    try {
-      if (!hasExercises || Object.keys(exercises).length === 0) {
-        return;
-      }
-      
-      setCompletionInitiated(true);
-      setShowCompletion(true);
-      
-    } catch (error) {
-      console.error("Error while finishing workout:", error);
-    }
-  };
-  
-  // Detect potential issues with workoutId
-  const hasWorkoutIdIssue = isActive && !workoutId;
-  
-  // If showing completion view
-  if (showCompletion) {
+
+  // Show special welcome message for newly created workouts
+  if (isNewlyCreated) {
     return (
-      <div className="flex flex-col min-h-screen bg-black text-white pt-16 pb-4">
-        <main className="flex-1 overflow-auto px-4">
-          <div className="container max-w-5xl mx-auto">
-            <h1 className="text-2xl font-bold my-6 text-center">Workout Complete</h1>
-            
-            <WorkoutCompletion
-              exercises={exercises}
-              duration={elapsedTime}
-              intensity={7}
-              efficiency={8}
-              onComplete={() => {
-                handleFinishWorkout()
-                  .then(() => {
-                    setShowCompletion(false);
-                    setCompletionInitiated(false);
-                    toast.success("Workout completed successfully!");
-                  })
-                  .catch((error) => {
-                    console.error("Error saving workout:", error);
-                    toast.error("Error saving workout.");
-                  });
-              }}
-            />
-          </div>
-        </main>
+      <div className="min-h-screen bg-gray-950 text-white">
+        <WorkoutBanner />
+        <div className="container max-w-5xl mx-auto px-4 py-8">
+          <Card className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border-purple-500/30">
+            <CardContent className="flex flex-col items-center justify-center py-12 text-center px-4">
+              <div className="w-16 h-16 rounded-full bg-purple-600/20 flex items-center justify-center mb-6">
+                <Dumbbell className="w-8 h-8 text-purple-400" />
+              </div>
+              <h2 className="text-2xl font-bold mb-3 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Workout Started Successfully!
+              </h2>
+              <p className="text-gray-300 max-w-md mb-8 leading-relaxed">
+                Your training session is now active. Add your first exercise to begin tracking your sets, weights, and progress.
+              </p>
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Button 
+                  onClick={handleOpenAddExercise}
+                  className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-semibold rounded-full px-8 py-3 shadow-lg shadow-purple-500/25"
+                  size="lg"
+                >
+                  <Plus className="mr-2 h-5 w-5" />
+                  Add Your First Exercise
+                </Button>
+              </motion.div>
+              <p className="text-sm text-gray-500 mt-4">
+                Timer is running • Your progress will be automatically saved
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
 
+  // Standard training content for workouts with exercises
   return (
-    <TrainingSessionLayout>
-      <WorkoutMetricsPanel 
-        elapsedTime={elapsedTime}
-        exerciseCount={exerciseCount}
-        completedSets={completedSets}
-        totalSets={totalSets}
+    <div className="min-h-screen bg-gray-950 text-white">
+      <WorkoutBanner />
+      <TrainingSessionContent
+        onFinishWorkoutClick={handleFinishWorkout}
+        isSaving={isSaving}
+        onOpenAddExercise={handleOpenAddExercise}
       />
-      
-      {/* Show warning badge for missing workout ID */}
-      {hasWorkoutIdIssue && process.env.NODE_ENV !== 'production' && (
-        <div className="mx-4 mb-2">
-          <Badge variant="destructive" className="flex items-center gap-1 py-1 px-2 w-full justify-center">
-            <AlertTriangle size={14} />
-            <span className="text-xs">Missing Workout ID - Save Issues Likely</span>
-          </Badge>
-        </div>
-      )}
-      
-      {/* Main content area */}
-      <div className="flex-1 overflow-y-auto pb-24">
-        {hasExercises ? (
-          <ExerciseListWrapper 
-            adaptedExercises={exercises}
-            safeActiveExercise={activeExercise}
-            safeFocusedExercise={focusedExercise}
-            nextExerciseName={nextExerciseName || ""}
-            exerciseCount={exerciseCount}
-            isComplete={false}
-            totalSets={totalSets}
-            completedSets={completedSets}
-            onFinishWorkout={handleFinishWorkoutClick}
-            isSaving={isSaving}
-            onOpenAddExercise={handleOpenAddExerciseSheet}
-          />
-        ) : (
-          <EmptyWorkoutState 
-            onAddExerciseClick={handleOpenAddExerciseSheet}
-          />
-        )}
-      </div>
-      
-      {/* Unified action button - fixed at bottom */}
-      <AnimatePresence>
-        {hasExercises && (
-          <motion.div 
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 50, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 380, damping: 30 }}
-            className="fixed bottom-20 left-0 right-0 px-4 z-50"
-          >
-            <div className="container max-w-md mx-auto">
-              <Card className={cn(
-                "p-4 flex flex-row justify-between items-center",
-                "bg-gradient-to-br from-gray-900/95 to-black/95",
-                "border border-gray-800/50",
-                "shadow-lg shadow-purple-900/10"
-              )}>
-                <Button
-                  onClick={handleOpenAddExerciseSheet}
-                  variant="outline"
-                  size="sm"
-                  className="bg-indigo-900/30 border-indigo-700/30 hover:bg-indigo-800/30"
-                >
-                  <Plus className="w-4 h-4 mr-1" /> Add Exercise
-                </Button>
-                
-                <Button
-                  onClick={handleFinishWorkoutClick}
-                  disabled={completedSets === 0 || isSaving}
-                  size="sm"
-                  className={`
-                    ${completedSets === 0 ? 'bg-gray-700 text-gray-300' : 'bg-gradient-to-r from-green-600 to-emerald-700'} 
-                    transition-all duration-300
-                  `}
-                >
-                  {isSaving ? (
-                    <>
-                      <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                      Saving...
-                    </>
-                  ) : (
-                    'Complete Workout'
-                  )}
-                </Button>
-              </Card>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      
-      {/* Sheets for adding exercises, rating, etc. */}
-      <TrainingSessionSheets
-        isAddExerciseSheetOpen={isAddExerciseSheetOpen}
-        setIsAddExerciseSheetOpen={setIsAddExerciseSheetOpen}
-        isRatingSheetOpen={isRatingSheetOpen}
-        setIsRatingSheetOpen={setIsRatingSheetOpen}
-        handleSubmitRating={handleSubmitRating}
-        trainingConfig={trainingConfig}
-        lastCompletedExercise={lastCompletedExercise}
-        lastCompletedSetIndex={lastCompletedSetIndex}
-        handleAddExercise={handleAddExercise}
-      />
-      
-      {/* Only show in development mode */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-2 right-2 z-50 opacity-50 hover:opacity-100 transition-opacity">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="text-xs bg-gray-900/80 text-gray-400"
-            onClick={() => {
-              const state = JSON.stringify({
-                exercises: Object.keys(exercises),
-                sets: completedSets,
-                isActive,
-                workoutId
-              });
-              console.log('Training Session Debug:', state);
-              navigator.clipboard.writeText(state);
-              toast.success('Debug state copied to clipboard');
-            }}
-          >
-            Debug
-          </Button>
-        </div>
-      )}
-    </TrainingSessionLayout>
+    </div>
   );
 };

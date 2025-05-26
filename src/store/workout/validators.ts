@@ -60,27 +60,42 @@ export const hasValidExerciseStructure = (exercises: WorkoutExercises): boolean 
   return valid;
 };
 
+// Check if workout was recently created (within grace period)
+export const isRecentlyCreatedWorkout = (state: Partial<WorkoutState>, gracePeriodMs: number = 30000): boolean => {
+  if (!state.startTime) return false;
+  
+  const startTime = typeof state.startTime === 'string' ? new Date(state.startTime).getTime() : state.startTime;
+  const now = Date.now();
+  const timeSinceCreation = now - startTime;
+  
+  return timeSinceCreation <= gracePeriodMs;
+};
+
 // Check if workout state is consistent
 export const isWorkoutStateConsistent = (state: Partial<WorkoutState>): boolean => {
-  // State is inconsistent if workout is marked active but has no exercises
+  // NEW: Allow active workouts with no exercises if they were recently created
   if (state.isActive && (!state.exercises || Object.keys(state.exercises || {}).length === 0)) {
-    console.warn('Inconsistent workout state: workout is active but has no exercises');
-    return false;
+    const isRecent = isRecentlyCreatedWorkout(state);
+    if (isRecent) {
+      console.log('✅ Active workout with 0 exercises is allowed - recently created');
+      return true;
+    } else {
+      console.warn('❌ Inconsistent workout state: workout is active but has no exercises and is not recent');
+      return false;
+    }
   }
   
-  // Check if active exercise actually exists in the workout
+  // ... keep existing code (other consistency checks) the same ...
   if (state.activeExercise && state.exercises && !state.exercises[state.activeExercise]) {
     console.warn(`Inconsistent workout state: active exercise "${state.activeExercise}" does not exist in workout`);
     return false;
   }
   
-  // Check if focused exercise actually exists in the workout
   if (state.focusedExercise && state.exercises && !state.exercises[state.focusedExercise]) {
     console.warn(`Inconsistent workout state: focused exercise "${state.focusedExercise}" does not exist in workout`);
     return false;
   }
   
-  // Check if we have consistent workout ID when active
   if (state.isActive && !state.workoutId) {
     console.warn('Inconsistent workout state: active workout but no workoutId');
     return false;
@@ -116,25 +131,28 @@ export const canWorkoutBeSaved = (state: Partial<WorkoutState>): boolean => {
 
 // Validate if a workout is "zombie" - in an inconsistent state that needs to be reset
 export const isZombieWorkout = (state: Partial<WorkoutState>): boolean => {
-  // Case 1: An "active" workout with no exercises
+  // UPDATED: Don't consider recently created workouts as zombies
   if (state.isActive && (!state.exercises || Object.keys(state.exercises).length === 0)) {
-    console.warn('Detected zombie workout: Active but contains no exercises');
-    return true;
+    const isRecent = isRecentlyCreatedWorkout(state);
+    if (!isRecent) {
+      console.warn('Detected zombie workout: Active but contains no exercises and is not recent');
+      return true;
+    }
+    // If recent, it's not a zombie - it's a fresh workout
+    return false;
   }
   
-  // Case 2: A workout that was explicitly ended but still marked as active
+  // ... keep existing code (other zombie checks) the same ...
   if (state.explicitlyEnded && state.isActive) {
     console.warn('Detected zombie workout: Explicitly ended but still marked as active');
     return true;
   }
   
-  // Case 3: A workout that was saved but still marked as active
   if (state.workoutStatus === 'saved' && state.isActive) {
     console.warn('Detected zombie workout: Saved but still marked as active');
     return true;
   }
   
-  // Case 4: Workout has been inactive for more than 24 hours
   const inactiveThreshold = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
   const now = Date.now();
   const lastActivity = state.lastTabActivity || 0;
@@ -177,8 +195,8 @@ export const validateWorkoutState = (
     return { isValid: false, issues, needsRepair: true };
   }
   
-  // Check exercise data structure
-  if (state.exercises && !hasValidExerciseStructure(state.exercises)) {
+  // Check exercise data structure (only if exercises exist)
+  if (state.exercises && Object.keys(state.exercises).length > 0 && !hasValidExerciseStructure(state.exercises)) {
     issues.push("Invalid exercise data structure detected");
     
     // Only show the toast if we're not going to attempt repair
@@ -211,16 +229,13 @@ export const repairExercises = (exercises: WorkoutExercises): WorkoutExercises =
   Object.keys(exercises).forEach(exerciseName => {
     const sets = exercises[exerciseName];
     
-    // Skip completely invalid sets
     if (!sets || !Array.isArray(sets) || sets.length === 0) {
       repairCount++;
       console.warn(`Skipping completely invalid exercise "${exerciseName}"`);
       return;
     }
     
-    // Filter out any invalid sets and repair the ones we can
     const validSets = sets.filter(set => set && typeof set === 'object').map(set => {
-      // Create a valid set, using defaults for missing properties
       const repairedSet = {
         id: set.id || `temp-${exerciseName}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
         exercise_name: exerciseName,
@@ -230,14 +245,12 @@ export const repairExercises = (exercises: WorkoutExercises): WorkoutExercises =
         completed: !!set.completed,
         set_number: typeof set.set_number === 'number' ? set.set_number : 0,
         isEditing: !!set.isEditing,
-        // Preserve any other properties
         ...set
       };
       
       return repairedSet;
     });
     
-    // Only include the exercise if it has valid sets after repair
     if (validSets.length > 0) {
       repairedExercises[exerciseName] = validSets;
     } else {

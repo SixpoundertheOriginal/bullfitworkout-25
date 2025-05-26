@@ -5,7 +5,7 @@ import { useWorkoutTimer } from '@/hooks/useWorkoutTimer';
 import { useExercises } from "@/hooks/useExercises";
 import { TrainingSessionLoading } from "@/components/training/TrainingSessionLoading";
 import { SimplifiedTrainingContent } from "@/components/training/SimplifiedTrainingContent";
-import { validateWorkoutState } from '@/store/workout/validators';
+import { validateWorkoutState, isRecentlyCreatedWorkout } from '@/store/workout/validators';
 import { toast } from '@/hooks/use-toast';
 import { useWorkoutStore } from '@/store/workout';
 
@@ -13,21 +13,40 @@ const TrainingSessionPage = () => {
   const { isLoading: loadingExercises } = useExercises();
   const navigate = useNavigate();
   const workoutStore = useWorkoutStore();
-  const { workoutStatus, isActive, resetSession } = workoutStore;
+  const { workoutStatus, isActive, exercises, resetSession } = workoutStore;
   
   // Initialize the workout timer
   useWorkoutTimer();
   
   // Track workout termination status
   const isTerminatedStatus = workoutStatus === 'saved' || workoutStatus === 'idle';
+  const hasExercises = Object.keys(exercises || {}).length > 0;
   
-  // Validate workout state when page loads
+  // Enhanced validation for newly created workouts
   useEffect(() => {
-    console.log("TrainingSessionPage: Running comprehensive state validation");
+    console.log("TrainingSessionPage: Running enhanced state validation");
     
-    // Validate with slight delay to ensure store is hydrated
+    // Validate with delay to ensure store is hydrated
     const timer = setTimeout(() => {
       const state = workoutStore;
+      
+      // Special handling for newly created workouts
+      if (isActive && !hasExercises) {
+        const isRecent = isRecentlyCreatedWorkout(state);
+        
+        if (isRecent) {
+          console.log("✅ Active workout with 0 exercises - recently created, allowing to proceed");
+          toast({
+            title: "Workout Started",
+            description: "Add your first exercise to begin tracking your progress",
+          });
+          return; // Allow the newly created workout to proceed
+        } else {
+          console.warn("❌ Active workout with 0 exercises - not recent, treating as zombie");
+        }
+      }
+      
+      // Run standard validation for other cases
       const { isValid, needsRepair } = validateWorkoutState(state, { 
         showToasts: false,
         attemptRepair: false
@@ -61,7 +80,7 @@ const TrainingSessionPage = () => {
     }, 800);
     
     return () => clearTimeout(timer);
-  }, [navigate, isActive, isTerminatedStatus, workoutStore, resetSession]);
+  }, [navigate, isActive, isTerminatedStatus, hasExercises, workoutStore, resetSession]);
 
   if (loadingExercises) {
     return <TrainingSessionLoading />;

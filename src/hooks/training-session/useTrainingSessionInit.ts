@@ -5,10 +5,11 @@ import { LoadTrainingConfigFn } from '@/types/workout';
 import { useWorkoutStore } from '@/store/workout';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { isRecentlyCreatedWorkout } from '@/store/workout/validators';
 
 /**
  * Enhanced hook for handling initialization logic for training sessions
- * with comprehensive zombie state detection and cleanup
+ * with improved config persistence and zombie state detection
  */
 export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean, startWorkout: () => void) => {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
   const cleanupPerformedRef = useRef(false);
   
   // Get workout store actions
-  const { runWorkoutValidation, detectAndCleanupZombieWorkout, resetSession } = useWorkoutStore();
+  const { runWorkoutValidation, detectAndCleanupZombieWorkout, resetSession, setTrainingConfig } = useWorkoutStore();
   
   // Load training config function
   const loadTrainingConfig: LoadTrainingConfigFn = useCallback(() => {
@@ -25,6 +26,7 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
   
   // Save training preferences to local storage
   const saveTrainingPreferences = useCallback((config: any) => {
+    console.log('💾 Saving training preferences:', config);
     return saveConfig(config);
   }, [saveConfig]);
   
@@ -33,7 +35,19 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
     console.log('🔍 Performing comprehensive zombie workout cleanup');
     
     try {
-      // Run the store's zombie detection
+      const state = useWorkoutStore.getState();
+      
+      // Special handling for recently created workouts
+      if (state.isActive && Object.keys(state.exercises).length === 0) {
+        const isRecent = isRecentlyCreatedWorkout(state);
+        
+        if (isRecent) {
+          console.log('✅ Found recently created empty workout - allowing to proceed');
+          return false; // Not a zombie, it's a fresh workout
+        }
+      }
+      
+      // Run the store's zombie detection for older workouts
       const zombieDetected = detectAndCleanupZombieWorkout();
       
       if (zombieDetected) {
@@ -54,20 +68,24 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
         const storedData = localStorage.getItem('workout-storage');
         if (storedData) {
           const parsed = JSON.parse(storedData);
-          const state = parsed?.state;
+          const stateData = parsed?.state;
           
-          if (state?.isActive && (!state?.exercises || Object.keys(state.exercises).length === 0)) {
-            console.warn('🧟‍♂️ Found zombie state in localStorage - cleaning up');
-            localStorage.removeItem('workout-storage');
-            resetSession();
+          if (stateData?.isActive && (!stateData?.exercises || Object.keys(stateData.exercises).length === 0)) {
+            const isRecent = isRecentlyCreatedWorkout(stateData);
             
-            toast({
-              title: "Workout Reset",
-              description: "Detected and cleared invalid workout data from storage",
-              variant: "destructive"
-            });
-            
-            return true;
+            if (!isRecent) {
+              console.warn('🧟‍♂️ Found zombie state in localStorage - cleaning up');
+              localStorage.removeItem('workout-storage');
+              resetSession();
+              
+              toast({
+                title: "Workout Reset",
+                description: "Detected and cleared invalid workout data from storage",
+                variant: "destructive"
+              });
+              
+              return true;
+            }
           }
         }
       } catch (storageError) {
@@ -96,11 +114,13 @@ export const useTrainingSessionInit = (isActive: boolean, hasExercises: boolean,
       const config = loadTrainingConfig();
       if (config) {
         console.log('📋 Found saved training config:', config);
+        // Restore training config to store for immediate access
+        setTrainingConfig(config);
       } else {
         console.log('ℹ️ No saved config found and no active session');
       }
     }
-  }, [isActive, hasExercises, startWorkout, loadTrainingConfig]);
+  }, [isActive, hasExercises, startWorkout, loadTrainingConfig, setTrainingConfig]);
   
   // Run comprehensive validation and cleanup on mount
   useEffect(() => {
