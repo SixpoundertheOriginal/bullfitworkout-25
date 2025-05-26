@@ -249,15 +249,13 @@ export const useTrainingSessionHandlers = (
       const { workoutId } = workoutStore;
       
       if (!workoutId) {
-        console.warn("❌ Missing workout ID. Generating temporary ID");
-        // Generate and set temporary ID
-        const tempId = `temp-${Date.now()}`;
-        workoutStore.setWorkoutId?.(tempId);
+        console.warn("❌ Missing workout ID. Cannot complete workout without valid ID");
         toast({
           title: "Workout ID missing", 
-          description: "Generated temporary ID to complete workout",
+          description: "Cannot save workout without a valid workout ID. Please start a new workout.",
           variant: "destructive"
         });
+        return null;
       }
       
       // Use the provided config or fall back to the injected one
